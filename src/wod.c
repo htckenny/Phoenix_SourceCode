@@ -1,0 +1,239 @@
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
+#include <inttypes.h>
+#include <time.h>
+#include <math.h>
+
+#include <fat_sd/ff.h>
+#include "fs.h"
+#include <dev/i2c.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <freertos/semphr.h>
+#include <util/error.h>
+#include <util/hexdump.h>
+#include <util/csp_buffer.h>
+#include <util/log.h>
+#include <util/driver_debug.h>
+#include <util/delay.h>
+#include <dev/cpu.h>
+
+#include <io/nanopower.h>
+#include <io/nanomind.h>
+
+#define max(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a > _b ? _a : _b; })
+#define min(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a < _b ? _a : _b; })
+#define E_NO_ERR -1
+
+#define dtime 2000 //1 minute for the real case
+
+
+uint8_t wod[232];
+uint8_t frame_1[102];
+uint8_t frame_2[102];
+uint8_t frame_3[102];
+uint8_t frame[3][102];
+
+
+void sa(int byte_no, int bit_no){ //calculate the position of the memory and then store in.
+	int num=0;
+	switch(bit_no)
+	{
+		case 0:
+			num=128;	break;
+		case 1:
+			num=64;		break;
+		case 2:
+			num=32;		break;
+		case 3:
+			num=16;		break;
+		case 4:
+			num=8;		break;
+		case 5:
+			num=4;		break;
+		case 6:
+			num=2;		break;
+		case 7:
+			num=1;		break;
+		default:
+			num = 0;
+			printf("error, do not have this bit number");
+			break;
+	}
+	wod[byte_no-1]=wod[byte_no-1]+num;
+
+}
+void calbit(int dataSet){  //normally for mode(first bit of 57bits)
+	int curbit;
+	//32 data set
+	if (dataSet>32)
+		printf("error, data set no more than 32");
+
+	curbit = 57*(dataSet-1);
+	sa(curbit/8+5,curbit%8);//+1(next)+4(32bit time)
+	printf("%d\n",curbit/8+5);
+	printf("%d\n",curbit%8);
+
+}
+void calmulbit(int dataSet, int data,unsigned int value){ //for the wod choose which dataset and data and the value
+	//data=1:batvol ,data=2:batcurr.............data=7:tempbat
+	int curbit;
+	int i ,j;
+	int rec[8];
+	//32 data set
+	if (dataSet>32)
+		printf("error, data set no more than 32");
+	if(value>255)
+		printf("value out of range!!\n");
+	for(i=0;i<8;i++){
+		rec[i]=0;
+	}
+	for(i=0;i<8;i++){
+		if(value/pow(2,(7-i))>=1){
+			rec[i]=1;
+			value = value-pow(2,(7-i));
+		}
+	}
+//	for(i=0;i<8;i++){
+//		printf("%d %d \n",i,rec[i]);
+//
+//	}
+	for(j=0;j<8;j++){
+		if(rec[j]==1){
+			curbit = 57*(dataSet-1)+8*(data-1)+j+1;
+			sa(curbit/8+5,curbit%8);//+1(next)+4(32bit time)
+			//printf("%d\n",curbit/8+5);
+			//printf("%d\n",curbit%8);
+		}
+	}
+}
+void getWodFrame(int fnum){
+
+	unsigned int mode = 0;
+	unsigned int batVoltage = 0;
+	unsigned int batCurrent = 0;
+	unsigned int bus3v3Current=0;
+	unsigned int bus5v0Current=0;
+	unsigned int tempComm=0 ;
+	unsigned int tempEps=0 ;
+	unsigned int tempBat=0 ;
+
+
+	unsigned int reg=8;
+	uint8_t txdata[1];
+	txdata[0] = reg;
+	int rx_length = 43;
+	uint8_t rxdata[rx_length];
+
+	if(i2c_master_transaction(0,2, txdata,1,&rxdata,rx_length,2) == E_NO_ERR) { //eps node = 2
+		batVoltage = rxdata[8] << 8 | rxdata[9];
+		tempEps = ((rxdata[12]<<8|rxdata[13])+(rxdata[14]<<8|rxdata[15])+(rxdata[16]<<8|rxdata[17]))/3 ;
+		tempBat = ((rxdata[18]<<8|rxdata[19])+(rxdata[20]<<8|rxdata[21])+(rxdata[22]<<8|rxdata[23]))/3 ;
+	}
+	reg=22;
+	txdata[0] = reg;
+	rx_length = 1;
+	uint8_t val[rx_length];
+	if(i2c_master_transaction(0,80, txdata,1,&val,rx_length,2) == E_NO_ERR) {
+		tempComm  = val[0];
+	}
+
+
+	if (mode)	calbit(fnum);		// wodd.dataSet[fnum].mode = 0 or 1;
+	calmulbit(fnum,1,batVoltage);	// wodd.dataSet[fnum].bat_voltage = batVoltage;
+	calmulbit(fnum,2,batCurrent);	// wodd.dataSet[fnum].bat_current=0;
+	calmulbit(fnum,3,bus3v3Current);// wodd.dataSet[fnum].bus3v3_current=0;
+	calmulbit(fnum,4,bus5v0Current);// wodd.dataSet[fnum].bus5v0_current=0;
+	calmulbit(fnum,5,tempComm);		// wodd.dataSet[fnum].comm_temp= tempComm;
+	calmulbit(fnum,6,tempEps);		// wodd.dataSet[fnum].eps_temp = tempEps;
+	calmulbit(fnum,7,tempBat);		// wodd.dataSet[fnum].battery_temp = tempBat;
+}
+
+void vTaskwod(void * pvParameters) {
+	int c = 0;
+	int i;
+	int snum=0; //series number
+	int day=0;
+	for(int i = 0;i<232;i++)
+	{
+		wod[i]=0;
+	}
+	vTaskDelay(dtime);
+
+	while(c<2){
+	//obc get time------------------------------------------
+	timestamp_t t;
+	t.tv_sec = 0;
+	t.tv_nsec = 0;
+	obc_timesync(&t, 6000);
+	time_t tt = t.tv_sec;
+	printf("OBC time is: %s\r\n", ctime(&tt));
+	//-------------------------------------------------------
+	//wodd.time = ctime(&tt) ;
+	//wodd.time = t.tv_sec;
+	//printf("time : %d\n",wodd.time);
+
+	//first four byte for time
+	wod[3]=t.tv_sec;
+	wod[2]=t.tv_sec>>8;
+	wod[1]=t.tv_sec>>16;
+	wod[0]=t.tv_sec>>24;
+
+//get the 32 dataSet . dtime must be modify
+	for(i=1;i<=32;i++)
+	{
+		getWodFrame(i);
+		printf("--------Frame %d get--------\n",i);
+		vTaskDelay(dtime);
+	}
+
+
+	for (int j=0;j<3;j++)
+	{
+		snum++;
+		//printf("%d", snum);
+		frame[j][0]=0;// the first two byte header is not defined yet but maybe the day
+		frame[j][1]=0;
+		frame[j][2]=snum>>8;
+		frame[j][3]=snum;
+		for(i = 0;i<98;i++){
+			frame[j][i+4]=wod[i+j*98];
+		}
+	}
+	char cday[10];
+	int re;
+	sprintf(cday,"%d", day); //change the day from integer to char
+	//printf(cday);
+	re = wod_write(cday,frame[0]); //write the frame[0] into the file system
+	if (re) printf("error1");
+	else printf("Good1");
+	vTaskDelay(dtime);
+	re = wod_write(cday,frame[1]);
+	if (re) printf("error2");
+	else printf("Good2");
+	vTaskDelay(dtime);
+	re = wod_write(cday,frame[2]);
+	if (re) printf("error3");
+	else printf("Good3");
+
+
+	uint8_t rewod[102*3];
+	for(i=0;i<102*3;i++)
+	{
+		rewod[i]=0;
+	}
+	wod_down(0,"0",0,&rewod);  //read the data from the FS, second parameter is the day.
+
+	//printf("%d\n",sizeof(rewod));
+	hex_dump(rewod,102*3);
+
+	c++;
+	}
+}

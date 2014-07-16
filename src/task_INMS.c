@@ -21,11 +21,12 @@ void vTaskinms(void * pvParameters) {
 
 		printf("-------------------------------------------\n");
 		printf("Script_LEN:\n");
-		printf("%02X%02X\n",script[1],script[0]);
+		printf("%02X%02X\n",script[1],script[0]);   //Script length
 		printf("Script_HDR:\n");
-		printf("%02X%02X%02X%02X \n",script[2],script[3],script[4],script[5]);
-		printf("%02X%02X%02X%02X \n",script[6],script[7],script[8],script[9]);
-		printf("%02X%02X \n",script[10],script[11]);
+		printf("%02X%02X%02X%02X \n",script[2],script[3],script[4],script[5]); //UTC time at which to start run the script
+	          //B0: sec 0~59 , B1 Min 0~59 , B2 Hr 0~23 ,B3 script_index 0x41=S1 0x42=S2 .....0x45=s5 0x55=End of table
+		printf("%02X%02X%02X%02X \n",script[6],script[7],script[8],script[9]); // File serial number
+		printf("%02X%02X \n",script[10],script[11]);  //many detail check code   see data sheet P.50
 		printf("TimeTable:\n");
 		int flag =15;
 		while(1){

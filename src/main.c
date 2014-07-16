@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#include "sema.h"
 #include <conf_nanomind.h>
 #include <conf_io.h>
 
@@ -51,7 +52,8 @@ int main(void) {
 
 	/* Initialise USART */
 	usart_init(USART_CONSOLE, cpu_core_clk, F_USART);
-
+	usart_init(1, cpu_core_clk, F_USART);
+	usart_init(2, cpu_core_clk, F_USART);
 	/* Initialize delay */
 	delay_init(cpu_core_clk);
 
@@ -149,22 +151,36 @@ int main(void) {
 	xTaskCreate(vTaskInit, (const signed char *) "INIT", 1024*4, NULL, 3, NULL);
 	extern void vTaskServer(void * pvParameters);
 	xTaskCreate(vTaskServer, (const signed char *) "SRV", 1024*4, NULL, 2, NULL);
+//	extern void vTaskUsartRx(void * pvParameters);
+//	xTaskCreate(vTaskUsartRx, (const signed char*) "USART", 1024*4, NULL, 3, NULL);
 
-	//xTaskCreate(vTaskUsartRx, (const signed char*) "USART", 1024*4, NULL, 3, NULL);
-       extern void vTaskinms(void * pvParameters);
-     xTaskCreate(vTaskinms, (const signed char *) "INMS", 1024*4, NULL, 2, NULL);
+	//extern void usart_inms(void * pvParameters);
+	//	xTaskCreate(usart_inms, (const signed char*) "USART", 1024*4, NULL, 3, NULL);
 
-  extern void vTaskI2C(void * pvParameters);
-  xTaskCreate(vTaskI2C, (const signed char *) "I2C", 1024*4, NULL, 2, NULL);
 
-   
+//	extern void RTOS1(void * pvParameters);
+//	xTaskCreate(RTOS1, (const signed char*) "Test1", 1024*4, NULL, 3, NULL);
 
+
+//	extern void RTOS2(void * pvParameters);
+//	xTaskCreate(RTOS2, (const signed char*) "Test2", 1024*4, NULL, 3, &test2 );
+
+   //    extern void vTaskinms(void * pvParameters);
+  //   xTaskCreate(vTaskinms, (const signed char *) "INMS", 1024*4, NULL, 2, NULL);
+
+// extern void vTaskI2C(void * pvParameters);
+//xTaskCreate(vTaskI2C, (const signed char *) "I2C", 1024*4, NULL, 2, NULL);
+  extern void Fgive(void * pvParameters);
+  xTaskCreate(Fgive, (const signed char *) "I2C", 1024*4, NULL, 2, NULL);
+  extern void Ftake(void * pvParameters);
+  xTaskCreate(Ftake, (const signed char *) "I", 1024*4, NULL, 2, NULL);
+  extern void Ftakex(void * pvParameters);
+  xTaskCreate(Ftakex, (const signed char *) "C", 1024*4, NULL, 2, NULL);
  //   extern void vTaskfstest(void * pvParameters);
  //   xTaskCreate(vTaskfstest, (const signed char *) "FS", 1024*4, NULL, 2, NULL);
 
 	/* Timer uses LFCLOCK = F_OSC/2 */
 	vTaskStartScheduler(F_OSC/2, 1024*4);
-
 	/* Should never reach here */
 	while(1) exit(0);
 

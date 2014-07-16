@@ -19,17 +19,18 @@
 #include <util/delay.h>
 #include <dev/cpu.h>
 
-#include <io/nanopower.h>
+#include <io/nanopower2.h>
 #include <io/nanomind.h>
-
-#define max(a,b) \
+#include <csp/csp.h>
+#include <csp/csp_endian.h>
+#define __max(a,b) \
+   ({__typeof__ (a) _a = (a); \
+     __typeof__ (b) _b = (b); \
+     _a > _b ? _b : _a; })
+#define __min(a,b) \
    ({ __typeof__ (a) _a = (a); \
        __typeof__ (b) _b = (b); \
-     _a > _b ? _a : _b; })
-#define min(a,b) \
-   ({ __typeof__ (a) _a = (a); \
-       __typeof__ (b) _b = (b); \
-     _a < _b ? _a : _b; })
+     _a < _b ? _b : _a; })
 #define E_NO_ERR -1
 
 #define dtime 2000 //1 minute for the real case
@@ -121,22 +122,22 @@ void getWodFrame(int fnum){
 	unsigned int batCurrent = 0;
 	unsigned int bus3v3Current=0;
 	unsigned int bus5v0Current=0;
-	unsigned int tempComm=0 ;
-	unsigned int tempEps=0 ;
-	unsigned int tempBat=0 ;
+	signed int tempComm=0 ;
+	signed int tempEps=0 ;
+	signed int tempBat=0 ;
 
 
 	unsigned int reg=8;
 	uint8_t txdata[1];
 	txdata[0] = reg;
 	int rx_length = 43;
-	uint8_t rxdata[rx_length];
+	//uint8_t rxdata[rx_length];
 
-	if(i2c_master_transaction(0,2, txdata,1,&rxdata,rx_length,2) == E_NO_ERR) { //eps node = 2
-		batVoltage = rxdata[8] << 8 | rxdata[9];
-		tempEps = ((rxdata[12]<<8|rxdata[13])+(rxdata[14]<<8|rxdata[15])+(rxdata[16]<<8|rxdata[17]))/3 ;
-		tempBat = ((rxdata[18]<<8|rxdata[19])+(rxdata[20]<<8|rxdata[21])+(rxdata[22]<<8|rxdata[23]))/3 ;
-	}
+//	if(i2c_master_transaction(0,2, txdata,1,&rxdata,rx_length,2) == E_NO_ERR) { //eps node = 2
+//		batVoltage = rxdata[8] << 8 | rxdata[9];
+//		tempEps = ((rxdata[12]<<8|rxdata[13])+(rxdata[14]<<8|rxdata[15])+(rxdata[16]<<8|rxdata[17]))/3 ;
+//		tempBat = ((rxdata[18]<<8|rxdata[19])+(rxdata[20]<<8|rxdata[21])+(rxdata[22]<<8|rxdata[23]))/3 ;
+//	}
 	reg=22;
 	txdata[0] = reg;
 	rx_length = 1;
@@ -144,6 +145,20 @@ void getWodFrame(int fnum){
 	if(i2c_master_transaction(0,80, txdata,1,&val,rx_length,2) == E_NO_ERR) {
 		tempComm  = val[0];
 	}
+	eps_hk_t hk = {};
+	if (eps_hk_get(&hk) >= 0)
+		eps_hk_print(&hk);
+	else
+		printf("CMD_ERROR_FAIL");
+
+	//following the conversion equation comes from the QB50 Whole Orbit Data-Iss2.pdf
+	batVoltage = __min(__max(floor(20*(hk.vbatt/1000)-60),255),0);
+	batCurrent = __min(__max(floor(127*((hk.cursys-hk.cursun)/1000)+127),255),0);
+
+	bus3v3Current = __min(__max(floor(40*((hk.curout[0]+hk.curout[1]+hk.curout[2])/1000)),255),0);
+	bus5v0Current = __min(__max(floor(40*((hk.curout[3]+hk.curout[4]+hk.curout[5])/1000)),255),0);
+	tempEps = __min(__max(floor(4*(((hk.temp[0]+hk.temp[1]+hk.temp[2]+hk.temp[3])/4)/1000)+60),255),0);
+	tempBat = __min(__max(floor(4*(((hk.temp[4]+hk.temp[5])/2)/1000)+60),255),0);;
 
 
 	if (mode)	calbit(fnum);		// wodd.dataSet[fnum].mode = 0 or 1;
@@ -180,11 +195,11 @@ void vTaskwod(void * pvParameters) {
 	//wodd.time = t.tv_sec;
 	//printf("time : %d\n",wodd.time);
 
-	//first four byte for time
-	wod[3]=t.tv_sec;
-	wod[2]=t.tv_sec>>8;
-	wod[1]=t.tv_sec>>16;
-	wod[0]=t.tv_sec>>24;
+	//first four byte for time(little endian)
+	wod[0]=t.tv_sec;
+	wod[1]=t.tv_sec>>8;
+	wod[2]=t.tv_sec>>16;
+	wod[3]=t.tv_sec>>24;
 
 //get the 32 dataSet . dtime must be modify
 	for(i=1;i<=32;i++)

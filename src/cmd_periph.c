@@ -253,18 +253,6 @@ struct command mon_commands[] = {
 		.help = "Magnetometer read",
 		.handler = mag_test_single,
 	},{
-		.name = "loop",
-		.help = "Magnetometer read in a loop",
-		.handler = mag_loop,
-	},{
-		.name = "loop_noformat",
-		.help = "Magnetometer read in a loop (not formatted)",
-		.handler = mag_loop_noformat,
-	},{
-		.name = "loop_raw",
-		.help = "Magnetometer read in a loop (raw output)",
-		.handler = mag_loop_raw,
-	},{
 		.name = "status",
 		.help = "Read magnetometer status registers",
 		.handler = mag_get_info,

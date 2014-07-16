@@ -1,8 +1,8 @@
-#include <stdlib.h>
-#include <string.h>
-#include <stdint.h>
-#include <inttypes.h>
-
+//#include <stdlib.h>
+//#include <string.h>
+//#include <stdint.h>
+//#include <inttypes.h>
+#include <dev/cpu.h>
 #include <dev/i2c.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -13,7 +13,9 @@
 #include <util/log.h>
 #include <util/driver_debug.h>
 #include <util/delay.h>
-#include <dev/cpu.h>
+#include <util/timestamp.h>
+#include <util/vermagic.h>
+//#include <time.h>
 
 #define E_NO_ERR -1
 
@@ -23,7 +25,7 @@ int delete_buf(){
 	  uint8_t txdata[1];
 	  txdata[0] = reg;
 
-	  if ( i2c_master_transaction(0,80, txdata,1,0,0,2) == E_NO_ERR) {
+	  if ( i2c_master_transaction(0,80, txdata,1,0,0,5) == E_NO_ERR) {
 		  printf(" Delete a frame in receive buffer \r\n");
 		  return 1;
 	  }
@@ -40,7 +42,7 @@ int arm_ant(){
 	  uint8_t txdata[1];
 	  txdata[0] = 173;    // arm 0x49 ant board
 
-	  if ( i2c_master_transaction(0,49,txdata,1,0,0,2) == E_NO_ERR) {
+	  if ( i2c_master_transaction(0,49,txdata,1,0,0,5) == E_NO_ERR) {
 	        return 1;
 	  }
 	  else
@@ -66,8 +68,8 @@ int callsign(){
 				 	  txdata2[6] = 73;
 				 	  txdata2[7] = 88;
 
-	  if ( i2c_master_transaction(0,81, txdata,8,0,0,2) == E_NO_ERR) {
-		  if ( i2c_master_transaction(0,81, txdata2,8,0,0,2) == E_NO_ERR)
+	  if ( i2c_master_transaction(0,81, txdata,8,0,0,5) == E_NO_ERR) {
+		  if ( i2c_master_transaction(0,81, txdata2,8,0,0,5) == E_NO_ERR)
 	        return 1;
 		  else
 			  return 0;
@@ -86,7 +88,7 @@ int deploy_ant(){
 	  uint8_t txdata[2];
 	  txdata[0] = reg;
 	  txdata[1] = para;
-	  if ( i2c_master_transaction(0,49, txdata,2,0,0,2) == E_NO_ERR) {
+	  if ( i2c_master_transaction(0,49, txdata,2,0,0,5) == E_NO_ERR) {
 	        return 1;
 	  }
 	  else
@@ -106,7 +108,7 @@ int tx_mode(int mode){
 	  uint8_t txdata[2];
 	  txdata[0] = reg;
 	  txdata[1] = para;
-	  if ( i2c_master_transaction(0,81,txdata,2,0,0,2) == E_NO_ERR) {
+	  if ( i2c_master_transaction(0,81,txdata,2,0,0,5) == E_NO_ERR) {
 	        return 1;
 	  }
 	  else
@@ -121,7 +123,7 @@ int CIC(){   //check incoming command
 	  int rx_length = 1;
      uint8_t val[rx_length];  // have 1 byte response
 
-	  if ( i2c_master_transaction(0,80, txdata,1,&val,rx_length,2) == E_NO_ERR) {
+	  if ( i2c_master_transaction(0,80, txdata,1,&val,rx_length,10) == E_NO_ERR) {
 	        return (unsigned int)val[0];
 	  }
 	  else
@@ -130,24 +132,92 @@ int CIC(){   //check incoming command
 int down_data_read(int day,int type,int ssn,int packlength,void * txbuf){
 	  printf("wait for kenny\n" );
 }
+int return_error(){
+	uint8_t txdata[238];
+	txdata[0]=16;
+				  for(int a=1;a<6;a++)
+					  txdata[a]=255;
+
+			    if ( i2c_master_transaction(0,81,txdata,6,0,0,5) == E_NO_ERR) {
+			    				  return 1;}
+			    else  return 0;
+
+}
+
+int rccs(){ //Request COM Current State
+      	  uint8_t txdata[238];
+		  txdata[0] = 26;
+
+		 int rx_length = 16;
+	     uint8_t val[rx_length];  // have 16 byte response
+
+		  if ( i2c_master_transaction(0,80, txdata,1,&val,rx_length,10) == E_NO_ERR) {
+			  txdata[0]=16;
+			  for(int a=1;a<(rx_length+1);a++)
+				  txdata[a]=val[a-1];
+
+			      vTaskDelay(100);
+		    if ( i2c_master_transaction(0,81,txdata,17,0,0,5) == E_NO_ERR) {
+		    				  return 1;}
+			  else{
+				printf("have error on send rccs \n");
+				  return -1;
+				  }
+		  }
+		  else{
+			  printf("have error on rccs \n");
+		  return -1;
+		  }
+}
+
+int recs(){  //Request EPS Current State
+      	  uint8_t txdata[238];
+		  txdata[0] = 8;
+
+		 int rx_length = 43;
+	     uint8_t val[rx_length];  // have 16 byte response
+
+		  if ( i2c_master_transaction(0,2, txdata,1,&val,rx_length,10) == E_NO_ERR) {
+			  txdata[0]=16;
+
+
+			  for(int a=1;a<(rx_length+1);a++)
+			 				  txdata[a]=val[a-1];
+						      vTaskDelay(100);
+
+		    if ( i2c_master_transaction(0,81,txdata,44,0,0,5) == E_NO_ERR) {
+		    				  return 1;}
+			  else{
+				printf("have error on send recs \n");
+				  return -1;
+				  }
+		  }
+		  else{
+			  printf("have error on recs \n");
+		  return -1;
+		  }
+}
 int execute(char * txbuf){   // send back received command to GS
 	uint8_t txdata[238];
 	uint8_t dframe[101];
 	int count;
 	int datatype;
 	int ssn;
-
+    int x=txbuf[1];
+    uint8_t time;
 	//---------------------------------------------------------//
-	switch(txbuf[1]){
+	switch(x){
 	case 0x11: //downlink 1 sector of data (100 frames)
+		printf("Command Type: 0x11  downlink  1 sector of data (100 frames) \r\n");
 		 datatype=txbuf[4];///////////////////////////////
-		 ssn=txbuf[4]-(32*datatype);
+		 ssn=txbuf[4]-(32*datatype);/////////////////////////
+	printf("Data Type: %d Day: %d  Serial number: %d \r\n",datatype,txbuf[3],ssn);
 		for(int a=ssn*100;a<(ssn*100)+100;a++){
       if(down_data_read(txbuf[3],datatype,a,101,&dframe)==1){
     	  memcpy(txdata[1],&dframe,101);
     	  txdata[0]=16;
-    	  if ( i2c_master_transaction(0,81,txdata,102,0,0,2) != E_NO_ERR) {
-    				  return 0;}
+    	  if ( i2c_master_transaction(0,81,txdata,102,0,0,5) != E_NO_ERR) {
+    				  return 1;}
     	  else
     				  return 0;
       }
@@ -156,21 +226,16 @@ int execute(char * txbuf){   // send back received command to GS
            return 0;}
 		}
 	case 0x12:  //Multiple Sector retrieve
-
 	case 0x13:  //Target frame retrieve
-
-
-
 	case 0x21:     //test downlink a-->z
-
-
+		printf("Command Type: 0x21  downlink a-->z \r\n");
 			  txdata[0] = 16;
                  count =1;
               for(int n=97;n<123;n++){
             	  txdata[count]=n;
             	  count++;
               }
-			  if ( i2c_master_transaction(0,81, txdata,27,0,0,2) == E_NO_ERR) {
+			  if ( i2c_master_transaction(0,81, txdata,27,0,0,5) == E_NO_ERR) {
 			        return 1;
 			  }
 			  else
@@ -178,6 +243,7 @@ int execute(char * txbuf){   // send back received command to GS
 
 	case 0x22:  //test downlink 0~236
 			   // TX buffer size
+		printf("Command Type: 0x21  downlink 0~236 \r\n");
 			  txdata[0] = 16;
 
 			 	count =0;
@@ -185,11 +251,32 @@ int execute(char * txbuf){   // send back received command to GS
 			  txdata[n]=count;
 			 	count++;
 			 	               }
-			  if ( i2c_master_transaction(0,81, txdata,238,0,0,2) == E_NO_ERR) {
+
+
+			  if ( i2c_master_transaction(0,81, txdata,236,0,0,5) == E_NO_ERR) {
 			        return 1;
 			  }
 			  else
 			  return 0;
+	case 0x23: //get time
+		printf("Command Type: 0x23 show on-board time \r\n");
+		txdata[0] = 16;
+		timestamp_t t;
+		t.tv_sec = 0;
+		t.tv_nsec = 0;
+		obc_timesync(&t, 6000);
+		time_t tt = t.tv_sec;
+		time = t.tv_sec;
+		printf("OBC time is: %d\r\n",time);
+		txdata[1] = time;
+
+
+
+		if ( i2c_master_transaction(0,81,txdata,2,0,0,5) == E_NO_ERR) {
+					        return 1;
+					  }
+					  else
+					  return 0;
 	case 0x31:  //upload INMS script
 	case 0x32:   // upload SEUV scipt
 	case 0x33:   // SEUV_take data
@@ -198,7 +285,18 @@ int execute(char * txbuf){   // send back received command to GS
 	case 0x36:   // SEUV_OFF
 	case 0x51://Request ADCS Current State
 	case 0x52://Request COM Current State
+		printf("Command Type: 0x52  Request COM Current State 0~236 \r\n");
+		if(rccs()==1)
+		return 1;
+		else
+		return 0;
 	case 0x53://Request EPS Current State
+		printf("Command Type: 0x53  Request EPS Current State 0~236 \r\n");
+				if(recs()==1)
+				return 1;
+				else
+				return 0;
+
 	case 0x54://Request WOD
 	case 0x55://Request PHOENIX HK
 	case 0x56://Request on board time
@@ -207,6 +305,7 @@ int execute(char * txbuf){   // send back received command to GS
 
     default:
               printf("Invalid command\n" );
+              return_error();
     return 0;
 }}
 
@@ -264,7 +363,7 @@ int RIC(){   // read incomming command
 	  int rx_length = 17;
 	  uint8_t val[rx_length];  // expect  1+16 byte response , first byte is length1~16
 
-	  if ( i2c_master_transaction(0,80, txdata,1,&val,rx_length,2) == E_NO_ERR) {
+	  if ( i2c_master_transaction(0,80, txdata,1,&val,rx_length,10) == E_NO_ERR) {
 		    hex_dump(val,15);     // get command   print in
 
 	/*   if( send_back(val)==1){  // sned it back
@@ -274,13 +373,13 @@ int RIC(){   // read incomming command
 		   }else
 			   printf(" Replyed to GS fail \r\n");
     */
+		  //  vTaskDelay(100);
 		    if( execute(val)==1){  // Execute the command
-		   			   printf(" Execute the command done \r\n");
-		   			   vTaskDelay(500);
 		   			   delete_buf();   // delete one frame in receive buffer
+		   			   return 1;
 		    }else{
 		      printf(" execute fail \r\n");}
-	        return 1;
+		    delete_buf();
 	  }
 	  else
 	  return -1;
@@ -288,40 +387,31 @@ int RIC(){   // read incomming command
 
 void vTaskI2C(void * pvParameters) {
 
-		vTaskDelay(10000);
+		vTaskDelay(5000);
 	    while(1){
 	 if(arm_ant()==1){
-	printf("Arm ant success \r\n");
-	vTaskDelay(1000);
+//	printf("Arm ant success \r\n");
 	break;}
 	 else{
-		 vTaskDelay(1000);
 		 printf("Arm ant fail \r\n");
 	    }
 	             }
 
 	    while(1){
 	   	 if(deploy_ant()==1){
-	   	printf("Deploy ant success \r\n");
-	   	vTaskDelay(1000);
 	   	break;}
 	   	 else{
-	   		 vTaskDelay(1000);
 	   		 printf("Deploy ant fail \r\n");
 	   	    }}
 
 	    while(1){
 	 if(tx_mode(1)==1){
-	printf("tx_mode set success \r\n");
-	vTaskDelay(1000);
 	break;}
 	 else{
-		 vTaskDelay(1000);
 		 printf("tx_mode set fail \r\n");}}
 
 	    while(1){
 		 if(callsign()==1){
-		printf("callsign set success \r\n");
 		break;}
 		 else{
 			 printf("tx_mode set fail \r\n");}}
@@ -339,20 +429,18 @@ void vTaskI2C(void * pvParameters) {
 		 printf("Start to checking imcoming command \r\n");
 		 printf("GS can start to send uplink command \r\n");
 		 int flag;
-		  vTaskDelay(3000);
 	    while(1){
 	    	flag = CIC();
-	    	if(flag>-1){
-	    		printf("%d frame in receive buffer \r\n",flag);
-	    		 vTaskDelay(3000);
-	    	}
-	    	else
-	    		printf("I2C CIC fail \r\n");
+	    	if( flag>10 || flag<0 )
+	    		flag = CIC();
 
-	   		 vTaskDelay(3000);
+
 	    	if(flag>0){
+	    	  printf("Find %d frame in receive buffer \r\n",flag);
                RIC();
                }
+
+	    	 vTaskDelay(500);
 	    	}
 	    }
 

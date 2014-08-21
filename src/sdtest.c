@@ -3,7 +3,7 @@
 #include <fat_sd/ff.h>
 
 FRESULT scan_files (char* path);
-#define F_PUTS			0	//write string into the file
+#define F_PUTS			1	//write string into the file
 #define F_READ			1	//read the string out of the file
 #define F_UNLINK		0	//delete the file
 #define SCAN_FILES		0	//scan the directory

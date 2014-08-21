@@ -1,6 +1,8 @@
 #include <dev/usart.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <fat_sd/ff.h>
+#include "fs.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>

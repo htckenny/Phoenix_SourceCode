@@ -37,9 +37,9 @@
 
 
 uint8_t wod[232];
-uint8_t frame_1[102];
-uint8_t frame_2[102];
-uint8_t frame_3[102];
+//uint8_t frame_1[102];
+//uint8_t frame_2[102];
+//uint8_t frame_3[102];
 uint8_t frame[3][102];
 
 
@@ -83,7 +83,7 @@ void calbit(int dataSet){  //normally for mode(first bit of 57bits)
 	printf("%d\n",curbit%8);
 
 }
-void calmulbit(int dataSet, int data,unsigned int value){ //for the wod choose which dataset and data and the value
+void calmulbit(int dataSet, int data, int value){ //for the wod choose which dataset and data and the value
 	//data=1:batvol ,data=2:batcurr.............data=7:tempbat
 	int curbit;
 	int i ,j;
@@ -97,15 +97,15 @@ void calmulbit(int dataSet, int data,unsigned int value){ //for the wod choose w
 		rec[i]=0;
 	}
 	for(i=0;i<8;i++){
-		if(value/pow(2,(7-i))>=1){
+	if(value==0)
+			break;
+		if(value>= (1<<(7-i))){
 			rec[i]=1;
-			value = value-pow(2,(7-i));
+			value = value - (1<<(7-i));
 		}
+
 	}
-//	for(i=0;i<8;i++){
-//		printf("%d %d \n",i,rec[i]);
-//
-//	}
+
 	for(j=0;j<8;j++){
 		if(rec[j]==1){
 			curbit = 57*(dataSet-1)+8*(data-1)+j+1;
@@ -145,11 +145,12 @@ void getWodFrame(int fnum){
 	if(i2c_master_transaction(0,80, txdata,1,&val,rx_length,2) == E_NO_ERR) {
 		tempComm  = val[0];
 	}
+
 	eps_hk_t hk = {};
-	if (eps_hk_get(&hk) >= 0)
-		eps_hk_print(&hk);
-	else
-		printf("CMD_ERROR_FAIL");
+//	if (eps_hk_get(&hk) >= 0)
+//		eps_hk_print(&hk);
+//	else
+//		printf("CMD_ERROR_FAIL");
 
 	//following the conversion equation comes from the QB50 Whole Orbit Data-Iss2.pdf
 	batVoltage = __min(__max(floor(20*(hk.vbatt/1000)-60),255),0);
@@ -163,7 +164,9 @@ void getWodFrame(int fnum){
 
 	if (mode)	calbit(fnum);		// wodd.dataSet[fnum].mode = 0 or 1;
 	calmulbit(fnum,1,batVoltage);	// wodd.dataSet[fnum].bat_voltage = batVoltage;
+	printf("bV = %d\n",batVoltage );
 	calmulbit(fnum,2,batCurrent);	// wodd.dataSet[fnum].bat_current=0;
+	printf("BC = %d\n",batCurrent );
 	calmulbit(fnum,3,bus3v3Current);// wodd.dataSet[fnum].bus3v3_current=0;
 	calmulbit(fnum,4,bus5v0Current);// wodd.dataSet[fnum].bus5v0_current=0;
 	calmulbit(fnum,5,tempComm);		// wodd.dataSet[fnum].comm_temp= tempComm;
@@ -183,72 +186,72 @@ void vTaskwod(void * pvParameters) {
 	vTaskDelay(dtime);
 
 	while(c<2){
-	//obc get time------------------------------------------
-	timestamp_t t;
-	t.tv_sec = 0;
-	t.tv_nsec = 0;
-	obc_timesync(&t, 6000);
-	time_t tt = t.tv_sec;
-	printf("OBC time is: %s\r\n", ctime(&tt));
-	//-------------------------------------------------------
-	//wodd.time = ctime(&tt) ;
-	//wodd.time = t.tv_sec;
-	//printf("time : %d\n",wodd.time);
+		/*obc get time------------------------------------------*/
+		timestamp_t t;
+		t.tv_sec = 0;
+		t.tv_nsec = 0;
+		obc_timesync(&t, 6000);
+		time_t tt = t.tv_sec;
+		printf("OBC time is: %s\r\n", ctime(&tt));
 
-	//first four byte for time(little endian)
-	wod[0]=t.tv_sec;
-	wod[1]=t.tv_sec>>8;
-	wod[2]=t.tv_sec>>16;
-	wod[3]=t.tv_sec>>24;
+		//wodd.time = ctime(&tt) ;
+		//wodd.time = t.tv_sec;
+		//printf("time : %d\n",wodd.time);
 
-//get the 32 dataSet . dtime must be modify
-	for(i=1;i<=32;i++)
-	{
-		getWodFrame(i);
-		printf("--------Frame %d get--------\n",i);
-		vTaskDelay(dtime);
-	}
+		//first four byte for time(little endian)
+		wod[0]=t.tv_sec;
+		wod[1]=t.tv_sec>>8;
+		wod[2]=t.tv_sec>>16;
+		wod[3]=t.tv_sec>>24;
 
-
-	for (int j=0;j<3;j++)
-	{
-		snum++;
-		//printf("%d", snum);
-		frame[j][0]=0;// the first two byte header is not defined yet but maybe the day
-		frame[j][1]=0;
-		frame[j][2]=snum>>8;
-		frame[j][3]=snum;
-		for(i = 0;i<98;i++){
-			frame[j][i+4]=wod[i+j*98];
+	//get the 32 dataSet . dtime must be modify
+		for(i=1;i<=5;i++)
+		{
+			getWodFrame(i);
+			printf("--------Frame %d get--------\n",i);
+			vTaskDelay(dtime);
 		}
-	}
-	char cday[10];
-	int re;
-	sprintf(cday,"%d", day); //change the day from integer to char
-	//printf(cday);
-	re = wod_write(cday,frame[0]); //write the frame[0] into the file system
-	if (re) printf("error1");
-	else printf("Good1");
-	vTaskDelay(dtime);
-	re = wod_write(cday,frame[1]);
-	if (re) printf("error2");
-	else printf("Good2");
-	vTaskDelay(dtime);
-	re = wod_write(cday,frame[2]);
-	if (re) printf("error3");
-	else printf("Good3");
 
 
-	uint8_t rewod[102*3];
-	for(i=0;i<102*3;i++)
-	{
-		rewod[i]=0;
-	}
-	wod_down(0,"0",0,&rewod);  //read the data from the FS, second parameter is the day.
+		for (int j=0;j<3;j++)
+		{
+			snum++;
+			//printf("%d", snum);
+			frame[j][0]=0;// the first two byte header is not defined yet but maybe the day
+			frame[j][1]=0;
+			frame[j][2]=snum>>8;
+			frame[j][3]=snum;
+			for(i = 0;i<98;i++){
+				frame[j][i+4]=wod[i+j*98];
+			}
+		}
+		char cday[10];
+		int re = 0;
+		sprintf(cday,"%d", day); //change the day from integer to char
+		//printf(cday);
+		re = wod_write(cday,frame[0],0); //write the frame[0] into the file system
+		if (re) printf("error1");
+		else printf("Good1\n");
+		vTaskDelay(dtime);
+		re = wod_write(cday,frame[1],1);
+		if (re) printf("error2");
+		else printf("Good2\n");
+		vTaskDelay(dtime);
+		re = wod_write(cday,frame[2],1);
+		if (re) printf("error3");
+		else printf("Good3\n");
 
-	//printf("%d\n",sizeof(rewod));
-	hex_dump(rewod,102*3);
 
-	c++;
+		uint8_t rewod[102];
+		for(i=0;i<102;i++)
+		{
+			rewod[i]=0;
+		}
+		for (int i =1;i<=6;i++){
+			wod_down(0,"0",i,rewod);  //read the data from the FS, second parameter is the day.
+			hex_dump(rewod,102);
+		}
+
+		c++;
 	}
 }

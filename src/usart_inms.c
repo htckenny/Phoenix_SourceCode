@@ -1,3 +1,5 @@
+/*Not using anymore
+
 #include <dev/usart.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -7,7 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-char uchar[];
+char uchar[10];
 uint8_t con[]={0xF1,0x01,0x01};
 int a = 10000;
 char inmscmd[]= {0xF1,0x01,0x01};
@@ -75,3 +77,4 @@ void i2s(int i,char *s)	// Convert Integer to String
 	p[len]=0;
 }
 
+*/

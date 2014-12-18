@@ -47,13 +47,14 @@
 #define F_CPU				40000000
 #define F_OSC				8000000
 #define F_USART				500000
+#define F_USART_INMS	9600
 
 int main(void) {
 
 	/* Initialise USART */
 	usart_init(USART_CONSOLE, cpu_core_clk, F_USART);
 	usart_init(1, cpu_core_clk, F_USART);
-	//usart_init(2, cpu_core_clk, 9600); //for inms
+	usart_init(2, cpu_core_clk, F_USART_INMS); //for inms
 	/* Initialize delay */
 	delay_init(cpu_core_clk);
 
@@ -65,10 +66,15 @@ int main(void) {
 	ds1302_init();
 	ds1302_clock_read_burst(&clock);
 	ds1302_clock_to_time((time_t *) &timestamp.tv_sec, &clock);
+//	ds1302_clock_to_time( &timestamp.tv_sec, &clock);
 	timestamp.tv_nsec = 0;
-
+//	printf("1rtc = %d\n",&timestamp.tv_sec );
+	timestamp.tv_sec = 946684800;
 	/* Set time in lib-c */
 	clock_set_time(&timestamp);
+//	printf("2rtc = %d\n",(time_t *) &timestamp.tv_sec );
+//	; //attention
+	printf("rtc = %d\n",timestamp.tv_sec );
 #endif
 
 	/* Initialize command */
@@ -155,18 +161,22 @@ int main(void) {
 	//	extern void vTaskUsartRx(void * pvParameters);
 	//	xTaskCreate(vTaskUsartRx, (const signed char*) "USART", 1024*4, NULL, 3, NULL);
 
-	//extern void usart_inms(void * pvParameters);
-	//	xTaskCreate(usart_inms, (const signed char*) "USART", 1024*4, NULL, 3, NULL);
-
-	extern void vTaskwod(void * pvParameters);
-	xTaskCreate(vTaskwod, (const signed char*) "WOD", 1024*4, NULL, 2, NULL);
+//	extern void vTaskinms(void * pvParameters);
+//	xTaskCreate(vTaskinms, (const signed char*) "INMS", 1024*4, NULL, 3, NULL);
+//
+//	extern void vTaskInmsReceive(void * pvParameters);
+//	xTaskCreate(vTaskInmsReceive, (const signed char*) "INMSR", 1024*4, NULL, 3, NULL);
+//	extern void vTaskwod(void * pvParameters);
+//	xTaskCreate(vTaskwod, (const signed char*) "WOD", 1024*4, NULL, 2, NULL);
+	//extern void vTimer(void * pvParameters);
+	//	xTaskCreate(vTimer, (const signed char*) "TIMER", 1024*4, NULL, 2, NULL);
 //	extern void vTaskInitBooting(void * pvParameters);
 //	xTaskCreate(vTaskInitBooting, (const signed char *) "booting", 1024*4, NULL, 2, NULL);
 
 //		extern void RTOS1(void * pvParameters);
 //		xTaskCreate(RTOS1, (const signed char*) "Test1", 1024*4, NULL, 3, NULL);
-//
-//
+//	extern void vTaskInitBooting(void * pvParameters);
+//		xTaskCreate(vTaskInitBooting, (const signed char*) "TIMER", 1024*4, NULL, 2, NULL);
 //		extern void RTOS2(void * pvParameters);
 //		xTaskCreate(RTOS2, (const signed char*) "Test2", 1024*4, NULL, 3, &test2 );
 //

@@ -37,9 +37,7 @@
 
 
 uint8_t wod[232];
-//uint8_t frame_1[102];
-//uint8_t frame_2[102];
-//uint8_t frame_3[102];
+uint8_t beaconWod [8];
 uint8_t frame[3][102];
 
 
@@ -69,6 +67,7 @@ void sa(int byte_no, int bit_no){ //calculate the position of the memory and the
 			break;
 	}
 	wod[byte_no-1]=wod[byte_no-1]+num;
+
 
 }
 void calbit(int dataSet){  //normally for mode(first bit of 57bits)
@@ -127,9 +126,9 @@ void getWodFrame(int fnum){
 	signed int tempBat=0 ;
 
 
-	unsigned int reg=8;
+	unsigned int reg;
 	uint8_t txdata[1];
-	txdata[0] = reg;
+	//txdata[0] = reg;
 	int rx_length = 43;
 	//uint8_t rxdata[rx_length];
 
@@ -140,10 +139,10 @@ void getWodFrame(int fnum){
 //	}
 	reg=22;
 	txdata[0] = reg;
-	rx_length = 1;
+	rx_length = 2;
 	uint8_t val[rx_length];
 	if(i2c_master_transaction(0,80, txdata,1,&val,rx_length,2) == E_NO_ERR) {
-		tempComm  = val[0];
+		tempComm  =((((val[1]<<8)+val[0])*330)/1023)-50;
 	}
 
 	eps_hk_t hk = {};
@@ -172,20 +171,66 @@ void getWodFrame(int fnum){
 	calmulbit(fnum,5,tempComm);		// wodd.dataSet[fnum].comm_temp= tempComm;
 	calmulbit(fnum,6,tempEps);		// wodd.dataSet[fnum].eps_temp = tempEps;
 	calmulbit(fnum,7,tempBat);		// wodd.dataSet[fnum].battery_temp = tempBat;
-}
+	//for beacon
 
-void vTaskwod(void * pvParameters) {
-	int c = 0;
-	int i;
-	int snum=0; //series number
-	int day=0;
-	for(int i = 0;i<232;i++)
+	beaconWod[0]= mode;
+	beaconWod[1]= batVoltage;
+	beaconWod[2]= batCurrent;
+	beaconWod[3]= bus3v3Current;
+	beaconWod[4]= bus5v0Current;
+	beaconWod[5]= tempComm;
+	beaconWod[6]= tempEps;
+	beaconWod[7]= tempBat;
+//	int re = wodBeaconWrite(beaconWod);
+//	if(re!=-1)
+//	{
+//		printf("write beacon wod");
+//	}
+}
+void vTaskBeacon(void * pvParameters) {
+	uint8_t txdataW[8];
+	uint8_t txdata[19];
+	for(int i =0;i<8;i++)
 	{
+		txdataW[i]=0;
+	}
+	vTaskDelay(2000);
+	while(1){
+		/*                                               1D = 30m      */
+		/*beacon message Node Time[1] Time[2] Q	B		5			0			T			W		0			1*/
+		uint8_t txdataH[]={0x14, 0x1D, 0x00, 0x51, 0x42, 0x35, 0x30, 0x54, 0x57, 0x30, 0x31};
+
+		for(int i=0;i<8;i++){
+			txdataW[i] = beaconWod[i];
+		}
+		for (int i=0;i<11;i++)	{
+			txdata[i]=txdataH[i];
+		}
+		for (int i=0;i<8;i++){
+			txdata[i+11]=txdataW[i];
+		}
+		if(i2c_master_transaction(0,81, txdata,23,0,0,0) == E_NO_ERR) {
+			printf("Set AX.25 beacon with default callsigns");
+		}
+		else{
+			printf("set beacon fail \r\n");
+		}
+		/*beacon message*/
+	}
+}
+void vTaskwod(void * pvParameters) {
+	int dataSetNum= 0;
+	int i;
+//	int snum=0; //series number
+//	int day=0;
+	int re = 0;
+	for(int i = 0;i<232;i++){
 		wod[i]=0;
 	}
+
 	vTaskDelay(dtime);
 
-	while(c<2){
+	while(dataSetNum<2){
 		/*obc get time------------------------------------------*/
 		timestamp_t t;
 		t.tv_sec = 0;
@@ -199,12 +244,19 @@ void vTaskwod(void * pvParameters) {
 		//printf("time : %d\n",wodd.time);
 
 		//first four byte for time(little endian)
+		//wod[232]  is the whole package
 		wod[0]=t.tv_sec;
 		wod[1]=t.tv_sec>>8;
 		wod[2]=t.tv_sec>>16;
 		wod[3]=t.tv_sec>>24;
 
-	//get the 32 dataSet . dtime must be modify
+
+
+//		getWodFrame(dataSetNum);
+//		printf("--------Frame %d get--------\n",i);
+//		vTaskDelay(dtime);
+
+		//get the 32 dataSet . dtime must be modify to 1 minute, i ->32
 		for(i=1;i<=5;i++)
 		{
 			getWodFrame(i);
@@ -212,46 +264,49 @@ void vTaskwod(void * pvParameters) {
 			vTaskDelay(dtime);
 		}
 
-
-		for (int j=0;j<3;j++)
-		{
-			snum++;
-			//printf("%d", snum);
-			frame[j][0]=0;// the first two byte header is not defined yet but maybe the day
-			frame[j][1]=0;
-			frame[j][2]=snum>>8;
-			frame[j][3]=snum;
-			for(i = 0;i<98;i++){
-				frame[j][i+4]=wod[i+j*98];
-			}
+		re = wod_write(wod);
+		if(re!=-1){
+			printf("write WOD into FS ");
 		}
-		char cday[10];
-		int re = 0;
-		sprintf(cday,"%d", day); //change the day from integer to char
-		//printf(cday);
-		re = wod_write(cday,frame[0],0); //write the frame[0] into the file system
-		if (re) printf("error1");
-		else printf("Good1\n");
-		vTaskDelay(dtime);
-		re = wod_write(cday,frame[1],1);
-		if (re) printf("error2");
-		else printf("Good2\n");
-		vTaskDelay(dtime);
-		re = wod_write(cday,frame[2],1);
-		if (re) printf("error3");
-		else printf("Good3\n");
+//		for (int j=0;j<3;j++)
+//		{
+//			snum++;
+//			//printf("%d", snum);
+//			frame[j][0]=0;// the first two byte header is the day
+//			frame[j][1]=0;
+//			frame[j][2]=snum>>8;
+//			frame[j][3]=snum;
+//			for(i = 0;i<98;i++){
+//				frame[j][i+4]=wod[i+j*98];
+//			}
+//		}
+//		char cday[10];
+//		int re = 0;
+//		sprintf(cday,"%d", day); //change the day from integer to char
+//		//printf(cday);
+//		re = wod_write(cday,frame[0],0); //write the frame[0] into the file system
+//		if (re) printf("Error with frame1\n");
+//		else printf("Good with frame1\n");
+//		vTaskDelay(dtime);
+//		re = wod_write(cday,frame[1],1);
+//		if (re) printf("Error with frame2\n");
+//		else printf("Good with frame2\n");
+//		vTaskDelay(dtime);
+//		re = wod_write(cday,frame[2],1);
+//		if (re) printf("Error with frame3\n");
+//		else printf("Good with frame3\n");
+//
+//
+//		uint8_t rewod[102];
+//		for(i=0;i<102;i++)
+//		{
+//			rewod[i]=0;
+//		}
+//		for (int i =1;i<=6;i++){
+//			wod_down(0,"0",i,rewod);  //read the data from the File System, second parameter is the day.
+//			hex_dump(rewod,102);
+//		}
 
-
-		uint8_t rewod[102];
-		for(i=0;i<102;i++)
-		{
-			rewod[i]=0;
-		}
-		for (int i =1;i<=6;i++){
-			wod_down(0,"0",i,rewod);  //read the data from the FS, second parameter is the day.
-			hex_dump(rewod,102);
-		}
-
-		c++;
+		dataSetNum++;
 	}
 }

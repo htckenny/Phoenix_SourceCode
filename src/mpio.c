@@ -9,7 +9,8 @@
 #include <dev/arm/at91sam7.h>
 #include <command/command.h>
 #include "mpio.h"
-
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 static inline AT91PS_GPT io_base(int pin) {
 	switch(pin) {
 	default:
@@ -103,7 +104,49 @@ int mpio_toggle_all(struct command_context *ctx) {
 	val++;
 	return CMD_ERROR_NONE;
 }
+int mpio_toggle_one(struct command_context *ctx) {
+	unsigned int node;
+	sscanf(ctx->argv[1], "%u", &node);
 
+	static int val = 0;
+//	int i;
+//	for (i = 0; i < 7; i++) {
+		if (val % 2) {
+			printf("Set %u\r\n",node);
+			io_set(node);
+		} else {
+			printf("Clear %u\r\n", node);
+			io_clear(node);
+		}
+//	}
+	val++;
+	return CMD_ERROR_NONE;
+}
+int inms_turn_on(struct command_context *ctx){
+		int i;
+		for (i = 0; i < 7; i++)
+			io_init(i, 1);
+
+		io_set(5);
+		vTaskDelay(300);
+		io_set(1);
+		vTaskDelay(1000);
+		io_clear(5);
+		io_clear(1);
+	return CMD_ERROR_NONE;
+
+}
+int inms_turn_off(struct command_context *ctx){
+
+		io_set(6);
+		vTaskDelay(300);
+		io_set(0);
+		vTaskDelay(1000);
+		io_clear(6);
+		io_clear(0);
+	return CMD_ERROR_NONE;
+
+}
 struct command mpio_sub_commands[] = {
 	{
 		.name = "read",
@@ -121,7 +164,19 @@ struct command mpio_sub_commands[] = {
 		.name = "toggle",
 		.help = "Toggle all MPIO pins",
 		.handler = mpio_toggle_all,
-	},
+	},{
+			.name = "toggle one",
+			.help = "Toggle one MPIO pins",
+			.handler = mpio_toggle_one,
+	},{
+			.name = "inms_on",
+			.help = "turn off INMS",
+			.handler = inms_turn_on,
+		},{
+			.name = "inms_off",
+			.help = "turn off INMS",
+			.handler = inms_turn_off,
+		},
 };
 
 struct command __root_command mpio_commands[] = {

@@ -5,13 +5,12 @@
  * Copyright 2010 GomSpace ApS. All rights reserved.
  */
 
-#include <stdint.h>
-#include <stdio.h>
-#include <time.h>
+#include <util/hexdump.h>
+#include <util/timestamp.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/queue.h>
-
+#include "parameter.h"
 #include <util/console.h>
 #include <dev/spi.h>
 #include <dev/gyro.h>
@@ -27,10 +26,11 @@
 #include <csp/csp.h>
 #include <csp/csp_endian.h>
 #define E_NO_ERR -1
-#if ENABLE_RTC
-#include <util/clock.h>
-#include <dev/arm/ds1302.h>
-#endif
+
+#include "parameter.h"
+#include "subsystem.h"
+#include "Tele_function.h"
+#include <io/nanomind.h>
 //------------------------------------
 extern spi_dev_t spi_dev;
 
@@ -58,149 +58,250 @@ static spi_chip_t gyro_chip[GYRO_MAP_SIZE];
 static spi_chip_t lm70_chip[LM70_MAP_SIZE];
 //static spi_chip_t max6675_chip;
 
-static const char * name_map[LM70_MAP_SIZE] = {"A1", "A2", "A3", "A4", "A5", "A6"};
-static int gyro_map[GYRO_MAP_SIZE] = {1, 3, 5, 8, 10, 12};
-static int lm70_map[LM70_MAP_SIZE] = {2, 4, 6, 9, 11, 13};
+static const char * name_map[LM70_MAP_SIZE] = { "A1", "A2", "A3", "A4", "A5", "A6" };
+static int gyro_map[GYRO_MAP_SIZE] = { 1, 3, 5, 8, 10, 12 };
+static int lm70_map[LM70_MAP_SIZE] = { 2, 4, 6, 9, 11, 13 };
 //int max6675_cs  = 1;
-typedef struct __attribute__((packed)) {
-	uint32_t tv_sec;
-	uint32_t tv_nsec;
-} timestamp_t;
-void jumpTime(struct command_context * ctx){
 
-	timestamp_t timestamp;
-	uint32_t waitingTime;
+int jumpTime(struct command_context * ctx){
+
+	timestamp_t t;
+	t.tv_sec = 0;
+	t.tv_nsec =0 ;
+	obc_timesync(&t, 1000);
+	unsigned int waitingTime = 0;
 		/* Set time in lib-c */
 
 	if (sscanf(ctx->argv[1], "%u", &waitingTime) != 1){
 		printf("Should input some time");
 	}
-	timestamp.tv_sec+=waitingTime;
-	clock_set_time(&timestamp);
-}
-int seuvon(struct command_context * ctx){
-
-	  eps_output_set_single(2,1,0);
-		return CMD_ERROR_NONE;
-}
-int seuvoff(struct command_context * ctx){
-
-	   eps_output_set_single(2,0,0);
-	    return CMD_ERROR_NONE;
+	t.tv_sec += waitingTime;
+	obc_timesync(&t, 1000);
+	printf("\n");
+	return CMD_ERROR_NONE;
 }
 
+int jump_mode(struct command_context * ctx) {
+	int mode;
+
+	if (ctx->argc != 2)
+		return CMD_ERROR_SYNTAX;
 
 
-int seuvread(struct command_context * ctx){
+	if (sscanf(ctx->argv[1], "%u", &mode) != 1)
+		return CMD_ERROR_SYNTAX;
 
-	  uint8_t txdata[1];
-	  uint8_t val[5];
-	  txdata[0]=221;
+	mode_status_flag = (uint8_t)mode;
 
-	  if ( i2c_master_transaction(0,110,0,0,&val,5,4) == E_NO_ERR) {
-	        hex_dump(val,5);
-	  }
-	  else
-	  printf("ERROR!!  Get no reply from SEUV \r\n");
 
-	  return CMD_ERROR_NONE;
+
+	return CMD_ERROR_NONE;
 }
-int i2cread(struct command_context * ctx){
+
+int ccsds_send(struct command_context * ctx) {
+
+	uint8_t hkdata[250];
+	uint8_t txframe[246];
+    uint8_t tx_length;
+    tx_length=254;
+    for(int a =1;a<233;a++)
+    	hkdata[a]=a;
+
+    hkdata[0]=wod_sid;
+    uint8_t err;
+    err= CCSDS_GenerateTelemetryPacket(&txframe[1],&tx_length,wod_apid, 15,1, hkdata, 229);
+ printf("txlen was 254 from CCSDS = %d\n",tx_length);
+
+    if(err==ERR_SUCCESS){
+      txframe[0]= com_tx_send;
+      tx_length= tx_length+1;
+    i2c_master_transaction(0, com_tx_node, &txframe, tx_length, 0, 0, 0);
+      printf("Send CCSDS packet success\n");
+      hex_dump(&txframe, tx_length);
+    }else
+	printf("have error on generate CCSDS packet \n");
+
+	return CMD_ERROR_NONE;
+}
+
+int parawrite(struct command_context * ctx) {
+
+	para_w();
+	return CMD_ERROR_NONE;
+}
+
+int pararead(struct command_context * ctx) {
+
+	para_r();
+	printf("First Flight %d\n", (int) parameters.first_flight);
+	printf("shutdown_flag %d\n", (int) parameters.shutdown_flag);
+	printf("adcs_function %d\n", (int) parameters.adcs_function);
+	printf("inms_function %d\n", (int) parameters.inms_function);
+	printf("com_function %d\n", (int) parameters.com_function);
+	printf("seuv_function %d\n", (int) parameters.seuv_function);
+	printf("gps_function %d\n", (int) parameters.gps_function);
+	printf("wod_store_count %d\n", (int) parameters.wod_store_count);
+	printf("inms_store_count %d\n", (int) parameters.inms_store_count);
+	printf("seuv_store_count %d\n", (int) parameters.seuv_store_count);
+	printf("hk_store_count %d\n", (int) parameters.hk_store_count);
+	printf("obc_packet_sequence_count %d\n", (int) parameters.obc_packet_sequence_count);
+	printf("inms_packet_sequence_count %d\n", (int) parameters.inms_packet_sequence_count);
+	printf("seuv_sequence_count %d\n", (int) parameters.seuv_packet_sequence_count);
+	printf("wod_sequence_count %d\n", (int) parameters.wod_packet_sequence_count);
+	printf("phoenix_hk_sequence_count %d\n", (int) parameters. phoenix_hk_packet_sequence_count);
+
+	printf("vbat_recover_threshold %d\n", (int) parameters.vbat_recover_threshold);
+	printf("vbat_safe_threshold %d\n", (int) parameters.vbat_safe_threshold);
+
+	return CMD_ERROR_NONE;
+}
+
+int paradelete(struct command_context * ctx) {
+	para_d();
+	return CMD_ERROR_NONE;
+}
+int data_DUMP(struct command_context * ctx) {
+	int type;
+	if (ctx->argc != 2)
+		return CMD_ERROR_SYNTAX;
+
+
+	if (sscanf(ctx->argv[1], "%u", &type) != 1)
+		return CMD_ERROR_SYNTAX;
+
+
+	if(type==1)
+		inms_data_dump();
+    if(type==2)
+    	wod_data_dump();
+    if(type==3)
+    	 seuv_data_dump();
+    if(type==4)
+    	hk_data_dump();
+	return CMD_ERROR_NONE;
+}
+
+int alldatadelete(struct command_context * ctx) {
+
+	para_d();
+	inms_data_delete();
+	wod_delete();
+	seuv_delete();
+	hk_delete();
+	return CMD_ERROR_NONE;
+}
+
+int inmsdatadelete(struct command_context * ctx) {
+	inms_data_delete();
+	return CMD_ERROR_NONE;
+}
+int woddelete(struct command_context * ctx) {
+	wod_delete();
+	return CMD_ERROR_NONE;
+}
+int seuvdelete(struct command_context * ctx) {
+	seuv_delete();
+	return CMD_ERROR_NONE;
+}
+int hkdelete(struct command_context * ctx) {
+	hk_delete();
+	return CMD_ERROR_NONE;
+}
+
+
+int idleunlock(struct command_context * ctx) {
+	parameters.first_flight = 0;
+	return CMD_ERROR_NONE;
+}
+
+int seuvread(struct command_context * ctx) {
+
+	uint8_t val[5];
+
+	if (i2c_master_transaction(0,seuv_node, 0, 0, &val, 5, seuv_delay) == E_NO_ERR) {
+		hex_dump(&val, 5);
+	} else
+		printf("ERROR!!  Get no reply from SEUV \r\n");
+
+	return CMD_ERROR_NONE;
+}
+int i2cread(struct command_context * ctx) {
 
 	unsigned int node;
 	unsigned int rx;
 	i2c_frame_t * frame = csp_buffer_get(I2C_MTU);
-	    if (ctx->argc != 3){
-		    printf("i2c check point1 error\r\n");
-			return CMD_ERROR_SYNTAX;}
+	if (ctx->argc != 3) {
+		printf("i2c check point1 error\r\n");
+		return CMD_ERROR_SYNTAX;
+	}
 
-		if (sscanf(ctx->argv[1], "%u", &node) != 1){
-		    printf("i2c check point2 error\r\n");
-			return CMD_ERROR_SYNTAX;}
+	if (sscanf(ctx->argv[1], "%u", &node) != 1) {
+		printf("i2c check point2 error\r\n");
+		return CMD_ERROR_SYNTAX;
+	}
 
-		if (sscanf(ctx->argv[2], "%u", &rx) != 1){
-				    printf("i2c check point2 error\r\n");
-					return CMD_ERROR_SYNTAX;}
+	if (sscanf(ctx->argv[2], "%u", &rx) != 1) {
+		printf("i2c check point2 error\r\n");
+		return CMD_ERROR_SYNTAX;
+	}
 
-
-		frame->dest = node;
+	frame->dest = node;
 	//	frame->len = txlen;
-		frame->len_rx = rx;
+	frame->len_rx = rx;
 
-		if (i2c_receive(0, &frame, 4) != E_NO_ERR) {
+	if (i2c_receive(0, &frame, 4) != E_NO_ERR) {
 
-		  printf("ERROR!!  Get no reply from COM \r\n");
-		  return CMD_ERROR_SYNTAX;
-		}
-		  hex_dump(frame,10);
-		  return CMD_ERROR_NONE;
+		printf("ERROR!!  Get no reply from COM \r\n");
+		return CMD_ERROR_SYNTAX;
+	}
+	hex_dump(&frame, 10);
+	return CMD_ERROR_NONE;
 }
-int seuvwrite(struct command_context * ctx){
+int seuvwrite(struct command_context * ctx) {
 	unsigned int node;
+	if (ctx->argc != 2) {
+		return CMD_ERROR_SYNTAX;
+	}
 
-    if (ctx->argc != 2){
-	    printf("i2c check point1 error\r\n");
-		return CMD_ERROR_SYNTAX;}
+	if (sscanf(ctx->argv[1], "%u", &node) != 1) {
+		return CMD_ERROR_SYNTAX;
+	}
 
-	if (sscanf(ctx->argv[1], "%u", &node) != 1){
-	    printf("i2c check point2 error\r\n");
-		return CMD_ERROR_SYNTAX;}
+	uint8_t txdata = node;
+	unsigned int addra = 110;
 
-	 uint8_t txdata= node;
-		unsigned int addra = 110;
+	if (i2c_master_transaction(0, addra, &txdata, 1, 0, 0,seuv_delay) == E_NO_ERR) {
+		printf("configured SEUV: %x\r\n", node);
+	} else
+		printf("ERROR!!  Get no reply from COM \r\n");
 
-	  if ( i2c_master_transaction(0,addra,txdata,1,0,0,4) == E_NO_ERR) {
-		    printf("configured SEUV: %x\r\n",node);
-	  }
-	  else
-	  printf("ERROR!!  Get no reply from COM \r\n");
-
-	  return CMD_ERROR_NONE;
+	return CMD_ERROR_NONE;
 }
 
-int fstestwod(struct command_context * ctx){
+int comhk2(struct command_context * ctx) {
 
-	     uint8_t rewod[102];
-			for(int i=0;i<102;i++)
-			{
-				rewod[i]=0;
-			}
-			for (int i =1;i<=3;i++){
-				 wod_read(0,rewod);  //read the data from the FS, second parameter is the day.
-				hex_dump(rewod,102);
-			}
-			return CMD_ERROR_NONE;
+	uint8_t txdata= com_tx_hk;
+	uint8_t val;
+
+	if (i2c_master_transaction(0,com_tx_node, &txdata, 1, &val, 1,com_delay) == E_NO_ERR) {
+		hex_dump(&val, 1);
+	} else
+		printf("ERROR!!  Get no reply from COM \r\n");
+
+	return CMD_ERROR_NONE;
 }
+int comhk(struct command_context * ctx) {
 
-int comhk2(struct command_context * ctx){
+	uint8_t txdata= com_rx_hk;
+	uint8_t val[16];
 
-	 uint8_t txdata[1];
-	  txdata[0] = 65;
-	  uint8_t val[1];
+	if (i2c_master_transaction(0,com_rx_node, &txdata, 1, &val, 16,com_delay) == E_NO_ERR) {
+		hex_dump(&val, 16);
+	} else
+		printf("ERROR!!  Get no reply from COM \r\n");
 
-	  if ( i2c_master_transaction(0,81, txdata,1,&val,1,10) == E_NO_ERR) {
-	        hex_dump(val,1);
-	  }
-	  else
-	  printf("ERROR!!  Get no reply from COM \r\n");
-
-	  return CMD_ERROR_NONE;
+	return CMD_ERROR_NONE;
 }
-int comhk(struct command_context * ctx){
-
-	 uint8_t txdata[1];
-	  txdata[0] = 26;
-	  uint8_t val[16];
-
-	  if ( i2c_master_transaction(0,80, txdata,1,&val,16,10) == E_NO_ERR) {
-	        hex_dump(val,16);
-	  }
-	  else
-	  printf("ERROR!!  Get no reply from COM \r\n");
-
-	  return CMD_ERROR_NONE;
-}
-
 
 //----------------------------------------------------------
 int cmd_panels_init(struct command_context *ctx) {
@@ -223,7 +324,7 @@ int cmd_panels_init(struct command_context *ctx) {
 
 int cmd_panels_test(struct command_context *ctx) {
 
-	while(1) {
+	while (1) {
 		int i;
 		if (usart_messages_waiting(USART_CONSOLE) != 0)
 			break;
@@ -231,22 +332,25 @@ int cmd_panels_test(struct command_context *ctx) {
 		spi_chip_t * chip;
 		for (i = 0; i < GYRO_MAP_SIZE; i++) {
 			chip = &gyro_chip[i];
-			printf("\E[2KGyro %d %s Angle\t\t\t %.3f [deg]\r\n", i, name_map[i], gyro_read_angle(chip));
-			printf("\E[2KGyro %d %s Rate\t\t\t %.3f [deg/sec]\r\n", i, name_map[i], gyro_read_rate(chip));
+			printf("\E[2KGyro %d %s Angle\t\t\t %.3f [deg]\r\n", i, name_map[i],
+					gyro_read_angle(chip));
+			printf("\E[2KGyro %d %s Rate\t\t\t %.3f [deg/sec]\r\n", i,
+					name_map[i], gyro_read_rate(chip));
 		}
 
 		printf("\E[2K\r\n");
 
 		for (i = 0; i < LM70_MAP_SIZE; i++) {
 			chip = &lm70_chip[i];
-			printf("\E[2KLM70 %d %s Temp\t\t\t %.3f [C]\r\n", i, name_map[i], lm70_read_temp(chip));
+			printf("\E[2KLM70 %d %s Temp\t\t\t %.3f [C]\r\n", i, name_map[i],
+					lm70_read_temp(chip));
 		}
 
 		printf("\E[2K\r\n");
 
 		//printf("\E[2KMax6675 Temp\t\t\t %.2f [C]\r\n", max6675_read_temp(&max6675_chip));
 
-		vTaskDelay(0.30*configTICK_RATE_HZ);
+		vTaskDelay(0.30 * configTICK_RATE_HZ);
 
 		printf("\E[20A\r");
 
@@ -257,7 +361,7 @@ int cmd_panels_test(struct command_context *ctx) {
 
 int cmd_panels_test_cont(struct command_context *ctx) {
 
-	while(1) {
+	while (1) {
 		int i;
 		if (usart_messages_waiting(USART_CONSOLE) != 0)
 			break;
@@ -268,7 +372,7 @@ int cmd_panels_test_cont(struct command_context *ctx) {
 			printf(" %.4f, ", gyro_read_rate(chip));
 		}
 
-		vTaskDelay(0.10*configTICK_RATE_HZ);
+		vTaskDelay(0.10 * configTICK_RATE_HZ);
 
 		printf("\n\r");
 	}
@@ -303,7 +407,8 @@ int cmd_gyro_write_offset(struct command_context *ctx) {
 	float offset;
 
 	if (args == NULL || sscanf(args, "%f", &offset) != 1) {
-		printf("Gyro offset is %.4f [deg/sec]\r\n", gyro_read_offset(&gyro_chip[0]));
+		printf("Gyro offset is %.4f [deg/sec]\r\n",
+				gyro_read_offset(&gyro_chip[0]));
 	} else {
 		printf("Setting offset %.4f [deg/sec]\r\n", offset);
 		gyro_write_offset(&gyro_chip[0], offset);
@@ -321,7 +426,7 @@ int cmd_lm70_init(struct command_context *ctx) {
 
 int cmd_lm70_test(struct command_context *ctx) {
 
-	while(1) {
+	while (1) {
 		if (usart_messages_waiting(USART_CONSOLE) != 0)
 			break;
 
@@ -333,107 +438,48 @@ int cmd_lm70_test(struct command_context *ctx) {
 
 }
 
-struct command gyro_commands[] = {
-	{
-		.name = "setup",
-		.help = "Gyro setup",
-		.handler = cmd_gyro_setup,
-	},{
-		.name = "test",
-		.help = "Gyro test",
-		.handler = cmd_gyro_test,
-	},{
-		.name = "null",
-		.help = "Gyro autonull",
-		.handler = cmd_gyro_autonull,
-	},{
-		.name = "offset",
-		.help = "Gyro offset",
-		.handler = cmd_gyro_write_offset,
-	},
-};
+struct command gyro_commands[] = { { .name = "setup", .help = "Gyro setup",
+		.handler = cmd_gyro_setup, }, { .name = "test", .help = "Gyro test",
+		.handler = cmd_gyro_test, }, { .name = "null", .help = "Gyro autonull",
+		.handler = cmd_gyro_autonull, }, { .name = "offset", .help =
+		"Gyro offset", .handler = cmd_gyro_write_offset, }, };
 
-struct command lm70_commands[] = {
-	{
-		.name = "init",
-		.help = "LM70 setup",
-		.handler = cmd_lm70_init,
-	},{
-		.name = "test",
-		.help = "LM70 test",
-		.handler = cmd_lm70_test,
-	},
-};
+struct command lm70_commands[] = { { .name = "init", .help = "LM70 setup",
+		.handler = cmd_lm70_init, }, { .name = "test", .help = "LM70 test",
+		.handler = cmd_lm70_test, }, };
 
-struct command panels_subcommands[] = {
-	{
-		.name = "init",
-		.help = "Panels init",
-		.handler = cmd_panels_init,
-	},{
-		.name = "test",
-		.help = "Panels test",
-		.handler = cmd_panels_test,
-	},{
-		.name = "cont",
-		.help = "Panels test (cont)",
-		.handler = cmd_panels_test_cont,
-	},
-};
+struct command panels_subcommands[] = { { .name = "init", .help = "Panels init",
+		.handler = cmd_panels_init, }, { .name = "test", .help = "Panels test",
+		.handler = cmd_panels_test, }, { .name = "cont", .help =
+		"Panels test (cont)", .handler = cmd_panels_test_cont, }, };
 
 struct command __root_command panels_commands[] = {
-	{
-			    .name = "seuvon",
-			    .help = "power on seuv",
-			    .handler = seuvon,
-    },{
-    		    .name = "seuvoff",
-			    .help = "power off seuv",
-			    .handler = seuvoff,
-    },{
-			    .name = "seuvwrite",
-		    	.help = "configure SEUV",
-		    	.usage = "<node>",
-			    .handler = seuvwrite,
-    },{
-				.name = "seuvread",
-				.help = "Take data from a configured Channel",
-				.handler = seuvread,
-	},{
-			.name = "i2cread",
-			.help = "Take data from i2c Channel",
-			.usage = "<node> <rx>",
-			.handler = i2cread,
-	},{
-				.name = "fstestwod",
-				.help = "Read and print WOD data inside Flesystem ",
-				.handler = fstestwod,
-	},{
-				.name = "comhk",
-				.help = "retrive com hk data ",
-				.handler = comhk,
-	 },{
-				.name = "comhk2",
-				.help = "retrive com transmitter state ",
-				.handler = comhk2,
-	 },{
-			 	 .name = "jt",
-			 	 .help = "jump specific time",
-			 	 .handler = jumpTime,
-	 },{
-		.name = "gyro",
-		.help = "Gyro commands",
-		.chain = INIT_CHAIN(gyro_commands),
-	},{
-		.name = "lm70",
-		.help = "LM70 commands",
-		.chain = INIT_CHAIN(lm70_commands),
-	},{
-		.name = "panels",
-		.help = "Panels commands",
-		.chain = INIT_CHAIN(panels_subcommands),
-	},
-};
+		{ .name = "ccsds_send",.help = "send a ccsds packet with 1~49 content", .handler = ccsds_send, },
+		{ .name = "parawrite",.help = "write para setting in FS", .handler = parawrite, },
+		{ .name ="pararead", .help = "read on board parameter setting in FS", .handler =pararead, },
+		{ .name = "paradelete", .help = "delete parameters.bin",.handler = paradelete, }
+		,{ .name = "alldatadelete", .help = "delete all on board data.bin",.handler = alldatadelete, }
+		,{ .name = "inmsdatadelete", .help = "delete inmsdata.bin",.handler = inmsdatadelete, }
+		,{ .name = "woddelete", .help = "delete wod.bin",.handler = woddelete, }
+		,{ .name = "seuvdelete", .help = "delete seuv.bin",.handler = seuvdelete, }
+		,{ .name = "hkdelete", .help = "delete hk.bin",.handler = hkdelete, }
+		,{ .name = "jump_mode", .help = "jump_mode [mode] // 0=safe mode, 2=adcs mode,3=payload mode",.handler = jump_mode, }
+		,{ .name = "jt", .help = "jt [sec]",.handler = jumpTime, }
+		,{ .name = "data_dump", .help = "onboard data_dump [type] // 1=inms 2=wod 3=seuv 4=hk",.handler = data_DUMP, }
+		, { .name = "idleunlock", .help =
+		"skip idle 30m step", .handler = idleunlock, }, { .name = "seuvwrite",
+		.help = "configure SEUV", .usage = "<node>", .handler = seuvwrite, }, {
+		.name = "seuvread", .help = "Take data from a configured Channel",
+		.handler = seuvread, },
+		{ .name = "i2cread", .help = "Take data from i2c Channel", .usage =
+				"<node> <rx>", .handler = i2cread, }, { .name = "comhk", .help =
+				"retrive com hk data ", .handler = comhk, }, { .name = "comhk2",
+				.help = "retrive com transmitter state ", .handler = comhk2, },
+		{ .name = "gyro", .help = "Gyro commands", .chain =
+		INIT_CHAIN(gyro_commands), }, { .name = "lm70", .help = "LM70 commands",
+				.chain = INIT_CHAIN(lm70_commands), }, { .name = "panels",
+				.help = "Panels commands", .chain =
+				INIT_CHAIN(panels_subcommands), }, };
 
 void cmd_panels_setup(void) {
 	command_register(panels_commands);

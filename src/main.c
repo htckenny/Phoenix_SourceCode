@@ -47,7 +47,7 @@
 #define F_CPU				40000000
 #define F_OSC				8000000
 #define F_USART				500000
-#define F_USART_INMS	9600
+#define F_USART_INMS		9600
 
 int main(void) {
 
@@ -74,7 +74,7 @@ int main(void) {
 	clock_set_time(&timestamp);
 //	printf("2rtc = %d\n",(time_t *) &timestamp.tv_sec );
 //	; //attention
-	printf("rtc = %d\n",timestamp.tv_sec );
+//	printf("rtc = %02x\n",timestamp.tv_sec );
 #endif
 
 	/* Initialize command */
@@ -112,7 +112,7 @@ int main(void) {
 
 
 	/* I2C nodes */
-	csp_i2c_init(1, 0, 400);
+	csp_i2c_init(1, 0, 100); //400
 	csp_route_set(2, &csp_if_i2c, CSP_NODE_MAC);
 	csp_route_set(3, &csp_if_i2c, CSP_NODE_MAC);
 	csp_route_set(4, &csp_if_i2c, CSP_NODE_MAC);
@@ -149,7 +149,9 @@ int main(void) {
 	for (i = 0; i < count; i++)
 		__init_array_start[i]();
 #endif
-
+	/* ------GPIO INIT -------*/
+     	for (int i = 0; i < 7; i++)
+      		io_init(i, 1);
 	/* Start tasks */
 	xTaskCreate(debug_console, (const signed char *) "CONSOLE", 1024*4, NULL, 0, NULL);
 
@@ -161,11 +163,18 @@ int main(void) {
 	//	extern void vTaskUsartRx(void * pvParameters);
 	//	xTaskCreate(vTaskUsartRx, (const signed char*) "USART", 1024*4, NULL, 3, NULL);
 
+	 extern void vTaskinms(void * pvParameters);
+	 xTaskCreate(vTaskinms, (const signed char*) "INMS", 1024*4, NULL, 3, NULL);
+
 //	extern void vTaskinms(void * pvParameters);
 //	xTaskCreate(vTaskinms, (const signed char*) "INMS", 1024*4, NULL, 3, NULL);
 //
-//	extern void vTaskInmsReceive(void * pvParameters);
-//	xTaskCreate(vTaskInmsReceive, (const signed char*) "INMSR", 1024*4, NULL, 3, NULL);
+//	extern void vTaskinms(void * pvParameters);
+//	xTaskCreate(vTaskinms, (const signed char*) "INMS", 1024*4, NULL, 3, NULL);
+//
+	// extern void vTaskInmsReceive(void * pvParameters);
+	// xTaskCreate(vTaskInmsReceive, (const signed char*) "INMSR", 1024*4, NULL, 3, &inms_task_receive);
+
 //	extern void vTaskwod(void * pvParameters);
 //	xTaskCreate(vTaskwod, (const signed char*) "WOD", 1024*4, NULL, 2, NULL);
 	//extern void vTimer(void * pvParameters);
@@ -178,7 +187,7 @@ int main(void) {
 //	extern void vTaskInitBooting(void * pvParameters);
 //		xTaskCreate(vTaskInitBooting, (const signed char*) "TIMER", 1024*4, NULL, 2, NULL);
 //		extern void RTOS2(void * pvParameters);
-//		xTaskCreate(RTOS2, (const signed char*) "Test2", 1024*4, NULL, 3, &test2 );
+//		xTaskCreate(RTOS2, (const signed char*) "Test2", 1024*4, NULL, 3, &test2);
 //
 //	 extern void vTaskinms(void * pvParameters);
 //	 xTaskCreate(vTaskinms, (const signed char *) "INMS", 1024*4, NULL, 2, NULL);

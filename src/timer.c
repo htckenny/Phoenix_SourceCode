@@ -4,42 +4,64 @@
 #include <dev/cpu.h>
 #include <util/delay.h>
 #include "parameter.h"
+#include <io/nanomind.h>
+#include <csp/csp_endian.h>
+#include <dev/i2c.h>
+#include "Tele_function.h"
+#include "subsystem.h"
+#include <string.h>
+#include <time.h>
 
 
-void timesyn(){
-	static timestamp_t t;
-	t.tv_sec = 0;
-	t.tv_nsec = 0;
-	obc_timesync(&t, 1000);
-	virtual_clock = t.tv_sec;
-	printf("OBC time syn: %d \r\n",virtual_clock);
+void gps_timesyn(){
+	uint8_t rxbuf[6];
+    uint8_t txbuf=Raw_GPS_Time;
+    timestamp_t t;
+    time_t tt;
+
+   if( i2c_master_transaction(0, adcs_node,&txbuf,1,&rxbuf,6,adcs_delay)==E_NO_ERR){
+
+	   t.tv_sec = 0;
+	   	t.tv_nsec = 0;
+	   	memcpy(&t.tv_sec,&rxbuf[2],4);
+	   	t.tv_sec=csp_ntoh32(t.tv_sec);
+	   	obc_timesync(&t, 1000);
+
+	   	tt = t.tv_sec + 946684800;
+	   	printf("OBC time Sync with GPS to : %s\r\n", ctime(&tt));
+
+   }else
+	   printf("Sync time with GPS Fail");
+
 }
 
-void Clock_Task(void * pvParameters) {
-	printf("Clock Task activated \r\n");
-	int time_counter=0;
-	int gps_counter=0;
-	portTickType xLastWakeTime;
-	const portTickType xFrequency = 1000;
+void init_time(){
+	time_t tt;
+	timestamp_t t;
 
-	timesyn();
+	t.tv_sec  = 473385600;// 473385600 = to 2015/1/1
+	t.tv_nsec = 0;
+
+
+	obc_timesync(&t, 6000);
+
+	/*-------------------------------------*/
+	tt = t.tv_sec + 946684800;
+	printf("Set OBC time to: %s\r\n", ctime(&tt));
+}
+
+
+
+void Clock_Task(void * pvParameters) {
+
+	if(parameters.first_flight == 1)
+	   init_time();
 
 	while(1){
-		xLastWakeTime = xTaskGetTickCount();
-		virtual_clock++;
-		if(time_counter==0)
-			timesyn();
-	/*	if(gps_counter==0)
-	      gpstimesyn();              */
-
-		time_counter++;
-		gps_counter++;
-		if(time_counter==60)
-			time_counter=0;
-
-		if(gps_counter==7200)
-			gps_counter=0;
-		// Wait for the next cycle.
-		vTaskDelayUntil( &xLastWakeTime, xFrequency );
+      vTaskDelay(600000);
+	  gps_timesyn();
 	}
+
+	/** End of Task, Should Never Reach This */
+	vTaskDelete(NULL);
 }

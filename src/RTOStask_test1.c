@@ -16,7 +16,7 @@ void RTOS1(void * pvParameters) {
 		vTaskDelay(2000);
 	//	printf("Resume RTOS2 \n");
 		vTaskResume(test2);
-
+		vTaskDelete(test2);
 	                   }
 }
 

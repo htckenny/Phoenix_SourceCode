@@ -15,6 +15,8 @@ xTaskHandle adcs_task;
 xTaskHandle seuv_task;
 xTaskHandle hk_task;
 xTaskHandle inms_task_receive;
+xTaskHandle inms_task_current;
+xTaskHandle inms_task_error;
 xTaskHandle inms_task;
 
 uint8_t mode_status_flag;

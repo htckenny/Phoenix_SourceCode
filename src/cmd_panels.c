@@ -30,6 +30,7 @@
 #include "parameter.h"
 #include "subsystem.h"
 #include "Tele_function.h"
+#include "I2C_GPIO.h"
 #include <io/nanomind.h>
 //------------------------------------
 extern spi_dev_t spi_dev;
@@ -62,7 +63,26 @@ static const char * name_map[LM70_MAP_SIZE] = { "A1", "A2", "A3", "A4", "A5", "A
 static int gyro_map[GYRO_MAP_SIZE] = { 1, 3, 5, 8, 10, 12 };
 static int lm70_map[LM70_MAP_SIZE] = { 2, 4, 6, 9, 11, 13 };
 //int max6675_cs  = 1;
-
+int adcs_i2c(struct command_context * ctx){
+	i2c_mpio_init();
+	unsigned int rxnum = 0;
+	unsigned int reg1;
+	unsigned int reg2;
+	if (sscanf(ctx->argv[1], "%u", &rxnum) != 1){
+		printf("Should input some rx number");
+	}
+	if (sscanf(ctx->argv[2], "%u", &reg1) != 1){
+		printf("Should input reg1");
+	}
+	if (sscanf(ctx->argv[3], "%u", &reg2 )!= 1){
+		printf("Should input reg2");
+	}
+	printf("%d\n",rxnum );
+	printf("%u\n", reg1);
+	printf("%u\n", reg2);
+	send_i2c_adcs(reg1,reg2,rxnum);
+	return CMD_ERROR_NONE;
+}
 int jumpTime(struct command_context * ctx){
 
 	timestamp_t t;
@@ -465,6 +485,7 @@ struct command __root_command panels_commands[] = {
 		,{ .name = "hkdelete", .help = "delete hk.bin",.handler = hkdelete, }
 		,{ .name = "jump_mode", .help = "jump_mode [mode] // 0=safe mode, 2=adcs mode,3=payload mode",.handler = jump_mode, }
 		,{ .name = "jt", .help = "jt [sec]",.handler = jumpTime, }
+		,{ .name = "ai2c", .help = "ai2c [par] [par] [rxnum]",.handler = adcs_i2c, }
 		,{ .name = "data_dump", .help = "onboard data_dump [type] // 1=inms 2=wod 3=seuv 4=hk",.handler = data_DUMP, }
 		, { .name = "idleunlock", .help =
 		"skip idle 30m step", .handler = idleunlock, }, { .name = "seuvwrite",

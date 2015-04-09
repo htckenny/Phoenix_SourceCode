@@ -1,99 +1,86 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-#include <freertos/semphr.h>
-#include <freertos/queue.h>
-typedef xQueueHandle xSemaphoreHandle;
-#include "mode_control.h"
+#include "parameter.h"
+#include "subsystem.h"
+  extern void Init_Task(void * pvParameters);
+  extern void ADCS_Task(void * pvParameters);
+  extern void HK_Task(void * pvParameters);
+  extern void SolarEUV_Task(void * pvParameters);
+  extern void vTaskInmsReceive(void * pvParameters);
+  extern void vTaskinms(void * pvParameters);
 
-xQueueHandle wod_flag;
-xQueueHandle hk_flag;
-xQueueHandle inms_flag;
-static int on=1;
-static int off =0;
+void Enter_Safe_Mode(int last_mode){
 
-int task_on(int type){
-	if(type ==1){
-		if(wod_flag != 0){
-		 if(! xQueueSend( wod_flag, &on ,500 ))
-		   printf("Fail to send queue to WOD\n");
-		 else return 1;
-		}
-		else
-			wod_flag = xQueueCreate( 1, sizeof( int ) );
+	if(last_mode==1){
+	vTaskDelete(init_task);
+    power_control(1,OFF);
+    power_control(2,OFF);
+	}
+if(last_mode==2)
+	vTaskDelete(adcs_task);
+    vTaskDelete(hk_task);
+    power_control(1,OFF);
+    power_control(2,OFF);
 
-	}else if(type==2){
-		if(hk_flag != 0){
-		 if(! xQueueSend( hk_flag, &on ,500 ))
-		   printf("Fail to send queue to hk\n");
-		 else return 1;
-		}
-		else
-			hk_flag = xQueueCreate( 1, sizeof( int ) );
+if(last_mode==3){
+	vTaskDelete(adcs_task);
+    vTaskDelete(hk_task);
+	if(parameters.seuv_function==1)
+    vTaskDelete(seuv_task);
 
-	}else if(type==3){
-		if(inms_flag != 0){
-		 if(! xQueueSend( inms_flag, &on ,500 ))
-		   printf("Fail to send queue to INMS\n");
-		 else return 1;
-		}
-		else
-			inms_flag = xQueueCreate( 1, sizeof( int ) );
 
-	}else return -1;
+	if(parameters.inms_function==1){
+	vTaskDelete(inms_task);
+	vTaskDelete(inms_task_receive);
+	}
 
-	return -1;
-
+	power_OFF_ALL();
 }
-int task_off(int type){
-	if(type ==1){
-		if(wod_flag != 0){
-		 if(! xQueueSend( wod_flag, &off ,500 ))
-		   printf("Fail to send queue to WOD\n");
-		 else return 1;
-		}
-		else
-			wod_flag = xQueueCreate( 1, sizeof( int ) );
-
-	}else if(type==2){
-		if(hk_flag != 0){
-		 if(! xQueueSend( hk_flag, &off ,500 ))
-		   printf("Fail to send queue to hk\n");
-		 else return 1;
-		}
-		else
-			hk_flag = xQueueCreate( 1, sizeof( int ) );
-
-	}else if(type==3){
-		if(inms_flag != 0){
-		 if(! xQueueSend( inms_flag, &off ,500 ))
-		   printf("Fail to send queue to INMS\n");
-		 else return 1;
-		}
-		else
-			inms_flag = xQueueCreate( 1, sizeof( int ) );
-
-	}else return -1;
-
-	return -1;
-
 }
 
 
 void mode_control(void * pvParameters) {
-
-	wod_flag = xQueueCreate( 1, sizeof( int ) );
-	hk_flag = xQueueCreate( 1, sizeof( int ) );
-	inms_flag = xQueueCreate( 1, sizeof( int ) );
+  uint8_t lastmode=1;
+  power_OFF_ALL();
+  vTaskDelay(2000);
+  mode_status_flag=lastmode;
+  printf("-----------------------Enter INIT Mode----------------------------\n");
+  xTaskCreate(Init_Task, (const signed char *) "Init_Task", 1024*4, NULL, 2,&init_task);
 
 	while(1){
-		vTaskDelay(10000);
-		task_on(1);
-		vTaskDelay(10000);
-		task_off(1);
 
+		if(mode_status_flag!=lastmode){  // Mode change detected!!!
 
+           if(mode_status_flag==2){   // if wants to Enter ADCS mode,should only from init mode.
+        	   lastmode=mode_status_flag;
+        	   printf("---------------------Enter ADCS Mode----------------------\n");
+        		printf(" Powering On ADCS & GPS, wait for 10s \n");
+        	    power_control(1,ON);
+        	    power_control(2,ON);
+        		vTaskDelay(10000);
+        	   xTaskCreate(ADCS_Task, (const signed char * ) "ADCS_Task", 1024 * 4, NULL,2, &adcs_task);
+        	   xTaskCreate(HK_Task, (const signed char * ) "HK_Task", 1024 * 4, NULL,2, &hk_task);
+           }else if(mode_status_flag==3){ //if wants to enter Payload Mode.
+        	   lastmode=mode_status_flag;
+        	   printf("-------------------Enter Payload Mode----------------------\n");
+
+        	   if(parameters.seuv_function==1)
+        	   xTaskCreate(SolarEUV_Task, (const signed char * ) "SEUV_Task", 1024 * 4, NULL,3, &seuv_task);
+
+    //    	   if(parameters.inms_function==1){
+    //           xTaskCreate(vTaskInmsReceive, (const signed char * ) "InmsReceive_Task", 1024 * 4, NULL,2, &inms_task_receive);
+    //           xTaskCreate(vTaskinms, (const signed char * ) "inms_Task", 1024 * 4, NULL,2, &inms_task);
+    //           }
+           }
+           else if(mode_status_flag==0){ //if wants to enter  SafeMode.
+        	   printf("Enter Safe Mode\n");
+        	   Enter_Safe_Mode(lastmode);
+        	   lastmode=mode_status_flag;
+           }
+
+		}
+		vTaskDelay(1000);
 	}
-
-
-
+	/** End this Task  ,Should Never Reach This Line*/
+	vTaskDelete(NULL);
 }

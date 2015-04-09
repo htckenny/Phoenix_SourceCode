@@ -163,9 +163,15 @@ int main(void) {
 	//	extern void vTaskUsartRx(void * pvParameters);
 	//	xTaskCreate(vTaskUsartRx, (const signed char*) "USART", 1024*4, NULL, 3, NULL);
 
-	 extern void vTaskinms(void * pvParameters);
-	 xTaskCreate(vTaskinms, (const signed char*) "INMS", 1024*4, NULL, 3, NULL);
-
+	 // extern void vTaskinms(void * pvParameters);
+	 // xTaskCreate(vTaskinms, (const signed char*) "INMS", 1024*4, NULL, 3, &inms_task);
+	 // extern void vTaskInmsCurrentMonitor(void * pvParameters);
+	 // xTaskCreate(vTaskInmsCurrentMonitor, (const signed char*) "INMS_Current", 1024*4, NULL, 3, NULL);
+	 // extern void vTaskInmsErrorHandle(void * pvParameters);
+	 // xTaskCreate(vTaskInmsErrorHandle, (const signed char*) "INMS_ERROR", 1024*4, NULL, 3, NULL);
+	// extern void ADCS_I2C(void * pvParameters);
+	// xTaskCreate(ADCS_I2C, (const signed char*) "ADCS_I2C", 1024*4, NULL, 0, NULL);
+ 
 //	extern void vTaskinms(void * pvParameters);
 //	xTaskCreate(vTaskinms, (const signed char*) "INMS", 1024*4, NULL, 3, NULL);
 //

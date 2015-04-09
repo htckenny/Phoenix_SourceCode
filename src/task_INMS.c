@@ -1,9 +1,11 @@
 /*
  * task_INMS.c
  *
- *  Created on: 2014/11/20
+ *  Created on: 	2014/10/06
+ *  Last updated: 	2015/04/09
  *      Author: Kenny Huang
  */
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
@@ -41,15 +43,22 @@ typedef struct __attribute__((packed)) {
 	int tt_hour, tt_min, tt_sec, tt_seq;
 } timetable;
 int rec[scriptNum];
-/*initializing for identifying which script is running*/
-int scriptRunning ;
-/*for the detection of the OBC_SU_ERRr*/
+/*
+	initializing for identifying which script is running
+ */
+int scriptRunning =0;
+/*
+	for the detection of the OBC_SU_ERR
+ */
 int obcSuErrFlag = 0;
 int maxlength = 0;
-uint32_t epoch_sec[scriptNum];	             	//the seconds from UTC epoch time 2000/01/01 00:00:00 Am
+/*
+	the seconds from UTC epoch time 2000/01/01 00:00:00 Am
+ */
+uint32_t epoch_sec[scriptNum];	             	
 uint32_t refsec[scriptNum] ;
 extern void vTaskInmsReceive(void * pvParameters);
-
+extern void vTaskinms(void * pvParameters);
 /**
  * This function is used for sorting the script time
  * @param
@@ -101,6 +110,9 @@ void inmssort(uint32_t *sec){
 	for (int i =0;i<scriptNum;i++){
 		refsec[i]=0;
 	}
+	for(int i = 0;i<scriptNum;i++){
+		printf("sec[%d] = %" PRIu32 "\n",i,sec[i]);
+	}
 	printf("t.tv_sec = %" PRIu32 "\n",t.tv_sec);
 	for(int i = 0;i<scriptNum;i++){
 		refsec[i] = (sec[i]-t.tv_sec);
@@ -130,72 +142,94 @@ uint32_t timeGet (int clockType){
 	timestamp_t t;
 	t.tv_sec = 0;
 	t.tv_nsec = 0;
-	obc_timesync(&t, 6000);
+	obc_timesync(&t, 1000);
 
 	onBoardTime = (clockType == 0) ?( t.tv_sec) :( t.tv_sec % 86400);
 	return onBoardTime;
 }
-//void vTaskScriptDetermine(void *pvParameters){
-//	//int rec[scriptNum];
-//	vTaskDelay(5000);
-//	uint32_t timeRef = timeGet(0);
-//	while(1){
-//		if(timeRef==secDetermine-30){
-//			scriptRunning =
-//		}
-//	}
-//	scriptRunning=rec[0];
-//}
+
 int inmsJumpScriptCheck (int currentScript){
-		/*After finish each command, perform this check to see if the next script is coming */
-		uint32_t timeRef ;
-		timeRef= timeGet(0);
-		currentScript++;
-		if(timeRef > epoch_sec[rec[currentScript]]-30){
-			return 1;
-		}
-		else
-			return 0;
+	/*After finish each command, perform this check to see if the next script is coming */
+	uint32_t timeRef ;
+	timeRef= timeGet(0);
+	currentScript++;
+	// printf("timeref = %d\n",timeRef );
+	printf("timeref =  %" PRIu32 "\n",timeRef);
+	printf("epoch =  %" PRIu32 "\n",epoch_sec[rec[currentScript]]-30);
+	printf("\E[2A\r");
+	// printf("\n");
+	if(timeRef > epoch_sec[rec[currentScript]]-30){
+		return 1;
+	}
+	else
+		return 0;
 }
+/**
+ * This is the task for inms monitor, if the over-current condition exist, 
+ * it will send error flag to INMS error handler.
+ * 
+ */
 void vTaskInmsCurrentMonitor(void * pvParameters){
 	int currentValue_5	=	0;
 	int currentValue_33	=	0;
 	/**
-	 * should setup a value
+	 * INMS_ICD issue 10
+	 * The nominal current for +5V and +3V3 voltage rails are:
+	 *  +5V : 140mA (168 mA peak during SU_SCI)
+	 *  +3V3: 15mA
 	 */
-	int overCurrent_5 	= 	100;
-	int overCurrent_33 	= 	50;
+	int overCurrent_5 	= 	300;	/* mA */
+	int overCurrent_33 	= 	50;	/* mA */
 
-	uint8_t Current_5V	=	0xB0;
-	uint8_t Current_33V	=	0x90;
-	char uchar5[4];
-	char uchar33[4];
+	uint8_t Current_5V_reg	=	0xB0;
+	uint8_t Current_33V_reg	=	0x90;
+
+	uint8_t uchar5[4];
+	uint8_t uchar33[4];
+
 	while(1){
-		//Get current sensor data from ADC
-		/*INMS overCurrent Condition Detected*/
-		if(i2c_master_transaction(0,109, &Current_5V,1,&uchar5,4,2) == E_NO_ERR){
-			printf("Get 5V Current information");
+		/*
+			Get current sensor data from ADC
+		 */
+		if(i2c_master_transaction(0,109, &Current_5V_reg,1,&uchar5,4,2) == E_NO_ERR){
+			// printf("Get 5V Current information");
 		}
-		if(i2c_master_transaction(0,109, &Current_33V,1,&uchar33,4,2) == E_NO_ERR){
-			printf("Get 3.3V Current information");
+		if(i2c_master_transaction(0,109, &Current_33V_reg,1,&uchar33,4,2) == E_NO_ERR){
+			// printf("Get 3.3V Current information");
 		}
-		currentValue_5 	=	(atoi(uchar5)*1)/(0.47/2*20);
-		currentValue_33 =	(atoi(uchar33)*1)/(6.8/2*20);
+	    /**
+	     * These formula is calculated depends on the electrical circuit
+	     */
+		currentValue_5 	= ((uchar5[0]<<8) + (uchar5[1]))/(0.47/2*20);
+		currentValue_33 = ((uchar33[0]<<8) + (uchar33[1]))/(6.8/2*20);
+
+		// printf("Current_5V: %d mA\n",currentValue_5);
+		// printf("Current_3.3V: %d mA\n",currentValue_33);
 
 		if(currentValue_5 >= overCurrent_5){
 			obcSuErrFlag = 4;
+			printf("Over-current Condition Detected, 5V: %d mA\n",currentValue_5);
 		}
 		if(currentValue_33 >= overCurrent_33){
 			obcSuErrFlag = 4;
+			printf("Over-current Condition Detected, 3V: %d mA\n",currentValue_33);
 		}
 		vTaskDelay(5000);
 	}
 }
+
 void vTaskInmsErrorHandle(void * pvParameters){
+	vTaskDelay(5000);
 	uint8_t rsp_err_code=0;
 	uint8_t seq_cnt=0;
 	uint8_t obcerrpacket[174];
-	extern int len[scriptNum];
+	int len[scriptNum];
+	uint8_t ucharAdcs[22];
+	uint8_t txbuf=0x22; 			//defined by ADCS interface doc
+	uint8_t errPacketTotal [174+22];		//response packet is FIXED 174 BYTES+ADCS 22 BYTES
+	for (int i =0;i<22;i++){
+		ucharAdcs[i]=0xFF;
+	}
 	for(int i=0;i<scriptNum;i++){
 		printf("script %d: ",i);
 		len[i]=inms_script_length(i);
@@ -203,22 +237,26 @@ void vTaskInmsErrorHandle(void * pvParameters){
 			maxlength = len[i];
 		}
 	}
-//	uint8_t script[scriptNum][maxlength];
-	uint8_t *script[scriptNum];
-	for (int i = 0; i < scriptNum; i++) {
-		script[i] = (uint8_t *)malloc(sizeof(int) * len[i]);
-	}
+	uint8_t script[scriptNum][maxlength];    
+	// uint8_t *script[scriptNum];
+	// for (int i = 0; i < scriptNum; i++) {
+	// 	script[i] = (uint8_t *)malloc(sizeof(int) * len[i]);
+	// }
 	for(int i=0;i<scriptNum;i++){
 		inms_script_read(i,len[i],&script[i]);
+		// printf("num = %d\n", i);
 	}
+	xTaskCreate( vTaskinms, (const signed char*) "INMS", 1024*4, NULL, 3, &inms_task);
 	while(1){
+		// printf("obcSuErrFlag = %d\n", obcSuErrFlag);
 		switch(obcSuErrFlag)  {
 			case 0:		//No error
 				rsp_err_code = 0x00;
-				power_control(4,OFF);
+				// power_control(4,OFF);
 				break;
 			case 1:		//INMS packet time-out error
 				rsp_err_code = 0xf0;
+				// power_control(4,OFF);
 				power_control(4,OFF);
 				break;
 			case 2:		//INMS packet length error detected
@@ -250,19 +288,21 @@ void vTaskInmsErrorHandle(void * pvParameters){
 			default:
 				break;
 		}
-
 		if (rsp_err_code!=0){
+			if(i2c_master_transaction(0,18, &txbuf,1,&ucharAdcs,22,2) == E_NO_ERR){
+				printf("Get Time, Attitude, Position from ADCS");
+			}
 			obcerrpacket[0] = 0xfa;
 			obcerrpacket[1] = seq_cnt; //not sure what is it
-	//		scriptRunning
 			obcerrpacket[2] = rsp_err_code;
 			obcerrpacket[3] = script[scriptRunning][len[scriptRunning]-2];
 			obcerrpacket[4] = script[scriptRunning][len[scriptRunning]-1];
 			for(int i=5;i<5+10;i++){
-				obcerrpacket[5] = script[scriptRunning][i-3];
+				obcerrpacket[i] = script[scriptRunning][i-3];
 			}
 			int jflag = 15;
 			int sflag;
+			// printf("debug4\n");
 			for (int i=0;i<7;i++){
 				obcerrpacket[jflag] = script[i][len[i]-2];
 				obcerrpacket[jflag+1] = script[i][len[i]-1];
@@ -272,12 +312,29 @@ void vTaskInmsErrorHandle(void * pvParameters){
 				}
 				jflag = jflag+12;
 			}
-			 inms_data_write(obcerrpacket);
-			 vTaskDelay(60*1000);  //ICD p50  wait 60 seconds
+			printf("obcErrorPacket: \n");
+			hex_dump(obcerrpacket,174);
+			
+			for (int i=0;i<22;i++){
+				errPacketTotal[i] = ucharAdcs[i];
+			}
+			for (int i=22;i<174+22;i++){
+				errPacketTotal[i] = obcerrpacket[i-22];
+			}
+			// hex_dump(errPacketTotal,196);
+			//inms_data_write(errPacketTotal);
+			vTaskSuspend(inms_task);
+			printf("suspend\n");
+			vTaskDelay(60*1000);  //ICD p50  wait 60 seconds
 			 /* turn on INMS */
-			power_control(4,OFF);
+			vTaskResume(inms_task);
+			// power_control(4,ON);
 			 // to next Times-Table
 			 obcSuErrFlag=0;
+			 if (seq_cnt == 255)
+			 	seq_cnt=0;
+			 else
+			 	seq_cnt++;
 		}
 		vTaskDelay(1000);
 	}
@@ -302,7 +359,7 @@ void vTaskInmsReceive(void * pvParameters){
 		ucharTotal[k]=0;
 	}
 	portTickType xLastWakeTime;
-	const portTickType xFrequency = 2000;
+	const portTickType xFrequency = 1500;
 
 	while(1){
 		/*response_pkt*/
@@ -345,20 +402,24 @@ void vTaskInmsReceive(void * pvParameters){
 					ucharTotal[i] = usart_getc(2);
 				}
 			}
+			
 			hex_dump(ucharTotal,numReceive+22);
+			// if(ucharTotal[22]==0xBB); 	//SU_ERR detected!
+			// 	obcSuErrFlag = 5;
 			//inms_data_write((uint8_t *)ucharTotal);
-			 numReceive=0;
+			numReceive=0;
 		/* ---------------------    */
-			 receiveFlag = 0;
+			receiveFlag = 0;
 		}
 		vTaskDelayUntil( &xLastWakeTime, xFrequency );
 	}
 }
 void vTaskinms(void * pvParameters) {
-	vTaskDelay(7000);
+	printf("Start INMS task......\n");
+	vTaskDelay(5000);
 	while(1){
 
-		int len[scriptNum];											//the length of each script
+		int len[scriptNum];	//the length of each script
 		for (int i=0;i<scriptNum;i++){
 			epoch_sec[i]=0;
 		}
@@ -387,7 +448,6 @@ void vTaskinms(void * pvParameters) {
 			}
 			else{
 				printf("No. %d script XSUM through Fletcher-16 [FAIL]\n",i);
-				//should generate error report ----------------------------------------------------------------------------------------------------
 				obcSuErrFlag = 6;
 			}
 		}
@@ -417,7 +477,6 @@ void vTaskinms(void * pvParameters) {
 			printf("[%d] => %d\n",i,rec[i]);
 		}
 
-
 		vTaskDelay(2000);
 
 		/* for temporary setting,  now only have idle0.bin, idle1.bin*/
@@ -434,7 +493,7 @@ void vTaskinms(void * pvParameters) {
 			/*Initialize*/
 			int flag = 0;		//record which byte is running now
 			int ttflag=0;		//times_table flag
-			timetable timetable_t[20]; 		//(option) Use pointer
+			timetable timetable_t[80]; 		//(option) Use pointer
 			flag = 15;
 			/*Mark an IDLE-SLOT script buffer as the RUNNING-SCRIPT*/
 			scriptRunning =  rec[i];	//for the need to jump to the next script
@@ -483,10 +542,14 @@ void vTaskinms(void * pvParameters) {
 				flag ++;
 				ttflag++;
 				printf("flag = %d, ttflag = %d\n", flag,ttflag);
+				if(flag>=1000)
+					break;
 			}
 			flag++;
 			ttflag--;
+			
 			int ttflagMax = ttflag;
+			printf("ttflagMax = %d\n",ttflagMax );
 			printf("[-------------STEP #5 : Checking the correctness of the sequence-------------]\n");
 			
 			/*Check if the first sequence is S1 [Req-INMS-I-228]*/
@@ -495,7 +558,7 @@ void vTaskinms(void * pvParameters) {
 			}
 			else{
 				printf("The first sequence is not S1, ERROR! \n");
-				//should return error code .
+				obcSuErrFlag=5;
 			}
 			/*
 				Check if the Script sequence slots be used sequentially [Req-INMS-I-229]
@@ -508,7 +571,7 @@ void vTaskinms(void * pvParameters) {
 				}
 				else{
 					printf("The sequence slots are not used sequentially, ERROR! \n");
-					//should return error code .
+					obcSuErrFlag=5;
 				}
 			}
 			printf("[-------------STEP #6 :Setting End of time flag-------------]\n");
@@ -541,11 +604,17 @@ void vTaskinms(void * pvParameters) {
 			int seqcount=0;
 			
 			while(1){
-				if(inmsJumpScriptCheck(i))
+				// printf("jump = %d\n",inmsJumpScriptCheck(i));
+				if(inmsJumpScriptCheck(i)){		//need test
+					if(i==0)
+						i--;
 					break;
-				//printf("virtual clock = %d\n",virtual_clock);  //-----------------------------------------------------need  test--------------------------------------------//
+				} 
+					
+				//printf("virtual clock = %d\n",virtual_clock);  //-----need  test------//
 				if(seqcount > ttflagMax){
-					break;
+					ttflag =0;
+					// break;
 				}
 				vTaskDelay(1000);
 				refTime = timeGet(1);  //get the small clock time
@@ -555,7 +624,7 @@ void vTaskinms(void * pvParameters) {
 					printf("%" PRIu32 " -- %" PRIu32 "\n",refTime,tTable_24);
 					printf("\E[1A\r");
 				}
-				if(refTime == tTable_24){
+				if((refTime  ==  tTable_24 )||((refTime -1 )==  tTable_24 )  ){
 					 printTime=0;
 					if(timetable_t[ttflag].tt_seq == 1){
 						flag =eotflag[0];
@@ -681,11 +750,15 @@ void vTaskinms(void * pvParameters) {
 							delayTimeTarget = delayTimeNow +script[rec[i]][flag+1]*60+script[rec[i]][flag];
 						}
 						tempTime = delayTimeNow;
+						portTickType xLastWakeTime;
+						const portTickType xFrequency = 1000;
+
 						while(delayTimeTarget != delayTimeNow){
+							xLastWakeTime = xTaskGetTickCount();
 							printf("%d-----------%d\n",delayTimeNow-tempTime,delayTimeTarget-tempTime);
 							printf("\E[1A\r");
-							delayTimeNow=timeGet(1); //change?
-							vTaskDelay(1000);
+							delayTimeNow = delayTimeNow+1;
+							vTaskDelayUntil( &xLastWakeTime, xFrequency );
 						}
 						/*delay*/
 						flag = flag +leng+4;

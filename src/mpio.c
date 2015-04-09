@@ -165,7 +165,7 @@ struct command mpio_sub_commands[] = {
 		.help = "Toggle all MPIO pins",
 		.handler = mpio_toggle_all,
 	},{
-			.name = "toggle one",
+			.name = "toggle_one",
 			.help = "Toggle one MPIO pins",
 			.handler = mpio_toggle_one,
 	},{

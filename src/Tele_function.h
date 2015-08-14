@@ -8,24 +8,28 @@
 #ifndef FUNCTION_H_
 #define FUNCTION_H_
 
+
 uint8_t CCSDS_GenerateTelemetryPacket(uint8_t* telemetryBuffer,uint8_t* telemetryBufferSize, uint16_t apid, uint8_t serviceType,uint8_t serviceSubtype, uint8_t* sourceData, uint8_t sourceDataLength);
 uint8_t sendTelecommandReport_Success(uint8_t* telecommand, uint8_t reportType);
 uint8_t sendTelecommandReport_Failure(uint8_t* telecommand, uint8_t reportType,uint8_t err);
-void decodeCCSDS_Command(uint8_t * telecommand);
-
-uint8_t SendPacketWithCCSDS_AX25(void * hkBuffer,uint8_t hkBufferLength,uint8_t sid,uint8_t apid,uint8_t type,uint8_t subTypes);
+void decodeCCSDS_Command(uint8_t * telecommand, uint8_t packet_length);
 uint8_t SendDataWithCCSDS_AX25(uint8_t datatype,uint8_t* data);
-
+uint8_t SendPacketWithCCSDS_AX25(void * hkBuffer,uint8_t hkBufferLength,uint8_t apid,uint8_t type,uint8_t subTypes);
+int tx_mode(uint8_t mode);
 void set_Call_Sign(int SSID);
+int set_tx_rate(uint8_t mode);
 
-/*Type 3 System Configuration Telecommand Table*/
-#define Enable_Task_Execution 5
-#define Disable_Task_Execution 6
 
-#define DT0200 8
-#define ShutdownTransmitter 9
-#define ResumeTransmitter 10
-#define HKStateReport 25
+void decodeService3(uint8_t subType, uint8_t*telecommand);
+void decodeService8(uint8_t subType, uint8_t*telecommand);
+void decodeService11(uint8_t subType, uint8_t*telecommand);
+//void decodeService13(uint8_t subType, uint8_t*telecommand);
+void decodeService15(uint8_t subType, uint8_t*telecommand);
+void decodeService129(uint8_t subType, uint8_t*telecommand);
+//void decodeService131(uint8_t subType, uint8_t*telecommand);
+void decodeService132(uint8_t subType, uint8_t*telecommand);
+
+
 
 /*Type 129 ADCS Telecommand Table*/
 #define Reset 1

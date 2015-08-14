@@ -29,5 +29,11 @@
 #define _CRC16_H_
 
 unsigned short crc16_ccitt(const void *buf, int len);
+unsigned short crc16(unsigned char* data_p, unsigned char length);
+unsigned short crc16_update(unsigned short crc,unsigned char a);
+unsigned short crc_ccitt_update (unsigned short crc, unsigned char data);
 
+unsigned int crc(unsigned char Data,unsigned int Syndrome);
+unsigned int crc_opt (unsigned char D, unsigned int Chk,unsigned int table[]);
+void InitLtbl (unsigned int table [ ]);
 #endif /* _CRC16_H_ */

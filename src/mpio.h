@@ -7,7 +7,8 @@
 
 #ifndef IO_H_
 #define IO_H_
-
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #include <dev/arm/at91sam7.h>
 
 #define IO_PIN_47			0		// T0TIOA0

@@ -16,156 +16,194 @@
 #include "mpio.h"
 #include <csp/csp_endian.h>
 #include <csp/csp.h>
-void power_OFF_ALL(){
+#include "fs.h"
+#include <dev/arm/ds1302.h>
 
+
+uint32_t get_time() {
+
+	unsigned long time;
+	struct ds1302_clock clock;
+	if (ds1302_clock_read_burst(&clock) < 0)
+		return 0;
+
+	if (ds1302_clock_to_time((time_t *) &time, &clock) < 0)
+		return 0;
+
+//	printf("Time is: %s", ctime((time_t *) &time));
+//	printf("Time is: %lu",time);
+
+	return (uint32_t)time;
+
+}
+
+int parameter_init() {
+
+
+	HK_frame.sun_light_flag = 0;
+
+	inms_task_flag = 0;
+	inms_task_receive_flag = 0;
+
+	/*--File System store count--*/
+	parameters.wod_store_count = 0;
+	parameters.inms_store_count = 0;
+	parameters.seuv_store_count = 0;
+	parameters.hk_store_count = 0;
+
+	/* Protocol sequence count */
+	parameters.obc_packet_sequence_count = 0;
+	parameters.ax25_sequence_count = 0;
+	parameters.tc_count = 0;
+
+	/* System Configuration */
+	parameters.first_flight = 1;
+	parameters.shutdown_flag = 0;
+	parameters.hk_collect_period = 60;
+	parameters.beacon_period = 30;
+	parameters.reboot_count = 0;
+	parameters.com_bit_rates = 0x08; // change to 0x01 before flight
+
+	/*  seuv related  */
+	parameters.seuv_period = 8;
+	parameters.seuv_sample_rate = 50;
+	parameters.seuv_ch1_conf = 0x9D;
+	parameters.seuv_ch2_conf = 0xBD;
+	parameters.seuv_ch3_conf = 0xDD;
+	parameters.seuv_ch4_conf = 0xFD;
+	parameters.seuv_mode = 0x01;
+
+	/* battery*/
+	parameters.vbat_recover_threshold = 7500;
+	parameters.vbat_safe_threshold = 7000;
+
+
+	seuvFrame.samples = parameters.seuv_sample_rate;
+
+	if (para_r() == No_Error) { //if successfully read last parameter from SD card
+		parameters.reboot_count = parameters.reboot_count + 1; //reboot counter+1
+		para_w();    //update to SD Card
+		return No_Error;//success
+	} else
+		para_w();
+	return Error;
+
+}
+
+void deploy_antenna() {
 	uint8_t txdata[2];
-	txdata[0]=9; //eps outputmask
-	txdata[1]=0; /* power on all sub systems  */
-	i2c_master_transaction(0, eps_node, &txdata,2, 0, 0,eps_delay);
 
-	io_set(6);
-    vTaskDelay(300);
-    io_set(0);
-    vTaskDelay(1000);
-    io_clear(6);
-    io_clear(0);
-
-}
-
-void deploy_antenna(){
-  uint8_t txdata[2];
-
-  txdata[0] = ant_arm;    // arm ant board
-  i2c_master_transaction(0,ant_node,&txdata,1,0,0,0);
-  vTaskDelay(100);
-  txdata[0] = ant_deploy;    // deploy ant board one by one
-  txdata[1] = ant_deploy_timeout;
-  i2c_master_transaction(0,ant_node,&txdata,2,0,0,0);
-  printf("Antenna Deployed!!\n");
+	txdata[0] = ant_arm;    // arm ant board
+	i2c_master_transaction(0, ant_node, &txdata, 1, 0, 0, 0);
+	vTaskDelay(100);
+	txdata[0] = ant_deploy;    // deploy ant board one by one
+	txdata[1] = ant_deploy_timeout;
+	i2c_master_transaction(0, ant_node, &txdata, 2, 0, 0, 0);
+	printf("Antenna Deployed!!\n");
 }
 
 
-void power_control(int device,int stats){
+void power_control(int device, int stats) {
 	/* device code:
 	 * ADCS = 1
 	 * GPS = 2
 	 * SEUV = 3
 	 * INMS = 4
+	 * Interface Board = 5
+	 * Stats => ON=1 / OFF=0
 	 *           */
-	unsigned int mode = stats;
-	int delay=1;
+	//   unsigned int mode = stats;
 
-        eps_output_set_single_req eps_switch;
-		eps_switch.mode = (uint8_t)mode;
-		eps_switch.delay = csp_hton16((int16_t)delay);
+	eps_output_set_single_req eps_switch;
+	eps_switch.mode = (uint8_t)stats;
+	eps_switch.delay = 0;
 
-		i2c_frame_t * frame;
+	uint8_t txdata[100];
+	txdata[0] = EPS_PORT_SET_SINGLE_OUTPUT; // Ping port
 
+	if (device == 1) {
 
-		if(device==1){
-
-			/* channel 0 = ADCS 5V */
-
+		/* channel 0 = ADCS 5V */
 		eps_switch.channel = 0;
 
-		frame = csp_buffer_get(I2C_MTU);
-		frame->dest = eps_node;
-		frame->data[0] = EPS_PORT_SET_SINGLE_OUTPUT; // Ping port
-		memcpy(&frame->data[1], &eps_switch, sizeof(eps_switch));
-		frame->len = 1 + sizeof(eps_switch);
-		frame->len_rx = 0;
-		frame->retries = 0;
-        i2c_send(0, frame, 0);
+		memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
+		i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
 
 		/* channel 3 = ADCS 3.3V */
 
 		eps_switch.channel = 3;
 
-		frame = csp_buffer_get(I2C_MTU);
-		frame->dest = eps_node;
-		frame->data[0] = EPS_PORT_SET_SINGLE_OUTPUT; // Ping port
-		memcpy(&frame->data[1], &eps_switch, sizeof(eps_switch));
-		frame->len = 1 + sizeof(eps_switch);
-		frame->len_rx = 0;
-		frame->retries = 0;
-        i2c_send(0, frame, 0);
+		memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
+		i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
 
-		csp_buffer_free(frame);
-		}
+	}
 
-		if(device==2){
+	if (device == 2) {
 
-			/* channel 4 = GPS 3.3V */
+		/* channel 4 = GPS 3.3V */
 		eps_switch.channel = 4;
 
-		frame = csp_buffer_get(I2C_MTU);
-		frame->dest = eps_node;
-		frame->data[0] = EPS_PORT_SET_SINGLE_OUTPUT; // Ping port
-		memcpy(&frame->data[1], &eps_switch, sizeof(eps_switch));
-		frame->len = 1 + sizeof(eps_switch);
-		frame->len_rx = 0;
-		frame->retries = 0;
-        i2c_send(0, frame, 0);
+		memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
+		i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
+
+	}
 
 
-		csp_buffer_free(frame);
+	if (device == 3) {
+
+		/* channel 2 = SEUV 5V */
+
+		eps_switch.channel = 2;
+
+		memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
+		i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
+
+		/* channel 5 = SEUV 3.3V */
+
+		eps_switch.channel = 5;
+
+		memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
+		i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
+
+	}
+
+	if (device == 4) {
+		/*      INMS Power GPIO Control        */
+		if (stats == ON) {
+			io_set(5);
+			vTaskDelay(300);
+			io_set(1);
+			vTaskDelay(1000);
+			io_clear(5);
+			io_clear(1);
 		}
 
+		if (stats == OFF) {
 
-		if(device==3){
-
-				/* channel 2 = SEUV 5V */
-
-			eps_switch.channel =2;
-
-			frame = csp_buffer_get(I2C_MTU);
-			frame->dest = eps_node;
-			frame->data[0] = EPS_PORT_SET_SINGLE_OUTPUT; // Ping port
-			memcpy(&frame->data[1], &eps_switch, sizeof(eps_switch));
-			frame->len = 1 + sizeof(eps_switch);
-			frame->len_rx = 0;
-			frame->retries = 0;
-	        i2c_send(0, frame, 0);
-
-			/* channel 5 = SEUV 3.3V */
-
-			eps_switch.channel = 5;
-
-			frame = csp_buffer_get(I2C_MTU);
-			frame->dest = eps_node;
-			frame->data[0] = EPS_PORT_SET_SINGLE_OUTPUT; // Ping port
-			memcpy(&frame->data[1], &eps_switch, sizeof(eps_switch));
-			frame->len = 1 + sizeof(eps_switch);
-			frame->len_rx = 0;
-			frame->retries = 0;
-	        i2c_send(0, frame, 0);
-
-			csp_buffer_free(frame);
-			}
-
-         if(device==4){
-            /*      INMS Power GPIO Control        */
-               if(stats==ON){
-        			io_set(5);
-        			vTaskDelay(300);
-        			io_set(1);
-        			vTaskDelay(1000);
-        			io_clear(5);
-        			io_clear(1);
-               }
-
-               if(stats==OFF){
-
-           		io_set(6);
-           		vTaskDelay(300);
-           		io_set(0);
-           		vTaskDelay(1000);
-           		io_clear(6);
-           		io_clear(0);
-               }
-         }
+			io_set(6);
+			vTaskDelay(300);
+			io_set(0);
+			vTaskDelay(1000);
+			io_clear(6);
+			io_clear(0);
+		}
+	}
+	if ( device == 5){
+		if (stats == ON) 
+			io_set(2);
+		if (stats == OFF) 
+			io_clear(2);
+	}
 }
 
 
+void power_OFF_ALL() {
 
+	power_control(1, OFF);
+	power_control(2, OFF);
+	power_control(3, OFF);
+	power_control(4, OFF);
+
+
+}
 

@@ -13,51 +13,91 @@ xTaskHandle init_task;
 xTaskHandle wod_task;
 xTaskHandle adcs_task;
 xTaskHandle seuv_task;
+xTaskHandle eop_task;
 xTaskHandle hk_task;
-xTaskHandle inms_task_receive;
-xTaskHandle inms_task_current;
-xTaskHandle inms_task_error;
+xTaskHandle inms_error_handle;
+xTaskHandle inms_current_moniter;
 xTaskHandle inms_task;
+xTaskHandle inms_task_receive;
+xTaskHandle schedule_task;
 
-uint8_t mode_status_flag;
-uint8_t beacon_period;
-uint8_t sun_light_flag;
-uint8_t adcs_done_flag;
+#define safe_mode 0
+#define init_mode 1
+#define adcs_mode 2
+#define payload_mode 3
+
+
+
+typedef struct __attribute__((packed)) {
+	uint8_t mode_status_flag;
+	uint8_t sun_light_flag;
+	/*  fs related  */
+	uint32_t reboot_count;                      // how many times C&DH has reboot
+	uint16_t interface_3V3_current;                 // Interface Board current for INMS
+	uint16_t interface_5V_current;                 // Interface Board current for INMS
+} hk_frame_t;
+
+hk_frame_t HK_frame;
+
+
+typedef struct __attribute__((packed)) {
+	uint8_t mode;
+	uint8_t batVoltage;
+	uint8_t batCurrent;
+	uint8_t bus3v3Current;
+	uint8_t bus5v0Current;
+	uint8_t tempComm;
+	uint8_t tempEps;
+	uint8_t tempBat;
+
+} beacon_frame_t;
+
+beacon_frame_t beacon_frame;
+
+uint8_t inms_task_flag;
+uint8_t inms_task_receive_flag;
+uint8_t schedule_task_flag;
+uint8_t schedule_new_command_flag;
+uint8_t schedule_series_number;
+uint8_t schedule_unlink_flag;
+uint8_t idleunlocks;
+
 
 typedef struct __attribute__((packed)) {
 
 	/* System Configuration */
-	uint8_t first_flight;
-	uint8_t shutdown_flag;
-	uint8_t adcs_function;  //H1-47+48
-	uint8_t inms_function;
-	uint8_t com_function;
-	uint8_t seuv_function;  //H1-51+52
-	uint8_t gps_function;   //h1-50
+	uint8_t first_flight;                      /* During early orbit, this flag should be 1,
+	                                            Finished early orbit, this flag should be 0*/
+	uint8_t ant_deploy_flag;                   // default =0, if deployed, =1
+	uint8_t shutdown_flag;                     // if this flag =1, COM board will not send any packet to GS
+	uint8_t hk_collect_period;                 // period to collect a house keeping data, default = 60 (second)
+	uint8_t beacon_period;                     // beacon period while not in early orbit mode, default = 30(s)
+	// ps. while during early orbit mode, beacon_period is 15s and can not be changed unless leave early orbit.
+	uint8_t com_bit_rates;                     // (0x01)= 1200bps, (0x08)= 9600bps
+	uint32_t reboot_count;                      // how many times C&DH has reboot
 
+	/*  seuv related  */
+	uint8_t seuv_period;                       // period to collect a SEUV data, default = 60 (second)
+	uint8_t seuv_sample_rate;                  // how many samples to take when collect a SEUV data
+	uint8_t seuv_ch1_conf;
+	uint8_t seuv_ch2_conf;
+	uint8_t seuv_ch3_conf;
+	uint8_t seuv_ch4_conf;
+	uint8_t seuv_mode;                         // (0x01)= Mode A work with light, (0x02)= Mode B always work, (0x03)= Mode Off
 	/*  fs related  */
+	uint32_t wod_store_count;                  // Number of packets stored in satellite
+	uint32_t inms_store_count;                 // Number of packets stored in satellite
+	uint32_t seuv_store_count;                 // Number of packets stored in satellite
+	uint32_t hk_store_count;                   // Number of packets stored in satellite
 
-	uint32_t wod_store_count;
-	uint32_t inms_store_count;
-	uint32_t seuv_store_count;
-	uint32_t hk_store_count;
+	/* Protocol sequence count */
+	uint16_t obc_packet_sequence_count;         //used in packing CCSDS header apid
+	uint8_t ax25_sequence_count;                //used in packing ax25  2ed header
+	uint8_t tc_count;                           //used in packing ax25  2ed header
 
-	/* COM sequence count */
-	uint16_t obc_packet_sequence_count;
-	uint16_t inms_packet_sequence_count;
-	uint16_t seuv_packet_sequence_count;
-	uint16_t wod_packet_sequence_count;
-	uint16_t phoenix_hk_packet_sequence_count;
-	uint8_t ax25_sequence_count;
-	uint8_t tc_count;
-
-
-
-
-
-	 /* battery*/
-	uint16_t vbat_recover_threshold;
-	uint16_t vbat_safe_threshold;
+	/* battery*/
+	uint16_t vbat_recover_threshold;           // Leave safe mode threshold(mV), should be 7000 in default
+	uint16_t vbat_safe_threshold;              // Enter Safe Mode threshold(mV), should be 7500 in default
 
 } parameter_t;
 
@@ -88,5 +128,24 @@ typedef struct __attribute__((packed)) {
 
 adcs_para_t adcs_para;
 
+
+typedef struct __attribute__((packed)) {
+	uint32_t packet_number;
+	uint16_t T1; // eps temp
+	uint16_t T2; // eps temp
+	uint16_t T3; // eps temp
+	uint16_t T4; // eps temp
+	uint16_t T5;  // com temp
+	uint16_t T6; // antenna temp
+	uint16_t T7; // adcs temp
+	uint16_t T8; // gps temp
+	uint16_t T9;  // obc temp
+	uint16_t T10; // interface temp
+	uint16_t T11; // interface INMS temp
+
+} thurmal_frame_t;
+thurmal_frame_t ThurmalFrame;
+
+uint8_t Tdata[178];
 
 #endif /* PARAMETER_H_ */

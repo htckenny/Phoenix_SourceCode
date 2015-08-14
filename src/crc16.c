@@ -26,7 +26,8 @@
  */
 
 #include "crc16.h"
-
+#define lo8(x) ((x)&0xff)
+#define hi8(x) ((x)>>8)
 /* CRC16 implementation acording to CCITT standards */
 
 static const unsigned short crc16tab[256]= {
@@ -72,3 +73,79 @@ unsigned short crc16_ccitt(const void *buf, int len)
 		crc = (crc<<8) ^ crc16tab[((crc>>8) ^ *(char *)buf++)&0x00FF];
 	return crc;
 }
+
+
+unsigned short crc16(unsigned char* data_p, unsigned char length){
+    unsigned char x;
+    unsigned short crc = 0xFFFF;
+
+    while (length--){
+        x = crc >> 8 ^ *data_p++;
+        x ^= x>>4;
+        crc = (crc << 8) ^ ((unsigned short)(x << 12)) ^ ((unsigned short)(x <<5)) ^ ((unsigned short)x);
+    }
+    return crc;
+}
+
+unsigned short crc16_update(unsigned short crc,unsigned char a){
+int i;
+crc ^= a;
+for (i = 0; i < 8; ++i)
+{
+if (crc & 1)
+crc = (crc >> 1) ^ 0xA001;
+else
+crc = (crc >> 1);
+}
+return crc;
+}
+
+
+unsigned short crc_ccitt_update (unsigned short crc, unsigned char data)
+{
+data ^= lo8 (crc);
+data ^= data << 4;
+return ((((unsigned short)data << 8) | hi8 (crc)) ^ (unsigned char)(data >> 4)
+^ ((unsigned short)data << 3));
+}
+
+
+unsigned int crc(unsigned char Data,unsigned int Syndrome)
+{
+int i;
+for (i=0; i<8; i++) {
+if ((Data & 0x80) ^ ((Syndrome & 0x8000) >> 8)) {
+Syndrome = ((Syndrome << 1) ^ 0x1021) & 0xFFFF;
+}
+else {
+Syndrome = (Syndrome << 1) & 0xFFFF;
+}
+Data = Data << 1;
+
+}
+return (Syndrome);
+}
+
+unsigned int crc_opt (unsigned char D, unsigned int Chk,unsigned int table[])
+{
+return (((Chk << 8) & 0xFF00)^table [(((Chk >> 8)^D) & 0x00FF)]);
+}
+
+
+void InitLtbl (unsigned int table [ ])
+{
+unsigned int i, tmp;
+for (i=0; i<256; i++) {
+tmp=0;
+if ((i & 1) != 0) tmp=tmp ^ 0x1021;
+if ((i & 2) != 0) tmp=tmp ^ 0x2042;
+if ((i & 4) != 0) tmp=tmp ^ 0x4084;
+if ((i & 8) != 0) tmp=tmp ^ 0x8108;
+if ((i & 16) != 0) tmp=tmp ^ 0x1231;
+if ((i & 32) != 0) tmp=tmp ^ 0x2462;
+if ((i & 64) != 0) tmp=tmp ^ 0x48C4;
+if ((i & 128) != 0) tmp=tmp ^ 0x9188;
+table [i] = tmp;
+}
+}
+

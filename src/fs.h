@@ -33,10 +33,31 @@ int hk_delete();
 int para_w();
 int para_r();
 int para_d();
+/*---------------------------------------------------*/
+int downlink_data_before_t(uint8_t datatype,uint32_t time1);
+int downlink_data_after_t(uint8_t datatype,uint16_t time1);
+int downlink_data_between_t(uint8_t datatype,uint16_t time1,uint16_t time2);
 
-
+int delete_data_before_t(uint8_t datatype,uint32_t time1);
+int delete_data_after_t(uint8_t datatype,uint16_t time1);
+int delete_data_between_t(uint8_t datatype,uint16_t time1,uint16_t time2);
+/*---------------------------------------------------*/
 int inms_data_dump();
 int wod_data_dump();
 int seuv_data_dump();
 int hk_data_dump();
+int thermal_data_dump();
+
+/*---------------------------------------------------*/
+int T_data_d();
+int thurmal_2_w();
+int thurmal_1_w();
+/*---------------------------------------------------*/
+int schedule_write(uint8_t * frameCont, int length);
+int schedule_read(uint8_t * txbuf[][200]);
+int schedule_reset();
+int schedule_delete(int range, uint8_t * frameCont);
+int schedule_shift(uint8_t *frameCont);
+int schedule_dump();
+/*---------------------------------------------------*/
 #endif /* FS_H_ */

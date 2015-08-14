@@ -17,10 +17,9 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "sema.h"
 #include <conf_nanomind.h>
 #include <conf_io.h>
-
+#include "mpio.h"
 #include <dev/usart.h>
 #include <dev/arm/cpu_pm.h>
 #include <util/console.h>
@@ -46,8 +45,10 @@
 
 #define F_CPU				40000000
 #define F_OSC				8000000
-#define F_USART				500000
+#define F_USART				500000		//500000	57600
 #define F_USART_INMS		9600
+#include "parameter.h"
+
 
 int main(void) {
 
@@ -66,15 +67,10 @@ int main(void) {
 	ds1302_init();
 	ds1302_clock_read_burst(&clock);
 	ds1302_clock_to_time((time_t *) &timestamp.tv_sec, &clock);
-//	ds1302_clock_to_time( &timestamp.tv_sec, &clock);
 	timestamp.tv_nsec = 0;
-//	printf("1rtc = %d\n",&timestamp.tv_sec );
-	timestamp.tv_sec = 946684800;
+
 	/* Set time in lib-c */
 	clock_set_time(&timestamp);
-//	printf("2rtc = %d\n",(time_t *) &timestamp.tv_sec );
-//	; //attention
-//	printf("rtc = %02x\n",timestamp.tv_sec );
 #endif
 
 	/* Initialize command */
@@ -112,7 +108,7 @@ int main(void) {
 
 
 	/* I2C nodes */
-	csp_i2c_init(1, 0, 100); //400
+	csp_i2c_init(1, 0, 400);
 	csp_route_set(2, &csp_if_i2c, CSP_NODE_MAC);
 	csp_route_set(3, &csp_if_i2c, CSP_NODE_MAC);
 	csp_route_set(4, &csp_if_i2c, CSP_NODE_MAC);
@@ -149,65 +145,39 @@ int main(void) {
 	for (i = 0; i < count; i++)
 		__init_array_start[i]();
 #endif
+
 	/* ------GPIO INIT -------*/
-     	for (int i = 0; i < 7; i++)
-      		io_init(i, 1);
+	for (int i = 0; i < 7; i++)
+	 	io_init(i, 1);
+	 io_set(2);
 	/* Start tasks */
 	xTaskCreate(debug_console, (const signed char *) "CONSOLE", 1024*4, NULL, 0, NULL);
-
 	extern void vTaskInit(void *pvParameters);
 	xTaskCreate(vTaskInit, (const signed char *) "INIT", 1024*4, NULL, 3, NULL);
 	extern void vTaskServer(void * pvParameters);
 	xTaskCreate(vTaskServer, (const signed char *) "SRV", 1024*4, NULL, 2, NULL);
-
-	//	extern void vTaskUsartRx(void * pvParameters);
-	//	xTaskCreate(vTaskUsartRx, (const signed char*) "USART", 1024*4, NULL, 3, NULL);
-
-	 // extern void vTaskinms(void * pvParameters);
-	 // xTaskCreate(vTaskinms, (const signed char*) "INMS", 1024*4, NULL, 3, &inms_task);
-	 // extern void vTaskInmsCurrentMonitor(void * pvParameters);
-	 // xTaskCreate(vTaskInmsCurrentMonitor, (const signed char*) "INMS_Current", 1024*4, NULL, 3, NULL);
-	 // extern void vTaskInmsErrorHandle(void * pvParameters);
-	 // xTaskCreate(vTaskInmsErrorHandle, (const signed char*) "INMS_ERROR", 1024*4, NULL, 3, NULL);
-	// extern void ADCS_I2C(void * pvParameters);
-	// xTaskCreate(ADCS_I2C, (const signed char*) "ADCS_I2C", 1024*4, NULL, 0, NULL);
- 
+	
 //	extern void vTaskinms(void * pvParameters);
-//	xTaskCreate(vTaskinms, (const signed char*) "INMS", 1024*4, NULL, 3, NULL);
-//
-//	extern void vTaskinms(void * pvParameters);
-//	xTaskCreate(vTaskinms, (const signed char*) "INMS", 1024*4, NULL, 3, NULL);
-//
-	// extern void vTaskInmsReceive(void * pvParameters);
-	// xTaskCreate(vTaskInmsReceive, (const signed char*) "INMSR", 1024*4, NULL, 3, &inms_task_receive);
+//	xTaskCreate(vTaskinms, (const signed char *) "inms", 1024*4, NULL, 2, NULL);
 
-//	extern void vTaskwod(void * pvParameters);
-//	xTaskCreate(vTaskwod, (const signed char*) "WOD", 1024*4, NULL, 2, NULL);
-	//extern void vTimer(void * pvParameters);
-	//	xTaskCreate(vTimer, (const signed char*) "TIMER", 1024*4, NULL, 2, NULL);
-//	extern void vTaskInitBooting(void * pvParameters);
-//	xTaskCreate(vTaskInitBooting, (const signed char *) "booting", 1024*4, NULL, 2, NULL);
+	// extern void vTaskSchedule(void * pvParameters);
+	// xTaskCreate(vTaskSchedule, (const signed char *) "SCH", 1024*4, NULL, 2, NULL);
+// extern void Mode_Control(void * pvParameters);
+// xTaskCreate(Mode_Control, (const signed char *) "MC", 1024*4, NULL, 2, NULL);
+//	extern void Init_Task(void * pvParameters);
+//	xTaskCreate(Init_Task, (const signed char *) "Init_Task", 1024*4, NULL, 2, &init_task);
+	// extern void Telecom_Task(void * pvParameters);
+	 // xTaskCreate(Telecom_Task, (const signed char * ) "COM_Task", 1024 * 4, NULL,2,NULL);
 
-//		extern void RTOS1(void * pvParameters);
-//		xTaskCreate(RTOS1, (const signed char*) "Test1", 1024*4, NULL, 3, NULL);
-//	extern void vTaskInitBooting(void * pvParameters);
-//		xTaskCreate(vTaskInitBooting, (const signed char*) "TIMER", 1024*4, NULL, 2, NULL);
-//		extern void RTOS2(void * pvParameters);
-//		xTaskCreate(RTOS2, (const signed char*) "Test2", 1024*4, NULL, 3, &test2);
-//
-//	 extern void vTaskinms(void * pvParameters);
-//	 xTaskCreate(vTaskinms, (const signed char *) "INMS", 1024*4, NULL, 2, NULL);
-//
-//	 extern void vTaskI2C(void * pvParameters);
-//	 xTaskCreate(vTaskI2C, (const signed char *) "I2C", 1024*4, NULL, 2, NULL);
-//	 extern void Fgive(void * pvParameters);
-//	 xTaskCreate(Fgive, (const signed char *) "I2C", 1024*4, NULL, 2, NULL);
-//	 extern void Ftake(void * pvParameters);
-//	 xTaskCreate(Ftake, (const signed char *) "I", 1024*4, NULL, 2, NULL);
-//	 extern void Ftakex(void * pvParameters);
-//	 xTaskCreate(Ftakex, (const signed char *) "C", 1024*4, NULL, 2, NULL);
-//	 extern void vTasksdtest(void * pvParameters);
-//	 xTaskCreate(vTasksdtest, (const signed char *) "FS", 1024*4, NULL, 2, NULL);
+	 // extern void vTaskwod(void * pvParameters);
+	// xTaskCreate(vTaskwod, (const signed char * ) "WOD_Task", 1024 * 4, NULL, 2, &wod_task);
+//	extern void vTaskSchedule(void * pvParameters);
+//	xTaskCreate(vTaskSchedule, (const signed char * ) "sch_Task", 1024 * 4, NULL,2,NULL);
+	
+//   extern void thermal_test(void * pvParameters);
+//	xTaskCreate(thermal_test, (const signed char *) "T_Test", 1024*4, NULL, 2, NULL);
+//	extern void ADCS_Tasks(void * pvParameters);
+//	xTaskCreate(ADCS_Tasks, (const signed char * ) "ADCS_Task", 1024 * 4, NULL,2,NULL);
 
 	/* Timer uses LFCLOCK = F_OSC/2 */
 	vTaskStartScheduler(F_OSC/2, 1024*4);

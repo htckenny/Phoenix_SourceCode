@@ -65,6 +65,28 @@ int adc_test_cont(struct command_context *ctx) {
 
 	return CMD_ERROR_NONE;
 }
+int pwmtt(struct command_context *ctx){
+
+		unsigned int dutycycle=100;
+		unsigned int channel=0;
+		unsigned int duty16bit=65535;
+
+
+		printf("Setting channel %u dutycycle to %u %% [%u]\r\n", channel, dutycycle, duty16bit);
+
+		pwm_init();
+
+
+			pwm_set_freq(0, 10, 40000000);
+			pwm_enable(0);
+			pwm_set_duty(0, duty16bit);
+
+
+
+		return CMD_ERROR_NONE;
+
+}
+
 
 int pwm_test(struct command_context *ctx) {
 
@@ -116,7 +138,7 @@ int pwm_test(struct command_context *ctx) {
 	char * args = command_args(ctx);
 	unsigned int dutycycle;
 	unsigned int channel;
-	if (sscanf(args, "%u %u", &channel, &dutycycle) != 1)
+	if (sscanf(args, "%u %u", &channel, &dutycycle) != 2)
 		return CMD_ERROR_SYNTAX;
 
 	unsigned int duty16bit;
@@ -137,7 +159,7 @@ int pwm_test(struct command_context *ctx) {
 	pwm_disable(channel);
 	pwm_disable(channel);
 
-	pwm_set_freq(channel, 100, 40000000);
+	pwm_set_freq(channel, 10, 40000000);
 	pwm_enable(channel);
 	pwm_set_duty(channel, duty16bit);
 
@@ -244,7 +266,17 @@ struct command pwm_commands[] = {
 		.name = "dir",
 		.help = "PWM change dir",
 		.handler = pwm_dir,
-	},
+	},{
+			.name = "test",
+			.help = "pwm test",
+			.usage = "<channel> <dutycycle>",
+			.handler = pwm_test_single,
+	},{
+			.name = "pwmtt",
+			.help = "PWM init",
+			.usage = "<dutycycle> <frequency>",
+			.handler = pwmtt,
+		}
 };
 
 struct command mon_commands[] = {

@@ -12,88 +12,96 @@
 #include <dev/cpu.h>
 
 #define E_NO_ERR -1
-uint16_t battery_read(){
-	   eps_hk_t * chkparam;
+uint16_t battery_read() {
+	eps_hk_t * chkparam;
 
-		i2c_frame_t * frame;
-		frame = csp_buffer_get(I2C_MTU);
-		frame->dest = 2;
-		frame->data[0] = EPS_PORT_HK;
-		frame->data[1] = 0;
-		frame->len = 2;
-		frame->len_rx = 2 + (uint8_t) sizeof(eps_hk_t);
-		frame->retries = 0;
+	i2c_frame_t * frame = csp_buffer_get(I2C_MTU);
+	frame->dest = eps_node;
+	frame->data[0] = EPS_PORT_HK;
+	frame->data[1] = 0;
+	frame->len = 2;
+	frame->len_rx = 2 + (uint8_t) sizeof(eps_hk_t);
+	frame->retries = 0;
 
-		if (i2c_send(0, frame, 0) != E_NO_ERR) {
-			csp_buffer_free(frame);
-			return 0;
-		}
-
-		if (i2c_receive(0, &frame, 20) != E_NO_ERR)
-			return 0;
-
-		chkparam = (eps_hk_t *)&frame->data[2];
-		eps_hk_unpack(chkparam);
+	if (i2c_send(0, frame, 0) != E_NO_ERR) {
 		csp_buffer_free(frame);
-		return chkparam->vbatt;
+		return 0;
+	}
+
+	if (i2c_receive(0, &frame, 20) != E_NO_ERR)
+		return 0;
+
+	if (frame->data[0] != 8)
+		i2c_receive(0, &frame, 20);
+
+	if (frame->data[0] != 8)
+		return 0;
+
+	chkparam = (eps_hk_t *)&frame->data[2];
+	eps_hk_unpack(chkparam);
+	csp_buffer_free(frame);
+	return chkparam->vbatt;
 }
 
-void enter_safe_mode(uint8_t stats){
-	printf("Enter Safe Mode \n");
-	printf("Enter Safe Mode \n");
-	printf("Enter Safe Mode \n");
-	vTaskDelete(wod_task);
-	vTaskDelete(seuv_task);
-	vTaskDelete(adcs_task);
 
-
-
-
-}
-
-void Leave_safe_mode(){
+void Leave_safe_mode() 
+{
 	printf("Recover from Safe Mode \n");
 	printf("Recover from Safe Mode \n");
 	printf("Recover from Safe Mode \n");
 
-
-	mode_status_flag=2;
-//	if (cpu_set_reset_cause)
-//		cpu_set_reset_cause(CPU_RESET_USER);
-//	cpu_reset();
-
+	i2c_frame_t * frame;
+	frame = csp_buffer_get(I2C_MTU);
+	frame->dest = 2;
+	frame->data[0] = EPS_PORT_HARDRESET;
+	frame->len = 1;
+	frame->len_rx = 0;
+	frame->retries = 0;
+	if (i2c_send(0, frame, 0) != E_NO_ERR) {
+		csp_buffer_free(frame);
+	}
 }
 
 
 void BatteryCheckTask(void * pvParameters) {
 	printf("Battery Check Task activated \r\n");
 	uint16_t vbat;
-	while(1){
-         vbat = battery_read();
-		printf("vbat = %05u mV \r\n",vbat);
+	vTaskDelay(3000);
+	while (1) {
+		vbat = battery_read();
+		printf("vbat = %05u mV \r\n", vbat);
 
-		if( ((int)vbat < (int)parameters.vbat_safe_threshold) && (vbat!=0))
-		mode_status_flag=0;
-
-
-
-		if(mode_status_flag==0)
-		while(1){
-			vTaskDelay(30000);
-
-			vbat = battery_read();
-			printf("vbat = %05u mV \r\n",vbat);
-
-			if( ((int)vbat > (int)parameters.vbat_recover_threshold) && (vbat!=0)){
-				Leave_safe_mode();           /* Leave safemode  */
-			   break;
-		    }
-
+		if ( (int)vbat < (int)parameters.vbat_safe_threshold){
+                    vbat = battery_read();
+               	if ( (int)vbat < (int)parameters.vbat_safe_threshold){
+				if (vbat != 0){
+					if (parameters.vbat_safe_threshold != 0){
+						HK_frame.mode_status_flag = safe_mode;
+					}
+				}	
+			}
 		}
+
+
+
+		if (HK_frame.mode_status_flag == safe_mode)
+			while (1) {
+				vTaskDelay(30000);
+
+				vbat = battery_read();
+				printf("vbat = %05u mV \r\n", vbat);
+
+				if ( (int)vbat > (int)parameters.vbat_recover_threshold)
+					if (parameters.vbat_recover_threshold != 0)
+						if (vbat != 0) {
+							Leave_safe_mode();           /* Leave safemode  */
+							break;
+						}
+
+			}
 
 		vTaskDelay(30000);
 	}
 	/** End of Task, Should Never Reach This */
 	vTaskDelete(NULL);
-	}
-
+}

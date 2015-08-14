@@ -4,13 +4,14 @@
  * @author Johan De Claville Christiansen
  * Copyright 2012 GomSpace ApS. All rights reserved.
  */
-
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #include <stdio.h>
 #include <dev/arm/at91sam7.h>
 #include <command/command.h>
 #include "mpio.h"
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
+
+
 static inline AT91PS_GPT io_base(int pin) {
 	switch(pin) {
 	default:
@@ -96,7 +97,8 @@ int mpio_toggle_all(struct command_context *ctx) {
 		if (val % 2) {
 			printf("Set %u\r\n", i);
 			io_set(i);
-		} else {
+		} 
+		else {
 			printf("Clear %u\r\n", i);
 			io_clear(i);
 		}
@@ -111,13 +113,14 @@ int mpio_toggle_one(struct command_context *ctx) {
 	static int val = 0;
 //	int i;
 //	for (i = 0; i < 7; i++) {
-		if (val % 2) {
-			printf("Set %u\r\n",node);
-			io_set(node);
-		} else {
-			printf("Clear %u\r\n", node);
-			io_clear(node);
-		}
+	if (val % 2) {
+		printf("Set %u\r\n",node);
+		io_set(node);
+	}
+	else {
+		printf("Clear %u\r\n", node);
+		io_clear(node);
+	}
 //	}
 	val++;
 	return CMD_ERROR_NONE;

@@ -860,6 +860,7 @@ struct command panels_subcommands[] = { {
 };
 
 struct command __root_command panels_commands[] = {
+	{ .name = "tele", .help = "tele [ON = 1 / OFF = 0]", .handler = telecom, },
 	{ .name = "jt", .help = "jt [sec]", .handler = jumpTime, },
 	{
 		.name = "schd",

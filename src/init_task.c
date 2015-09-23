@@ -1,8 +1,9 @@
 /*
  * init_task.c
  *
- *  Created on: 2015/8/13
- *      Author: rusei
+ *  Created on: 	2015/08/13	By rusei
+ *  Last Update: 	2015/09/23	By Kenny
+ *      Author: rusei, Kenny
  */
 
 #include "fs.h"
@@ -24,8 +25,6 @@
 
 #define E_NO_ERR -1
 
-
-
 void Init_Task(void * pvParameters) {
 
 	if (parameter_init()  == Error)
@@ -33,8 +32,8 @@ void Init_Task(void * pvParameters) {
 	else
 		printf("Loaded parameter from fs\n");
 
-	// extern void BatteryCheckTask(void * pvParameters);
-	// xTaskCreate(BatteryCheckTask, (const signed char *) "BatCk", 1024 * 4, NULL, 2, NULL);
+	extern void BatteryCheckTask(void * pvParameters);
+	xTaskCreate(BatteryCheckTask, (const signed char *) "BatCk", 1024 * 4, NULL, 2, NULL);
 	
 	/*   Idle 30M in first flight  */
 	if (parameters.ant_deploy_flag == 0) {

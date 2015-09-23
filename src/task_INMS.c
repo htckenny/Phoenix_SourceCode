@@ -122,17 +122,37 @@ void inmssort(uint32_t *sec) {
 	bubblesort(refsec);
 }
 /*FLETCHER-16  checksum based on REQ: INMS-I-127*/
-uint16_t fletcher(uint8_t script[], int length) {
+uint16_t fletcher(uint8_t *script, size_t length) {
+	
+	/* Another way of implementing Flectcher-16 checksum*/
+	// uint16_t sum1 = 0xff, sum2 = 0xff;
+
+ //    while (length) {
+ //            size_t tlen = length > 20 ? 20 : length;
+ //            length -= tlen;
+ //            do {
+ //                sum2 += sum1 += *script++;
+ //            } while (--tlen);
+ //            sum1 = (sum1 & 0xff) + (sum1 >> 8);
+ //            sum2 = (sum2 & 0xff) + (sum2 >> 8);
+ //    }
+ //    /* Second reduction step to reduce sums to 8 bits */
+ //    sum1 = (sum1 & 0xff) + (sum1 >> 8);
+ //    sum2 = (sum2 & 0xff) + (sum2 >> 8);
+ //    printf("%" PRIu16 "\n", sum2 << 8 | sum1 ); 
+ //    return sum2 << 8 | sum1;
+
 
 	uint16_t C0_int = 0, C1_int = 0;
-	uint16_t XSUM_W = 65535;//0xFFFF
-	for (int i = 0; i < length; i++) {
+	uint16_t XSUM_W = 0xFFFF;	//0xFFFF = 0d65535
+	for (unsigned int i = 0; i < length; i++) {
 		C0_int = C0_int + script[i];
 		C1_int = C1_int + C0_int;
 		C0_int = (C0_int) % (255);
 		C1_int = (C1_int) % (255);
 	}
-	XSUM_W = (C0_int) || (C1_int >> 8);
+	XSUM_W = (C0_int) || (C1_int << 8);
+	printf("sum = %d\n", XSUM_W);
 	return XSUM_W;
 }
 /*Return the system time with big clock(Real seconds) or small clock(86400)*/
@@ -151,13 +171,15 @@ int inmsJumpScriptCheck (int currentScript) {
 	/*After finish each command, perform this check to see if the next script is coming */
 	uint32_t timeRef ;
 	timeRef = timeGet(0);
+
 	// Scan next Script 
-	currentScript++;
-	// printf("timeref = %d\n",timeRef );
-	printf("timer =  %" PRIu32 "\n", timeRef);
-	printf("epoch =  %" PRIu32 "\n", epoch_sec[rec[currentScript]] - 30);
+	if (currentScript != 6)
+		currentScript++;
+	// 
+	printf("\t\t\t\ttimer =  %" PRIu32 "\n", timeRef);
+	printf("\t\t\t\tepoch =  %" PRIu32 "\n", epoch_sec[rec[currentScript]]);
 	printf("\E[2A\r");
-	// printf("\n");
+
 	if (timeRef > epoch_sec[rec[currentScript]] - 10) {
 		return 1;
 	}
@@ -191,7 +213,7 @@ void vTaskInmsReceive(void * pvParameters) {
 	while (1) {
 		/*response_pkt*/
 		// if (parameters.inms_function == 0)
-		vTaskDelete(NULL);	
+		// vTaskDelete(NULL);	
 		xLastWakeTime = xTaskGetTickCount();
 		receiveFlag++;
 		/*
@@ -317,8 +339,9 @@ void vTaskinms(void * pvParameters) {
 			rec[1] = 0;
 		}
 		/*                                                                                                 */
-		rec[0] = 1;
-		rec[1] = 0;
+		// rec[0] = 0;
+		// rec[1] = 3;
+		// rec[2] = 4;
 		printf("[-------------STEP #4 : Recording TimeTable with structure-------------]\n");
 		/*STEP #4 Record the TimeTable with structure*/
 		for (int i = 0; i < scriptNum; i++) {
@@ -434,15 +457,23 @@ void vTaskinms(void * pvParameters) {
 			printf("%d", timetable_t[ttflag].tt_seq);
 			int printTime = 1;
 			int seqcount = 0;
-
+			uint32_t first_time = 0 ;
+			if (i == 0){
+				while(1){
+					if (first_time > epoch_sec[rec[i]]){
+						break;
+					}
+				
+					vTaskDelay(1000);
+					first_time = timeGet(0);
+					// printf("time = %" PRIu32 "\n",first_time);
+					printf("diff = %" PRIu32 "\n", epoch_sec[rec[i]] - first_time);
+					printf("\E[1A\r");
+				}
+			}
 			while (1) {
-				// printf("jump = %d\n",inmsJumpScriptCheck(i));
-				// if (inmsJumpScriptCheck(i)) {		//need test
-				// 	if (i == 0)
-				// 		i--;
-				// 	break;
-				// }
-
+				if (inmsJumpScriptCheck(i))
+					break;
 				//printf("virtual clock = %d\n",virtual_clock);  //-----need  test------//
 				if (seqcount > ttflagMax) {
 					ttflag = 0;
@@ -455,6 +486,7 @@ void vTaskinms(void * pvParameters) {
 				if (printTime == 1) {
 					printf("%" PRIu32 " -- %" PRIu32 "\n", refTime, tTable_24);
 					printf("\E[1A\r");
+
 				}
 				if ((refTime  ==  tTable_24 ) || ((refTime - 1 ) ==  tTable_24 )  ) {
 					printTime = 0;
@@ -491,7 +523,7 @@ void vTaskinms(void * pvParameters) {
 					while (flag <= script[rec[i]][0]) {
 						printf("Into the sequence  loop : Sending command....\n");
 						leng = script[rec[i]][flag + 3]; //get Command's length
-						printf("Flag = %d\n", flag);
+						printf("\nFlag = %d\n", flag);
 						printf("Leng = %d\n", leng);
 						printf("Content = %d\n", script[rec[i]][flag + 2]);
 //						if(script[rec[i]][flag+1]*60+script[rec[i]][flag]==1110){
@@ -526,7 +558,7 @@ void vTaskinms(void * pvParameters) {
 							printf("COMMAND: OBC_SU_ON...........\n");
 						}
 						else if (script[rec[i]][flag + 2] == 242) { 														//OBC_SU_OFF = 242
-
+ 							printf("delete inms task receive\n");
 							vTaskDelete(inms_task_receive);
 							vTaskDelay(500);
 							power_control(4, OFF);	//command EPS to POWER OFF INMS
@@ -597,6 +629,7 @@ void vTaskinms(void * pvParameters) {
 						printf("leng = %d\n", leng);
 						flag = flag + leng + 4;
 						printf("flag = %d\n", flag);
+
 						if (inmsJumpScriptCheck(i))
 							break;
 					}
@@ -769,9 +802,10 @@ void vTaskInmsErrorHandle(void * pvParameters) {
 				errPacketTotal[i] = obcerrpacket[i - 22];
 			}
 			// hex_dump(errPacketTotal,196);
-			//inms_data_write(errPacketTotal);
+			inms_data_write(errPacketTotal);
 			vTaskSuspend(inms_task);
-			//	printf("suspend\n");
+			printf("suspend inms for 60 sec\n");
+				
 			vTaskDelay(60 * 1000); //ICD p50  wait 60 seconds
 			/* turn on INMS */
 			vTaskResume(inms_task);

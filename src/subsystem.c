@@ -40,42 +40,42 @@ uint32_t get_time() {
 int parameter_init() {
 
 
-	HK_frame.sun_light_flag = 0;
+	HK_frame.sun_light_flag              = 0;
 
-	inms_task_flag = 0;
-	inms_task_receive_flag = 0;
+	inms_task_flag                       = 0;
+	inms_task_receive_flag               = 0;
 
 	/*--File System store count--*/
-	parameters.wod_store_count = 0;
-	parameters.inms_store_count = 0;
-	parameters.seuv_store_count = 0;
-	parameters.hk_store_count = 0;
+	parameters.wod_store_count           = 0;
+	parameters.inms_store_count          = 0;
+	parameters.seuv_store_count          = 0;
+	parameters.hk_store_count            = 0;
 
 	/* Protocol sequence count */
 	parameters.obc_packet_sequence_count = 0;
-	parameters.ax25_sequence_count = 0;
-	parameters.tc_count = 0;
+	parameters.ax25_sequence_count       = 0;
+	parameters.tc_count                  = 0;
 
 	/* System Configuration */
-	parameters.first_flight = 1;
-	parameters.shutdown_flag = 0;
-	parameters.hk_collect_period = 60;
-	parameters.beacon_period = 30;
-	parameters.reboot_count = 0;
-	parameters.com_bit_rates = 0x08; // change to 0x01 before flight
+	parameters.first_flight              = 1;
+	parameters.shutdown_flag             = 0;
+	parameters.hk_collect_period         = 60;
+	parameters.beacon_period             = 30;
+	parameters.reboot_count              = 0;
+	parameters.com_bit_rates             = 0x08; // change to 0x01 before flight
 
 	/*  seuv related  */
-	parameters.seuv_period = 8;
-	parameters.seuv_sample_rate = 50;
-	parameters.seuv_ch1_conf = 0x9D;
-	parameters.seuv_ch2_conf = 0xBD;
-	parameters.seuv_ch3_conf = 0xDD;
-	parameters.seuv_ch4_conf = 0xFD;
-	parameters.seuv_mode = 0x01;
+	parameters.seuv_period               = 8;
+	parameters.seuv_sample_rate          = 50;
+	parameters.seuv_ch1_conf             = 0x9D;
+	parameters.seuv_ch2_conf             = 0xBD;
+	parameters.seuv_ch3_conf             = 0xDD;
+	parameters.seuv_ch4_conf             = 0xFD;
+	parameters.seuv_mode                 = 0x01;
 
 	/* battery*/
-	parameters.vbat_recover_threshold = 7500;
-	parameters.vbat_safe_threshold = 7000;
+	parameters.vbat_recover_threshold    = 7500;
+	parameters.vbat_safe_threshold       = 7000;
 
 
 	seuvFrame.samples = parameters.seuv_sample_rate;
@@ -84,7 +84,8 @@ int parameter_init() {
 		parameters.reboot_count = parameters.reboot_count + 1; //reboot counter+1
 		para_w();    //update to SD Card
 		return No_Error;//success
-	} else
+	}
+	else
 		para_w();
 	return Error;
 
@@ -104,14 +105,19 @@ void deploy_antenna() {
 
 
 void power_control(int device, int stats) {
-	/* device code:
-	 * ADCS = 1
-	 * GPS = 2
-	 * SEUV = 3
-	 * INMS = 4
-	 * Interface Board = 5
-	 * Stats => ON=1 / OFF=0
-	 *           */
+	/**
+	 * Device code:
+	 * 1: ADCS
+	 * 2: GPS
+	 * 3: SEUV
+	 * 4: INMS
+	 * 5: Interface Board
+	 *
+	 * Status =>
+	 * 1: ON
+	 * 0: OFF
+	 */
+
 	//   unsigned int mode = stats;
 
 	eps_output_set_single_req eps_switch;
@@ -120,54 +126,42 @@ void power_control(int device, int stats) {
 
 	uint8_t txdata[100];
 	txdata[0] = EPS_PORT_SET_SINGLE_OUTPUT; // Ping port
-
+	/* ADCS  */
 	if (device == 1) {
-
 		/* channel 0 = ADCS 5V */
 		eps_switch.channel = 0;
-
 		memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
 		i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
 
 		/* channel 3 = ADCS 3.3V */
-
 		eps_switch.channel = 3;
-
 		memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
 		i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
-
 	}
-
-	if (device == 2) {
-
+	/* GPS  */
+	else if (device == 2) {
 		/* channel 4 = GPS 3.3V */
 		eps_switch.channel = 4;
 
 		memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
 		i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
-
 	}
-
-
-	if (device == 3) {
+	/* SEUV */
+	else if (device == 3) {
 
 		/* channel 2 = SEUV 5V */
-
 		eps_switch.channel = 2;
-
 		memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
 		i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
 
 		/* channel 5 = SEUV 3.3V */
-
 		eps_switch.channel = 5;
-
 		memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
 		i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
 
 	}
-
-	if (device == 4) {
+	/* INMS */
+	else if (device == 4) {
 		/*      INMS Power GPIO Control        */
 		if (stats == ON) {
 			io_set(5);
@@ -177,9 +171,7 @@ void power_control(int device, int stats) {
 			io_clear(5);
 			io_clear(1);
 		}
-
-		if (stats == OFF) {
-
+		else if (stats == OFF) {
 			io_set(6);
 			vTaskDelay(300);
 			io_set(0);
@@ -188,22 +180,23 @@ void power_control(int device, int stats) {
 			io_clear(0);
 		}
 	}
-	if ( device == 5){
-		if (stats == ON) 
+	/* Interface Board */
+	else if (device == 5) {
+		if (stats == ON)
 			io_set(2);
-		if (stats == OFF) 
+		else if (stats == OFF)
 			io_clear(2);
 	}
 }
 
-
 void power_OFF_ALL() {
-
+	/**
+	 * Power off all the subsystems
+	 */
 	power_control(1, OFF);
 	power_control(2, OFF);
 	power_control(3, OFF);
 	power_control(4, OFF);
-
 
 }
 

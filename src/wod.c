@@ -136,10 +136,10 @@ int getWodFrame(int fnum) {
 	uint16_t val[7];
 	txdata[0] = com_rx_hk;
 	if (i2c_master_transaction(0, com_rx_node, &txdata, 1, &val, com_rx_hk_len, com_delay) == E_NO_ERR) {
-		tempComm  = __max(__min(floor(4 * (float)(((val[5] * 330) / 1023) - 50) + 60), 255), 0);
+		tempComm  = __max(__min(floor(4 * (float)(189.5522-0.0546*val[5] ) + 60), 255), 0);
 	} else
 		return Error;
-
+	// printf("temp com = %" PRIu16 "\n", val[5]);
 	eps_hk_t * chkparam;
 	i2c_frame_t * frame = csp_buffer_get(I2C_MTU);
 	if (frame == NULL)
@@ -181,7 +181,7 @@ int getWodFrame(int fnum) {
 	printf("i5.0 = %u\n", (chkparam->curout[3] + chkparam->curout[4] + chkparam->curout[5]));
 	printf("EPS temp = %u\n", (chkparam->temp[0] + chkparam->temp[1] + chkparam->temp[2]) / 3);
 	printf("BAT temp = %u\n", chkparam->temp[3]);
-	printf("COM temp = %u\n", tempComm );
+	printf("COM temp = %f\n", 189.5522-0.0546*val[5]);
 
 	batVoltage = __max(__min(floor(20 * ((float)chkparam->vbatt / 1000) - 60), 255), 0);
 	batCurrent = __max(__min(floor(127 * ((float)chkparam->cursys / 1000) + 127), 255), 0);

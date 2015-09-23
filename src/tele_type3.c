@@ -120,6 +120,7 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 		memcpy(&txBuffer[23], &buffs, 2);
 
 		txlen = 25;
+		printf("[TM 3-1]current mode = %d\n", txBuffer[0]);
 		SendPacketWithCCSDS_AX25(&txBuffer, txlen, obc_apid, type, subType);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
 

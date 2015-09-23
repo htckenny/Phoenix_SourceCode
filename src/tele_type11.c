@@ -27,11 +27,13 @@ void decodeService11(uint8_t subType, uint8_t *telecommand) {
 #define Time_Shifting					15
 #define Dump_Command					17
 
-	uint16_t packet_length = (256 * telecommand[4]) + telecommand[5];
+	uint16_t packet_length = (telecommand[4] << 8 ) + telecommand[5];
 
-	uint8_t paras[180];
+	uint8_t paras[180] ={0};
+	paras[0] = packet_length;
+	printf("%d\n", paras[0]);
 	if ((packet_length - 4) > 0)
-		memcpy(&paras, telecommand + 9, packet_length - 4); // !!!!!!!!!!!!!!!!!!!!!!!!
+		memcpy(&paras[1], telecommand + 9, packet_length - 4); // !!!!!!!!!!!!!!!!!!!!!!!!
 	switch (subType) {
 
 	//send acceptance report
@@ -89,7 +91,7 @@ void decodeService11(uint8_t subType, uint8_t *telecommand) {
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  // acceptance success
 
 		// schedule_write need to check
-		if (schedule_write(telecommand + 9, packet_length) == Error) {
+		if (schedule_write(paras) == Error) {
 			completionError = FS_IO_ERR;
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
 		}

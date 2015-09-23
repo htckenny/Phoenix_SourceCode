@@ -36,11 +36,11 @@ void Init_Task(void * pvParameters) {
 	else
 		printf("Loaded parameter from fs\n");
 
-	 extern void BatteryCheckTask(void * pvParameters);
-	 xTaskCreate(BatteryCheckTask, (const signed char *) "Bat_Check", 1024 * 4, NULL, 2, NULL);
-
+	// extern void BatteryCheckTask(void * pvParameters);
+	// xTaskCreate(BatteryCheckTask, (const signed char *) "BatCk", 1024 * 4, NULL, 2, NULL);
+	
 	/*   Idle 30M in first flight  */
-	if (parameters.ant_deploy_flag == 0){
+	if (parameters.ant_deploy_flag == 0) {
 		printf("Idle 30 Minutes before deploy  \r\n");
 		printf("You can Key-in 'idleunlock' to cancel this idle  \r\n");
 		printf("Or Key-in 'testmode' to enter ground test mode \r\n");
@@ -60,17 +60,19 @@ void Init_Task(void * pvParameters) {
 	}
 
 	/*   Deploy Device  */
-	  if(idleunlocks!=1)
+	if (idleunlocks != 1) {
 		deploy_antenna();
-		printf("Antenna  deployed \n");
+		// printf("Antenna  deployed \n");
+	}
 
 	printf("-----------------------------------------\n");
 	printf("Active Telecom Task, User can start to upload Ground Telecommand\n");
 	extern void Telecom_Task(void * pvParameters);
-	xTaskCreate(Telecom_Task, (const signed char * ) "COM_Task", 1024 * 4, NULL, 2, NULL);
+	xTaskCreate(Telecom_Task, (const signed char * ) "COM", 1024 * 4, NULL, 2, NULL);
 	extern void vTaskwod(void * pvParameters);
-	xTaskCreate(vTaskwod, (const signed char * ) "WOD_Task", 1024 * 4, NULL, 2, &wod_task);
+	xTaskCreate(vTaskwod, (const signed char * ) "WOD", 1024 * 4, NULL, 2, &wod_task);
 
+	// change to the ADCS mode
 	HK_frame.mode_status_flag = 2;
 
 

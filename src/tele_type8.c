@@ -13,41 +13,43 @@
 #include <time.h>
 #include "SEUV_Task.h"
 #include "Tele_function.h"
-
+#include "inttypes.h"
 
 void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	uint8_t txBuffer[200];
-
 	timestamp_t t;
 	time_t tt;
+
 	uint8_t completionError = I2C_SEND_ERROR;
 // note: parameter start from telecommand[10]
 	/*------------------------------------------Telecommand-----------------------------------*/
-	printf("enter type 8\n");
-	printf("enter type 8\n");
+	// printf("Enter type 8\n");
+	// printf("enter type 8\n");
 
-#define reboot 3
-#define Sync_Time 4
-#define DTTest 5
-#define ShutdownTransmitter 6
-#define ResumeTransmitter 7
-#define Enter_Safe_Threshold 8
-#define Leave_Safe_Threshold 9
-#define I2C_COMMAND 10 //<---- very useful, but use it carefully
-#define para_to_default 11
-#define set_tx_rates 12
-#define set_call_sign 13
-#define power_on_target 14
-#define power_off_target 15
+#define reboot 						3
+#define Sync_Time 					4
+#define DTTest 						5
+#define ShutdownTransmitter 		6
+#define ResumeTransmitter			7
+#define Enter_Safe_Threshold 		8
+#define Leave_Safe_Threshold		9
+#define I2C_COMMAND 				10 		//<---- very useful, but use it carefully
+#define para_to_default 			11
+#define set_tx_rates 				12
+#define set_call_sign 				13
+#define power_on_target 			14
+#define power_off_target 			15
+#define enter_nominal_mode			16
+#define	INMS_Script_State			17
 
 	printf("telecommand[4] = %u\n", telecommand[4]);
 	printf("telecommand[5] = %u\n", telecommand[5]);
-	uint16_t para_length = (256 * telecommand[4]) + telecommand[5] - 5;
+	uint16_t para_length = (telecommand[4] << 8) + telecommand[5] - 4;
 	printf("para_len = %u\n", para_length);
 	uint8_t type = 8;
 	uint8_t paras[180];
 	if (para_length > 0)
-		memcpy(&paras, telecommand + 10, para_length); // !!!!!!!!!!!!!!!!!!!!!!!!
+		memcpy(&paras, telecommand + 9, para_length);
 	switch (subType) {
 	/*---------------ID:3 reboot      ----------------*/
 	case reboot:
@@ -76,10 +78,15 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		printf("Execute Type 8 Sybtype 4 , Sync_Time \r\n");
 		t.tv_sec = 0;
 		t.tv_nsec = 0;
+		// printf("%d\n", paras[0]);
 		memcpy(&t.tv_sec, &paras[0], 4);
-		// t.tv_sec = csp_ntoh32(t.tv_sec);
+		t.tv_sec = csp_ntoh32(t.tv_sec);
+		// printf("sec = %" PRIu32 "\n", t.tv_sec);
+
+		t.tv_sec += 946684800 ;
+		
 		obc_timesync(&t, 1000);
-		tt = t.tv_sec + 946684800;
+		tt = t.tv_sec ;
 		printf("OBC time Sync by telecommand to : %s\r\n", ctime(&tt));
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
 		break;
@@ -113,9 +120,9 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		parameters.shutdown_flag = 1;
 		para_w();
 		printf("Shutdown Command Detected!! \r\n");
-		if (tx_mode(3) != 0)   //set transceiver into standby mode
+		if (tx_mode(3) != 0) {  //set transceiver into standby mode
 			printf("tx_mode set fail \r\n");
-
+		}
 
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
 		break;
@@ -244,14 +251,15 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	case power_on_target:
 		printf("para_length = %d\n", para_length);
 		printf("target = %d\n", paras[0]);
-		if (para_length == 1) {
+		if (para_length >= 1) {
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
 		}
 		else {
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); // send acceptance fail
+			printf("Wrong!!\n");
 			break;
 		}
-		printf("Execute Type 8 Sybtype 14 ,power_on_target  \r\n");
+		printf("Execute Type 8 Sybtype 14 ,power_on_target [%d]\r\n", paras[0]);
 		power_control(paras[0], ON);
 
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
@@ -260,18 +268,61 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 
 	/*---------------ID:15 power_off_target     ----------------*/
 	case power_off_target:
-		if (para_length == 1) {
+		if (para_length >= 1) {
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
 		}
 		else {
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); // send acceptance fail
 			break;
 		}
-		printf("Execute Type 8 Sybtype 15 ,power_off_target \r\n");
+		printf("Execute Type 8 Sybtype 15 ,power_off_target [%d]\r\n", paras[0]);
 
 		power_control(paras[0], OFF);
 
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+		break;
+	/*---------------  ID:16 enter nominal mode      ----------------*/
+	case enter_nominal_mode:
+		if (para_length == 0)
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); // send acceptance fail
+			break;
+		}
+		printf("Execute Type 8 Sybtype 16 ,enter nominal mode  \r\n");
+		
+		// parameters.first_flight = 0;
+		HK_frame.mode_status_flag = 3;
+		para_w();
+
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+
+
+		break;
+	case INMS_Script_State:
+		if (para_length == 1)
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); // send acceptance fail
+			break;
+		}
+		printf("Execute Type 8 Sybtype 17\r\n");
+		
+		// parameters.first_flight = 0;
+		if (paras[0] == 1) {
+			inms_status = 1;
+			printf("enable inms script handler\n");			
+		}	//enable
+		else if (paras[0] == 0){
+			inms_status = 0;
+			printf("disable inms script handler\n");		
+		}
+
+		para_w();
+
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+
+
 		break;
 
 	/*----------------------------Otherwise----------------*/

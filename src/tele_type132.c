@@ -28,11 +28,11 @@ void decodeService132(uint8_t subType, uint8_t*telecommand) {
 #define get_and_download 2
 
 
-	uint16_t packet_length = (256 * telecommand[4]) + telecommand[5];
-	uint8_t type = 3;
+	uint16_t packet_length = (telecommand[4] << 8) + telecommand[5] - 4;
+	uint8_t type = 132;
 	uint8_t paras[180];
-	if ((packet_length - 4) > 0)
-		memcpy(&paras, telecommand + 9, packet_length - 4); // !!!!!!!!!!!!!!!!!!!!!!!!
+	if (packet_length > 0)
+		memcpy(&paras, telecommand + 9, packet_length); // !!!!!!!!!!!!!!!!!!!!!!!!
 	switch (subType) {
 
 	/*---------------ID:1 configure----------------*/

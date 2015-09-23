@@ -64,12 +64,13 @@ void Leave_safe_mode()
 
 
 void BatteryCheckTask(void * pvParameters) {
-	printf("Battery Check Task activated \r\n");
 	uint16_t vbat;
 	vTaskDelay(3000);
+	printf("Battery Check Task activated \r\n");
+	
 	while (1) {
 		vbat = battery_read();
-		printf("vbat = %05u mV \r\n", vbat);
+		printf("vbat = %04u mV \r\n", vbat);
 
 		if ( (int)vbat < (int)parameters.vbat_safe_threshold){
                     vbat = battery_read();
@@ -81,8 +82,6 @@ void BatteryCheckTask(void * pvParameters) {
 				}	
 			}
 		}
-
-
 
 		if (HK_frame.mode_status_flag == safe_mode)
 			while (1) {

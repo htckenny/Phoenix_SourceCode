@@ -12,7 +12,7 @@
 #include "SEUV_Task.h"
 #include "Tele_function.h"
 #include "subsystem.h"
-
+#include <inttypes.h>
 
 
 void decodeService15(uint8_t subType, uint8_t*telecommand) {
@@ -29,81 +29,158 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 #define delete_data 10
 
 
-	uint16_t packet_length = (256 * telecommand[4]) + telecommand[5];
+	uint16_t packet_length = (telecommand[4] << 8) + telecommand[5] -4;
 
 	uint8_t paras[180];
-	if ((packet_length - 4) > 0)
-		memcpy(&paras, telecommand + 9, packet_length - 4); // !!!!!!!!!!!!!!!!!!!!!!!!
+	if ( packet_length > 0)
+		memcpy(&paras, telecommand + 9, packet_length ); // !!!!!!!!!!!!!!!!!!!!!!!!
 	switch (subType) {
 
 	/*---------------ID:9 download_data----------------*/
 	case download_data:
-		printf("  download_data   \n");
-		if (packet_length > 10) {
+		printf("download_data  \n");
+		// printf("%d\n", packet_length);
 
+		if (packet_length > 5) {
 
 			memcpy(&T1, &paras[2], 4);
-			memcpy(&T2, &paras[7], 4);
+			// printf("be Time 1 = %"PRIu32" \n", T1);
+			if (paras[1] == 1){								/* mode is 1 => need T1 and T2 */
+				memcpy(&T2, &paras[7], 4);
 
-			if (paras[1] == 1) {
+			}
+			else if (paras[1] == 2 || paras[1] == 3){		/* mode is 2 or 3 => only need T1 */
+				T2 = 0;
+			}
+			T1 = csp_ntoh32(T1);
+			T2 = csp_ntoh32(T2);
+			printf("be Time 1 = %"PRIu32" \n", T1);
+			/* PHOENIX HK */
+			if (paras[0] == 1) {
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
-				if (downlink_data_between_t(paras[0], T1, T2) != No_Error) {
+				if (scan_files_Downlink ("0:/HK_DATA", paras[1], T1, T2) != No_Error){
 					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
 					break;
 				}
 			}
-			else if (paras[1] == 2) {
+			/* INMS */
+			else if (paras[0] == 2) {
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
-				if (downlink_data_before_t(paras[0], T1) != No_Error) {
+				if (scan_files_Downlink ("0:/INMS_DATA", paras[1], T1, T2) != No_Error){
 					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
 					break;
 				}
 			}
-			else if (paras[1] == 3) {
-				printf("  download_data  3 \n");
+			/* SEUV */
+			else if (paras[0] == 3) {
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
-				if (downlink_data_after_t(paras[0], T1) != No_Error) {
+				if (scan_files_Downlink ("0:/SEUV_DATA", paras[1], T1, T2) != No_Error){
 					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
 					break;
 				}
 			}
-			else
+			/* EOP */
+			else if (paras[0] == 4) {
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
+				if (scan_files_Downlink ("0:/EOP_DATA", paras[1], T1, T2) != No_Error){
+					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
+					break;
+				}
+			}
+			/* WOD */
+			else if (paras[0] == 5) {
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
+				if (scan_files_Downlink ("0:/WOD_DATA", paras[1], T1, T2) != No_Error){
+					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
+					break;
+				}
+			}
+			else{
 				sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); //accept fail
-
-
+			}
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
-		} else
+		} 
+		else
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); //accept fail
 		break;
 	/*---------------ID:10 delete_data----------------*/
 	case delete_data:
-		if (packet_length > 10) {
-			memcpy(&T1, &paras[2], 4);
-			memcpy(&T2, &paras[7], 4);
+		if (packet_length > 5) {
 
-			if (paras[1] == 1) {
+			memcpy(&T1, &paras[2], 4);
+			if (paras[1] == 1){								/* mode is 1 => need T1 and T2 */
+				memcpy(&T2, &paras[7], 4);
+			}
+			else if (paras[1] == 2 || paras[1] == 3){		/* mode is 2 or 3 => only need T1 */
+				T2 = 0;
+			}
+			T1 = csp_ntoh32(T1);
+			T2 = csp_ntoh32(T2);
+
+			/* PHOENIX HK */
+			if (paras[0] == 1) {
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
-				if (delete_data_between_t(paras[0], T1, T2) != No_Error) {
+				if (scan_files_Delete ("0:/HK_DATA", paras[1], T1, T2) != No_Error){
 					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
 					break;
 				}
 			}
-			else if (paras[1] == 2) {
+			/* INMS */
+			else if (paras[0] == 2) {
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
-				if (delete_data_before_t(paras[0], T1) != No_Error) {
+				if (scan_files_Delete ("0:/INMS_DATA", paras[1], T1, T2) != No_Error){
 					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
 					break;
 				}
 			}
-			else if (paras[1] == 3) {
+			/* SEUV */
+			else if (paras[0] == 3) {
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
-				if (delete_data_after_t(paras[0], T1) != No_Error) {
+				if (scan_files_Delete ("0:/SEUV_DATA", paras[1], T1, T2) != No_Error){
+					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
+					break;
+				}
+			}
+			/* EOP */
+			else if (paras[0] == 4) {
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
+				if (scan_files_Delete ("0:/EOP_DATA", paras[1], T1, T2) != No_Error){
+					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
+					break;
+				}
+			}
+			/* WOD */
+			else if (paras[0] == 5) {
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
+				if (scan_files_Delete ("0:/WOD_DATA", paras[1], T1, T2) != No_Error){
 					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
 					break;
 				}
 			}
 			else
 				sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); //accept fail
+			// if (paras[1] == 1) {
+			// 	sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
+			// 	if (delete_data_between_t(paras[0], T1, T2) != No_Error) {
+			// 		sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
+			// 		break;
+			// 	}
+			// }
+			// else if (paras[1] == 2) {
+			// 	sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
+			// 	if (delete_data_before_t(paras[0], T1) != No_Error) {
+			// 		sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
+			// 		break;
+			// 	}
+			// }
+			// else if (paras[1] == 3) {
+			// 	sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
+			// 	if (delete_data_after_t(paras[0], T1) != No_Error) {
+			// 		sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
+			// 		break;
+			// 	}
+			// }
+			
 
 
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report

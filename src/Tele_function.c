@@ -17,11 +17,11 @@
 int tx_mode(uint8_t mode) {
 
 	if (mode == 1)
-		printf(" Set COM to Normal Mode \r\n");
+		printf("Set COM to Normal Mode \r\n");
 	else if (mode == 0)
-		printf(" Set COM to external telemetry mode \r\n");
+		printf("Set COM to external telemetry mode \r\n");
 	else if (mode == 3)
-		printf(" Set COM to receive loopback mode \r\n");
+		printf("Set COM to receive loopback mode \r\n");
 
 	uint8_t txdata[2];
 	txdata[0] = com_tx_mode;
@@ -292,11 +292,16 @@ uint8_t AX25_GenerateTelemetryPacket_Send(uint8_t* data , uint8_t data_len) {
 
 	txBuffer[data_len + AX25_2ed_size] = TC_Count(); //tc_count
 	txlen = data_len + AX25_2ed_size + 1;
-	if (parameters.shutdown_flag != 1)
-	if (i2c_master_transaction(0, com_tx_node, &txBuffer, txlen, &rx, 1, com_delay) != E_NO_ERR)
-		return Error;
-
-
+	// para_r();
+	// printf("1shut down flag == %d\n", parameters.shutdown_flag);
+	if (parameters.shutdown_flag != 1){
+		printf("send telemetry.. \n");
+		if (i2c_master_transaction(0, com_tx_node, &txBuffer, txlen, &rx, 1, com_delay) != E_NO_ERR)
+			return Error;
+	}
+	else
+		printf("transmitter shutdown!!");
+	
 	return ERR_SUCCESS;
 }
 
@@ -312,9 +317,10 @@ uint8_t AX25_Send(uint8_t* data , uint8_t data_len) {
 	memcpy(&txBuffer[1], data, data_len);
 	txBuffer[0] = com_tx_send;
 	txlen = data_len + 1;
-	if (parameters.shutdown_flag != 1)
-	if (i2c_master_transaction(0, com_tx_node, &txBuffer, txlen, &rx, 1, com_delay) != E_NO_ERR)
-		return Error;
+	if (parameters.shutdown_flag != 1){
+		if (i2c_master_transaction(0, com_tx_node, &txBuffer, txlen, &rx, 1, com_delay) != E_NO_ERR)
+			return Error;
+	}
 
 	return ERR_SUCCESS;
 }
@@ -439,6 +445,7 @@ uint8_t SendDataWithCCSDS_AX25(uint8_t datatype, uint8_t* data) { //add sid then
 	 *   1 = HK
 	 *   2 = inms
 	 *   3 = seuv
+	 *   4 = eop
 	 *   5 = wod          */
 	uint8_t datalength;
 	uint8_t databuffer[250];
@@ -449,19 +456,20 @@ uint8_t SendDataWithCCSDS_AX25(uint8_t datatype, uint8_t* data) { //add sid then
 	if (datatype == 1) {
 		databuffer[0] = phoenix_hk_sid;
 		datalength = hk_length + 1;
-
-	} else if (datatype == 2) {
+	} 
+	else if (datatype == 2) {
 		databuffer[0] = inms_sid;
 		datalength = inms_data_length + 1;
-
-	} else if (datatype == 3) {
+	} 
+	else if (datatype == 3) {
 		databuffer[0] = seuv_sid;
 		datalength = seuv_length + 1;
-	} else if (datatype == 4) {
+	} 
+	else if (datatype == 4) {
 		databuffer[0] = eop_sid;
 		datalength = eop_length + 1;
-
-	} else if (datatype == 5) {
+	} 
+	else if (datatype == 5) {
 
 		databuffer[0] = wod_sid;
 
@@ -484,7 +492,8 @@ uint8_t SendDataWithCCSDS_AX25(uint8_t datatype, uint8_t* data) { //add sid then
 
 		return No_Error;
 
-	} else
+	}
+	else
 		return Error;
 
 	memcpy(&databuffer[1], data, datalength - 1); //copy data to databuffer
@@ -534,11 +543,14 @@ void decodeCCSDS_Command(uint8_t * telecommand, uint8_t packet_length) {
 	case T11_OnBoard_Sche:
 		decodeService11(serviceSubType, telecommand);
 		break;
+	case T13_LargeData_Transfer:
+		decodeService13(serviceSubType, telecommand);
+		break;
 	case T15_dowlink_management:
 		decodeService15(serviceSubType, telecommand);
 		break;
-	case T129_ADCS:
-		decodeService129(serviceSubType, telecommand);
+	case T131_ADCS:
+		decodeService131(serviceSubType, telecommand);
 		break;
 	case  T132_SEUV:
 		decodeService132(serviceSubType, telecommand);

@@ -61,7 +61,7 @@ uint8_t schedule_new_command_flag;
 uint8_t schedule_series_number;
 uint8_t schedule_unlink_flag;
 uint8_t idleunlocks;
-
+uint8_t inms_status;
 
 typedef struct __attribute__((packed)) {
 
@@ -99,6 +99,8 @@ typedef struct __attribute__((packed)) {
 	uint16_t vbat_recover_threshold;           // Leave safe mode threshold(mV), should be 7000 in default
 	uint16_t vbat_safe_threshold;              // Enter Safe Mode threshold(mV), should be 7500 in default
 
+	/* Schedule related */
+	uint8_t schedule_series_number;
 } parameter_t;
 
 parameter_t parameters;
@@ -131,17 +133,17 @@ adcs_para_t adcs_para;
 
 typedef struct __attribute__((packed)) {
 	uint32_t packet_number;
-	uint16_t T1; // eps temp
-	uint16_t T2; // eps temp
-	uint16_t T3; // eps temp
-	uint16_t T4; // eps temp
-	uint16_t T5;  // com temp
-	uint16_t T6; // antenna temp
-	uint16_t T7; // adcs temp
-	uint16_t T8; // gps temp
-	uint16_t T9;  // obc temp
-	uint16_t T10; // interface temp
-	uint16_t T11; // interface INMS temp
+	uint16_t T1; 		// eps temp
+	uint16_t T2; 		// eps temp
+	uint16_t T3; 		// eps temp
+	uint16_t T4; 		// eps temp
+	uint16_t T5;  		// com temp
+	uint16_t T6; 		// antenna temp
+	uint16_t T7; 		// adcs temp
+	uint16_t T8; 		// gps temp
+	uint16_t T9;  		// obc temp
+	uint16_t T10; 		// interface temp
+	uint16_t T11; 		// interface INMS temp
 
 } thurmal_frame_t;
 thurmal_frame_t ThurmalFrame;

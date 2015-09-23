@@ -283,7 +283,7 @@ uint8_t hk_get() {
     t.tv_sec = 0;
     t.tv_nsec = 0;
     obc_timesync(&t, 6000);
-    t.tv_sec = csp_hton32(t.tv_sec);
+    // t.tv_sec = csp_hton32(t.tv_sec);
     memcpy(&hk_buffer[0], &t.tv_sec, 4); // get Time LSB
 
 
@@ -337,9 +337,9 @@ void HK_Task(void * pvParameters) {
     while (1) {
 
         if (parameters.first_flight == 1)
-            vTaskDelay(30000);
+            vTaskDelay(3000);  //30000
         else
-            vTaskDelay(60000);
+            vTaskDelay(6000);  //60000
 
         clean_hk_buffer();
         clean_all();

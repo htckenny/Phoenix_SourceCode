@@ -23,9 +23,9 @@ int set_tx_rate(uint8_t mode);
 void decodeService3(uint8_t subType, uint8_t*telecommand);
 void decodeService8(uint8_t subType, uint8_t*telecommand);
 void decodeService11(uint8_t subType, uint8_t*telecommand);
-//void decodeService13(uint8_t subType, uint8_t*telecommand);
+void decodeService13(uint8_t subType, uint8_t*telecommand);
 void decodeService15(uint8_t subType, uint8_t*telecommand);
-void decodeService129(uint8_t subType, uint8_t*telecommand);
+void decodeService131(uint8_t subType, uint8_t*telecommand);
 //void decodeService131(uint8_t subType, uint8_t*telecommand);
 void decodeService132(uint8_t subType, uint8_t*telecommand);
 

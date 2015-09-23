@@ -64,14 +64,40 @@ static int gyro_map[GYRO_MAP_SIZE] = { 1, 3, 5, 8, 10, 12 };
 static int lm70_map[LM70_MAP_SIZE] = { 2, 4, 6, 9, 11, 13 };
 //int max6675_cs  = 1;
 //
+int ir(struct command_context * ctx) { 
+
+	unsigned int buffer;
+	int len;
+
+
+	if (ctx->argc < 2) {
+		return CMD_ERROR_SYNTAX;
+	}
+	if (sscanf(ctx->argv[1], "%u", &buffer) != 1) {
+		return CMD_ERROR_SYNTAX;
+	}
+	printf("slot  = %d\n", buffer);
+	len = inms_script_length((int)buffer);
+	uint8_t script[len] ;
+	// for (int i = 0 ; i < len ; i++){
+	// 	script[i] = 0;
+	// }
+	
+	// printf("%d\n",len );
+	inms_script_read(buffer, len, &script);
+	// printf("%d\n", script[304]);
+	hex_dump(&script, len);
+	
+	return CMD_ERROR_NONE;
+}
 // Simulate receive telecommand and execute it
 int ct(struct command_context * ctx) { 
 
-	unsigned int  serviceType;
-	unsigned int  serviceSubType;
+	unsigned int serviceType;
+	unsigned int serviceSubType;
 	unsigned int buffers[200];
 	uint8_t para[50] = {0};
-	int i;
+	// int i;
 
 
 	if (ctx->argc < 3) {
@@ -83,17 +109,16 @@ int ct(struct command_context * ctx) {
 	if (sscanf(ctx->argv[2], "%u", &serviceSubType) != 1) {
 		return CMD_ERROR_SYNTAX;
 	}
-
+	// printf("%d\n", ctx->argc);
 	if (ctx->argc > 3) {
-		for (i = 0; i < (ctx->argc - 3); i++) {
+		for (int i = 0; i < (ctx->argc - 3); i++) {
 			sscanf(ctx->argv[i + 3], "%u", &buffers[i + 9]);
 			para[i + 9] = (uint8_t)buffers[i + 9];
 		}
 	}
-
+	para[5] = 5 + (ctx->argc) - 3;
 	para[7] = serviceType;
 	para[8] = serviceSubType;
-	para[5] = 5 + (ctx->argc) - 3;
 
 	switch (serviceType) {
 
@@ -106,13 +131,16 @@ int ct(struct command_context * ctx) {
 	case T11_OnBoard_Sche:
 		decodeService11(serviceSubType, para);
 		break;
+	case T13_LargeData_Transfer:
+		decodeService13(serviceSubType, para);
+		break;	
 	case T15_dowlink_management:
 		decodeService15(serviceSubType, para);
 		break;
-	case T129_ADCS:
-		decodeService129(serviceSubType, para);
+	case T131_ADCS:
+		decodeService131(serviceSubType, para);
 		break;
-	case  T132_SEUV:
+	case T132_SEUV:
 		decodeService132(serviceSubType, para);
 		break;
 	default:
@@ -139,6 +167,50 @@ int jumpTime(struct command_context * ctx)
 	obc_timesync(&t, 1000);
 	printf("\n");
 	return CMD_ERROR_NONE;
+}
+int scheduleDelete(struct command_context * ctx) {
+	
+	uint32_t time_absolute_1, time_absolute_2;
+	uint8_t telecommand[256] = {0};
+	// uint8_t length = (ctx->argc) - 4;
+	unsigned int range;
+	// unsigned int subtype;
+	// unsigned int buffer[255] = {0};
+	if (!ctx->argc >= 4) {
+		return CMD_ERROR_SYNTAX;
+	}
+	if (sscanf(ctx->argv[1], "%u", &range) != 1) {
+		return CMD_ERROR_SYNTAX;
+	}	
+	if (sscanf(ctx->argv[2], "%" PRIu32 "", &time_absolute_1) != 1) {
+		return CMD_ERROR_SYNTAX;
+	}	
+	if (range == 1){
+		if (sscanf(ctx->argv[3], "%" PRIu32 "", &time_absolute_2) != 1) {
+			return CMD_ERROR_SYNTAX;
+		}	
+	}
+	/* length of the telecommand */
+	telecommand[4] = ctx->argc + 5 ;
+	/* 4 bytes time */
+	
+	telecommand[5] = 0;
+	telecommand[7] = 11;
+	telecommand[8] = 6;
+	telecommand[9] = range;
+	memcpy(&telecommand[10], &time_absolute_1, 4);
+	memcpy(&telecommand[15], &time_absolute_2, 4);
+
+	if (schedule_delete(range, telecommand) == 1) {
+		return CMD_ERROR_FAIL;
+	}
+	else {
+		schedule_new_command_flag = 1 ;
+		// parameters.schedule_series_number ++;
+		// para_w();
+		return CMD_ERROR_NONE;
+	}
+
 }
 int scheduleRelated(struct command_context * ctx) {
 	unsigned int command_type;
@@ -176,7 +248,9 @@ int scheduleRelated(struct command_context * ctx) {
 	case 3 :
 		printf("time_shift = %" PRIu32 "\n", time_shift);
 		memcpy(&telecommand, &time_shift, 4);
-
+		for (int i = 0; i < 4 ;i++){
+			printf("%d\n", telecommand[i]);
+		}
 		if (schedule_shift(telecommand) == 1)
 			return CMD_ERROR_FAIL;
 		else {
@@ -207,7 +281,7 @@ int scheduleWrite(struct command_context * ctx)
 	uint8_t length = (ctx->argc) - 4;
 	unsigned int type;
 	unsigned int subtype;
-	unsigned int buffer[255];
+	unsigned int buffer[255] = {0};
 	if (!ctx->argc >= 4) {
 		return CMD_ERROR_SYNTAX;
 	}
@@ -226,14 +300,15 @@ int scheduleWrite(struct command_context * ctx)
 		}
 	}
 	// printf("test1 \n");
-	//
+	/* length of the telecommand */
 	telecommand[0] = ctx->argc + 5 ;
+	/* 4 bytes time */
 	memcpy(&telecommand[1], &time_absolute, 4);
 	telecommand[5] = 0;
 	telecommand[6] = type;
 	telecommand[7] = subtype;
 
-	for (int i = 0 ; i < ctx->argc + 3; i++) {
+	for (int i = 0 ; i < length ; i++) {
 		telecommand[i + 8] = buffer[i];
 	}
 	// printf("test2\n");
@@ -246,11 +321,15 @@ int scheduleWrite(struct command_context * ctx)
 		// }
 	}
 	printf("\ntelecommand scan\n");
-	if (schedule_write(telecommand, ctx->argc + 4) == 1) {
+	para_r();
+
+	if (schedule_write(telecommand) == 1) {
 		return CMD_ERROR_FAIL;
 	}
 	else {
 		schedule_new_command_flag = 1 ;
+		// parameters.schedule_series_number ++;
+		// para_w();
 		return CMD_ERROR_NONE;
 	}
 }
@@ -401,7 +480,7 @@ int jump_mode(struct command_context * ctx) {
 
 
 int parawrite(struct command_context * ctx) {
-
+	parameter_init();
 	para_w();
 	return CMD_ERROR_NONE;
 }
@@ -409,15 +488,17 @@ int parawrite(struct command_context * ctx) {
 int pararead(struct command_context * ctx) {
 
 	para_r();
-	printf("First Flight %d\n", (int) parameters.first_flight);
-	printf("shutdown_flag %d\n", (int) parameters.shutdown_flag);
-	printf("wod_store_count %d\n", (int) parameters.wod_store_count);
-	printf("inms_store_count %d\n", (int) parameters.inms_store_count);
-	printf("seuv_store_count %d\n", (int) parameters.seuv_store_count);
-	printf("hk_store_count %d\n", (int) parameters.hk_store_count);
-	printf("obc_packet_sequence_count %d\n", (int) parameters.obc_packet_sequence_count);
-	printf("vbat_recover_threshold %d\n", (int) parameters.vbat_recover_threshold);
-	printf("vbat_safe_threshold %d\n", (int) parameters.vbat_safe_threshold);
+	printf("First Flight \t\t\t%d\n", (int) parameters.first_flight);
+	printf("shutdown_flag \t\t\t%d\n", (int) parameters.shutdown_flag);
+	printf("ant_deploy_flag \t\t%d\n", (int) parameters.ant_deploy_flag);
+	printf("wod_store_count \t\t%d\n", (int) parameters.wod_store_count);
+	printf("inms_store_count \t\t%d\n", (int) parameters.inms_store_count);
+	printf("seuv_store_count \t\t%d\n", (int) parameters.seuv_store_count);
+	printf("hk_store_count \t\t\t%d\n", (int) parameters.hk_store_count);
+	printf("obc_packet_sequence_count \t%d\n", (int) parameters.obc_packet_sequence_count);
+	printf("vbat_recover_threshold \t\t%d\n", (int) parameters.vbat_recover_threshold);
+	printf("vbat_safe_threshold \t\t%d\n", (int) parameters.vbat_safe_threshold);
+	printf("schedule_series_number \t\t%d\n", (int) parameters.schedule_series_number);
 
 	return CMD_ERROR_NONE;
 }
@@ -582,7 +663,8 @@ int comhk(struct command_context * ctx) {
 
 	if (i2c_master_transaction(0, com_rx_node, &txdata, 1, &val, com_rx_hk_length, com_delay) == E_NO_ERR) {
 		hex_dump(&val, com_rx_hk_length);
-	} else
+	} 
+	else
 		printf("ERROR!!  Get no reply from COM \r\n");
 
 	return CMD_ERROR_NONE;
@@ -762,6 +844,12 @@ struct command panels_subcommands[] = { {
 struct command __root_command panels_commands[] = {
 	{ .name = "jt", .help = "jt [sec]", .handler = jumpTime, },
 	{
+		.name = "schd",
+		.help = "schedule_delete <range> <time_1> <time_2 (opt)>",
+		.usage = "<range> <time_1> <time_2 (opt)>",
+		.handler = scheduleDelete,
+	},
+	{
 		.name = "schw",
 		.help = "schedule_write <Absolute_time> <Type> <Subtype> <para>",
 		.usage = "<Absolute_time> <Type> <Subtype> <para>",
@@ -773,6 +861,7 @@ struct command __root_command panels_commands[] = {
 		.usage = "sch <Command ID> <Para(optional)>",
 		.handler = scheduleRelated,
 	},
+	{ .name = "ir", .help = " inms script read", .usage = "<buffer>" , .handler = ir, },
 	{ .name = "ct", .help = " simulate receiving a uplink command and execute it", .usage = "<type> <subtype> <data*N> " , .handler = ct, },
 	{ .name = "ccsds_send", .help = "send a ccsds packet every 10 seconds", .usage = "<type> <subtype> <data> " , .handler = ccsds_send, },
 	{ .name = "telecomtest", .help = "telecomtest <packet_num> <packet_len>", .usage = "<packet_num> <packet_len>", .handler = telecomtest,	},

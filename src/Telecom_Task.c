@@ -26,14 +26,15 @@ void Read_Execute() {  // read incoming command
 
 	uint8_t val[201];  // expect  1+200 byte response , first byte is length1~200
 
-	if ( i2c_master_transaction(0, com_rx_node, &txdata, 1, &val, 150, com_delay) == E_NO_ERR) {
+	if ( i2c_master_transaction(0, com_rx_node, &txdata, 1, &val, 200, com_delay) == E_NO_ERR) {
 		hex_dump(&val[0], 6);    // get command   print in
 		hex_dump(&val[6], val[0]); // Byte 0~1=packet data length, byte 2~5= signal strength , byte 6~N = data part
 		delete_buf();   // delete one frame in receive buffer
 		decodeCCSDS_Command(&val[6], val[0]);
 
 
-	} else
+	}
+	else
 		printf("read Telecommand Fails\n");
 }
 
@@ -59,12 +60,13 @@ void Telecom_Task(void * pvParameters) {
 
 	set_Call_Sign(0);
 	set_tx_rate(8);
-	if (parameters.shutdown_flag == 1)
+	if (parameters.shutdown_flag == 1) {
 		printf("Shutdown Command Detected!! \r\n");
+	}
 
-    if (tx_mode(1) != 0)  //set transceiver into auto mode
+	if (tx_mode(1) != 0) {  //set transceiver into auto mode
 		printf("tx_mode set fail \r\n");
-
+	}
 
 	while (1) {
 

@@ -20,6 +20,7 @@ xTaskHandle inms_current_moniter;
 xTaskHandle inms_task;
 xTaskHandle inms_task_receive;
 xTaskHandle schedule_task;
+xTaskHandle com_task;
 
 #define safe_mode 0
 #define init_mode 1

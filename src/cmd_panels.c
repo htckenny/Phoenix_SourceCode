@@ -63,7 +63,25 @@ static const char * name_map[LM70_MAP_SIZE] = { "A1", "A2", "A3", "A4", "A5",
 static int gyro_map[GYRO_MAP_SIZE] = { 1, 3, 5, 8, 10, 12 };
 static int lm70_map[LM70_MAP_SIZE] = { 2, 4, 6, 9, 11, 13 };
 //int max6675_cs  = 1;
-//
+
+
+int telecom(struct command_context * ctx){
+	unsigned int buffer;
+	extern void Telecom_Task(void * pvParameters);
+	if (ctx->argc < 2) {
+		return CMD_ERROR_SYNTAX;
+	}
+	if (sscanf(ctx->argv[1], "%u", &buffer) != 1) {
+		return CMD_ERROR_SYNTAX;
+	}
+	if (buffer == 1){
+		xTaskCreate(Telecom_Task, (const signed char * ) "COM", 1024 * 4, NULL, 2, &com_task);
+	}
+	else if (buffer == 0) {
+		vTaskDelete(com_task);
+	}	
+
+}
 int ir(struct command_context * ctx) { 
 
 	unsigned int buffer;

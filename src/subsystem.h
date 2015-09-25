@@ -150,7 +150,7 @@
 		* SEUV            = 3
 		* INMS            = 4
 		* Interface Board = 5
-	 *           */
+	*/
 #define ON 1
 #define OFF 0
 

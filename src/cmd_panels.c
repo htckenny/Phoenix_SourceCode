@@ -80,7 +80,7 @@ int telecom(struct command_context * ctx){
 	else if (buffer == 0) {
 		vTaskDelete(com_task);
 	}	
-
+	return CMD_ERROR_NONE;
 }
 int ir(struct command_context * ctx) { 
 

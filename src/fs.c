@@ -1176,14 +1176,14 @@ int wod_delete() {
 int seuv_write()
 {
 	f_mount(0, &fs);
-    struct tm  ts;
-    char buf[80];
-    char s[] = "0:/SEUV_DATA/";
-    char fileName[40];
+ 	struct tm  ts;
+ 	char buf[80];
+	char s[] = "0:/SEUV_DATA/";
+	char fileName[40];
 
 	timestamp_t t;
 
-    strcpy(fileName, s);
+  	strcpy(fileName, s);
 
 	// Get current time
 	t.tv_sec = 0;
@@ -1202,6 +1202,8 @@ int seuv_write()
 
 	// f_mount(0, &fs);
 	// char fileName[] = "0:/seuv.bin";
+
+	seuvFrame.packettime = csp_hton32(t.tv_sec);
 
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK)

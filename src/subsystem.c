@@ -65,13 +65,19 @@ int parameter_init() {
 	parameters.com_bit_rates             = 0x08; // change to 0x01 before flight
 
 	/*  seuv related  */
-	parameters.seuv_period               = 8;
-	parameters.seuv_sample_rate          = 50;
-	parameters.seuv_ch1_conf             = 0x9D;
-	parameters.seuv_ch2_conf             = 0xBD;
-	parameters.seuv_ch3_conf             = 0xDD;
-	parameters.seuv_ch4_conf             = 0xFD;
-	parameters.seuv_mode                 = 0x01;
+	parameters.seuv_period				= 8;
+	parameters.seuv_sample_rate			= 50;
+
+	parameters.seuv_ch1_G1_conf			= 0x98;		/* Gain 1 configuration */
+	parameters.seuv_ch2_G1_conf			= 0xB8;
+	parameters.seuv_ch3_G1_conf			= 0xD8;
+	parameters.seuv_ch4_G1_conf			= 0xF8;
+
+	parameters.seuv_ch1_G8_conf			= 0x9B;		/* Gain 8 configuration */
+	parameters.seuv_ch2_G8_conf			= 0xBB;
+	parameters.seuv_ch3_G8_conf			= 0xDB;
+	parameters.seuv_ch4_G8_conf			= 0xFB;
+	parameters.seuv_mode				= 0x01;
 
 	/* battery*/
 	parameters.vbat_recover_threshold    = 7500;
@@ -148,17 +154,28 @@ void power_control(int device, int stats) {
 	}
 	/* SEUV */
 	else if (device == 3) {
+		if (stats == ON) {
+			/* channel 2 = SEUV 5V */
+			eps_switch.channel = 2;
+			memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
+			i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
 
-		/* channel 2 = SEUV 5V */
-		eps_switch.channel = 2;
-		memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
-		i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
-
-		/* channel 5 = SEUV 3.3V */
-		eps_switch.channel = 5;
-		memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
-		i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
-
+			/* channel 5 = SEUV 3.3V */
+			eps_switch.channel = 5;
+			memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
+			i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
+		}
+		else if (stats == OFF){
+			/* channel 5 = SEUV 3.3V */
+			eps_switch.channel = 5;
+			memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
+			i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
+			
+			/* channel 2 = SEUV 5V */
+			eps_switch.channel = 2;
+			memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
+			i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
+		}
 	}
 	/* INMS */
 	else if (device == 4) {

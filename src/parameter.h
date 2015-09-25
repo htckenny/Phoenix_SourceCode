@@ -80,10 +80,14 @@ typedef struct __attribute__((packed)) {
 	/*  seuv related  */
 	uint8_t seuv_period;                       // period to collect a SEUV data, default = 60 (second)
 	uint8_t seuv_sample_rate;                  // how many samples to take when collect a SEUV data
-	uint8_t seuv_ch1_conf;
-	uint8_t seuv_ch2_conf;
-	uint8_t seuv_ch3_conf;
-	uint8_t seuv_ch4_conf;
+	uint8_t seuv_ch1_G1_conf;
+	uint8_t seuv_ch2_G1_conf;
+	uint8_t seuv_ch3_G1_conf;
+	uint8_t seuv_ch4_G1_conf;
+	uint8_t seuv_ch1_G8_conf;
+	uint8_t seuv_ch2_G8_conf;
+	uint8_t seuv_ch3_G8_conf;
+	uint8_t seuv_ch4_G8_conf;
 	uint8_t seuv_mode;                         // (0x01)= Mode A work with light, (0x02)= Mode B always work, (0x03)= Mode Off
 	/*  fs related  */
 	uint32_t wod_store_count;                  // Number of packets stored in satellite

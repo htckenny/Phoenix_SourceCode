@@ -25,9 +25,10 @@
 #include "fs.h"
 #include <io/nanopower2.h>
 #include <csp/csp.h>
-int num;
 
+int num;
 uint8_t hk_buffer[200];
+
 /* Thermistor Sensor data */
 void TS12_16() {
 
@@ -55,17 +56,14 @@ int TS11() {
     tx[0] = 0xD0;
     tx[1] = 0xD0;
 
-
     i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
     i2c_master_transaction(0, interface_node, 0 , 0, &rx, 4, seuv_delay);
-
 
     if (i2c_master_transaction(0, interface_node, 0 , 0, &rx, 4, seuv_delay) != E_NO_ERR)
         return Error;
 
-
-    //   memcpy(&ThurmalFrame.T10,&rx[0],3);
-    ThurmalFrame.T11 = rx[0] * 256 + rx[1];
+    // memcpy(&ThurmalFrame.T10,&rx[0],3);
+    ThurmalFrame.T11 = (rx[0] << 8 + rx[1]);
 
 
     return No_Error;
@@ -88,8 +86,8 @@ int TS10() {
         return Error;
 
 
-    //   memcpy(&ThurmalFrame.T10,&rx[0],3);
-    ThurmalFrame.T10 = rx[0] * 256 + rx[1];
+    // memcpy(&ThurmalFrame.T10,&rx[0],3);
+    ThurmalFrame.T10 = (rx[0] << 8 + rx[1]);
     //ThurmalFrame.T10=0x0A;
 
     return No_Error;

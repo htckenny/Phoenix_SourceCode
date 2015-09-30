@@ -1204,20 +1204,24 @@ int seuv_write()
 	// char fileName[] = "0:/seuv.bin";
 
 	seuvFrame.packettime = csp_hton32(t.tv_sec);
-
+	printf("sample = %d\n", seuvFrame.samples);
+	
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK)
 		printf("SEUV  f_open fail!!\n");
+	else
+		printf("SEUV f_open success \n");
 	f_lseek(&file, file.fsize);
 	res = f_write(&file, &seuvFrame.packettime, (int)sizeof(seuv_frame_t), &bw);
-	if (res != FR_OK)
-		printf("SEUV  f_open fail!!\n");
+
 	if (res != FR_OK) {
+		printf("SEUV  f_write fail!!\n");
 		f_close(&file);
 		f_mount(0, NULL);
 		return Error;
 	}
 	else {
+		printf("SEUV f_write success\n");
 		f_close(&file);
 		f_mount(0, NULL);
 		return No_Error;
@@ -1250,21 +1254,22 @@ int seuv_read(char fileName[], void * txbuf) { // serial =1~N
 	res = f_read(&file, &buffer, seuv_length, &br);
 
 	if (res != FR_OK) {
-		printf("\r\n wod_read() fail .. \r\n");
+		printf("\r\n seuv_read() fail .. \r\n");
 		f_close(&file);
 		f_mount(0, NULL);
 		return Error;
 	}
 	else {
+		printf("\r\n seuv_read() success .. \r\n");
 		memcpy(txbuf, &buffer, seuv_length);
 		f_close(&file);
-		f_mount(0, NULL);
+		// f_mount(0, NULL);
 		return No_Error;
 	}
 }
-int seuv_delete() {
-	f_mount(0, &fs);
-	char fileName[] = "0:/seuv.bin";
+int seuv_delete(char fileName[]) {
+	// f_mount(0, &fs);
+	// char fileName[] = "0:/seuv.bin";
 	res = f_unlink(fileName);	  //先刪除
 
 	if (res != FR_OK) {
@@ -1832,7 +1837,6 @@ int T_data_d() {  // serial =1~N
 	}
 
 	return No_Error;
-
 }
 
 /** End of thermal related FS function*/
@@ -2035,7 +2039,6 @@ int scan_files_Downlink (
 	    			printf("range error\n");
 	    			break;
 		    }
-			
         }
     }
     return res;
@@ -2059,7 +2062,7 @@ int scan_files_Delete (
     char t_hour[2]={0};
     char t_min[2]={0};
     char t_sec[2]={0};
-	uint8_t ErrCode;
+	// uint8_t ErrCode;
 #if _USE_LFN
     static char lfn[_MAX_LFN + 1];  	 /* Buffer to store the LFN */
     fno.lfname = lfn;
@@ -2147,7 +2150,6 @@ int scan_files_Delete (
 	    			printf("range error\n");
 	    			break;
 		    }
-			
         }
     }
     return res;

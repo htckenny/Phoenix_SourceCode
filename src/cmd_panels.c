@@ -134,7 +134,7 @@ int ct(struct command_context * ctx) {
 			para[i + 9] = (uint8_t)buffers[i + 9];
 		}
 	}
-	para[5] = 5 + (ctx->argc) - 3;
+	para[5] = 5 + (ctx->argc) - 4;
 	para[7] = serviceType;
 	para[8] = serviceSubType;
 
@@ -517,6 +517,9 @@ int pararead(struct command_context * ctx) {
 	printf("vbat_recover_threshold \t\t%d\n", (int) parameters.vbat_recover_threshold);
 	printf("vbat_safe_threshold \t\t%d\n", (int) parameters.vbat_safe_threshold);
 	printf("schedule_series_number \t\t%d\n", (int) parameters.schedule_series_number);
+	printf("SEUV mode \t\t\t%d\n", (int) parameters.seuv_mode);
+	printf("SEUV period \t\t\t%d\n", (int) parameters.seuv_period);
+	printf("SEUV sample rate \t\t%d\n", (int) parameters.seuv_sample_rate);
 
 	return CMD_ERROR_NONE;
 }

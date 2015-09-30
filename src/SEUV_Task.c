@@ -9,6 +9,7 @@
 #include <freertos/task.h>
 #include <math.h>
 #include <util/timestamp.h>
+#include <util/hexdump.h>
 #include <dev/i2c.h>
 #include "parameter.h"
 #include "subsystem.h"
@@ -17,6 +18,7 @@
 #include <csp/csp_endian.h>
 #include "SEUV_Task.h"
 #include <string.h>
+#include <math.h>
 
 /**
  * This function is used for calculate the average and the standard deviation of the SEUV data
@@ -24,24 +26,24 @@
  * @param data    data array
  * @param numbers number of the data
  */
-
-
 void calculate_avg_std(uint8_t ch, uint8_t data[], uint8_t numbers) {
     int tmp[numbers];
     int total = 0;
     int flag;
+    /* Calculate the raw data from the received three bytes */
     for (flag = 0; flag < numbers; flag++)
-        tmp[flag] = (data[flag * 3] * 256 * 256) + (data[flag * 3 + 1] * 256) + data[flag * 3 + 2];
+        tmp[flag] = (data[flag * 3] << 16) + (data[flag * 3 + 1] << 8) + data[flag * 3 + 2];
 
+    /* Add all of the numbers of samples */
     for (flag = 0; flag < numbers; flag++)
         total = total + tmp[flag];
 
-
+    /* Calculate the Average and the standard deviation of the samples */
     if (ch == 1) {
         seuvFrame.ch1AVG = (total / numbers);
         total = 0;
         for (flag = 0; flag < numbers; flag++) {
-            total += (tmp[flag] - seuvFrame.ch1AVG) * (tmp[flag] - seuvFrame.ch1AVG);
+            total += pow((tmp[flag] - seuvFrame.ch1AVG), 2);
         }
         seuvFrame.ch1STD = sqrt(total);
     }
@@ -49,7 +51,7 @@ void calculate_avg_std(uint8_t ch, uint8_t data[], uint8_t numbers) {
         seuvFrame.ch2AVG = (total / numbers);
         total = 0;
         for (flag = 0; flag < numbers; flag++) {
-            total += (tmp[flag] - seuvFrame.ch2AVG) * (tmp[flag] - seuvFrame.ch2AVG);
+            total += pow((tmp[flag] - seuvFrame.ch2AVG), 2);
         }
         seuvFrame.ch2STD = sqrt(total);
     }
@@ -57,7 +59,7 @@ void calculate_avg_std(uint8_t ch, uint8_t data[], uint8_t numbers) {
         seuvFrame.ch3AVG = (total / numbers);
         total = 0;
         for (flag = 0; flag < numbers; flag++) {
-            total += (tmp[flag] - seuvFrame.ch3AVG) * (tmp[flag] - seuvFrame.ch3AVG);
+            total += pow((tmp[flag] - seuvFrame.ch3AVG), 2);
         }
         seuvFrame.ch3STD = sqrt(total);
     }
@@ -65,14 +67,14 @@ void calculate_avg_std(uint8_t ch, uint8_t data[], uint8_t numbers) {
         seuvFrame.ch4AVG = (total / numbers);
         total = 0;
         for (flag = 0; flag < numbers; flag++) {
-            total += (tmp[flag] - seuvFrame.ch4AVG) * (tmp[flag] - seuvFrame.ch4AVG);
+            total += pow((tmp[flag] - seuvFrame.ch4AVG), 2);
         }
         seuvFrame.ch4STD = sqrt(total);
     }
 }
 
-uint8_t seuv_take_data(uint8_t ch, int gain, uint8_t frame[][3*seuvFrame.samples]) {
-
+// uint8_t seuv_take_data(uint8_t ch, int gain, uint8_t frame[][3*seuvFrame.samples]) {
+uint8_t seuv_take_data(uint8_t ch, int gain, uint8_t *frame) {
     uint8_t rx[10];    
     uint8_t tx[2];
 
@@ -113,13 +115,16 @@ uint8_t seuv_take_data(uint8_t ch, int gain, uint8_t frame[][3*seuvFrame.samples
         }        
     }
 
-    i2c_master_transaction(0, seuv_node, &tx, 1, &rx, seuv_data_length, seuv_delay);
-
-    if (i2c_master_transaction(0, seuv_node, 0 , 0, &rx, seuv_data_length, seuv_delay) == E_NO_ERR)
+    // i2c_master_transaction(0, seuv_node, &tx, 1, &rx, seuv_data_length, seuv_delay);
+    // printf("hi %d\n", tx[0]);
+    if (i2c_master_transaction(0, seuv_node, &tx , 1, &rx, seuv_data_length, seuv_delay) == E_NO_ERR){
         memcpy(frame, &rx, 3);
+        // hex_dump(frame, 3);
+    }
     else
         return  ERR_I2C_FAIL;
 
+    
     return ERR_SUCCESS;
 }
 
@@ -138,85 +143,122 @@ uint8_t seuv_take_data(uint8_t ch, int gain, uint8_t frame[][3*seuvFrame.samples
 //     printf("SEUV Work With INMS Done\n");
 //     power_control(3, OFF);
 // }
-void get_a_packet() {
+void get_a_packet(int gain) {
 
-    uint8_t count;           // error count , 0 = no error
-    count = 0;
-    uint8_t frame[4][3 * seuvFrame.samples];
-    // uint8_t frame_2 [3 * seuvFrame.samples];
-    // uint8_t frame_3 [3 * seuvFrame.samples];
-    // uint8_t frame_4 [3 * seuvFrame.samples];
+    uint8_t count = 0;           // error count , 0 = no error
+    uint8_t frame_1 [3 * parameters.seuv_sample_rate];
+    uint8_t frame_2 [3 * parameters.seuv_sample_rate];
+    uint8_t frame_3 [3 * parameters.seuv_sample_rate];
+    uint8_t frame_4 [3 * parameters.seuv_sample_rate];
 
-    // uint8_t frame_g1 [seuvFrame.samples];
-    // uint8_t frame_g8 [seuvFrame.samples];
+    for (int i = 0 ; i < parameters.seuv_sample_rate ;i++){
+        frame_1[i] = 0;
+        frame_2[i] = 0;
+        frame_3[i] = 0;
+        frame_4[i] = 0;
+    }
 
-    power_control(3, ON);
-    vTaskDelay(2000);
-    for (int i = 0 ; i < seuvFrame.samples ; i++){
-        for (int ch = 0 ; ch < 4 ; ch++){
-            seuv_take_data(ch + 1, 1, &frame[ch] + (3 * i));        //channel 1~4 sample 50 times
+
+    /* Take data from SEUV in numbers of samples [Gain = 1]*/
+    if (gain == 1) {
+        /* Power on SEUV */
+        power_control(3, ON);
+        vTaskDelay(2000);
+
+        for (int i = 0 ; i < parameters.seuv_sample_rate ; i++){
+            seuv_take_data(1, 1, &frame_1[3 * i]);  
+            seuv_take_data(2, 1, &frame_2[3 * i]);  
+            seuv_take_data(3, 1, &frame_3[3 * i]);  
+            seuv_take_data(4, 1, &frame_4[3 * i]);  
         }
-        // seuv_take_data(2, 1, &frame[1] + (3 * i));
-        // seuv_take_data(3, 1, &frame[2] + (3 * i));
-        // seuv_take_data(4, 1, &frame[3] + (3 * i));
-    }
+        printf("Gain 1 : take data\n");
+        if (count == 0) {
+            calculate_avg_std(1, frame_1, parameters.seuv_sample_rate);      
+            calculate_avg_std(2, frame_2, parameters.seuv_sample_rate);
+            calculate_avg_std(3, frame_3, parameters.seuv_sample_rate);
+            calculate_avg_std(4, frame_4, parameters.seuv_sample_rate);
 
-    if (count == 0) {
-        for (int ch = 0 ; ch < 4 ; ch++){
-            calculate_avg_std(ch + 1, frame[ch], seuvFrame.samples);
-        }        
-        if (seuv_write() == No_Error)
-            printf("Write a packet into SEUV.bin\n");
-        else
-            printf("Fail to write into SEUV.bin\n");
-    }
-    else {
-        printf("Fail to get SEUV data\n");
-    }
-    count = 0 ;
-    for (int i = 0 ; i < 4 ;i++){
-        *frame[i] = 0;
-    }
-    for (int i = 0 ; i < seuvFrame.samples ; i++){
-        for (int ch = 0 ; ch < 4 ; ch++){
-            seuv_take_data(ch + 1, 8, &frame[ch] + (3 * i));        //channel 1~4 sample 50 times
+            printf("1 A = %f\n", seuvFrame.ch1AVG);
+            printf("1 S = %f\n", seuvFrame.ch1STD);
+            printf("2 A = %f\n", seuvFrame.ch2AVG);
+            printf("2 S = %f\n", seuvFrame.ch2STD);
+            printf("3 A = %f\n", seuvFrame.ch3AVG);
+            printf("3 S = %f\n", seuvFrame.ch3STD);
+            printf("4 A = %f\n", seuvFrame.ch4AVG);
+            printf("4 S = %f\n", seuvFrame.ch4STD);
+            seuvFrame.samples += 1 ; 
+            // printf("sample = %d\n", seuvFrame.samples);
+            if (seuv_write() == No_Error)
+                printf("Write a packet into SEUV.bin\n");
+            else
+                printf("Fail to write into SEUV.bin\n");
+            seuvFrame.samples -= 1 ; 
+        }
+        else {
+            printf("Fail to get SEUV data\n");
         }
     }
-    if (count == 0) {
-        for (int ch = 0 ; ch < 4 ; ch++){
-            calculate_avg_std(ch + 1, frame[ch], seuvFrame.samples);
-        }         
-        if (seuv_write() == No_Error)
-            printf("Write a packet into SEUV.bin\n");
-        else
-            printf("Fail to write into SEUV.bin\n");
-    }
-    else {
-        printf("Fail to get SEUV data\n");
-    }
+    else if (gain == 8) {
+        printf("Gain 8 : take data\n");
+        //channel 1~4 sample 50 times
+        for (int i = 0 ; i < parameters.seuv_sample_rate ; i++){     
+            seuv_take_data(1, 8, &frame_1[3 * i]);  
+            seuv_take_data(2, 8, &frame_2[3 * i]);  
+            seuv_take_data(3, 8, &frame_3[3 * i]);  
+            seuv_take_data(4, 8, &frame_4[3 * i]);  
+        }
+        if (count == 0) {       
+            calculate_avg_std(1, frame_1, parameters.seuv_sample_rate);      
+            calculate_avg_std(2, frame_2, parameters.seuv_sample_rate);
+            calculate_avg_std(3, frame_3, parameters.seuv_sample_rate);
+            calculate_avg_std(4, frame_4, parameters.seuv_sample_rate);
 
-    power_control(3, OFF);
+            printf("1 A = %f\n", seuvFrame.ch1AVG);
+            printf("1 S = %f\n", seuvFrame.ch1STD);
+            printf("2 A = %f\n", seuvFrame.ch2AVG);
+            printf("2 S = %f\n", seuvFrame.ch2STD);
+            printf("3 A = %f\n", seuvFrame.ch3AVG);
+            printf("3 S = %f\n", seuvFrame.ch3STD);
+            printf("4 A = %f\n", seuvFrame.ch4AVG);
+            printf("4 S = %f\n", seuvFrame.ch4STD);
+            seuvFrame.samples += 8 ; 
+            if (seuv_write() == No_Error)
+                printf("Write a packet into SEUV.bin\n");
+            else
+                printf("Fail to write into SEUV.bin\n");
+            seuvFrame.samples -= 8 ; 
+        }
+        else {
+            printf("Fail to get SEUV data\n");
+        }   
+        /* Power off SEUV */
+        power_control(3, OFF);
+    }
 }
 
 void SolarEUV_Task(void * pvParameters) {
 
     portTickType xLastWakeTime;
     portTickType xFrequency = 1000;
-
+    parameter_init();
     while (1) {
 
         if (parameters.seuv_period != 0) {
             xFrequency = parameters.seuv_period * 1000;
+            // xFrequency = 10 * 1000;
         }
         /* Set the delay time during one sampling operation*/
         xLastWakeTime = xTaskGetTickCount();
         printf("mode = %d\n", parameters.seuv_mode);
         if (parameters.seuv_mode == 0x01) {         /* Mode A: check if the CubeSat is in the sun light area */
-            if (HK_frame.sun_light_flag == 1)       /* If True, get a packet */
-                get_a_packet();
+            if (HK_frame.sun_light_flag == 1) {     /* If True, get a packet */
+                get_a_packet(1);
+                get_a_packet(8);
+            }      
         }
         else if (parameters.seuv_mode == 0x02) {    /* Mode B: Keep sampling every 8 seconds */           
-                get_a_packet();
+            get_a_packet(1);
+            get_a_packet(8);
         }
         else if (parameters.seuv_mode == 0x03) {    
             printf("mode = 3, no measurement taken\n");
@@ -226,6 +268,5 @@ void SolarEUV_Task(void * pvParameters) {
 
     /* End of seuv */
     vTaskDelete(NULL);
-
 }
 

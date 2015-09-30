@@ -1,5 +1,4 @@
 #include <util/timestamp.h>
-
 #include <freertos/FreeRTOS.h>
 #include "parameter.h"
 #include "crc16.h"
@@ -23,7 +22,7 @@ void decodeService131(uint8_t subType, uint8_t * telecommand) {
 	uint8_t rxBufferLength;
 	uint8_t types = 3;
 	uint8_t parameterLength;
-// note: parameter start from telecommand[9]
+	// note: parameter start from telecommand[9]
 	/*------------------------------------------Telecommand-----------------------------------*/
 
 	/*---------------ID:1 Reset----------------*/

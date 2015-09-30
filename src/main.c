@@ -172,6 +172,9 @@ int main(void) {
 	// extern void vTaskinms(void * pvParameters);
 	// xTaskCreate(vTaskinms, (const signed char *) "inms", 1024*4, NULL, 2, NULL);
 	
+	// extern void SolarEUV_Task(void * pvParameters);
+	// xTaskCreate(SolarEUV_Task, (const signed char *) "SEUV", 1024*4, NULL, 2, NULL);
+	
 	// extern void vTaskfstest(void * pvParameters);
 	// xTaskCreate(vTaskfstest, (const signed char *) "FS_T", 1024*4, NULL, 2, NULL);
 	

@@ -15,9 +15,9 @@
 
 /*------------------------------------------Telecommand-----------------------------------*/
 #define script_first_part		9
-#define script_middle_part	10
+#define script_middle_part		10
 #define script_last_part		11
-#define Ack_to_a_part		14
+#define Ack_to_a_part			14
 int script_length = 0;
 
 void  decodeService13(uint8_t subType, uint8_t *telecommand) {

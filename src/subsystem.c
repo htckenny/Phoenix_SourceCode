@@ -83,8 +83,9 @@ int parameter_init() {
 	parameters.vbat_recover_threshold    = 7500;
 	parameters.vbat_safe_threshold       = 7000;
 
-
-	seuvFrame.samples = parameters.seuv_sample_rate;
+	seuvFrame.samples = parameters.seuv_sample_rate << 1 ;		/* samples */
+																/* 0 1 2 3 4 5 6 |  7    */
+																/*  sample rate  | Gain  */			
 
 	if (para_r() == No_Error) { //if successfully read last parameter from SD card
 		parameters.reboot_count = parameters.reboot_count + 1; //reboot counter+1

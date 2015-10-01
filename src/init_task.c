@@ -54,7 +54,6 @@ void Init_Task(void * pvParameters) {
 
 		}
 	}
-
 	/*   Deploy Device  */
 	if (idleunlocks != 1) {
 		deploy_antenna();
@@ -65,10 +64,11 @@ void Init_Task(void * pvParameters) {
 	printf("Active Telecom Task, User can start to upload Ground Telecommand\n");
 	extern void Telecom_Task(void * pvParameters);
 	xTaskCreate(Telecom_Task, (const signed char * ) "COM", 1024 * 4, NULL, 2, NULL);
+	/* Activate WOD collecting task, and start to transmit the beacon */
 	extern void vTaskwod(void * pvParameters);
 	xTaskCreate(vTaskwod, (const signed char * ) "WOD", 1024 * 4, NULL, 2, &wod_task);
 
-	// change to the ADCS mode
+	/* change to the ADCS mode */ 
 	HK_frame.mode_status_flag = 2;
 
 

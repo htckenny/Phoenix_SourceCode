@@ -31,7 +31,8 @@ static timestamp_t t;
 uint8_t wod[232];
 uint8_t beaconWod [8];
 
-void sa(int byte_no, int bit_no) { //calculate the position of the memory and then store in.
+/* calculate the position of the memory and then store in. */
+void sa(int byte_no, int bit_no) { 
 	int num = 0;
 	switch (bit_no)
 	{
@@ -57,10 +58,10 @@ void sa(int byte_no, int bit_no) { //calculate the position of the memory and th
 		break;
 	}
 	wod[byte_no - 1] = wod[byte_no - 1] + num;
-
-
 }
-void calbit(int dataSet) { //normally for mode(first bit of 57bits)
+
+/* normally for mode(first bit of 57bits) */
+void calbit(int dataSet) { 
 	int curbit;
 	//32 data set
 	if (dataSet > 32)
@@ -70,7 +71,8 @@ void calbit(int dataSet) { //normally for mode(first bit of 57bits)
 	sa(curbit / 8 + 5, curbit % 8); //+1(next)+4(32bit time)
 
 }
-void calmulbit(int dataSet, int data, int value) { //for the wod choose which dataset and data and the value
+/* for the wod choose which dataset and data and the value */
+void calmulbit(int dataSet, int data, int value) { 
 	//data=1:batvol ,data=2:batcurr.............data=7:tempbat
 	int curbit;
 	int i , j;
@@ -90,9 +92,7 @@ void calmulbit(int dataSet, int data, int value) { //for the wod choose which da
 			rec[i] = 1;
 			value = value - (1 << (7 - i));
 		}
-
 	}
-
 	for (j = 0; j < 8; j++) {
 		if (rec[j] == 1) {
 			curbit = 57 * (dataSet - 1) + 8 * (data - 1) + j + 1;
@@ -107,7 +107,6 @@ int getWodFrame(int fnum) {
 	if (fnum < 1)
 		return Error;
 
-
 	if (fnum == 1) {
 		t.tv_sec = 0;
 		t.tv_nsec = 0;
@@ -117,8 +116,6 @@ int getWodFrame(int fnum) {
 		wod[2] = t.tv_sec >> 16;
 		wod[3] = t.tv_sec >> 24;
 	}
-
-
 	unsigned int mode = 1;
 	if (HK_frame.mode_status_flag == 0)
 		mode = 0;
@@ -196,7 +193,7 @@ int getWodFrame(int fnum) {
 	//printf("i3.3=%u\n",bus3v3Current);
 	// printf("i5.0=%u\n",bus5v0Current);
 	// printf("tmpEPS=%u\n",tempEps);
-	//   printf("temBAT=%u\n",tempBat);
+	//  printf("temBAT=%u\n",tempBat);
 
 
 	if (mode)	calbit(fnum);		// wodd.dataSet[fnum].mode = 0 or 1;
@@ -223,7 +220,10 @@ int getWodFrame(int fnum) {
 	return No_Error;
 }
 
-
+/**
+ * This task is used for generate beacon signal, and tranmit to the GS
+ * @param pvParameters [description]
+ */
 void beacon_task(void * pvParameters) {
 
 	int period = 30000;		//Normally the beacon period is 30 sec

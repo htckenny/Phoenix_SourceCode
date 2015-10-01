@@ -1205,7 +1205,7 @@ int seuv_write()
 
 	seuvFrame.packettime = csp_hton32(t.tv_sec);
 	printf("sample = %d\n", seuvFrame.samples);
-	
+
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK)
 		printf("SEUV  f_open fail!!\n");
@@ -1389,6 +1389,94 @@ int hk_delete() {
 }
 
 /** End of HK data related FS function*/
+/*  ---------------------------------------------------  */	
+/** Start of EOP data related FS function*/
+
+int eop_write(uint8_t * frameCont )
+{
+	f_mount(0, &fs);
+    struct tm  ts;
+    char buf[80];
+    char s[] = "0:/EOP_DATA/";
+    char fileName[40];
+
+	timestamp_t t;
+
+    strcpy(fileName, s);
+
+	// Get current time
+	t.tv_sec = 0;
+	t.tv_nsec = 0;
+	obc_timesync(&t, 6000);
+	time_t tt = t.tv_sec;
+	time(&tt);
+	// Format time, "ddd yyyy-mm-dd hh:mm:ss zzz"
+	ts = *localtime(&tt);
+	strftime(buf, sizeof(buf), "%Y%m%d_%H%M%S", &ts);
+
+	strcat(fileName, buf);
+	strcat(fileName, "_EOP_TW01");
+	strcat(fileName, ".dat");
+	printf("%s\n", fileName);
+	
+	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+	f_lseek(&file, file.fsize);
+	res = f_write(&file, frameCont, eop_length, &bw);
+
+	if (res != FR_OK) {
+		printf("\r\n eop_write() fail .. \r\n");
+		f_close(&file);
+		f_mount(0, NULL);
+		return Error;
+	}
+	else {
+		printf("\r\n eop_write() success .. \r\n");
+		f_close(&file);
+		f_mount(0, NULL);
+		return No_Error;
+	}
+}
+
+int eop_read(char fileName[], void * txbuf) { 
+	
+	// f_mount(0, &fs);	
+	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+	if (res != FR_OK) {
+		printf("\r\n f_open() fail .. \r\n");
+	}
+	else {
+		printf("\r\n f_open() success .. \r\n");
+	}	
+	res = f_read(&file, &buffer, eop_length, &br);
+
+	if (res != FR_OK) {
+		printf("\r\n wod_read() fail .. \r\n");
+		f_close(&file);
+		f_mount(0, NULL);
+		return Error;
+	}
+	else {
+		memcpy(txbuf, &buffer, eop_length);
+		f_close(&file);
+		f_mount(0, NULL);
+		return No_Error;
+	}
+}
+
+int eop_delete(char fileName[]) {
+
+	f_mount(0, &fs);	
+	res = f_unlink(fileName);	  //先刪除
+
+	if (res != FR_OK) {
+		printf("\r\n f_unlink() fail .. \r\n");
+		return Error;
+	}
+	else {
+		printf("\r\n f_unlink() success .. \r\n");
+		return No_Error;
+	}
+}
 /*  ---------------------------------------------------  */	
 /** Start of parameter related FS function*/
 
@@ -1751,7 +1839,6 @@ int thurmal_1_w() {  // serial =1~N
 		printf("\r\n f_open() fail .. \r\n");
 	}
 	else {
-
 		//printf("\r\n f_open() success .. \r\n");
 	}
 
@@ -1954,12 +2041,12 @@ int scan_files_Downlink (
 			    			SendDataWithCCSDS_AX25(3, &seuv_data[0]);
 			    		}
 			    		else if (strcmp(path, "0:/EOP_DATA") == 0){
-		    				// inms_data_read(full_path, eop_data);
-			    			// hex_dump(&eop_data, eop_length);
-			    			// SendDataWithCCSDS_AX25(4, &eop_data[0]);
+		    				eop_read(full_path, eop_data);
+			    			hex_dump(&eop_data, eop_length);
+			    			SendDataWithCCSDS_AX25(4, &eop_data[0]);
 			    		}
 			    		else if (strcmp(path, "0:/WOD_DATA") == 0){
-		    				// inms_data_read(full_path, wod_data);
+		    				// wod_read(full_path, wod_data);
 			    			// hex_dump(&wod_data, wod_length);
 			    			// SendDataWithCCSDS_AX25(5, &wod_data[0]);
 			    		}
@@ -1989,9 +2076,9 @@ int scan_files_Downlink (
 			    			SendDataWithCCSDS_AX25(3, &seuv_data[0]);
 			    		}
 			    		else if (strcmp(path, "0:/EOP_DATA") == 0){
-		    				// inms_data_read(full_path, eop_data);
-			    			// hex_dump(&eop_data, eop_length);
-			    			// SendDataWithCCSDS_AX25(4, &eop_data[0]);
+		    				eop_read(full_path, eop_data);
+			    			hex_dump(&eop_data, eop_length);
+			    			SendDataWithCCSDS_AX25(4, &eop_data[0]);
 			    		}
 			    		else if (strcmp(path, "0:/WOD_DATA") == 0){
 		    				// inms_data_read(full_path, wod_data);
@@ -2023,9 +2110,9 @@ int scan_files_Downlink (
 			    			SendDataWithCCSDS_AX25(3, &seuv_data[0]);
 			    		}
 			    		else if (strcmp(path, "0:/EOP_DATA") == 0){
-		    				// inms_data_read(full_path, eop_data);
-			    			// hex_dump(&eop_data, eop_length);
-			    			// SendDataWithCCSDS_AX25(4, &eop_data[0]);
+		    				eop_read(full_path, eop_data);
+			    			hex_dump(&eop_data, eop_length);
+			    			SendDataWithCCSDS_AX25(4, &eop_data[0]);
 			    		}
 			    		else if (strcmp(path, "0:/WOD_DATA") == 0){
 		    				// inms_data_read(full_path, wod_data);
@@ -2128,26 +2215,67 @@ int scan_files_Delete (
 		    	case 1:
 		    		if (timeRec_T1 < (unsigned)t_of_day && timeRec_T2 > (unsigned)t_of_day){
 		    			printf("mode = 1 delete \n");
-		    			inms_data_delete(full_path);
+		    			if (strcmp(path, "0:/HK_DATA") == 0){
+							hk_delete(full_path);
+		    			}
+		    			else if (strcmp(path, "0:/INMS_DATA") == 0){
+		    				inms_data_delete(full_path);	
+		    			}
+		    			else if (strcmp(path, "0:/SEUV_DATA") == 0){
+		    				seuv_delete(full_path);	
+		    			}
+		    			else if (strcmp(path, "0:/EOP_DATA") == 0){
+		    				eop_delete(full_path);	
+		    			}
+		    			else if (strcmp(path, "0:/WOD_DATA") == 0){
+		    				// wod_delete(full_path);	
+		    			}
 		    		}
 		    		
 		    		break;
 	    		case 2:
     			   	if (timeRec_T1 > (unsigned)t_of_day){
     			   		printf("mode = 2 delete \n");
-    			   		inms_data_delete(full_path);		    			
+    			   		if (strcmp(path, "0:/HK_DATA") == 0){
+							hk_delete(full_path);
+		    			}
+		    			else if (strcmp(path, "0:/INMS_DATA") == 0){
+		    				inms_data_delete(full_path);	
+		    			}
+		    			else if (strcmp(path, "0:/SEUV_DATA") == 0){
+		    				seuv_delete(full_path);	
+		    			}
+		    			else if (strcmp(path, "0:/EOP_DATA") == 0){
+		    				eop_delete(full_path);	
+		    			}
+		    			else if (strcmp(path, "0:/WOD_DATA") == 0){
+		    				// wod_delete(full_path);	
+		    			}		    			
     			   	}
     			   
 	    			break;
 	    		case 3:
 	    			if (timeRec_T1 < (unsigned)t_of_day){
     			   		printf("mode = 3 delete \n");
-    			   		inms_data_delete(full_path);
+    			   		if (strcmp(path, "0:/HK_DATA") == 0){
+							hk_delete(full_path);
+		    			}
+		    			else if (strcmp(path, "0:/INMS_DATA") == 0){
+		    				inms_data_delete(full_path);	
+		    			}
+		    			else if (strcmp(path, "0:/SEUV_DATA") == 0){
+		    				seuv_delete(full_path);	
+		    			}
+		    			else if (strcmp(path, "0:/EOP_DATA") == 0){
+		    				eop_delete(full_path);	
+		    			}
+		    			else if (strcmp(path, "0:/WOD_DATA") == 0){
+		    				// wod_delete(full_path);	
+		    			}
     			   	}
-    			   	
 	    			break;
 	    		default:
-	    			printf("range error\n");
+	    			printf("Range error Type 1 ~ 3\n");
 	    			break;
 		    }
         }

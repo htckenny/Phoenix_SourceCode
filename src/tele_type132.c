@@ -67,7 +67,7 @@ void decodeService132(uint8_t subType, uint8_t*telecommand) {
 		if (packet_length == 0) {
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
 			/* Read parameter from the FS, should delete this line if parameter_init is already called */
-			parameter_init();
+			para_r();
 			/* sample SEUV once with gain = 1 */
 			get_a_packet(1);
 			seuvFrame.samples += 1; 

@@ -63,7 +63,7 @@ int TS11() {
         return Error;
 
     // memcpy(&ThurmalFrame.T10,&rx[0],3);
-    ThurmalFrame.T11 = (rx[0] << 8 + rx[1]);
+    ThurmalFrame.T11 = (rx[0] << 8) + rx[1];
 
 
     return No_Error;
@@ -87,7 +87,7 @@ int TS10() {
 
 
     // memcpy(&ThurmalFrame.T10,&rx[0],3);
-    ThurmalFrame.T10 = (rx[0] << 8 + rx[1]);
+    ThurmalFrame.T10 = (rx[0] << 8)+ rx[1];
     //ThurmalFrame.T10=0x0A;
 
     return No_Error;

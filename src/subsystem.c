@@ -126,7 +126,7 @@ void power_control(int device, int stats) {
 	 */
 
 	//   unsigned int mode = stats;
-
+	printf("power %d with device %d\n", stats, device);
 	eps_output_set_single_req eps_switch;
 	eps_switch.mode = (uint8_t)stats;
 	eps_switch.delay = 0;

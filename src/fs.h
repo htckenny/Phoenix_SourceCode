@@ -1,7 +1,9 @@
 /*
  * FS.h
  *
- *  Created on: 2014/11/20
+ *  Created on: 	2014/11/20
+ *  Last Update: 	2015/09/30
+ *  Author: 		rusei, Kenny
  *
  */
 #ifndef FS_H_
@@ -12,24 +14,32 @@
 int inms_script_write(int buffNum,uint8_t scriptCont[], int delete_flag, int length);
 void inms_script_read(int buffNum,int packlength,void * txbuf);
 int inms_script_length(int buffNum);
+/*---------------------------------------------------*/
+/*             		  INMS Data                      */
 int inms_data_write(uint8_t frameCont[]);
 int inms_data_read(char fileName[], void * txbuf);      					 // serial= which packet you want to read , Range 1~N
 int inms_data_delete();                                                       //return 0 when success, return -1 when fail.
 /*---------------------------------------------------*/
-
-int wod_write(uint8_t frameCont[] );
+/*                Whole Orbit Data                   */
+int wod_write(uint8_t frameCont[]);
 int wod_read(int serial,void * txbuf);
 int wod_delete();
 /*---------------------------------------------------*/
+/*                 Solar EUV Data                    */
 int seuv_write();
 int seuv_read(char fileName[],void * txbuf);
 int seuv_delete();
 /*---------------------------------------------------*/
-int hk_write(uint8_t frameCont[] );
+/*              House Keeping Data                   */
+int hk_write(uint8_t frameCont[]);
 int hk_read(char fileName[],void * txbuf);
 int hk_delete();
 /*---------------------------------------------------*/
-
+/*            Early Orbit Phase Data                 */
+int eop_write(uint8_t frameCont[]);
+int eop_read(char fileName[],void * txbuf);
+int eop_delete();
+/*---------------------------------------------------*/
 int para_w();
 int para_r();
 int para_d();

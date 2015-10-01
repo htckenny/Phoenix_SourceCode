@@ -65,6 +65,23 @@ static int lm70_map[LM70_MAP_SIZE] = { 2, 4, 6, 9, 11, 13 };
 //int max6675_cs  = 1;
 
 
+int seuv_switch(struct command_context * ctx){
+	unsigned int buffer;
+	extern void SolarEUV_Task(void * pvParameters);
+	if (ctx->argc < 2) {
+		return CMD_ERROR_SYNTAX;
+	}
+	if (sscanf(ctx->argv[1], "%u", &buffer) != 1) {
+		return CMD_ERROR_SYNTAX;
+	}
+	if (buffer == 1){
+		xTaskCreate(SolarEUV_Task, (const signed char * ) "SEUV", 1024 * 4, NULL, 3, &seuv_task);
+	}
+	else if (buffer == 0) {
+		vTaskDelete(seuv_task);
+	}	
+	return CMD_ERROR_NONE;
+}
 int telecom(struct command_context * ctx){
 	unsigned int buffer;
 	extern void Telecom_Task(void * pvParameters);
@@ -656,11 +673,19 @@ int seuvwrite(struct command_context * ctx) {
 
 	uint8_t txdata = node;
 	unsigned int addra = 110;
+	uint8_t val[5];
 
+	// i2c_master_transaction(0, addra, &txdata, 1, 0, 0, seuv_delay) ;
+	// if (i2c_master_transaction(0, addra, &txdata, 1, &val, 5, seuv_delay) == E_NO_ERR) {
+	// 	hex_dump(&val, 5);
+	// 	hex_dump(&val, 5);
+	// } else
+	// 	printf("ERROR!!  Get no reply from SEUV \r\n");
 	if (i2c_master_transaction(0, addra, &txdata, 1, 0, 0, seuv_delay) == E_NO_ERR) {
 		printf("configured SEUV: %x\r\n", node);
-	} else
-		printf("ERROR!!  Get no reply from COM \r\n");
+	} 
+	else
+		printf("ERROR!!  Get no reply from SEUV \r\n");
 
 	return CMD_ERROR_NONE;
 }
@@ -863,6 +888,7 @@ struct command panels_subcommands[] = { {
 };
 
 struct command __root_command panels_commands[] = {
+	{ .name = "seuvs", .help = "seuvs [ON = 1 / OFF = 0]", .handler = seuv_switch, },
 	{ .name = "tele", .help = "tele [ON = 1 / OFF = 0]", .handler = telecom, },
 	{ .name = "jt", .help = "jt [sec]", .handler = jumpTime, },
 	{

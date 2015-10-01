@@ -94,7 +94,7 @@ typedef struct __attribute__((packed)) {
 	uint32_t inms_store_count;                 // Number of packets stored in satellite
 	uint32_t seuv_store_count;                 // Number of packets stored in satellite
 	uint32_t hk_store_count;                   // Number of packets stored in satellite
-
+	uint32_t eop__store_count;
 	/* Protocol sequence count */
 	uint16_t obc_packet_sequence_count;         //used in packing CCSDS header apid
 	uint8_t ax25_sequence_count;                //used in packing ax25  2ed header

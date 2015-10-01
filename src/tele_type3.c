@@ -164,12 +164,14 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 	case Report_Parameter:
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
 
-		memcpy(&txBuffer[0], &parameters.vbat_safe_threshold, 2);
-		memcpy(&txBuffer[2], &parameters.vbat_recover_threshold, 2);
-		txBuffer[4] = parameters.hk_collect_period;
-		txBuffer[5] = parameters.seuv_period;
-		txBuffer[6] = parameters.beacon_period;
-		txlen = 7;
+		// memcpy(&txBuffer[0], &parameters.vbat_safe_threshold, 2);
+		// memcpy(&txBuffer[2], &parameters.vbat_recover_threshold, 2);
+		// txBuffer[4] = parameters.hk_collect_period;
+		// txBuffer[5] = parameters.seuv_period;
+		// txBuffer[6] = parameters.beacon_period;
+
+		memcpy(txBuffer, &parameters.first_flight, sizeof(parameter_t));
+		txlen = sizeof(parameter_t);
 		SendPacketWithCCSDS_AX25(&txBuffer, txlen, obc_apid, type, subType);
 
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);

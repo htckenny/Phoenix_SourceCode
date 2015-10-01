@@ -39,7 +39,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 	/*---------------ID:9 download_data----------------*/
 	case download_data:
 		printf("download_data  \n");
-		// printf("%d\n", packet_length);
+		printf("%d\n", packet_length);
 
 		if (packet_length > 5) {
 
@@ -55,6 +55,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 			T1 = csp_ntoh32(T1);
 			T2 = csp_ntoh32(T2);
 			printf("be Time 1 = %"PRIu32" \n", T1);
+			printf("para 0 = %d\n", paras[0]);
 			/* PHOENIX HK */
 			if (paras[0] == 1) {
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
@@ -159,6 +160,21 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 			}
 			else
 				sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); //accept fail
+
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+		} 
+		else
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); //accept fail
+		break;
+
+	default:
+		sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
+		break;
+
+	}
+}
+
+
 			// if (paras[1] == 1) {
 			// 	sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
 			// 	if (delete_data_between_t(paras[0], T1, T2) != No_Error) {
@@ -181,18 +197,3 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 			// 	}
 			// }
 			
-
-
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
-		} else
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); //accept fail
-		break;
-
-	default:
-		sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
-		break;
-
-	}
-}
-
-

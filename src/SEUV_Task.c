@@ -40,12 +40,18 @@ void calculate_avg_std(uint8_t ch, uint8_t data[], uint8_t numbers) {
 
     /* Calculate the Average and the standard deviation of the samples */
     if (ch == 1) {
+        // printf("%d\n", total );
         seuvFrame.ch1AVG = (total / numbers);
+        // printf("%f\n", seuvFrame.ch1AVG);
         total = 0;
         for (flag = 0; flag < numbers; flag++) {
+            // printf("%d\t%f\n", tmp[flag], seuvFrame.ch1AVG);
             total += pow((tmp[flag] - seuvFrame.ch1AVG), 2);
+            // printf("total = %d\n", total);
         }
+        // printf("total = %f\n", total);
         seuvFrame.ch1STD = sqrt(total);
+        // printf("std = %f\n", seuvFrame.ch1STD);
     }
     else if (ch == 2) {
         seuvFrame.ch2AVG = (total / numbers);
@@ -115,11 +121,12 @@ uint8_t seuv_take_data(uint8_t ch, int gain, uint8_t *frame) {
         }        
     }
 
-    // i2c_master_transaction(0, seuv_node, &tx, 1, &rx, seuv_data_length, seuv_delay);
-    // printf("hi %d\n", tx[0]);
-    if (i2c_master_transaction(0, seuv_node, &tx , 1, &rx, seuv_data_length, seuv_delay) == E_NO_ERR){
-        memcpy(frame, &rx, 3);
-        // hex_dump(frame, 3);
+    i2c_master_transaction(0, seuv_node, &tx, 1, 0, 0, seuv_delay);
+    // printf("node : %d\n", tx[0]);
+    vTaskDelay(75); //Stiil need to discuss
+    if (i2c_master_transaction(0, seuv_node, 0, 0, &rx, seuv_data_length, seuv_delay) == E_NO_ERR){
+        hex_dump(&rx, 5); 
+        memcpy(frame, rx, 3);
     }
     else
         return  ERR_I2C_FAIL;
@@ -261,7 +268,7 @@ void SolarEUV_Task(void * pvParameters) {
             get_a_packet(8);
         }
         else if (parameters.seuv_mode == 0x03) {    
-            printf("mode = 3, no measurement taken\n");
+            printf("No measurement taken\n");
         }
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
     }

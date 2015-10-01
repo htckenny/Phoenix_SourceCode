@@ -9,15 +9,11 @@
 #include "subsystem.h"
 #include "Tele_function.h"
 
-
-
-
 void delete_buf() {
 
 	uint8_t txdata = com_rx_delete;
 	i2c_master_transaction(0, com_rx_node, &txdata, 1, 0, 0, com_delay);
 }
-
 
 void Read_Execute() {  // read incoming command
 
@@ -63,7 +59,6 @@ void Telecom_Task(void * pvParameters) {
 	if (parameters.shutdown_flag == 1) {
 		printf("Shutdown Command Detected!! \r\n");
 	}
-
 	if (tx_mode(1) != 0) {  //set transceiver into auto mode
 		printf("tx_mode set fail \r\n");
 	}

@@ -123,6 +123,7 @@ uint8_t seuv_take_data(uint8_t ch, int gain, uint8_t *frame) {
 
     i2c_master_transaction(0, seuv_node, &tx, 1, 0, 0, seuv_delay);
     // printf("node : %d\n", tx[0]);
+    /* Delay time to allow MCP3424 finish one sampling */
     vTaskDelay(75); //Stiil need to discuss
     if (i2c_master_transaction(0, seuv_node, 0, 0, &rx, seuv_data_length, seuv_delay) == E_NO_ERR){
         hex_dump(&rx, 5); 

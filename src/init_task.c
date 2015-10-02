@@ -31,7 +31,7 @@ void Init_Task(void * pvParameters) {
 		printf("Can't read parameter from fs\n");
 	else
 		printf("Loaded parameter from fs\n");
-
+	/* Activate Battery check task */
 	extern void BatteryCheckTask(void * pvParameters);
 	xTaskCreate(BatteryCheckTask, (const signed char *) "BatCk", 1024 * 4, NULL, 2, NULL);
 	

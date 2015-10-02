@@ -14,17 +14,22 @@ extern void vTaskInmsCurrentMonitor(void * pvParameters);
 
 void Enter_Safe_Mode(int last_mode) {
 
-    if (last_mode == 1) {                                       // if last mode = Init Mode
+    /* last mode = Init Mode */
+    if (last_mode == 1) {                                       
         vTaskDelete(init_task);
     }
-    if (last_mode == 2)                                         // if last mode = ADCS Mode
+    /* last mode = ADCS Mode */
+    if (last_mode == 2){
         vTaskDelete(adcs_task);
-//  if(parameters.first_flight==1)
-//     vTaskDelete(eop_task);
+        if(parameters.first_flight==1){
+            vTaskDelete(eop_task);                
+        }
+    }                                
 
-    power_control(1, OFF);      // Power OFF        ADCS
-    power_control(2, OFF);      // Power OFF        GPS
+    power_control(1, OFF);      // Power OFF    ADCS
+    power_control(2, OFF);      // Power OF     GPS
 
+    /* last mode = Payload Mode */
     if (last_mode == 3) {
         printf("Shutting Down ADCS_Task\n");
         vTaskDelete(adcs_task);
@@ -33,18 +38,18 @@ void Enter_Safe_Mode(int last_mode) {
         printf("Shutting Down SEUV_Task\n");
         vTaskDelete(seuv_task);
         printf("Shutting Down INMS related \n");
-        // vTaskDelete(inms_error_handle);
-        // vTaskDelete(inms_current_moniter);
+        vTaskDelete(inms_error_handle);
+        vTaskDelete(inms_current_moniter);
 
-        if (inms_task_flag == 1)
+        if (inms_task_flag == 1){
             vTaskDelete(inms_task);
+            inms_task_flag = 0;
+        }
 
-        if (inms_task_receive_flag == 1)
+        if (inms_task_receive_flag == 1){
             vTaskDelete(inms_task_receive);
-
-        inms_task_flag = 0;
-        inms_task_receive_flag = 0;
-
+            inms_task_receive_flag = 0;
+        }
         power_OFF_ALL();
     }
 }
@@ -56,10 +61,11 @@ void Mode_Control(void * pvParameters) {
      * MODE 0 = SAFE MODE
      */
 
-    power_OFF_ALL();   // command EPS power off all configurable device for insurance.
+    /* power off all configurable device for insurance. */
+    power_OFF_ALL();   
     vTaskDelay(2000);  // waiting for power off being applied
 
-    HK_frame.mode_status_flag = 1; // set satellite to enter INIT mode
+    HK_frame.mode_status_flag = 1;  // set satellite to enter INIT mode
     printf("-----------------------Enter INIT Mode----------------------------\n");
     xTaskCreate(Init_Task, (const signed char *) "Init", 1024 * 4, NULL, 2, &init_task);
 
@@ -71,10 +77,10 @@ void Mode_Control(void * pvParameters) {
             if (HK_frame.mode_status_flag == 2) { // desire to Enter the ADCS mode
                 printf("---------------------Enter ADCS Mode----------------------\n");
                 if(parameters.first_flight==1){
-                    // xTaskCreate(EOP_Task, (const signed char * ) "EOP", 1024 * 4, NULL,1, &eop_task);
+                    xTaskCreate(EOP_Task, (const signed char * ) "EOP", 1024 * 4, NULL,1, &eop_task);
                     // xTaskCreate(GPS_Task, (const signed char * ) "GPS", 1024 * 4, NULL, 1, &gps_task);
                 }
-                // xTaskCreate(ADCS_Task, (const signed char * ) "ADCS", 1024 * 4, NULL, 1, &adcs_task);
+                xTaskCreate(ADCS_Task, (const signed char * ) "ADCS", 1024 * 4, NULL, 1, &adcs_task);
 
                 lastmode = HK_frame.mode_status_flag; // ENTER ADCS MODE DONE!
             }
@@ -89,15 +95,14 @@ void Mode_Control(void * pvParameters) {
                     para_w();
                 }
                 printf("Creating four task ~~~\n");
-                // xTaskCreate(HK_Task, (const signed char * ) "HK", 1024 * 4, NULL, 2, &hk_task);
-                // xTaskCreate(SolarEUV_Task, (const signed char * ) "SEUV", 1024 * 4, NULL, 3, &seuv_task);
-                // xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "InmsEH", 1024 * 4, NULL, 2, &inms_error_handle);
-                // xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "inms_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
+                xTaskCreate(HK_Task, (const signed char * ) "HK", 1024 * 4, NULL, 2, &hk_task);
+                xTaskCreate(SolarEUV_Task, (const signed char * ) "SEUV", 1024 * 4, NULL, 3, &seuv_task);
+                xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "InmsEH", 1024 * 4, NULL, 2, &inms_error_handle);
+                xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "inms_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
                 lastmode = HK_frame.mode_status_flag;
             }
             else if (HK_frame.mode_status_flag == 0) { //if wants to enter  SafeMode.
                 printf("-------------------Enter Safe Mode----------------------\n");
-                
                 Enter_Safe_Mode(lastmode);
 
                 lastmode = HK_frame.mode_status_flag; // ENTER SAFE Mode DONE!

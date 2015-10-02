@@ -14,6 +14,14 @@
 #include "SEUV_Task.h"
 #include "Tele_function.h"
 
+#define Report_HK_State 1
+#define Report_COM_HK_1 2
+#define Report_EPS_HK 3
+#define Report_Parameter 4
+#define Report_COM_HK_2 5
+
+
+/* Helper function */
 uint16_t Interface_tmp_get() {
 	uint8_t rx[5];
 
@@ -76,6 +84,7 @@ uint16_t Interface_5V_current_get() {
 
 }
 
+/* telecommand Service 3  */
 void decodeService3(uint8_t subType, uint8_t*telecommand) {
 	uint8_t txBuffer[254];
 	uint8_t txlen;
@@ -85,13 +94,6 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 	uint8_t completionError;
 	// note: parameter start from telecommand[10]
 	/*------------------------------------------Telecommand-----------------------------------*/
-#define Report_HK_State 1
-#define Report_COM_HK_1 2
-#define Report_EPS_HK 3
-#define Report_Parameter 4
-#define Report_COM_HK_2 5
-
-
 
 
 	switch (subType) {

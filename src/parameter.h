@@ -67,19 +67,19 @@ uint8_t inms_status;
 typedef struct __attribute__((packed)) {
 
 	/* System Configuration */
-	uint8_t first_flight;                      /* During early orbit, this flag should be 1,
-	                                            Finished early orbit, this flag should be 0*/
-	uint8_t ant_deploy_flag;                   // default =0, if deployed, =1
-	uint8_t shutdown_flag;                     // if this flag =1, COM board will not send any packet to GS
-	uint8_t hk_collect_period;                 // period to collect a house keeping data, default = 60 (second)
-	uint8_t beacon_period;                     // beacon period while not in early orbit mode, default = 30(s)
-	// ps. while during early orbit mode, beacon_period is 15s and can not be changed unless leave early orbit.
-	uint8_t com_bit_rates;                     // (0x01)= 1200bps, (0x08)= 9600bps
-	uint32_t reboot_count;                      // how many times C&DH has reboot
+	uint8_t first_flight;           	/* During early orbit, this flag should be 1,
+	                                	   Finished early orbit, this flag should be 0*/
+	uint8_t ant_deploy_flag;       		// default = 0, if deployed, = 1
+	uint8_t shutdown_flag;				// if this flag = 1, COM board will not send any packet to GS
+	uint8_t hk_collect_period;      	// period to collect a house keeping data, default = 60 (second)
+	uint8_t beacon_period;         	 	// beacon period while not in early orbit mode, default = 30(s)
+										// ps. while during early orbit mode, beacon_period is 15s and can not be changed unless leave early orbit.
+	uint8_t com_bit_rates; 				// (0x01)= 1200bps, (0x08)= 9600bps
+	uint32_t reboot_count;        	  	// how many times C&DH has reboot
 
 	/*  seuv related  */
-	uint8_t seuv_period;                       // period to collect a SEUV data, default = 60 (second)
-	uint8_t seuv_sample_rate;                  // how many samples to take when collect a SEUV data
+	uint8_t seuv_period;				// period to collect a SEUV data, default = 60 (second)
+	uint8_t seuv_sample_rate;			// how many samples to take when collect a SEUV data
 	uint8_t seuv_ch1_G1_conf;
 	uint8_t seuv_ch2_G1_conf;
 	uint8_t seuv_ch3_G1_conf;
@@ -88,22 +88,22 @@ typedef struct __attribute__((packed)) {
 	uint8_t seuv_ch2_G8_conf;
 	uint8_t seuv_ch3_G8_conf;
 	uint8_t seuv_ch4_G8_conf;
-	uint8_t seuv_mode;                         // (0x01)= Mode A work with light, (0x02)= Mode B always work, (0x03)= Mode Off
+	uint8_t seuv_mode;					/*	(0x01) = Mode A work with light
+											(0x02) = Mode B always work
+											(0x03) = Mode Off  				*/
 	/*  fs related  */
-	uint32_t wod_store_count;                  // Number of packets stored in satellite
-	uint32_t inms_store_count;                 // Number of packets stored in satellite
-	uint32_t seuv_store_count;                 // Number of packets stored in satellite
-	uint32_t hk_store_count;                   // Number of packets stored in satellite
+	uint32_t wod_store_count;			// Number of packets stored in satellite
+	uint32_t inms_store_count;			// Number of packets stored in satellite
+	uint32_t seuv_store_count;			// Number of packets stored in satellite
+	uint32_t hk_store_count;			// Number of packets stored in satellite
 	uint32_t eop__store_count;
 	/* Protocol sequence count */
-	uint16_t obc_packet_sequence_count;         //used in packing CCSDS header apid
-	uint8_t ax25_sequence_count;                //used in packing ax25  2ed header
-	uint8_t tc_count;                           //used in packing ax25  2ed header
-
+	uint16_t obc_packet_sequence_count;	//used in packing CCSDS header apid
+	uint8_t ax25_sequence_count;		//used in packing ax25  2ed header
+	uint8_t tc_count;					//used in packing ax25  2ed header
 	/* battery*/
-	uint16_t vbat_recover_threshold;           // Leave safe mode threshold(mV), should be 7000 in default
-	uint16_t vbat_safe_threshold;              // Enter Safe Mode threshold(mV), should be 7500 in default
-
+	uint16_t vbat_recover_threshold;	// Leave safe mode threshold(mV), should be 7000 in default
+	uint16_t vbat_safe_threshold;		// Enter Safe Mode threshold(mV), should be 7500 in default
 	/* Schedule related */
 	uint8_t schedule_series_number;
 } parameter_t;

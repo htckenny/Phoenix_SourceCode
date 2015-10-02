@@ -1115,7 +1115,8 @@ int wod_write(uint8_t * frameCont )
 	}
 }
 
-int wod_read(int serial, void * txbuf) { // serial =1~N
+int wod_read(int serial, void * txbuf) // serial =1~N
+{ 
 
 	if (serial == 0) serial = 1;
 	f_mount(0, &fs);
@@ -1154,7 +1155,8 @@ int wod_read(int serial, void * txbuf) { // serial =1~N
 	}
 }
 
-int wod_delete() {
+int wod_delete()
+{
 	f_mount(0, &fs);
 	char fileName[] = "0:/wod.bin";
 	res = f_unlink(fileName);	  //先刪除
@@ -1228,7 +1230,8 @@ int seuv_write()
 	}
 }
 
-int seuv_read(char fileName[], void * txbuf) { // serial =1~N
+int seuv_read(char fileName[], void * txbuf) 
+{ 
 
 	// if (serial == 0) serial = 1;
 	// f_mount(0, &fs);
@@ -1267,7 +1270,8 @@ int seuv_read(char fileName[], void * txbuf) { // serial =1~N
 		return No_Error;
 	}
 }
-int seuv_delete(char fileName[]) {
+int seuv_delete(char fileName[]) 
+{
 	// f_mount(0, &fs);
 	// char fileName[] = "0:/seuv.bin";
 	res = f_unlink(fileName);	  //先刪除
@@ -1334,7 +1338,8 @@ int hk_write(uint8_t * frameCont )
 	}
 }
 
-int hk_read(char fileName[], void * txbuf) { // serial =1~N
+int hk_read(char fileName[], void * txbuf) // serial =1~N
+{ 
 
 	// if (serial == 0) serial = 1;
 	// f_mount(0, &fs);
@@ -1373,7 +1378,8 @@ int hk_read(char fileName[], void * txbuf) { // serial =1~N
 	}
 }
 
-int hk_delete() {
+int hk_delete() 
+{
 	f_mount(0, &fs);
 	char fileName[] = "0:/hk.bin";
 	res = f_unlink(fileName);	  //先刪除
@@ -1437,7 +1443,8 @@ int eop_write(uint8_t * frameCont )
 	}
 }
 
-int eop_read(char fileName[], void * txbuf) { 
+int eop_read(char fileName[], void * txbuf) 
+{ 
 	
 	// f_mount(0, &fs);	
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
@@ -1450,7 +1457,7 @@ int eop_read(char fileName[], void * txbuf) {
 	res = f_read(&file, &buffer, eop_length, &br);
 
 	if (res != FR_OK) {
-		printf("\r\n wod_read() fail .. \r\n");
+		printf("\r\n eop_read() fail .. \r\n");
 		f_close(&file);
 		f_mount(0, NULL);
 		return Error;
@@ -1463,7 +1470,8 @@ int eop_read(char fileName[], void * txbuf) {
 	}
 }
 
-int eop_delete(char fileName[]) {
+int eop_delete(char fileName[]) 
+{
 
 	f_mount(0, &fs);	
 	res = f_unlink(fileName);	  //先刪除
@@ -1480,7 +1488,8 @@ int eop_delete(char fileName[]) {
 /*  ---------------------------------------------------  */	
 /** Start of parameter related FS function*/
 
-int para_r() {  // serial =1~N
+int para_r()  // serial =1~N
+{ 
 
 	f_mount(0, &fs);
 	char fileName[] = "0:/para.bin";
@@ -1511,7 +1520,8 @@ int para_r() {  // serial =1~N
 	}
 }
 
-int para_w() {  // serial =1~N
+int para_w() // serial =1~N
+{  
 
 
 	f_mount(0, &fs);
@@ -1539,7 +1549,8 @@ int para_w() {  // serial =1~N
 	}
 }
 
-int para_d() {  // serial =1~N
+int para_d()  // serial =1~N
+{ 
 
 	f_mount(0, &fs);
 	char fileName[] = "0:/para.bin";
@@ -1560,7 +1571,8 @@ int para_d() {  // serial =1~N
 /*  ---------------------------------------------------  */	
 /** Start of ADCS parameter related FS function*/
 
-int adcs_para_r() {  // serial =1~N
+int adcs_para_r() 
+{  // serial =1~N
 
 	f_mount(0, &fs);
 	char fileName[] = "0:/adcs_para.bin";
@@ -1589,7 +1601,8 @@ int adcs_para_r() {  // serial =1~N
 	}
 }
 
-int adcs_para_w() {  // serial =1~N
+int adcs_para_w() 
+{  // serial =1~N
 
 
 	f_mount(0, &fs);
@@ -1617,7 +1630,8 @@ int adcs_para_w() {  // serial =1~N
 	}
 }
 
-int adcs_para_d() {  // serial =1~N
+int adcs_para_d() 
+{  // serial =1~N
 
 	f_mount(0, &fs);
 	char fileName[] = "0:/adcs_para.bin";
@@ -1637,7 +1651,8 @@ int adcs_para_d() {  // serial =1~N
 /*  ---------------------------------------------------  */	
 /** Start of data dump related FS function*/
 
-int inms_data_dump() {
+int inms_data_dump() 
+{
 	f_mount(0, &fs);
 	char fileName[] = "0:/inms.bin";
 	int count = 0;
@@ -1670,7 +1685,8 @@ int inms_data_dump() {
 }
 
 
-int seuv_data_dump() {
+int seuv_data_dump() 
+{
 	f_mount(0, &fs);
 	char fileName[] = "0:/seuv.bin";
 	int count = 0;
@@ -1719,7 +1735,8 @@ int seuv_data_dump() {
 	return No_Error;
 }
 
-int wod_data_dump() {
+int wod_data_dump() 
+{
 	f_mount(0, &fs);
 	char fileName[] = "0:/wod.bin";
 	int count = 0;
@@ -1753,7 +1770,8 @@ int wod_data_dump() {
 	return No_Error;
 }
 
-int hk_data_dump() {
+int hk_data_dump() 
+{
 	f_mount(0, &fs);
 	char fileName[] = "0:/hk.bin";
 	int count = 0;
@@ -1787,7 +1805,8 @@ int hk_data_dump() {
 	f_mount(0, NULL);
 	return No_Error;
 }
-int thermal_data_dump() {
+int thermal_data_dump() 
+{
 	f_mount(0, &fs);
 	char fileName[] = "0:/t_obc.bin";
 	int count = 0;
@@ -1827,14 +1846,14 @@ int thermal_data_dump() {
 /*  ---------------------------------------------------  */	
 /** Start of thermal related FS function*/
 
-int thurmal_1_w() {  // serial =1~N
+int thurmal_1_w() 
+{  // serial =1~N
 	f_mount(0, &fs);
 	char fileName[] = "0:/t_obc.bin";
 
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 
-	if (res != FR_OK)
-	{
+	if (res != FR_OK) {
 		printf("\r\n @@ %d @@ \r\n", res);
 		printf("\r\n f_open() fail .. \r\n");
 	}
@@ -1860,7 +1879,8 @@ int thurmal_1_w() {  // serial =1~N
 	return No_Error;
 }
 
-int thurmal_2_w() {  // serial =1~N
+int thurmal_2_w() 
+{  // serial =1~N
 	f_mount(0, &fs);
 	char fileName[] = "0:/t_inms.bin";
 
@@ -1892,7 +1912,8 @@ int thurmal_2_w() {  // serial =1~N
 	return No_Error;
 }
 
-int T_data_d() {  // serial =1~N
+int T_data_d() 
+{  // serial =1~N
 
 	f_mount(0, &fs);
 	char fileName[] = "0:/t_obc.bin";
@@ -1930,7 +1951,8 @@ int T_data_d() {  // serial =1~N
 /*  ---------------------------------------------------  */	
 /** Start of scan file related FS function*/
 
-int scan_files_Downlink (
+int scan_files_Downlink 
+(
     char* path,        		/* Start node to be scanned (also used as work area) */
     int mode,
     uint32_t timeRec_T1, 
@@ -2130,7 +2152,8 @@ int scan_files_Downlink (
     }
     return res;
 }
-int scan_files_Delete (
+int scan_files_Delete 
+(
     char* path,        		/* Start node to be scanned (also used as work area) */
     int mode,
     uint32_t timeRec_T1, 

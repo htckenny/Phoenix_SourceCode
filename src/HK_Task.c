@@ -70,7 +70,7 @@ int TS11() {
 }
 
 /* interface temperature */
-int TS10() {   
+int TS10() {
     uint8_t rx[10];
 
     uint8_t tx[2];
@@ -87,14 +87,14 @@ int TS10() {
 
 
     // memcpy(&ThurmalFrame.T10,&rx[0],3);
-    ThurmalFrame.T10 = (rx[0] << 8)+ rx[1];
+    ThurmalFrame.T10 = (rx[0] << 8) + rx[1];
     //ThurmalFrame.T10=0x0A;
 
     return No_Error;
 }
 
-/* obc temp */ 
-int TS9() {  
+/* obc temp */
+int TS9() {
     uint16_t * adc_buffer;
 
     adc_buffer = adc_start_blocking(1);
@@ -104,8 +104,8 @@ int TS9() {
     return No_Error;
 }
 
- // adcs temp
-int TS7() { 
+// adcs temp
+int TS7() {
     uint8_t txbuffer = 175;
     uint8_t rxbuffer[6];
 
@@ -119,7 +119,7 @@ int TS7() {
 }
 
 // antenna temp
-int TS6() {   
+int TS6() {
     uint8_t txbuffer = 0xC0;
     uint16_t rxbuffer;
 
@@ -131,7 +131,7 @@ int TS6() {
     return No_Error;
 }
 // com temp
-int TS5() {   
+int TS5() {
     uint8_t txbuffer = com_rx_hk;
     uint16_t rxbuffer[7];
 
@@ -146,7 +146,7 @@ int TS5() {
 }
 
 // eps temp
-int TS1_4() {   
+int TS1_4() {
     eps_hk_t * chkparam;
 
     i2c_frame_t * frame = csp_buffer_get(I2C_MTU);
@@ -286,17 +286,17 @@ uint8_t hk_get() {
 
 
     /*get adcs hk1*/
-       txbuf = 0x88;
-       if (i2c_master_transaction(0, adcs_node, &txbuf, 1, &hk_buffer[4], 48, adcs_delay) != E_NO_ERR)
-           return Error;
+    txbuf = 0x88;
+    if (i2c_master_transaction(0, adcs_node, &txbuf, 1, &hk_buffer[4], 48, adcs_delay) != E_NO_ERR)
+        return Error;
     /*get adcs hk2*/
-       txbuf = 0x89;
-       if (i2c_master_transaction(0, adcs_node, &txbuf, 1, &hk_buffer[52], 36, adcs_delay) != E_NO_ERR)
-           return Error;
+    txbuf = 0x89;
+    if (i2c_master_transaction(0, adcs_node, &txbuf, 1, &hk_buffer[52], 36, adcs_delay) != E_NO_ERR)
+        return Error;
     /*get adcs hk3*/
-       txbuf = 0x8A;
-       if (i2c_master_transaction(0, adcs_node, &txbuf, 1, &hk_buffer[88], 12, adcs_delay) != E_NO_ERR)
-           return Error;
+    txbuf = 0x8A;
+    if (i2c_master_transaction(0, adcs_node, &txbuf, 1, &hk_buffer[88], 12, adcs_delay) != E_NO_ERR)
+        return Error;
 
     /* get System Status*/
     HK_frame.reboot_count = parameters.reboot_count;
@@ -315,7 +315,7 @@ uint8_t hk_get() {
     memcpy(&hk_buffer[100 + sizeof(hk_frame_t)], &ThurmalFrame.T6, ((int)sizeof(thurmal_frame_t)) - 14);
 
 
-   // now total length = 122 byte
+    // now total length = 122 byte
 
     // Finished , print the complete frame
     hex_dump(&hk_buffer[0], hk_length);

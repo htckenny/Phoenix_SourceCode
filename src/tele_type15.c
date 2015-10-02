@@ -174,7 +174,9 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 	}
 }
 
-
+/**
+ * Old Code
+ */
 			// if (paras[1] == 1) {
 			// 	sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
 			// 	if (delete_data_between_t(paras[0], T1, T2) != No_Error) {

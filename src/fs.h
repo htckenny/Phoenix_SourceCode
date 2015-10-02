@@ -22,7 +22,7 @@ int inms_data_delete();                                                       //
 /*---------------------------------------------------*/
 /*                Whole Orbit Data                   */
 int wod_write(uint8_t frameCont[]);
-int wod_read(int serial,void * txbuf);
+int wod_read(char fileName[], void * txbuf);
 int wod_delete();
 /*---------------------------------------------------*/
 /*                 Solar EUV Data                    */

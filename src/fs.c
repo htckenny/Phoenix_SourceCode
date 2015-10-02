@@ -1089,8 +1089,32 @@ int inms_script_length(int buffNum) {
 
 int wod_write(uint8_t * frameCont )
 {
+	// f_mount(0, &fs);
+	// char fileName[] = "0:/wod.bin";
 	f_mount(0, &fs);
-	char fileName[] = "0:/wod.bin";
+ 	struct tm  ts;
+ 	char buf[80];
+	char s[] = "0:/WOD_DATA/";
+	char fileName[40];
+
+	timestamp_t t;
+
+  	strcpy(fileName, s);
+
+	// Get current time
+	t.tv_sec = 0;
+	t.tv_nsec = 0;
+	obc_timesync(&t, 6000);
+	time_t tt = t.tv_sec;
+	time(&tt);
+	// Format time, "ddd yyyy-mm-dd hh:mm:ss zzz"
+	ts = *localtime(&tt);
+	strftime(buf, sizeof(buf), "%Y%m%d_%H%M%S", &ts);
+
+	strcat(fileName, buf);
+	strcat(fileName, "_WOD_TW01");
+	strcat(fileName, ".dat");
+	printf("%s\n", fileName);
 
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK) {
@@ -1115,19 +1139,19 @@ int wod_write(uint8_t * frameCont )
 	}
 }
 
-int wod_read(int serial, void * txbuf) // serial =1~N
+int wod_read(char fileName[], void * txbuf) // serial =1~N
 { 
 
-	if (serial == 0) serial = 1;
-	f_mount(0, &fs);
-	char fileName[20];
-	char s[] = "0:/wod/wod_";
-	strcpy(fileName, s);
-	int head = (serial - 1) / 100;
-	char num[5];
-	sprintf(num, "%d", head);
-	strcat(fileName, num);
-	strcat(fileName, ".bin");
+	// if (serial == 0) serial = 1;
+	// f_mount(0, &fs);
+	// char fileName[20];
+	// char s[] = "0:/wod/wod_";
+	// strcpy(fileName, s);
+	// int head = (serial - 1) / 100;
+	// char num[5];
+	// sprintf(num, "%d", head);
+	// strcat(fileName, num);
+	// strcat(fileName, ".bin");
 
 
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
@@ -1137,8 +1161,9 @@ int wod_read(int serial, void * txbuf) // serial =1~N
 	else {
 		printf("\r\n f_open() success .. \r\n");
 	}
-	int tmp = (serial - 1) % 100;
-	f_lseek(&file, tmp * wod_length);
+	// int tmp = (serial - 1) % 100;
+	// f_lseek(&file, tmp * wod_length);
+	f_lseek(&file, file.fsize);
 	res = f_read(&file, &buffer, wod_length, &br);
 
 	if (res != FR_OK) {
@@ -2068,9 +2093,9 @@ int scan_files_Downlink
 			    			SendDataWithCCSDS_AX25(4, &eop_data[0]);
 			    		}
 			    		else if (strcmp(path, "0:/WOD_DATA") == 0){
-		    				// wod_read(full_path, wod_data);
-			    			// hex_dump(&wod_data, wod_length);
-			    			// SendDataWithCCSDS_AX25(5, &wod_data[0]);
+		    				wod_read(full_path, wod_data);
+			    			hex_dump(&wod_data, wod_length);
+			    			SendDataWithCCSDS_AX25(5, &wod_data[0]);
 			    		}
 		    			// SendPacketWithCCSDS_AX25(&beacon_frame.mode, 8, obc_apid, 0, 0);
 		    			vTaskDelay(500);
@@ -2103,9 +2128,9 @@ int scan_files_Downlink
 			    			SendDataWithCCSDS_AX25(4, &eop_data[0]);
 			    		}
 			    		else if (strcmp(path, "0:/WOD_DATA") == 0){
-		    				// inms_data_read(full_path, wod_data);
-			    			// hex_dump(&wod_data, wod_length);
-			    			// SendDataWithCCSDS_AX25(5, &wod_data[0]);
+		    				inms_data_read(full_path, wod_data);
+			    			hex_dump(&wod_data, wod_length);
+			    			SendDataWithCCSDS_AX25(5, &wod_data[0]);
 			    		}
 			    		vTaskDelay(500);
     			   	}
@@ -2137,9 +2162,9 @@ int scan_files_Downlink
 			    			SendDataWithCCSDS_AX25(4, &eop_data[0]);
 			    		}
 			    		else if (strcmp(path, "0:/WOD_DATA") == 0){
-		    				// inms_data_read(full_path, wod_data);
-			    			// hex_dump(&wod_data, wod_length);
-			    			// SendDataWithCCSDS_AX25(5, &wod_data[0]);
+		    				inms_data_read(full_path, wod_data);
+			    			hex_dump(&wod_data, wod_length);
+			    			SendDataWithCCSDS_AX25(5, &wod_data[0]);
 			    		}
 			    		vTaskDelay(500);
     			   	}
@@ -2251,7 +2276,7 @@ int scan_files_Delete
 		    				eop_delete(full_path);	
 		    			}
 		    			else if (strcmp(path, "0:/WOD_DATA") == 0){
-		    				// wod_delete(full_path);	
+		    				wod_delete(full_path);	
 		    			}
 		    		}
 		    		
@@ -2272,7 +2297,7 @@ int scan_files_Delete
 		    				eop_delete(full_path);	
 		    			}
 		    			else if (strcmp(path, "0:/WOD_DATA") == 0){
-		    				// wod_delete(full_path);	
+		    				wod_delete(full_path);	
 		    			}		    			
     			   	}
     			   
@@ -2293,7 +2318,7 @@ int scan_files_Delete
 		    				eop_delete(full_path);	
 		    			}
 		    			else if (strcmp(path, "0:/WOD_DATA") == 0){
-		    				// wod_delete(full_path);	
+		    				wod_delete(full_path);	
 		    			}
     			   	}
 	    			break;

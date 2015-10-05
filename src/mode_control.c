@@ -72,9 +72,10 @@ void Mode_Control(void * pvParameters) {
     uint8_t lastmode = 1; // Satellite  enter init mode done.
 
     while (1) {
-        if (HK_frame.mode_status_flag != lastmode) { // Mode change detected!!!
-
-            if (HK_frame.mode_status_flag == 2) { // desire to Enter the ADCS mode
+        /* Mode change detected!!! */
+        if (HK_frame.mode_status_flag != lastmode) { 
+            /* desire to Enter the ADCS mode */
+            if (HK_frame.mode_status_flag == 2) { 
                 printf("---------------------Enter ADCS Mode----------------------\n");
                 if(parameters.first_flight==1){
                     xTaskCreate(EOP_Task, (const signed char * ) "EOP", 1024 * 4, NULL,1, &eop_task);
@@ -84,7 +85,8 @@ void Mode_Control(void * pvParameters) {
 
                 lastmode = HK_frame.mode_status_flag; // ENTER ADCS MODE DONE!
             }
-            else if (HK_frame.mode_status_flag == 3) { //if wants to enter Payload Mode.
+            /* desire to Enter the Payload Mode. */
+            else if (HK_frame.mode_status_flag == 3) {
                 vTaskDelay(3000);
 
                 printf("-------------------Enter Payload Mode----------------------\n");
@@ -101,9 +103,11 @@ void Mode_Control(void * pvParameters) {
                 xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "inms_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
                 lastmode = HK_frame.mode_status_flag;
             }
-            else if (HK_frame.mode_status_flag == 0) { //if wants to enter  SafeMode.
+            /* desire to Enter the Safe Mode. */
+            else if (HK_frame.mode_status_flag == 0) { 
                 printf("-------------------Enter Safe Mode----------------------\n");
                 Enter_Safe_Mode(lastmode);
+
 
                 lastmode = HK_frame.mode_status_flag; // ENTER SAFE Mode DONE!
             }

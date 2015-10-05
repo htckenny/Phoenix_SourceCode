@@ -61,15 +61,18 @@ void Mode_Control(void * pvParameters) {
      * MODE 0 = SAFE MODE
      */
 
+    uint8_t lastmode ;
     /* power off all configurable device for insurance. */
     power_OFF_ALL();   
     vTaskDelay(2000);  // waiting for power off being applied
 
-    HK_frame.mode_status_flag = 1;  // set satellite to enter INIT mode
+    /* Set satellite to enter INIT mode */
+    HK_frame.mode_status_flag = 1; 
     printf("-----------------------Enter INIT Mode----------------------------\n");
     xTaskCreate(Init_Task, (const signed char *) "Init", 1024 * 4, NULL, 2, &init_task);
 
-    uint8_t lastmode = 1; // Satellite  enter init mode done.
+    /* Satellite  enter init mode done. */
+    lastmode = 1;  
 
     while (1) {
         /* Mode change detected!!! */
@@ -81,7 +84,7 @@ void Mode_Control(void * pvParameters) {
                     xTaskCreate(EOP_Task, (const signed char * ) "EOP", 1024 * 4, NULL,1, &eop_task);
                     // xTaskCreate(GPS_Task, (const signed char * ) "GPS", 1024 * 4, NULL, 1, &gps_task);
                 }
-                xTaskCreate(ADCS_Task, (const signed char * ) "ADCS", 1024 * 4, NULL, 1, &adcs_task);
+                xTaskCreate(ADCS_Tasks, (const signed char * ) "ADCS", 1024 * 4, NULL, 1, &adcs_task);
 
                 lastmode = HK_frame.mode_status_flag; // ENTER ADCS MODE DONE!
             }
@@ -96,12 +99,12 @@ void Mode_Control(void * pvParameters) {
                     parameters.first_flight = 0;
                     para_w();
                 }
-                printf("Creating four task ~~~\n");
+                printf("Creating tasks of HK, INMS, SEUV ~~~\n");
                 xTaskCreate(HK_Task, (const signed char * ) "HK", 1024 * 4, NULL, 2, &hk_task);
                 xTaskCreate(SolarEUV_Task, (const signed char * ) "SEUV", 1024 * 4, NULL, 3, &seuv_task);
                 xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "InmsEH", 1024 * 4, NULL, 2, &inms_error_handle);
                 xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "inms_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
-                lastmode = HK_frame.mode_status_flag;
+                lastmode = HK_frame.mode_status_flag;   // ENTER PAYLOAD MODE DONE!
             }
             /* desire to Enter the Safe Mode. */
             else if (HK_frame.mode_status_flag == 0) { 

@@ -27,18 +27,20 @@
 
 void Init_Task(void * pvParameters) {
 
+	/* Initialize the system parameters */
 	if (parameter_init()  == Error)
 		printf("Can't read parameter from fs\n");
 	else
 		printf("Loaded parameter from fs\n");
+
 	/* Activate Battery check task */
 	extern void BatteryCheckTask(void * pvParameters);
 	xTaskCreate(BatteryCheckTask, (const signed char *) "BatCk", 1024 * 4, NULL, 2, NULL);
 	
-	/*   Idle 30M in first flight  */
+	/* Idle 30 minutes in first flight  */
 	if (parameters.ant_deploy_flag == 0) {
 		printf("Idle 30 Minutes before deploy  \r\n");
-		printf("You can Key-in 'idleunlock' to cancel this idle  \r\n");
+		printf("You can Key-in 'idleunlock' to cancel this idle time \r\n");
 		printf("Or Key-in 'testmode' to enter ground test mode \r\n");
 	}
 
@@ -62,6 +64,7 @@ void Init_Task(void * pvParameters) {
 
 	printf("-----------------------------------------\n");
 	printf("Active Telecom Task, User can start to upload Ground Telecommand\n");
+	/* Activate telecom task, enable receiver to receive command from GS */
 	extern void Telecom_Task(void * pvParameters);
 	xTaskCreate(Telecom_Task, (const signed char * ) "COM", 1024 * 4, NULL, 2, NULL);
 	/* Activate WOD collecting task, and start to transmit the beacon */

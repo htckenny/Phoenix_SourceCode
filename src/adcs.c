@@ -52,9 +52,9 @@ void ADCS_Tasks(void * pvParameters) {
 		yrate = rxbuf[2] + (rxbuf[3] << 8); //   *256 = <<8, /256= >>8
 		zrate = rxbuf[4] + (rxbuf[5] << 8); //   *256 = <<8, /256= >>8
 
-		printf("Xrate= %d\n", xrate);
-		printf("Yrate= %d\n", yrate);
-		printf("Zrate= %d\n", zrate);
+		printf("Xrate = %d\n", xrate);
+		printf("Yrate = %d\n", yrate);
+		printf("Zrate = %d\n", zrate);
 
 		if ((yrate >= -2700) && (yrate <= -1700)) 	{			//Please check the negative value
 

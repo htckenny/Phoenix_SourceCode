@@ -63,7 +63,23 @@ static const char * name_map[LM70_MAP_SIZE] = { "A1", "A2", "A3", "A4", "A5",
 static int gyro_map[GYRO_MAP_SIZE] = { 1, 3, 5, 8, 10, 12 };
 static int lm70_map[LM70_MAP_SIZE] = { 2, 4, 6, 9, 11, 13 };
 //int max6675_cs  = 1;
-
+int adcs_switch(struct command_context * ctx){
+	unsigned int buffer;
+	extern void ADCS_Tasks(void * pvParameters);
+	if (ctx->argc < 2) {
+		return CMD_ERROR_SYNTAX;
+	}
+	if (sscanf(ctx->argv[1], "%u", &buffer) != 1) {
+		return CMD_ERROR_SYNTAX;
+	}
+	if (buffer == 1){
+		xTaskCreate(ADCS_Tasks, (const signed char * ) "ADCS", 1024 * 4, NULL, 1, &adcs_task);
+	}
+	else if (buffer == 0) {
+		vTaskDelete(adcs_task);
+	}	
+	return CMD_ERROR_NONE;
+}
 
 int seuv_switch(struct command_context * ctx){
 	unsigned int buffer;
@@ -673,7 +689,7 @@ int seuvwrite(struct command_context * ctx) {
 
 	uint8_t txdata = node;
 	unsigned int addra = 110;
-	uint8_t val[5];
+	// uint8_t val[5];
 
 	// i2c_master_transaction(0, addra, &txdata, 1, 0, 0, seuv_delay) ;
 	// if (i2c_master_transaction(0, addra, &txdata, 1, &val, 5, seuv_delay) == E_NO_ERR) {
@@ -706,10 +722,14 @@ int comhk(struct command_context * ctx) {
 
 	uint8_t txdata = com_rx_hk;
 	uint8_t val[com_rx_hk_length];
-
-	if (i2c_master_transaction(0, com_rx_node, &txdata, 1, &val, com_rx_hk_length, com_delay) == E_NO_ERR) {
+	i2c_master_transaction(0, com_rx_node, &txdata, 1, 0, 0, com_delay) ;
+	// vTaskDelay(100);
+	if (i2c_master_transaction(0, com_rx_node, 0, 0, &val, com_rx_hk_length, com_delay) == E_NO_ERR) {
 		hex_dump(&val, com_rx_hk_length);
 	} 
+	// if (i2c_master_transaction(0, com_rx_node, &txdata, 1, &val, com_rx_hk_length, com_delay) == E_NO_ERR) {
+	// 	hex_dump(&val, com_rx_hk_length);
+	// } 
 	else
 		printf("ERROR!!  Get no reply from COM \r\n");
 
@@ -888,6 +908,7 @@ struct command panels_subcommands[] = { {
 };
 
 struct command __root_command panels_commands[] = {
+	{ .name = "adcss", .help = "adcss [ON = 1 / OFF = 0]", .handler = adcs_switch, },
 	{ .name = "seuvs", .help = "seuvs [ON = 1 / OFF = 0]", .handler = seuv_switch, },
 	{ .name = "tele", .help = "tele [ON = 1 / OFF = 0]", .handler = telecom, },
 	{ .name = "jt", .help = "jt [sec]", .handler = jumpTime, },

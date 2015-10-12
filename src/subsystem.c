@@ -77,15 +77,15 @@ int parameter_init() {
 	parameters.seuv_ch2_G8_conf			= 0xBB;
 	parameters.seuv_ch3_G8_conf			= 0xDB;
 	parameters.seuv_ch4_G8_conf			= 0xFB;
-	parameters.seuv_mode				= 0x01;
+	parameters.seuv_mode				= 0x03;
 
 	/* battery*/
 	parameters.vbat_recover_threshold    = 7500;
 	parameters.vbat_safe_threshold       = 7000;
 
 	seuvFrame.samples = parameters.seuv_sample_rate << 1 ;		/* samples */
-																/* 0 1 2 3 4 5 6 |  7    */
-																/*  sample rate  | Gain  */			
+	/* 0 1 2 3 4 5 6 |  7    */
+	/*  sample rate  | Gain  */
 
 	if (para_r() == No_Error) { //if successfully read last parameter from SD card
 		parameters.reboot_count = parameters.reboot_count + 1; //reboot counter+1
@@ -166,12 +166,12 @@ void power_control(int device, int stats) {
 			memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
 			i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
 		}
-		else if (stats == OFF){
+		else if (stats == OFF) {
 			/* channel 5 = SEUV 3.3V */
 			eps_switch.channel = 5;
 			memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
 			i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
-			
+
 			/* channel 2 = SEUV 5V */
 			eps_switch.channel = 2;
 			memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
@@ -215,6 +215,60 @@ void power_OFF_ALL() {
 	power_control(2, OFF);
 	power_control(3, OFF);
 	power_control(4, OFF);
-
 }
+
+/* Helper function */
+uint16_t Interface_tmp_get() {
+	uint8_t rx[5];
+	uint8_t tx[2];
+	tx[0] = 0xF0;	//0d240
+	tx[1] = 0xF0;
+
+	i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
+	if (i2c_master_transaction(0, interface_node, 0 , 0, &rx, 4, seuv_delay) == E_NO_ERR) {
+		return (rx[0] << 8) + rx[1];
+	} 
+	else
+		return 0;
+}
+uint16_t Interface_inms_thermistor_get() {
+	uint8_t rx[5];
+	uint8_t tx[2];
+	tx[0] = 0xD0;	//0d208
+	tx[1] = 0xD0;
+
+	i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
+	if (i2c_master_transaction(0, interface_node, 0 , 0, &rx, 4, seuv_delay) == E_NO_ERR) {
+		return (rx[0] << 8) + rx[1];
+	} 
+	else
+		return 0;
+}
+uint16_t Interface_3V3_current_get() {
+	uint8_t rx[5];
+	uint8_t tx[2];
+	tx[0] = 0x90;	//0d144
+	tx[1] = 0x90;
+
+	i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
+	if (i2c_master_transaction(0, interface_node, 0 , 0, &rx, 4, seuv_delay) == E_NO_ERR) {
+		return (rx[0] << 8) + rx[1];
+	} 
+	else
+		return 0;
+}
+uint16_t Interface_5V_current_get() {
+	uint8_t rx[5];
+	uint8_t tx[2];
+	tx[0] = 0xB0;	//0x176
+	tx[1] = 0xB0;
+
+	i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
+	if (i2c_master_transaction(0, interface_node, 0 , 0, &rx, 4, seuv_delay) == E_NO_ERR) {
+		return (rx[0] << 8) + rx[1];
+	} 
+	else
+		return 0;
+}
+
 

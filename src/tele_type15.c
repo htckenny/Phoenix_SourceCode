@@ -17,7 +17,6 @@
 
 void decodeService15(uint8_t subType, uint8_t*telecommand) {
 
-
 	uint32_t T1;
 	uint32_t T2;
 	uint8_t completionError = ERR_F_READ;

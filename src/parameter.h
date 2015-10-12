@@ -30,12 +30,13 @@ xTaskHandle com_task;
 
 
 typedef struct __attribute__((packed)) {
-	uint8_t mode_status_flag;
-	uint8_t sun_light_flag;
-	/*  fs related  */
-	uint32_t reboot_count;                      // how many times C&DH has reboot
-	uint16_t interface_3V3_current;                 // Interface Board current for INMS
-	uint16_t interface_5V_current;                 // Interface Board current for INMS
+	uint8_t mode_status_flag;						/* Flag indicates that which mode is the Cubesat in */
+	uint8_t sun_light_flag;							/* Flag indicates that the Cubesat is under sun light */	
+	uint32_t reboot_count;							/* Counts of the time C&DH reboot */
+	uint16_t interface_3V3_current;					/* Interface Board 3.3 V bus current for INMS */
+	uint16_t interface_5V_current;					/* Interface Board 5.0 V bus current for INMS */
+	uint16_t interface_temp;						/* Interface Board temperature */
+	uint16_t interface_thermistor;					/* Interface Board thermistor temperature */
 } hk_frame_t;
 
 hk_frame_t HK_frame;
@@ -150,8 +151,8 @@ typedef struct __attribute__((packed)) {
 	uint16_t T10; 		// interface temp
 	uint16_t T11; 		// interface INMS temp
 
-} thurmal_frame_t;
-thurmal_frame_t ThurmalFrame;
+} thermal_frame_t;
+thermal_frame_t ThermalFrame;
 
 uint8_t Tdata[178];
 

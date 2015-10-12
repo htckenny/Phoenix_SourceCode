@@ -84,7 +84,7 @@ void  decodeService13(uint8_t subType, uint8_t *telecommand) {
 
 		break;
 	case Ack_to_a_part:
-
+		/* Not used anymore */
 		break;		
 	default:
 		sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);

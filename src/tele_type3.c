@@ -1,88 +1,24 @@
-#include <util/timestamp.h>
-#include "subsystem.h"
-#include <freertos/FreeRTOS.h>
-#include "parameter.h"
-#include "crc16.h"
 #include <dev/i2c.h>
-#include "Tele_function.h"
+#include <util/timestamp.h>
 #include <util/hexdump.h>
-#include "fs.h"
+#include <freertos/FreeRTOS.h>
 #include <string.h>
 #include <io/nanomind.h>
 #include <csp/csp_endian.h>
 #include <time.h>
-#include "SEUV_Task.h"
+/* Self defined header file*/
+#include "subsystem.h"
+#include "parameter.h"
+#include "crc16.h"
 #include "Tele_function.h"
-
-#define Report_HK_State		1
-#define Report_COM_HK_1		2
-#define Report_EPS_HK		3
-#define Report_Parameter	4
-#define Report_COM_HK_2		5
-
-
-/* Helper function */
-uint16_t Interface_tmp_get() {
-	uint8_t rx[5];
-
-	uint8_t tx[2];
-	tx[0] = 0xF0;	//0x221
-	tx[1] = 0xF0;
-	i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
-
-	if (i2c_master_transaction(0, interface_node, 0 , 0, &rx, 4, seuv_delay) == E_NO_ERR) {
-		return ( rx[0] * 256 + rx[1]);
-
-	} else
-	return 0;
-}
-
-uint16_t Interface_inms_thermistor_get() {
-	uint8_t rx[5];
-
-	uint8_t tx[2];
-	tx[0] = 0xD0;	//0x221
-	tx[1] = 0xD0;
-	i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
-
-	if (i2c_master_transaction(0, interface_node, 0 , 0, &rx, 4, seuv_delay) == E_NO_ERR) {
-		return ( rx[0] * 256 + rx[1]);
-
-	} else
-	return 0;
-}
-uint16_t Interface_3V3_current_get() {
-	uint8_t rx[5];
-
-	uint8_t tx[2];
-	tx[0] = 0x90;
-	tx[1] = 0x90;
-	i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
-
-	if (i2c_master_transaction(0, interface_node, 0 , 0, &rx, 4, seuv_delay) == E_NO_ERR) {
-		return ( rx[0] * 256 + rx[1]);
-
-	} else
-	return 0;
-
-}
-
-uint16_t Interface_5V_current_get() {
-	uint8_t rx[5];
-
-	uint8_t tx[2];
-	tx[0] = 0xB0;	//0x189
-	tx[1] = 0xB0;
-	i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
-
-	if (i2c_master_transaction(0, interface_node, 0 , 0, &rx, 4, seuv_delay) == E_NO_ERR) {
-			return ( rx[0] * 256 + rx[1]);
-
-		} else
-		return 0;
-
-
-}
+#include "fs.h"
+#include "SEUV_Task.h"
+/* Definition of the service sub type*/
+#define Report_HK_State		1		/* Report House Keeping Data */
+#define Report_COM_HK_1		2		/* Report Communication Board House Keeping Data */
+#define Report_EPS_HK		3		/* Report EPS House Keeping Data */
+#define Report_Parameter	4		/* Report All System Parameters */
+#define Report_COM_HK_2		5		/* Report COM Board Baud Rate */
 
 /* telecommand Service 3  */
 void decodeService3(uint8_t subType, uint8_t*telecommand) {

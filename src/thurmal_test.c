@@ -58,9 +58,9 @@
 // 		return Error;
 
 
-// 	//   memcpy(&ThurmalFrame.T10,&rx[0],3);
-// 	ThurmalFrame.T10 = rx[0] * 256 + rx[1];
-// 	//ThurmalFrame.T10=0x0A;
+// 	//   memcpy(&ThermalFrame.T10,&rx[0],3);
+// 	ThermalFrame.T10 = rx[0] * 256 + rx[1];
+// 	//ThermalFrame.T10=0x0A;
 
 // 	return No_Error;
 // }
@@ -71,8 +71,8 @@
 
 // 	adc_buffer = adc_start_blocking(1);
 
-// 	ThurmalFrame.T9 = (uint16_t)((((adc_buffer[0] * 2493.0) / 1023) - 424) / 6.25);
-// 	//ThurmalFrame.T9=0x09;
+// 	ThermalFrame.T9 = (uint16_t)((((adc_buffer[0] * 2493.0) / 1023) - 424) / 6.25);
+// 	//ThermalFrame.T9=0x09;
 // 	return No_Error;
 // }
 
@@ -85,7 +85,7 @@
 // 		return Error;
 
 
-// 	ThurmalFrame.T7 = (uint16_t)rxbuffer[4];
+// 	ThermalFrame.T7 = (uint16_t)rxbuffer[4];
 
 // 	return No_Error;
 // }
@@ -99,8 +99,8 @@
 // 		return Error;
 
 
-// 	ThurmalFrame.T6 = rxbuffer;
-// 	//ThurmalFrame.T6=0x06;
+// 	ThermalFrame.T6 = rxbuffer;
+// 	//ThermalFrame.T6=0x06;
 
 // 	return No_Error;
 // }
@@ -113,8 +113,8 @@
 // 		return Error;
 
 // 	//rxbuffer=csp_ntoh16(rxbuffer);
-// 	ThurmalFrame.T5 = rxbuffer;
-// 	//ThurmalFrame.T5=0x05;
+// 	ThermalFrame.T5 = rxbuffer;
+// 	//ThermalFrame.T5=0x05;
 
 // 	return No_Error;
 // }
@@ -144,10 +144,10 @@
 // 	eps_hk_unpack(chkparam);
 // 	csp_buffer_free(frame);
 
-// 	ThurmalFrame.T1 = chkparam->temp[0];
-// 	ThurmalFrame.T2 = chkparam->temp[1];
-// 	ThurmalFrame.T3 = chkparam->temp[2];
-// 	ThurmalFrame.T4 = chkparam->temp[3];
+// 	ThermalFrame.T1 = chkparam->temp[0];
+// 	ThermalFrame.T2 = chkparam->temp[1];
+// 	ThermalFrame.T3 = chkparam->temp[2];
+// 	ThermalFrame.T4 = chkparam->temp[3];
 
 
 // 	return No_Error;
@@ -156,16 +156,16 @@
 
 // void clean_all() {
 
-// 	ThurmalFrame.T1 = 0;
-// 	ThurmalFrame.T2 = 0;
-// 	ThurmalFrame.T3 = 0;
-// 	ThurmalFrame.T4 = 0;
-// 	ThurmalFrame.T5 = 0;
-// 	ThurmalFrame.T6 = 0;
-// 	ThurmalFrame.T7 = 0;
-// 	ThurmalFrame.T8 = 0;
-// 	ThurmalFrame.T9 = 0;
-// 	ThurmalFrame.T10 = 0;
+// 	ThermalFrame.T1 = 0;
+// 	ThermalFrame.T2 = 0;
+// 	ThermalFrame.T3 = 0;
+// 	ThermalFrame.T4 = 0;
+// 	ThermalFrame.T5 = 0;
+// 	ThermalFrame.T6 = 0;
+// 	ThermalFrame.T7 = 0;
+// 	ThermalFrame.T8 = 0;
+// 	ThermalFrame.T9 = 0;
+// 	ThermalFrame.T10 = 0;
 
 // }
 
@@ -181,7 +181,7 @@
 
 // 		num++;
 // 		clean_all();
-// 		ThurmalFrame.packet_number=num;
+// 		ThermalFrame.packet_number=num;
 // 	    TS1_4();
 // 	    TS5();
 // 	    TS6();
@@ -189,8 +189,8 @@
 // 	    TS9();
 // 	    TS10();
 //        printf("------------------------------------- \n");
-// 	    printf("NUM = %d ,T1= %04X ,T2 %04X ,T3= %04X ,T4= %04X ,T5= %04X \n",(int)ThurmalFrame.packet_number,ThurmalFrame.T1,ThurmalFrame.T2,ThurmalFrame.T3,ThurmalFrame.T4,ThurmalFrame.T5);
-// 	    printf("T6= %04X ,T7 %04X ,T8= %04X ,T9= %04X ,T10= %04X \n",ThurmalFrame.T6,ThurmalFrame.T7,ThurmalFrame.T8,ThurmalFrame.T9,ThurmalFrame.T10);
+// 	    printf("NUM = %d ,T1= %04X ,T2 %04X ,T3= %04X ,T4= %04X ,T5= %04X \n",(int)ThermalFrame.packet_number,ThermalFrame.T1,ThermalFrame.T2,ThermalFrame.T3,ThermalFrame.T4,ThermalFrame.T5);
+// 	    printf("T6= %04X ,T7 %04X ,T8= %04X ,T9= %04X ,T10= %04X \n",ThermalFrame.T6,ThermalFrame.T7,ThermalFrame.T8,ThermalFrame.T9,ThermalFrame.T10);
 
 // 	    thurmal_1_w();
 // 	   	TS12_16();

@@ -1845,12 +1845,12 @@ int thermal_data_dump()
 		while (1) {
 
 
-			res = f_read(&file, &ThurmalFrame.packet_number, (int)sizeof(thurmal_frame_t), &br);
+			res = f_read(&file, &ThermalFrame.packet_number, (int)sizeof(thermal_frame_t), &br);
 
 			if (res == FR_OK) {
 				printf("Thermal Data Dump packet '%d' \r\n", count);
-				printf("NUM = %d ,T1= %04X ,T2 %04X ,T3= %04X ,T4= %04X ,T5= %04X \n", (int)ThurmalFrame.packet_number, ThurmalFrame.T1, ThurmalFrame.T2, ThurmalFrame.T3, ThurmalFrame.T4, ThurmalFrame.T5);
-				printf("T6= %04X ,T7 %04X ,T8= %04X ,T9= %04X ,T10= %04X \n", ThurmalFrame.T6, ThurmalFrame.T7, ThurmalFrame.T8, ThurmalFrame.T9, ThurmalFrame.T10);
+				printf("NUM = %d ,T1= %04X ,T2 %04X ,T3= %04X ,T4= %04X ,T5= %04X \n", (int)ThermalFrame.packet_number, ThermalFrame.T1, ThermalFrame.T2, ThermalFrame.T3, ThermalFrame.T4, ThermalFrame.T5);
+				printf("T6= %04X ,T7 %04X ,T8= %04X ,T9= %04X ,T10= %04X \n", ThermalFrame.T6, ThermalFrame.T7, ThermalFrame.T8, ThermalFrame.T9, ThermalFrame.T10);
 				printf("==================================== \r\n");
 				count++;
 			}
@@ -1887,7 +1887,7 @@ int thurmal_1_w()
 	}
 
 	f_lseek(&file, file.fsize);
-	res = f_write(&file, &ThurmalFrame.packet_number, (int)sizeof(thurmal_frame_t), &br);
+	res = f_write(&file, &ThermalFrame.packet_number, (int)sizeof(thermal_frame_t), &br);
 
 	if (res != FR_OK) {
 		printf("\r\n thurmal_1_w write() fail .. \r\n");

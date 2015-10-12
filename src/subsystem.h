@@ -76,9 +76,9 @@
 #define Error          		1
 #define inms_data_length 	196
 #define wod_length 			232
-#define eop_length 			50			//////////////////////////tbd
+#define eop_length 			50				/* TBD */
 #define seuv_length 		37
-#define hk_length 			100+sizeof(thurmal_frame_t)+sizeof(hk_frame_t)-14
+#define hk_length 			100 + sizeof(hk_frame_t) + 8
 #define schedule_length		20 
 /*----------------AX.25 2ed header------------------*/
 #define AX25_2ed_size 		5
@@ -120,10 +120,10 @@
 #define adcs_apid 		11
 
 /*---------------SID---------------*/
+#define phoenix_hk_sid	1 
 #define inms_sid 		2
 #define seuv_sid 		3
 #define eop_sid 		4
-#define phoenix_hk_sid	1
 #define wod_sid 		5
 
 #define eps_hk_sid 		6
@@ -159,5 +159,8 @@ void deploy_antenna();
 void power_OFF_ALL();
 int parameter_init();
 uint32_t get_time();
-
+uint16_t Interface_3V3_current_get();
+uint16_t Interface_5V_current_get();
+uint16_t Interface_tmp_get();
+uint16_t Interface_inms_thermistor_get();
 #endif /* SUBSYSTEM_H_ */

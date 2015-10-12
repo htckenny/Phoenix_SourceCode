@@ -22,7 +22,7 @@ void decodeService11(uint8_t subType, uint8_t *telecommand) {
 #define Enable_Telecommand_Release		1
 #define Disable_Telecommand_Release		2
 #define Reset_Command_Schedule 			3
-#define Insert_Telecommand 				4
+#define Insert_Telecommand				4
 #define Delete_Telecommand				6
 #define Time_Shifting					15
 #define Dump_Command					17

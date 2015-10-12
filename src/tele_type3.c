@@ -14,11 +14,11 @@
 #include "SEUV_Task.h"
 #include "Tele_function.h"
 
-#define Report_HK_State 1
-#define Report_COM_HK_1 2
-#define Report_EPS_HK 3
-#define Report_Parameter 4
-#define Report_COM_HK_2 5
+#define Report_HK_State		1
+#define Report_COM_HK_1		2
+#define Report_EPS_HK		3
+#define Report_Parameter	4
+#define Report_COM_HK_2		5
 
 
 /* Helper function */
@@ -171,7 +171,7 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 		// txBuffer[4] = parameters.hk_collect_period;
 		// txBuffer[5] = parameters.seuv_period;
 		// txBuffer[6] = parameters.beacon_period;
-
+		// printf("%d\n", sizeof(parameter_t));
 		memcpy(txBuffer, &parameters.first_flight, sizeof(parameter_t));
 		txlen = sizeof(parameter_t);
 		SendPacketWithCCSDS_AX25(&txBuffer, txlen, obc_apid, type, subType);
@@ -189,7 +189,6 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		} 
 		else {
-
 			completionError = I2C_READ_ERROR;
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 		}

@@ -188,11 +188,12 @@ void vTaskInmsReceive(void * pvParameters) {
 	int numReceive = 0;
 	char ucharAdcs[22];
 	char ucharTotal[174 + 22];		//response packet is FIXED 174 BYTES+ADCS 22 BYTES
-	// char uchar[174];
+
 	int receiveFlag = 0;
-	uint8_t txbuf = 0x22; //defined by ADCS interface doc
-//	int num=0;
-//	char snum[10];
+	uint8_t rxbuf[48];
+	uint8_t txbuf = 0x88; 			// ID = 136 Current ADCS state
+	timestamp_t t;
+
 	for (int k = 0; k < 22; k++) {
 		ucharAdcs[k] = 0;
 	}
@@ -222,7 +223,12 @@ void vTaskInmsReceive(void * pvParameters) {
 		if ( numReceive  != 0) {
 			printf("Get %d response packet!\n", numReceive + 22);
 			if (ADCSexist == 1) {
-				if (i2c_master_transaction(0, 18, &txbuf, 1, &ucharAdcs, 22, 2) == E_NO_ERR) {
+				t.tv_sec = 0;
+				t.tv_nsec = 0;
+				obc_timesync(&t, 6000);
+				memcpy(&ucharAdcs[0], &t.tv_sec, 4);
+				if (i2c_master_transaction(0, adcs_node, &txbuf, 1, &rxbuf, 48, adcs_delay) == E_NO_ERR) {
+					memcpy(&ucharAdcs[4], &rxbuf[18], 18);
 					printf("Get Time, Attitude, Position from ADCS");
 				}
 				else {
@@ -233,7 +239,6 @@ void vTaskInmsReceive(void * pvParameters) {
 				}
 				for (int i = 22; i < 196; i++) {
 					ucharTotal[i] = usart_getc(2);
-					//				ucharTotal[i] = usart_getc(2);
 				}
 			}
 			else {
@@ -773,7 +778,7 @@ void vTaskInmsErrorHandle(void * pvParameters) {
 			break;
 		}
 		if (rsp_err_code != 0) {
-			if (i2c_master_transaction(0, 18, &txbuf, 1, &ucharAdcs, 22, 2) == E_NO_ERR) {
+			if (i2c_master_transaction(0, adcs_node, &txbuf, 1, &ucharAdcs, 22, 2) == E_NO_ERR) {
 				printf("Get Time, Attitude, Position from ADCS");
 			}
 			obcerrpacket[0] = 0xfa;

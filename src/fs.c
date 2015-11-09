@@ -28,7 +28,12 @@ uint8_t buffer[300];
 FILINFO *fno;
 extern int findMaxBuf(uint8_t sortbuf[]);
 
-/** Start of Schedule related FS function*/
+/* Start of Schedule related FS function */
+
+/**
+ * Dump all the scheduled command stored in the FS
+ * @return error code
+ */
 int schedule_dump()
 {
 	uint8_t txlen;
@@ -51,6 +56,11 @@ int schedule_dump()
 	}
 	return No_Error;
 }
+/**
+ * Shift the current list of command for some time
+ * @param  frameCont input contents
+ * @return           error code
+ */
 int schedule_shift(uint8_t *frameCont)
 {
 	// printf("in shift -test2\n");
@@ -948,25 +958,25 @@ void inms_script_read(int buffNum, int packlength, void * txbuf) {
 		strcpy(fileName, "0:/INMS/Running.bin");
 	}
 	else if (buffNum == 0) {
-		strcpy(fileName, "0:/INMS/Idle0.bin");
+		strcpy(fileName, "0:/INMS/IDLE0.bin");
 	}
 	else if (buffNum == 1) {
-		strcpy(fileName, "0:/INMS/Idle1.bin");
+		strcpy(fileName, "0:/INMS/IDLE1.bin");
 	}
 	else if (buffNum == 2) {
-		strcpy(fileName, "0:/INMS/Idle2.bin");
+		strcpy(fileName, "0:/INMS/IDLE2.bin");
 	}
 	else if (buffNum == 3) {
-		strcpy(fileName, "0:/INMS/Idle3.bin");
+		strcpy(fileName, "0:/INMS/IDLE3.bin");
 	}
 	else if (buffNum == 4) {
-		strcpy(fileName, "0:/INMS/Idle4.bin");
+		strcpy(fileName, "0:/INMS/IDLE4.bin");
 	}
 	else if (buffNum == 5) {
-		strcpy(fileName, "0:/INMS/Idle5.bin");
+		strcpy(fileName, "0:/INMS/IDLE5.bin");
 	}
 	else if (buffNum == 6) {
-		strcpy(fileName, "0:/INMS/Idle6.bin");
+		strcpy(fileName, "0:/INMS/IDLE6.bin");
 	}
 	else if (buffNum == 7) {
 		strcpy(fileName, "0:/INMS/IDLE7.bin");
@@ -1976,8 +1986,7 @@ int T_data_d()
 /*  ---------------------------------------------------  */	
 /** Start of scan file related FS function*/
 
-int scan_files_Downlink 
-(
+int scan_files_Downlink (
     char* path,        		/* Start node to be scanned (also used as work area) */
     int mode,
     uint32_t timeRec_T1, 
@@ -2177,8 +2186,7 @@ int scan_files_Downlink
     }
     return res;
 }
-int scan_files_Delete 
-(
+int scan_files_Delete (
     char* path,        		/* Start node to be scanned (also used as work area) */
     int mode,
     uint32_t timeRec_T1, 

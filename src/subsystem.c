@@ -41,7 +41,7 @@ int parameter_init() {
 
 
 	HK_frame.sun_light_flag              = 0;
-
+	inms_status                          = 1;
 	inms_task_flag                       = 0;
 	inms_task_receive_flag               = 0;
 

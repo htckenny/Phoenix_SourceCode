@@ -1,4 +1,3 @@
-
 #include <io/nanopower2.h>
 #include <csp/csp.h>
 #include <csp/csp_endian.h>
@@ -12,12 +11,13 @@
 #include <dev/cpu.h>
 
 #define E_NO_ERR -1
+
 uint16_t battery_read() {
 	eps_hk_t * chkparam;
 
 	i2c_frame_t * frame = csp_buffer_get(I2C_MTU);
-	frame->dest = eps_node;
-	frame->data[0] = EPS_PORT_HK;
+	frame->dest = eps_node;		//2
+	frame->data[0] = EPS_PORT_HK;	//8
 	frame->data[1] = 0;
 	frame->len = 2;
 	frame->len_rx = 2 + (uint8_t) sizeof(eps_hk_t);
@@ -43,8 +43,7 @@ uint16_t battery_read() {
 	return chkparam->vbatt;
 }
 
-
-void Leave_safe_mode() 
+void Leave_safe_mode()
 {
 	printf("Recover from Safe Mode \n");
 	printf("Recover from Safe Mode \n");
@@ -62,43 +61,43 @@ void Leave_safe_mode()
 	}
 }
 
-
 void BatteryCheckTask(void * pvParameters) {
 	uint16_t vbat;
 	vTaskDelay(3000);
 	printf("Battery Check Task activated \r\n");
-	
+
 	while (1) {
 		vbat = battery_read();
 		printf("vbat = %04u mV \r\n", vbat);
 
-		if ( (int)vbat < (int)parameters.vbat_safe_threshold){
-                    vbat = battery_read();
-               	if ( (int)vbat < (int)parameters.vbat_safe_threshold){
-				if (vbat != 0){
-					if (parameters.vbat_safe_threshold != 0){
+		if ( (int) vbat < (int) parameters.vbat_safe_threshold) {
+			vbat = battery_read();
+			if ( (int) vbat < (int) parameters.vbat_safe_threshold) {
+				if (vbat != 0) {
+					if (parameters.vbat_safe_threshold != 0) {
 						HK_frame.mode_status_flag = safe_mode;
 					}
-				}	
+				}
 			}
 		}
 
-		if (HK_frame.mode_status_flag == safe_mode)
+		if (HK_frame.mode_status_flag == safe_mode) {
 			while (1) {
 				vTaskDelay(30000);
 
 				vbat = battery_read();
 				printf("vbat = %05u mV \r\n", vbat);
 
-				if ( (int)vbat > (int)parameters.vbat_recover_threshold)
-					if (parameters.vbat_recover_threshold != 0)
+				if ( (int)vbat > (int)parameters.vbat_recover_threshold) {
+					if (parameters.vbat_recover_threshold != 0) {
 						if (vbat != 0) {
 							Leave_safe_mode();           /* Leave safemode  */
 							break;
 						}
-
+					}
+				}
 			}
-
+		}
 		vTaskDelay(30000);
 	}
 	/** End of Task, Should Never Reach This */

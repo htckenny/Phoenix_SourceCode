@@ -96,6 +96,8 @@ void decodeService131(uint8_t subType, uint8_t * telecommand) {
 	}
 
 	/*--------------ID:6 Deploy_Magnetometer_Boom----------------*/
+	/*
+	//TODO: unlock this option
 	else if (subType == Deploy_Magnetometer_Boom) { //you should modify this ID
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
 		txBuffer[0] = subType;
@@ -108,7 +110,7 @@ void decodeService131(uint8_t subType, uint8_t * telecommand) {
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 		}
 	}
-
+	*/
 	/*--------------ID:7 Trigger_ADCS_Loop----------------*/
 	else if (subType == Trigger_ADCS_Loop) { //you should modify this ID
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report

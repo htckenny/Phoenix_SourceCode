@@ -194,13 +194,13 @@ void get_a_packet(int gain) {
             printf("3 S = %f\n", seuvFrame.ch3STD);
             printf("4 A = %f\n", seuvFrame.ch4AVG);
             printf("4 S = %f\n", seuvFrame.ch4STD);
-            seuvFrame.samples += 1 ; 
+            seuvFrame.samples += 0 ; 
             // printf("sample = %d\n", seuvFrame.samples);
             if (seuv_write() == No_Error)
                 printf("Write a packet into SEUV.bin\n");
             else
                 printf("Fail to write into SEUV.bin\n");
-            seuvFrame.samples -= 1 ; 
+            seuvFrame.samples -= 0 ; 
         }
         else {
             printf("Fail to get SEUV data\n");
@@ -229,12 +229,12 @@ void get_a_packet(int gain) {
             printf("3 S = %f\n", seuvFrame.ch3STD);
             printf("4 A = %f\n", seuvFrame.ch4AVG);
             printf("4 S = %f\n", seuvFrame.ch4STD);
-            seuvFrame.samples += 8 ; 
+            seuvFrame.samples += 1 ; 
             if (seuv_write() == No_Error)
                 printf("Write a packet into SEUV.bin\n");
             else
                 printf("Fail to write into SEUV.bin\n");
-            seuvFrame.samples -= 8 ; 
+            seuvFrame.samples -= 1 ; 
         }
         else {
             printf("Fail to get SEUV data\n");

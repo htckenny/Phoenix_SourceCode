@@ -5,7 +5,7 @@
 #include "fs.h"
 extern void EOP_Task(void * pvParameters);
 extern void Init_Task(void * pvParameters);
-extern void ADCS_Task(void * pvParameters);
+extern void ADCS_Tasks(void * pvParameters);
 extern void HK_Task(void * pvParameters);
 extern void SolarEUV_Task(void * pvParameters);
 extern void vTaskInmsErrorHandle(void * pvParameters);
@@ -83,6 +83,7 @@ void Mode_Control(void * pvParameters) {
                 if(parameters.first_flight==1){
                     xTaskCreate(EOP_Task, (const signed char * ) "EOP", 1024 * 4, NULL,1, &eop_task);
                     // xTaskCreate(GPS_Task, (const signed char * ) "GPS", 1024 * 4, NULL, 1, &gps_task);
+                    // TODO: implement GPS task and activate this line
                 }
                 xTaskCreate(ADCS_Tasks, (const signed char * ) "ADCS", 1024 * 4, NULL, 1, &adcs_task);
 
@@ -102,8 +103,8 @@ void Mode_Control(void * pvParameters) {
                 printf("Creating tasks of HK, INMS, SEUV ~~~\n");
                 xTaskCreate(HK_Task, (const signed char * ) "HK", 1024 * 4, NULL, 2, &hk_task);
                 xTaskCreate(SolarEUV_Task, (const signed char * ) "SEUV", 1024 * 4, NULL, 3, &seuv_task);
-                xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "InmsEH", 1024 * 4, NULL, 2, &inms_error_handle);
-                xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "inms_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
+                // xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "InmsEH", 1024 * 4, NULL, 2, &inms_error_handle);
+                // xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "inms_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
                 lastmode = HK_frame.mode_status_flag;   // ENTER PAYLOAD MODE DONE!
             }
             /* desire to Enter the Safe Mode. */
@@ -115,10 +116,9 @@ void Mode_Control(void * pvParameters) {
                 lastmode = HK_frame.mode_status_flag; // ENTER SAFE Mode DONE!
             }
         }
-        vTaskDelay(1000); // check whether mode changes every second
-
-        // printf("mode = %d\n", HK_frame.mode_status_flag);
+        /* Check if the mode is changed or not every second */
+        vTaskDelay(1000); 
     }
-    /** End of this Task  ,Should Never Reach This Line*/
+    /* End of this Task, Should Never Reach This Line */
     vTaskDelete(NULL);
 }

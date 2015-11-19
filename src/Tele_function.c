@@ -394,8 +394,7 @@ uint8_t sendTelecommandReport_Success(uint8_t* telecommand, uint8_t reportType) 
 // Sends a telecommand failure report
 // Report type can be any failure subtype of service type 1
 // Returns encountered errors
-uint8_t sendTelecommandReport_Failure(uint8_t* telecommand, uint8_t reportType,
-                                      uint8_t err) {
+uint8_t sendTelecommandReport_Failure(uint8_t* telecommand, uint8_t reportType, uint8_t err) {
 // CCSDS Source Data
 	uint8_t failure[TM_S1_FAILURE_SIZE];
 // CCSDS Packet length

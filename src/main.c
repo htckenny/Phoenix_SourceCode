@@ -158,7 +158,11 @@ int main(void) {
 	xTaskCreate(vTaskInit, (const signed char *) "INIT", 1024*4, NULL, 3, NULL);
 	extern void vTaskServer(void * pvParameters);
 	xTaskCreate(vTaskServer, (const signed char *) "SRV", 1024*4, NULL, 2, NULL);
+	extern void BatteryCheckTask(void * pvParameters);
+	xTaskCreate(BatteryCheckTask, (const signed char *) "BatCk", 1024 * 4, NULL, 2, NULL);
 	
+	// extern void EOP_Task(void * pvParameters);
+	// xTaskCreate(EOP_Task, (const signed char * ) "EOP", 1024 * 4, NULL, 2, NULL);
 
 	// extern void HK_Task(void * pvParameters) ;
 	// xTaskCreate(HK_Task, (const signed char * ) "HK", 1024 * 4, NULL, 2, NULL);
@@ -170,7 +174,7 @@ int main(void) {
 	// xTaskCreate(vTaskwod, (const signed char * ) "WOD", 1024 * 4, NULL, 2, &wod_task);
 	
 	// extern void vTaskinms(void * pvParameters);
-	// xTaskCreate(vTaskinms, (const signed char *) "inms", 1024*4, NULL, 2, NULL);
+	// xTaskCreate(vTaskinms, (const signed char *) "INMS", 1024*4, NULL, 2, NULL);
 	
 	// extern void SolarEUV_Task(void * pvParameters);
 	// xTaskCreate(SolarEUV_Task, (const signed char *) "SEUV", 1024*4, NULL, 2, NULL);
@@ -182,18 +186,18 @@ int main(void) {
 	// xTaskCreate(Mode_Control, (const signed char *) "MC", 1024*4, NULL, 2, NULL);
 	
 	// extern void vTaskSchedule(void * pvParameters);
-	// xTaskCreate(vTaskSchedule, (const signed char * ) "sched", 1024 * 4, NULL,2,NULL);
+	// xTaskCreate(vTaskSchedule, (const signed char * ) "SCHE", 1024 * 4, NULL,2,NULL);
 	
 	// extern void thermal_test(void * pvParameters);
 	// xTaskCreate(thermal_test, (const signed char *) "T_Test", 1024*4, NULL, 2, NULL);
 	
 	// extern void ADCS_Tasks(void * pvParameters);
-	// xTaskCreate(ADCS_Tasks, (const signed char * ) "ADCS_Task", 1024 * 4, NULL,2,NULL);
+	// xTaskCreate(ADCS_Tasks, (const signed char * ) "ADCS", 1024 * 4, NULL,2,NULL);
 	
 	// extern void vTaskInmsErrorHandle(void * pvParameters);
 	// extern void vTaskInmsCurrentMonitor(void * pvParameters);
-	// xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "InmsEH", 1024 * 4, NULL, 2, &inms_error_handle);
- 	// xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "inms_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
+	// xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "INMS_EH", 1024 * 4, NULL, 2, &inms_error_handle);
+ 	// xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "INMS_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
 
 	/* Timer uses LFCLOCK = F_OSC/2 */
 	vTaskStartScheduler(F_OSC/2, 1024*4);

@@ -76,7 +76,7 @@
 #define Error          		1
 #define inms_data_length 	196
 #define wod_length 			232
-#define eop_length 			50				/* TBD */
+#define eop_length 			28				/* TBD */
 #define seuv_length 		37
 #define hk_length 			100 + sizeof(hk_frame_t) + 8
 #define schedule_length		20 

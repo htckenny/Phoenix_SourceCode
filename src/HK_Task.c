@@ -116,8 +116,8 @@ int TS7() {
 	if (i2c_master_transaction(0, adcs_node, &txbuffer, 1, &rxbuffer, 6, adcs_delay) != E_NO_ERR)
 		return Error;
 
-	ThermalFrame.T7 = (uint16_t)rxbuffer[5];
-
+	// ThermalFrame.T7 = (uint16_t)rxbuffer[5];
+    memcpy(&ThermalFrame.T7, &rxbuffer[4], 2);
 	return No_Error;
 }
 
@@ -128,8 +128,8 @@ int TS6() {
 
 	if (i2c_master_transaction(0, ant_node, &txbuffer, 1, &rxbuffer, 2, com_delay) != E_NO_ERR)
 		return Error;
-
-	ThermalFrame.T6 = rxbuffer;
+	memcpy(&ThermalFrame.T6, &rxbuffer, 2);
+	// ThermalFrame.T6 = rxbuffer;
 
 	return No_Error;
 }

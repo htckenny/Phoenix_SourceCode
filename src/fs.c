@@ -772,14 +772,14 @@ int delete_data_between_t(uint8_t datatype, uint16_t time1, uint16_t time2) {
 int inms_data_write(uint8_t frameCont[])
 {
 	f_mount(0, &fs);
-    struct tm  ts;
-    char buf[80];
-    char s[] = "0:/INMS_DATA/";
-    char fileName[40];
+	struct tm  ts;
+	char buf[80];
+	char s[] = "0:/INMS_DATA/";
+	char fileName[40];
 
 	timestamp_t t;
 
-    strcpy(fileName, s);
+	strcpy(fileName, s);
 
 	/* Get current time */
 	t.tv_sec = 0;
@@ -1102,14 +1102,14 @@ int wod_write(uint8_t * frameCont )
 	// f_mount(0, &fs);
 	// char fileName[] = "0:/wod.bin";
 	f_mount(0, &fs);
- 	struct tm  ts;
- 	char buf[80];
+	struct tm  ts;
+	char buf[80];
 	char s[] = "0:/WOD_DATA/";
 	char fileName[40];
 
 	timestamp_t t;
 
-  	strcpy(fileName, s);
+	strcpy(fileName, s);
 
 	// Get current time
 	t.tv_sec = 0;
@@ -1213,14 +1213,14 @@ int wod_delete()
 int seuv_write()
 {
 	f_mount(0, &fs);
- 	struct tm  ts;
- 	char buf[80];
+	struct tm  ts;
+	char buf[80];
 	char s[] = "0:/SEUV_DATA/";
 	char fileName[40];
 
 	timestamp_t t;
 
-  	strcpy(fileName, s);
+	strcpy(fileName, s);
 
 	// Get current time
 	t.tv_sec = 0;
@@ -1330,14 +1330,14 @@ int hk_write(uint8_t * frameCont )
 	// char fileName[] = "0:/hk.bin";
 
 	f_mount(0, &fs);
-    struct tm  ts;
-    char buf[80];
-    char s[] = "0:/HK_DATA/";
-    char fileName[40];
+	struct tm  ts;
+	char buf[80];
+	char s[] = "0:/HK_DATA/";
+	char fileName[40];
 
 	timestamp_t t;
 
-    strcpy(fileName, s);
+	strcpy(fileName, s);
 
 	// Get current time
 	t.tv_sec = 0;
@@ -1436,14 +1436,14 @@ int hk_delete()
 int eop_write(uint8_t * frameCont )
 {
 	f_mount(0, &fs);
-    struct tm  ts;
-    char buf[80];
-    char s[] = "0:/EOP_DATA/";
-    char fileName[40];
+	struct tm  ts;
+	char buf[80];
+	char s[] = "0:/EOP_DATA/";
+	char fileName[40];
 
 	timestamp_t t;
 
-    strcpy(fileName, s);
+	strcpy(fileName, s);
 
 	// Get current time
 	t.tv_sec = 0;
@@ -1987,354 +1987,354 @@ int T_data_d()
 /** Start of scan file related FS function*/
 
 int scan_files_Downlink (
-    char* path,        		/* Start node to be scanned (also used as work area) */
-    int mode,
-    uint32_t timeRec_T1, 
-    uint32_t timeRec_T2
+	char* path,        		/* Start node to be scanned (also used as work area) */
+	int mode,
+	uint32_t timeRec_T1, 
+	uint32_t timeRec_T2
 )
 {
-    FRESULT res;
-    FILINFO fno;
-    FATDIR dir;
-    char *fn;   			/* This function assumes non-Unicode configuration */
-  	char timeref[16];    
- 	char full_path[45];
- 	char t_year[5]="0";
-    char t_mon[2]={0};
-    char t_mday[2]={0};
-    char t_hour[2]={0};
-    char t_min[2]={0};
-    char t_sec[2]={0};
-    uint8_t hk_data[hk_length] = {0};
-    uint8_t inms_data[inms_data_length * 2] = {0};
-  	uint8_t seuv_data[seuv_length] = {0};
-  	uint8_t eop_data[eop_length] = {0};
+	FRESULT res;
+	FILINFO fno;
+	FATDIR dir;
+	char *fn;   			/* This function assumes non-Unicode configuration */
+	char timeref[16];    
+	char full_path[45];
+	char t_year[5]="0";
+	char t_mon[2]={0};
+	char t_mday[2]={0};
+	char t_hour[2]={0};
+	char t_min[2]={0};
+	char t_sec[2]={0};
+	uint8_t hk_data[hk_length] = {0};
+	uint8_t inms_data[inms_data_length * 2] = {0};
+	uint8_t seuv_data[seuv_length] = {0};
+	uint8_t eop_data[eop_length] = {0};
 	uint8_t wod_data[wod_length] = {0};
 	uint32_t inms_2nd = 0;
 #if _USE_LFN
-    static char lfn[_MAX_LFN + 1];  	 /* Buffer to store the LFN */
-    fno.lfname = lfn;
-    fno.lfsize = sizeof lfn;
+	static char lfn[_MAX_LFN + 1];  	 /* Buffer to store the LFN */
+	fno.lfname = lfn;
+	fno.lfsize = sizeof lfn;
 #endif
 
-    res = f_opendir(&dir, path);                       /* Open the directory */
-    if (res == FR_OK) {
-        // i = strlen(path);
-        for (;;) {
-        	// printf("hi\n");
-            res = f_readdir(&dir, &fno);                   /* Read a directory item */
-            if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
-            if (fno.fname[0] == '.') continue;             /* Ignore dot entry */
+	res = f_opendir(&dir, path);                       /* Open the directory */
+	if (res == FR_OK) {
+		// i = strlen(path);
+		for (;;) {
+			// printf("hi\n");
+			res = f_readdir(&dir, &fno);                   /* Read a directory item */
+			if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
+			if (fno.fname[0] == '.') continue;             /* Ignore dot entry */
 #if _USE_LFN
-            fn = *fno.lfname ? fno.lfname : fno.fname;
+			fn = *fno.lfname ? fno.lfname : fno.fname;
 #else
-            fn = fno.fname;
+			fn = fno.fname;
 #endif
-            // if (fno.fattrib & AM_DIR) {                    /* It is a directory */
-            //     sprintf(&path[i], "/%s", fn);
-            //     res = scan_files(path, testTime);
-            //     path[i] = 0;
-            //     if (res != FR_OK) break;
-            // } 
-            // else {                                       
-            // 
-            // printf("%s/%s\n", path, fn);
-            sprintf(full_path, "%s/%s", path, fn);         
-            printf("%s\n", full_path);
-            
-            strncpy(timeref, fn, 15);						/* cut the time part of the file name */
-            timeref[15] = 0;
-            // printf("%s\n", timeref);
+			// if (fno.fattrib & AM_DIR) {                    /* It is a directory */
+			//     sprintf(&path[i], "/%s", fn);
+			//     res = scan_files(path, testTime);
+			//     path[i] = 0;
+			//     if (res != FR_OK) break;
+			// } 
+			// else {                                       
+			// 
+			// printf("%s/%s\n", path, fn);
+			sprintf(full_path, "%s/%s", path, fn);         
+			printf("%s\n", full_path);
+			
+			strncpy(timeref, fn, 15);						/* cut the time part of the file name */
+			timeref[15] = 0;
+			// printf("%s\n", timeref);
 
-		    strncpy(t_year , &timeref[0], 4);
-		    t_year[4] = 0;
-		    strncpy(t_mon  , &timeref[4], 2);
-		    strncpy(t_mday , &timeref[6], 2);
-		    strncpy(t_hour , &timeref[9], 2);
-		    strncpy(t_min , &timeref[11], 2);
-		    strncpy(t_sec , &timeref[13], 2);
+			strncpy(t_year , &timeref[0], 4);
+			t_year[4] = 0;
+			strncpy(t_mon  , &timeref[4], 2);
+			strncpy(t_mday , &timeref[6], 2);
+			strncpy(t_hour , &timeref[9], 2);
+			strncpy(t_min , &timeref[11], 2);
+			strncpy(t_sec , &timeref[13], 2);
 
-	        struct tm t;
-		    time_t t_of_day;
+			struct tm t;
+			time_t t_of_day;
 		  
-		    t.tm_year = atoi(t_year) - 1900;
-		    t.tm_mon = atoi(t_mon) - 1;   			    // Month, 0 - jan
-		    t.tm_mday = atoi(t_mday);          			// Day of the month
-		    t.tm_hour = atoi(t_hour);     
-		    t.tm_min = atoi(t_min);
-		    t.tm_sec = atoi(t_sec);
-		    t.tm_isdst = -1;       						// Is DST on? 1 = yes, 0 = no, -1 = unknown
+			t.tm_year = atoi(t_year) - 1900;
+			t.tm_mon = atoi(t_mon) - 1;   			    // Month, 0 - jan
+			t.tm_mday = atoi(t_mday);          			// Day of the month
+			t.tm_hour = atoi(t_hour);     
+			t.tm_min = atoi(t_min);
+			t.tm_sec = atoi(t_sec);
+			t.tm_isdst = -1;       						// Is DST on? 1 = yes, 0 = no, -1 = unknown
 
-		    t_of_day = mktime(&t);						/* Construct struct time to epoch seconds */
-		    t_of_day -= 946684800;
+			t_of_day = mktime(&t);						/* Construct struct time to epoch seconds */
+			t_of_day -= 946684800;
 			
 			ctime(&t_of_day);
-		    printf("epoch: %"PRIu32"\n", t_of_day );
-		    // printf("OBC time is: %s\r\n", ctime(&t_of_day));
-	    	
-		    switch(mode){
-		    	case 1:
-		    		if (timeRec_T1 < (unsigned)t_of_day && timeRec_T2 > (unsigned)t_of_day){
-		    			printf("mode = 1 down link \n");
-		    			if (strcmp(path, "0:/HK_DATA") == 0){
-		    				hk_read(full_path, hk_data);
-			    			hex_dump(&hk_data, hk_length);
-			    			SendDataWithCCSDS_AX25(1, &hk_data[0]);
-		    			}
-		    			else if (strcmp(path, "0:/INMS_DATA") == 0){
-		    				inms_data_read(full_path, inms_data);
-			    			hex_dump(&inms_data, inms_data_length);
-			    			SendDataWithCCSDS_AX25(2, &inms_data[0]);
-			    			memcpy(&inms_2nd ,&inms_data[196], 4);
-			    			if (inms_2nd > 0){
-			    				hex_dump(&inms_data[196], inms_data_length);
-			    				SendDataWithCCSDS_AX25(2, &inms_data[196]);
-			    			}
-			    		}
-			    		else if (strcmp(path, "0:/SEUV_DATA") == 0){
-		    				seuv_read(full_path, seuv_data);
-			    			hex_dump(&seuv_data, seuv_length);
-			    			SendDataWithCCSDS_AX25(3, &seuv_data[0]);
-			    		}
-			    		else if (strcmp(path, "0:/EOP_DATA") == 0){
-		    				eop_read(full_path, eop_data);
-			    			hex_dump(&eop_data, eop_length);
-			    			SendDataWithCCSDS_AX25(4, &eop_data[0]);
-			    		}
-			    		else if (strcmp(path, "0:/WOD_DATA") == 0){
-		    				wod_read(full_path, wod_data);
-			    			hex_dump(&wod_data, wod_length);
-			    			SendDataWithCCSDS_AX25(5, &wod_data[0]);
-			    		}
-		    			// SendPacketWithCCSDS_AX25(&beacon_frame.mode, 8, obc_apid, 0, 0);
-		    			vTaskDelay(500);
-		    		}
-		    		break;
-	    		case 2:
-    			   	if (timeRec_T1 > (unsigned)t_of_day){
-    			   		printf("mode = 2 down link \n");
-    			   		if (strcmp(path, "0:/HK_DATA") == 0){
-		    				hk_read(full_path, hk_data);
-			    			hex_dump(&hk_data, hk_length);
-			    			SendDataWithCCSDS_AX25(1, &hk_data[0]);
-		    			}
-		    			else if (strcmp(path, "0:/INMS_DATA") == 0){
-		    				inms_data_read(full_path, inms_data);
-			    			hex_dump(&inms_data, inms_data_length);			    			
-			    			SendDataWithCCSDS_AX25(2, &inms_data[0]);
-			    			memcpy(&inms_2nd ,&inms_data[196], 4);
-			    			if (inms_2nd > 0)
-			    				SendDataWithCCSDS_AX25(2, &inms_data[196]);
-			    		}
-			    		else if (strcmp(path, "0:/SEUV_DATA") == 0){
-		    				seuv_read(full_path, seuv_data);
-			    			hex_dump(&seuv_data, seuv_length);
-			    			SendDataWithCCSDS_AX25(3, &seuv_data[0]);
-			    		}
-			    		else if (strcmp(path, "0:/EOP_DATA") == 0){
-		    				eop_read(full_path, eop_data);
-			    			hex_dump(&eop_data, eop_length);
-			    			SendDataWithCCSDS_AX25(4, &eop_data[0]);
-			    		}
-			    		else if (strcmp(path, "0:/WOD_DATA") == 0){
-		    				inms_data_read(full_path, wod_data);
-			    			hex_dump(&wod_data, wod_length);
-			    			SendDataWithCCSDS_AX25(5, &wod_data[0]);
-			    		}
-			    		vTaskDelay(500);
-    			   	}
-	    			break;
-	    		case 3:
-	    			if (timeRec_T1 < (unsigned)t_of_day){
-    			   		printf("mode = 3 down link \n");
-    			   		if (strcmp(path, "0:/HK_DATA") == 0){
-		    				hk_read(full_path, hk_data);
-			    			hex_dump(&hk_data, hk_length);
-			    			SendDataWithCCSDS_AX25(1, &hk_data[0]);
-		    			}
-		    			else if (strcmp(path, "0:/INMS_DATA") == 0){
-		    				inms_data_read(full_path, inms_data);
-			    			hex_dump(&inms_data, inms_data_length);
-			    			SendDataWithCCSDS_AX25(2, &inms_data[0]);
-			    			memcpy(&inms_2nd ,&inms_data[196], 4);
-			    			if (inms_2nd > 0)
-			    				SendDataWithCCSDS_AX25(2, &inms_data[196]);
-			    		}
-			    		else if (strcmp(path, "0:/SEUV_DATA") == 0){
-		    				seuv_read(full_path, seuv_data);
-			    			hex_dump(&seuv_data, seuv_length);
-			    			SendDataWithCCSDS_AX25(3, &seuv_data[0]);
-			    		}
-			    		else if (strcmp(path, "0:/EOP_DATA") == 0){
-		    				eop_read(full_path, eop_data);
-			    			hex_dump(&eop_data, eop_length);
-			    			SendDataWithCCSDS_AX25(4, &eop_data[0]);
-			    		}
-			    		else if (strcmp(path, "0:/WOD_DATA") == 0){
-		    				inms_data_read(full_path, wod_data);
-			    			hex_dump(&wod_data, wod_length);
-			    			SendDataWithCCSDS_AX25(5, &wod_data[0]);
-			    		}
-			    		vTaskDelay(500);
-    			   	}
-	    			break;
-	    		default:
-	    			printf("range error\n");
-	    			break;
-		    }
-        }
-    }
-    return res;
+			printf("epoch: %"PRIu32"\n", t_of_day );
+			// printf("OBC time is: %s\r\n", ctime(&t_of_day));
+			
+			switch(mode){
+				case 1:
+					if (timeRec_T1 < (unsigned)t_of_day && timeRec_T2 > (unsigned)t_of_day){
+						printf("mode = 1 down link \n");
+						if (strcmp(path, "0:/HK_DATA") == 0){
+							hk_read(full_path, hk_data);
+							hex_dump(&hk_data, hk_length);
+							SendDataWithCCSDS_AX25(1, &hk_data[0]);
+						}
+						else if (strcmp(path, "0:/INMS_DATA") == 0){
+							inms_data_read(full_path, inms_data);
+							hex_dump(&inms_data, inms_data_length);
+							SendDataWithCCSDS_AX25(2, &inms_data[0]);
+							memcpy(&inms_2nd ,&inms_data[196], 4);
+							if (inms_2nd > 0){
+								hex_dump(&inms_data[196], inms_data_length);
+								SendDataWithCCSDS_AX25(2, &inms_data[196]);
+							}
+						}
+						else if (strcmp(path, "0:/SEUV_DATA") == 0){
+							seuv_read(full_path, seuv_data);
+							hex_dump(&seuv_data, seuv_length);
+							SendDataWithCCSDS_AX25(3, &seuv_data[0]);
+						}
+						else if (strcmp(path, "0:/EOP_DATA") == 0){
+							eop_read(full_path, eop_data);
+							hex_dump(&eop_data, eop_length);
+							SendDataWithCCSDS_AX25(4, &eop_data[0]);
+						}
+						else if (strcmp(path, "0:/WOD_DATA") == 0){
+							wod_read(full_path, wod_data);
+							hex_dump(&wod_data, wod_length);
+							SendDataWithCCSDS_AX25(5, &wod_data[0]);
+						}
+						// SendPacketWithCCSDS_AX25(&beacon_frame.mode, 8, obc_apid, 0, 0);
+						vTaskDelay(500);
+					}
+					break;
+				case 2:
+					if (timeRec_T1 > (unsigned)t_of_day){
+						printf("mode = 2 down link \n");
+						if (strcmp(path, "0:/HK_DATA") == 0){
+							hk_read(full_path, hk_data);
+							hex_dump(&hk_data, hk_length);
+							SendDataWithCCSDS_AX25(1, &hk_data[0]);
+						}
+						else if (strcmp(path, "0:/INMS_DATA") == 0){
+							inms_data_read(full_path, inms_data);
+							hex_dump(&inms_data, inms_data_length);			    			
+							SendDataWithCCSDS_AX25(2, &inms_data[0]);
+							memcpy(&inms_2nd ,&inms_data[196], 4);
+							if (inms_2nd > 0)
+								SendDataWithCCSDS_AX25(2, &inms_data[196]);
+						}
+						else if (strcmp(path, "0:/SEUV_DATA") == 0){
+							seuv_read(full_path, seuv_data);
+							hex_dump(&seuv_data, seuv_length);
+							SendDataWithCCSDS_AX25(3, &seuv_data[0]);
+						}
+						else if (strcmp(path, "0:/EOP_DATA") == 0){
+							eop_read(full_path, eop_data);
+							hex_dump(&eop_data, eop_length);
+							SendDataWithCCSDS_AX25(4, &eop_data[0]);
+						}
+						else if (strcmp(path, "0:/WOD_DATA") == 0){
+							inms_data_read(full_path, wod_data);
+							hex_dump(&wod_data, wod_length);
+							SendDataWithCCSDS_AX25(5, &wod_data[0]);
+						}
+						vTaskDelay(500);
+					}
+					break;
+				case 3:
+					if (timeRec_T1 < (unsigned)t_of_day){
+						printf("mode = 3 down link \n");
+						if (strcmp(path, "0:/HK_DATA") == 0){
+							hk_read(full_path, hk_data);
+							hex_dump(&hk_data, hk_length);
+							SendDataWithCCSDS_AX25(1, &hk_data[0]);
+						}
+						else if (strcmp(path, "0:/INMS_DATA") == 0){
+							inms_data_read(full_path, inms_data);
+							hex_dump(&inms_data, inms_data_length);
+							SendDataWithCCSDS_AX25(2, &inms_data[0]);
+							memcpy(&inms_2nd ,&inms_data[196], 4);
+							if (inms_2nd > 0)
+								SendDataWithCCSDS_AX25(2, &inms_data[196]);
+						}
+						else if (strcmp(path, "0:/SEUV_DATA") == 0){
+							seuv_read(full_path, seuv_data);
+							hex_dump(&seuv_data, seuv_length);
+							SendDataWithCCSDS_AX25(3, &seuv_data[0]);
+						}
+						else if (strcmp(path, "0:/EOP_DATA") == 0){
+							eop_read(full_path, eop_data);
+							hex_dump(&eop_data, eop_length);
+							SendDataWithCCSDS_AX25(4, &eop_data[0]);
+						}
+						else if (strcmp(path, "0:/WOD_DATA") == 0){
+							inms_data_read(full_path, wod_data);
+							hex_dump(&wod_data, wod_length);
+							SendDataWithCCSDS_AX25(5, &wod_data[0]);
+						}
+						vTaskDelay(500);
+					}
+					break;
+				default:
+					printf("range error\n");
+					break;
+			}
+		}
+	}
+	return res;
 }
 int scan_files_Delete (
-    char* path,        		/* Start node to be scanned (also used as work area) */
-    int mode,
-    uint32_t timeRec_T1, 
-    uint32_t timeRec_T2
+	char* path,        		/* Start node to be scanned (also used as work area) */
+	int mode,
+	uint32_t timeRec_T1, 
+	uint32_t timeRec_T2
 )
 {
-    FRESULT res;
-    FILINFO fno;
-    FATDIR dir;
-    char *fn;   			/* This function assumes non-Unicode configuration */
-  	char timeref[16];    
- 	char full_path[45];
- 	char t_year[5]="0";
-    char t_mon[2]={0};
-    char t_mday[2]={0};
-    char t_hour[2]={0};
-    char t_min[2]={0};
-    char t_sec[2]={0};
+	FRESULT res;
+	FILINFO fno;
+	FATDIR dir;
+	char *fn;   			/* This function assumes non-Unicode configuration */
+	char timeref[16];    
+	char full_path[45];
+	char t_year[5]="0";
+	char t_mon[2]={0};
+	char t_mday[2]={0};
+	char t_hour[2]={0};
+	char t_min[2]={0};
+	char t_sec[2]={0};
 	// uint8_t ErrCode;
 #if _USE_LFN
-    static char lfn[_MAX_LFN + 1];  	 /* Buffer to store the LFN */
-    fno.lfname = lfn;
-    fno.lfsize = sizeof lfn;
+	static char lfn[_MAX_LFN + 1];  	 /* Buffer to store the LFN */
+	fno.lfname = lfn;
+	fno.lfsize = sizeof lfn;
 #endif
 
-    res = f_opendir(&dir, path);                       /* Open the directory */
-    if (res == FR_OK) {
-        // i = strlen(path);
-        for (;;) {
-        	// printf("hi\n");
-            res = f_readdir(&dir, &fno);                   /* Read a directory item */
-            if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
-            if (fno.fname[0] == '.') continue;             /* Ignore dot entry */
+	res = f_opendir(&dir, path);                       /* Open the directory */
+	if (res == FR_OK) {
+		// i = strlen(path);
+		for (;;) {
+			// printf("hi\n");
+			res = f_readdir(&dir, &fno);                   /* Read a directory item */
+			if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
+			if (fno.fname[0] == '.') continue;             /* Ignore dot entry */
 #if _USE_LFN
-            fn = *fno.lfname ? fno.lfname : fno.fname;
+			fn = *fno.lfname ? fno.lfname : fno.fname;
 #else
-            fn = fno.fname;
+			fn = fno.fname;
 #endif
-            // if (fno.fattrib & AM_DIR) {                    /* It is a directory */
-            //     sprintf(&path[i], "/%s", fn);
-            //     res = scan_files(path, testTime);
-            //     path[i] = 0;
-            //     if (res != FR_OK) break;
-            // } 
-            // else {                                       
-            // 
-            // printf("%s/%s\n", path, fn);
-            sprintf(full_path, "%s/%s", path, fn);         
-            printf("%s\n", full_path);
-            
-            strncpy(timeref, fn, 15);						/* cut the time part of the file name */
-            timeref[15] = 0;
-            // printf("%s\n", timeref);
+			// if (fno.fattrib & AM_DIR) {                    /* It is a directory */
+			//     sprintf(&path[i], "/%s", fn);
+			//     res = scan_files(path, testTime);
+			//     path[i] = 0;
+			//     if (res != FR_OK) break;
+			// } 
+			// else {                                       
+			// 
+			// printf("%s/%s\n", path, fn);
+			sprintf(full_path, "%s/%s", path, fn);         
+			printf("%s\n", full_path);
+			
+			strncpy(timeref, fn, 15);						/* cut the time part of the file name */
+			timeref[15] = 0;
+			// printf("%s\n", timeref);
 
-		    strncpy(t_year , &timeref[0], 4);
-		    t_year[4] = 0;
-		    strncpy(t_mon  , &timeref[4], 2);
-		    strncpy(t_mday , &timeref[6], 2);
-		    strncpy(t_hour , &timeref[9], 2);
-		    strncpy(t_min , &timeref[11], 2);
-		    strncpy(t_sec , &timeref[13], 2);
+			strncpy(t_year , &timeref[0], 4);
+			t_year[4] = 0;
+			strncpy(t_mon  , &timeref[4], 2);
+			strncpy(t_mday , &timeref[6], 2);
+			strncpy(t_hour , &timeref[9], 2);
+			strncpy(t_min , &timeref[11], 2);
+			strncpy(t_sec , &timeref[13], 2);
 
-	        struct tm t;
-		    time_t t_of_day;
+			struct tm t;
+			time_t t_of_day;
 		  
-		    t.tm_year = atoi(t_year) - 1900;
-		    t.tm_mon = atoi(t_mon) - 1;   			    // Month, 0 - jan
-		    t.tm_mday = atoi(t_mday);          			// Day of the month
-		    t.tm_hour = atoi(t_hour);     
-		    t.tm_min = atoi(t_min);
-		    t.tm_sec = atoi(t_sec);
-		    t.tm_isdst = -1;       						// Is DST on? 1 = yes, 0 = no, -1 = unknown
+			t.tm_year = atoi(t_year) - 1900;
+			t.tm_mon = atoi(t_mon) - 1;   			    // Month, 0 - jan
+			t.tm_mday = atoi(t_mday);          			// Day of the month
+			t.tm_hour = atoi(t_hour);     
+			t.tm_min = atoi(t_min);
+			t.tm_sec = atoi(t_sec);
+			t.tm_isdst = -1;       						// Is DST on? 1 = yes, 0 = no, -1 = unknown
 
-		    t_of_day = mktime(&t);						/* Construct struct time to epoch seconds */
-		    t_of_day -= 946684800;
+			t_of_day = mktime(&t);						/* Construct struct time to epoch seconds */
+			t_of_day -= 946684800;
 			
 			ctime(&t_of_day);
-		    printf("epoch: %"PRIu32"\n", t_of_day );
-		    // printf("OBC time is: %s\r\n", ctime(&t_of_day));
-	    	
-		    switch(mode){
-		    	case 1:
-		    		if (timeRec_T1 < (unsigned)t_of_day && timeRec_T2 > (unsigned)t_of_day){
-		    			printf("mode = 1 delete \n");
-		    			if (strcmp(path, "0:/HK_DATA") == 0){
+			printf("epoch: %"PRIu32"\n", t_of_day );
+			// printf("OBC time is: %s\r\n", ctime(&t_of_day));
+			
+			switch(mode){
+				case 1:
+					if (timeRec_T1 < (unsigned)t_of_day && timeRec_T2 > (unsigned)t_of_day){
+						printf("mode = 1 delete \n");
+						if (strcmp(path, "0:/HK_DATA") == 0){
 							hk_delete(full_path);
-		    			}
-		    			else if (strcmp(path, "0:/INMS_DATA") == 0){
-		    				inms_data_delete(full_path);	
-		    			}
-		    			else if (strcmp(path, "0:/SEUV_DATA") == 0){
-		    				seuv_delete(full_path);	
-		    			}
-		    			else if (strcmp(path, "0:/EOP_DATA") == 0){
-		    				eop_delete(full_path);	
-		    			}
-		    			else if (strcmp(path, "0:/WOD_DATA") == 0){
-		    				wod_delete(full_path);	
-		    			}
-		    		}
-		    		
-		    		break;
-	    		case 2:
-    			   	if (timeRec_T1 > (unsigned)t_of_day){
-    			   		printf("mode = 2 delete \n");
-    			   		if (strcmp(path, "0:/HK_DATA") == 0){
+						}
+						else if (strcmp(path, "0:/INMS_DATA") == 0){
+							inms_data_delete(full_path);	
+						}
+						else if (strcmp(path, "0:/SEUV_DATA") == 0){
+							seuv_delete(full_path);	
+						}
+						else if (strcmp(path, "0:/EOP_DATA") == 0){
+							eop_delete(full_path);	
+						}
+						else if (strcmp(path, "0:/WOD_DATA") == 0){
+							wod_delete(full_path);	
+						}
+					}
+					
+					break;
+				case 2:
+					if (timeRec_T1 > (unsigned)t_of_day){
+						printf("mode = 2 delete \n");
+						if (strcmp(path, "0:/HK_DATA") == 0){
 							hk_delete(full_path);
-		    			}
-		    			else if (strcmp(path, "0:/INMS_DATA") == 0){
-		    				inms_data_delete(full_path);	
-		    			}
-		    			else if (strcmp(path, "0:/SEUV_DATA") == 0){
-		    				seuv_delete(full_path);	
-		    			}
-		    			else if (strcmp(path, "0:/EOP_DATA") == 0){
-		    				eop_delete(full_path);	
-		    			}
-		    			else if (strcmp(path, "0:/WOD_DATA") == 0){
-		    				wod_delete(full_path);	
-		    			}		    			
-    			   	}
-    			   
-	    			break;
-	    		case 3:
-	    			if (timeRec_T1 < (unsigned)t_of_day){
-    			   		printf("mode = 3 delete \n");
-    			   		if (strcmp(path, "0:/HK_DATA") == 0){
+						}
+						else if (strcmp(path, "0:/INMS_DATA") == 0){
+							inms_data_delete(full_path);	
+						}
+						else if (strcmp(path, "0:/SEUV_DATA") == 0){
+							seuv_delete(full_path);	
+						}
+						else if (strcmp(path, "0:/EOP_DATA") == 0){
+							eop_delete(full_path);	
+						}
+						else if (strcmp(path, "0:/WOD_DATA") == 0){
+							wod_delete(full_path);	
+						}		    			
+					}
+				   
+					break;
+				case 3:
+					if (timeRec_T1 < (unsigned)t_of_day){
+						printf("mode = 3 delete \n");
+						if (strcmp(path, "0:/HK_DATA") == 0){
 							hk_delete(full_path);
-		    			}
-		    			else if (strcmp(path, "0:/INMS_DATA") == 0){
-		    				inms_data_delete(full_path);	
-		    			}
-		    			else if (strcmp(path, "0:/SEUV_DATA") == 0){
-		    				seuv_delete(full_path);	
-		    			}
-		    			else if (strcmp(path, "0:/EOP_DATA") == 0){
-		    				eop_delete(full_path);	
-		    			}
-		    			else if (strcmp(path, "0:/WOD_DATA") == 0){
-		    				wod_delete(full_path);	
-		    			}
-    			   	}
-	    			break;
-	    		default:
-	    			printf("Range error Type 1 ~ 3\n");
-	    			break;
-		    }
-        }
-    }
-    return res;
+						}
+						else if (strcmp(path, "0:/INMS_DATA") == 0){
+							inms_data_delete(full_path);	
+						}
+						else if (strcmp(path, "0:/SEUV_DATA") == 0){
+							seuv_delete(full_path);	
+						}
+						else if (strcmp(path, "0:/EOP_DATA") == 0){
+							eop_delete(full_path);	
+						}
+						else if (strcmp(path, "0:/WOD_DATA") == 0){
+							wod_delete(full_path);	
+						}
+					}
+					break;
+				default:
+					printf("Range error Type 1 ~ 3\n");
+					break;
+			}
+		}
+	}
+	return res;
 }

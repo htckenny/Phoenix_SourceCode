@@ -10,7 +10,8 @@
 #define FS_H_
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-
+/*---------------------------------------------------*/
+/*             		  INMS Script                    */
 int inms_script_write(int buffNum,uint8_t scriptCont[], int delete_flag, int length);
 void inms_script_read(int buffNum,int packlength,void * txbuf);
 int inms_script_length(int buffNum);
@@ -36,7 +37,8 @@ int hk_read(char fileName[],void * txbuf);
 int hk_delete();
 /*---------------------------------------------------*/
 /*            Early Orbit Phase Data                 */
-int eop_write(uint8_t frameCont[]);
+void eop_write_dup(uint8_t frameCont[]);
+int eop_write(uint8_t frameCont[], int SD_partition);
 int eop_read(char fileName[],void * txbuf);
 int eop_delete();
 /*---------------------------------------------------*/
@@ -63,6 +65,7 @@ int T_data_d();
 int thurmal_2_w();
 int thurmal_1_w();
 /*---------------------------------------------------*/
+/*                 Schedule related                  */
 int schedule_write(uint8_t * frameCont);
 int schedule_read(uint8_t * txbuf);
 int schedule_reset();

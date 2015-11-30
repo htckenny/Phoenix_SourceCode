@@ -20,7 +20,7 @@
 
 #define maxlength 	20
 #define maxNum		50
-FATFS fs;
+FATFS fs[2];
 FRESULT res;
 FIL file;
 UINT br, bw;
@@ -243,7 +243,7 @@ int schedule_delete(int range, uint8_t * frameCont)
 }
 int schedule_reset() {
 
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	char fileName[] = "0:/OnB_Sch.bin";
 	res = f_unlink(fileName);	  //先刪除
 	f_mount(0, NULL);
@@ -263,7 +263,7 @@ int schedule_reset() {
 }
 int schedule_write(uint8_t frameCont[])
 {
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	char fileName[] = "0:/OnB_Sch.bin";
 	// char nextLine[] = "\n";
 	char snumber[] = "0";
@@ -318,7 +318,7 @@ int schedule_read(uint8_t * txbuf)
 	// char *
 	// printf("inside \n");
 	// uint8_t buf[50][50];
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	char fileName[] = "0:/OnB_Sch.bin";
 	// int total_line = 0;
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
@@ -405,7 +405,7 @@ int downlink_data_before_t(uint8_t datatype, uint32_t time1) {
 	else
 		return Error;
 
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	res = f_open(&file, fileName, FA_READ | FA_WRITE );
 	if (res != FR_OK)
 	{
@@ -468,7 +468,7 @@ int downlink_data_after_t(uint8_t datatype, uint16_t time1) {
 	else
 		return Error;
 
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	res = f_open(&file, fileName, FA_READ | FA_WRITE );
 	if (res != FR_OK)
 	{
@@ -523,7 +523,7 @@ int downlink_data_between_t(uint8_t datatype, uint16_t time1, uint16_t time2) {
 	else
 		return Error;
 
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	res = f_open(&file, fileName, FA_READ | FA_WRITE );
 	if (res != FR_OK) {
 		printf("\r\n f_open() fail .. \r\n");
@@ -590,7 +590,7 @@ int delete_data_before_t(uint8_t datatype, uint32_t time1) {
 	else
 		return Error;
 
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	res = f_open(&file, fileName, FA_READ | FA_WRITE );
 	if (res != FR_OK)
 	{
@@ -658,7 +658,7 @@ int delete_data_after_t(uint8_t datatype, uint16_t time1) {
 	else
 		return Error;
 
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	res = f_open(&file, fileName, FA_READ | FA_WRITE );
 	if (res != FR_OK)
 	{
@@ -721,7 +721,7 @@ int delete_data_between_t(uint8_t datatype, uint16_t time1, uint16_t time2) {
 	else
 		return Error;
 
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	res = f_open(&file, fileName, FA_READ | FA_WRITE );
 	if (res != FR_OK)
 	{
@@ -771,7 +771,7 @@ int delete_data_between_t(uint8_t datatype, uint16_t time1, uint16_t time2) {
 /** Start of INMS data related FS function*/
 int inms_data_write(uint8_t frameCont[])
 {
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	struct tm  ts;
 	char buf[80];
 	char s[] = "0:/INMS_DATA/";
@@ -879,7 +879,8 @@ int inms_data_delete(char fileName[]) {
 
 int inms_script_write(int buffNum, uint8_t scriptCont[], int delete_flag, int length) {
 
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
+	f_mount(1, &fs[1]);
 	char fileName[100];
 
 	if (buffNum == 8)
@@ -930,7 +931,7 @@ int inms_script_write(int buffNum, uint8_t scriptCont[], int delete_flag, int le
 	// else {
 	// 	printf("point to the last success ..\n");
 	// }
-	printf(" 4 = %d\n", scriptCont[4]);
+	// printf(" 4 = %d\n", scriptCont[4]);
 	printf("write content with %d bytes: \n", length) ;	
 	res = f_write(&file, scriptCont, length, &bw);
 	if (res != FR_OK) {
@@ -941,7 +942,6 @@ int inms_script_write(int buffNum, uint8_t scriptCont[], int delete_flag, int le
 	}
 	else {
 		printf("\r\n f_write() success .. \r\n");
-
 	}
 	hex_dump(scriptCont, length);
 
@@ -951,7 +951,7 @@ int inms_script_write(int buffNum, uint8_t scriptCont[], int delete_flag, int le
 }
 void inms_script_read(int buffNum, int packlength, void * txbuf) {
 
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 
 	char fileName[100];
 	if (buffNum == 8) {
@@ -1030,7 +1030,7 @@ void inms_script_read(int buffNum, int packlength, void * txbuf) {
 
 int inms_script_length(int buffNum) {
 
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	int packlength = 0;
 	char fileName[100];
 	// printf("i  = %d \n", buffNum);
@@ -1099,9 +1099,9 @@ int inms_script_length(int buffNum) {
 
 int wod_write(uint8_t * frameCont )
 {
-	// f_mount(0, &fs);
+	// f_mount(0, &fs[0]);
 	// char fileName[] = "0:/wod.bin";
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	struct tm  ts;
 	char buf[80];
 	char s[] = "0:/WOD_DATA/";
@@ -1192,7 +1192,7 @@ int wod_read(char fileName[], void * txbuf) // serial =1~N
 
 int wod_delete()
 {
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	char fileName[] = "0:/wod.bin";
 	res = f_unlink(fileName);	  //先刪除
 
@@ -1212,7 +1212,7 @@ int wod_delete()
 
 int seuv_write()
 {
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	struct tm  ts;
 	char buf[80];
 	char s[] = "0:/SEUV_DATA/";
@@ -1329,7 +1329,7 @@ int hk_write(uint8_t * frameCont )
 	// f_mount(0, &fs);
 	// char fileName[] = "0:/hk.bin";
 
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	struct tm  ts;
 	char buf[80];
 	char s[] = "0:/HK_DATA/";
@@ -1415,7 +1415,7 @@ int hk_read(char fileName[], void * txbuf) // serial =1~N
 
 int hk_delete() 
 {
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	char fileName[] = "0:/hk.bin";
 	res = f_unlink(fileName);	  //先刪除
 
@@ -1432,26 +1432,37 @@ int hk_delete()
 /** End of HK data related FS function*/
 /*  ---------------------------------------------------  */	
 /** Start of EOP data related FS function*/
+void eop_write_dup(uint8_t *frameCont){
+	uint8_t frame[eop_length];
+	memcpy(frame, frameCont,eop_length);
+	eop_write(frame, 0);
+	eop_write(frame, 1);
+}
 
-int eop_write(uint8_t * frameCont )
+int eop_write(uint8_t frameCont[], int SD_partition)		//SD_partition available : 0 & 1
 {
-	f_mount(0, &fs);
+	f_mount(SD_partition, &fs[SD_partition]);
+
 	struct tm  ts;
 	char buf[80];
-	char s[] = "0:/EOP_DATA/";
 	char fileName[40];
+	char s[] = "";
 
-	timestamp_t t;
+	if (SD_partition == 0)
+		strcpy(s, "0:/EOP_DATA/");
+	else
+		strcpy(s, "1:/EOP_DATA/");
 
 	strcpy(fileName, s);
-
-	// Get current time
+	/* Get current time */
+	timestamp_t t;
 	t.tv_sec = 0;
 	t.tv_nsec = 0;
 	obc_timesync(&t, 6000);
+	memcpy(&frameCont[0], &t.tv_sec, 4);
 	time_t tt = t.tv_sec;
 	time(&tt);
-	// Format time, "ddd yyyy-mm-dd hh:mm:ss zzz"
+	/* Format time, "ddd yyyy-mm-dd hh:mm:ss zzz" */
 	ts = *localtime(&tt);
 	strftime(buf, sizeof(buf), "%Y%m%d_%H%M%S", &ts);
 
@@ -1460,20 +1471,21 @@ int eop_write(uint8_t * frameCont )
 	strcat(fileName, ".dat");
 	printf("%s\n", fileName);
 	
+	hex_dump(frameCont, 28);
+
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	f_lseek(&file, file.fsize);
 	res = f_write(&file, frameCont, eop_length, &bw);
-
 	if (res != FR_OK) {
-		printf("\r\n eop_write() fail .. \r\n");
+		printf("\r\nEOP_write() fail .. \r\n");
 		f_close(&file);
-		f_mount(0, NULL);
+		f_mount(SD_partition, NULL);
 		return Error;
 	}
 	else {
-		printf("\r\n eop_write() success .. \r\n");
+		printf("\r\nEOP_write() success .. \r\n");
 		f_close(&file);
-		f_mount(0, NULL);
+		f_mount(SD_partition, NULL);
 		return No_Error;
 	}
 }
@@ -1508,7 +1520,7 @@ int eop_read(char fileName[], void * txbuf)
 int eop_delete(char fileName[]) 
 {
 
-	f_mount(0, &fs);	
+	f_mount(0, &fs[0]);	
 	res = f_unlink(fileName);	  //先刪除
 
 	if (res != FR_OK) {
@@ -1526,7 +1538,7 @@ int eop_delete(char fileName[])
 int para_r()  // serial =1~N
 { 
 
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	char fileName[] = "0:/para.bin";
 	res = f_open(&file, fileName, FA_READ | FA_WRITE );
 	if (res != FR_OK) {
@@ -1559,7 +1571,7 @@ int para_w() // serial =1~N
 {  
 
 
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	char fileName[] = "0:/para.bin";
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK) {
@@ -1587,7 +1599,7 @@ int para_w() // serial =1~N
 int para_d()  // serial =1~N
 { 
 
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	char fileName[] = "0:/para.bin";
 	res = f_unlink(fileName);	  //先刪除
 
@@ -1609,7 +1621,7 @@ int para_d()  // serial =1~N
 int adcs_para_r() 
 {  // serial =1~N
 
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	char fileName[] = "0:/adcs_para.bin";
 	res = f_open(&file, fileName, FA_READ | FA_WRITE );
 	if (res != FR_OK) {
@@ -1640,7 +1652,7 @@ int adcs_para_w()
 {  // serial =1~N
 
 
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	char fileName[] = "0:/adcs_para.bin";
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK) {
@@ -1668,7 +1680,7 @@ int adcs_para_w()
 int adcs_para_d() 
 {  // serial =1~N
 
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	char fileName[] = "0:/adcs_para.bin";
 	res = f_unlink(fileName);	  //先刪除
 
@@ -1688,7 +1700,7 @@ int adcs_para_d()
 
 int inms_data_dump() 
 {
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	char fileName[] = "0:/inms.bin";
 	int count = 0;
 	res = f_open(&file, fileName, FA_READ | FA_WRITE );
@@ -1722,7 +1734,7 @@ int inms_data_dump()
 
 int seuv_data_dump() 
 {
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	char fileName[] = "0:/seuv.bin";
 	int count = 0;
 	res = f_open(&file, fileName, FA_READ | FA_WRITE );
@@ -1772,7 +1784,7 @@ int seuv_data_dump()
 
 int wod_data_dump() 
 {
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	char fileName[] = "0:/wod.bin";
 	int count = 0;
 	res = f_open(&file, fileName, FA_READ | FA_WRITE );
@@ -1807,7 +1819,7 @@ int wod_data_dump()
 
 int hk_data_dump() 
 {
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	char fileName[] = "0:/hk.bin";
 	int count = 0;
 	res = f_open(&file, fileName, FA_READ | FA_WRITE );
@@ -1842,7 +1854,7 @@ int hk_data_dump()
 }
 int thermal_data_dump() 
 {
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	char fileName[] = "0:/t_obc.bin";
 	int count = 0;
 	res = f_open(&file, fileName, FA_READ | FA_WRITE );
@@ -1883,7 +1895,7 @@ int thermal_data_dump()
 
 int thurmal_1_w() 
 {  // serial =1~N
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	char fileName[] = "0:/t_obc.bin";
 
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
@@ -1916,7 +1928,7 @@ int thurmal_1_w()
 
 int thurmal_2_w() 
 {  // serial =1~N
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	char fileName[] = "0:/t_inms.bin";
 
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
@@ -1950,7 +1962,7 @@ int thurmal_2_w()
 int T_data_d() 
 {  // serial =1~N
 
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	char fileName[] = "0:/t_obc.bin";
 	res = f_unlink(fileName);	  //先刪除
 
@@ -1965,7 +1977,7 @@ int T_data_d()
 	}
 
 
-	f_mount(0, &fs);
+	f_mount(0, &fs[0]);
 	char fileName2[] = "0:/t_inms.bin";
 	res = f_unlink(fileName2);	  //先刪除
 

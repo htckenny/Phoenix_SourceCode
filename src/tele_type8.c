@@ -32,7 +32,8 @@
 #define power_on_target 			14				/* Power ON specific system */
 #define power_off_target 			15				/* Power OFF specific system */
 #define enter_nominal_mode			16				/* Enter Nominal mode to start science related task */
-#define INMS_Script_State			17
+#define INMS_Script_State			17				/* Set INMS handler to enable/ disable */
+#define SD_partition_flag 			18				/* Set which partition would like to read from */
 
 void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	uint8_t txBuffer[200];
@@ -312,6 +313,28 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		else if (paras[0] == 0){
 			inms_status = 0;
 			printf("disable inms script handler\n");		
+		}
+		para_w_dup();
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+		break;
+	/*---------------  ID:18 Set SD partition label number  ----------------*/		
+	case SD_partition_flag:
+		if (para_length == 1)
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); // send acceptance fail
+			break;
+		}
+		printf("Execute Type 8 Sybtype 18\r\n");
+		
+		// parameters.first_flight = 0;
+		if (paras[0] == 0) {
+			SD_partition_flag = 0;
+			printf("Set SD Read to partition [0]\n");			
+		}	//enable
+		else if (paras[0] == 1){
+			SD_partition_flag = 1;
+			printf("Set SD Read to partition [1]\n");		
 		}
 		para_w_dup();
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report

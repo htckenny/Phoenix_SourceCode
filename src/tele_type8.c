@@ -33,7 +33,7 @@
 #define power_off_target 			15				/* Power OFF specific system */
 #define enter_nominal_mode			16				/* Enter Nominal mode to start science related task */
 #define INMS_Script_State			17				/* Set INMS handler to enable/ disable */
-#define SD_partition_flag 			18				/* Set which partition would like to read from */
+#define SD_partition 				18				/* Set which partition would like to read from */
 
 void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	uint8_t txBuffer[200];
@@ -318,7 +318,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
 		break;
 	/*---------------  ID:18 Set SD partition label number  ----------------*/		
-	case SD_partition_flag:
+	case SD_partition:
 		if (para_length == 1)
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
 		else {
@@ -331,7 +331,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		if (paras[0] == 0) {
 			SD_partition_flag = 0;
 			printf("Set SD Read to partition [0]\n");			
-		}	//enable
+		}	
 		else if (paras[0] == 1){
 			SD_partition_flag = 1;
 			printf("Set SD Read to partition [1]\n");		

@@ -32,7 +32,8 @@ int seuv_read(char fileName[],void * txbuf);
 int seuv_delete();
 /*---------------------------------------------------*/
 /*              House Keeping Data                   */
-int hk_write(uint8_t frameCont[]);
+void hk_write_dup(uint8_t frameCont[]);
+int hk_write(uint8_t frameCont[], int SD_partition);
 int hk_read(char fileName[],void * txbuf);
 int hk_delete();
 /*---------------------------------------------------*/
@@ -77,5 +78,11 @@ int schedule_dump();
 
 int scan_files_Downlink (char* path, int mode, uint32_t timeRec_T1, uint32_t timeRec_T2) ;   	
 int scan_files_Delete (char* path, int mode, uint32_t timeRec_T1, uint32_t timeRec_T2) ;   	
+
+extern const char* fileName_HK[2];
+extern const char* fileName_INMS[2];
+extern const char* fileName_SEUV[2];
+extern const char* fileName_EOP[2];
+extern const char* fileName_WOD[2];
 
 #endif /* FS_H_ */

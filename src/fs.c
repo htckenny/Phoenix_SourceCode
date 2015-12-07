@@ -1323,23 +1323,28 @@ int seuv_delete(char fileName[])
 /** End of SEUV data related FS function*/
 /*  ---------------------------------------------------  */	
 /** Start of HK data related FS function*/
-
-int hk_write(uint8_t * frameCont )
+void hk_write_dup(uint8_t * frameCont)
 {
-	// f_mount(0, &fs);
-	// char fileName[] = "0:/hk.bin";
+	uint8_t frame[hk_length];
+	memcpy(frame, frameCont, hk_length);
+	hk_write(frame, 0);
+	hk_write(frame, 1);
+}
+int hk_write(uint8_t * frameCont, int SD_partition)
+{
 
-	f_mount(0, &fs[0]);
+	f_mount(SD_partition, &fs[SD_partition]);
 	struct tm  ts;
 	char buf[80];
-	char s[] = "0:/HK_DATA/";
+
 	char fileName[40];
-
-	timestamp_t t;
-
-	strcpy(fileName, s);
+	if (SD_partition == 0)
+		strcpy(fileName, "0:/HK_DATA/");
+	else
+		strcpy(fileName, "1:/HK_DATA/");
 
 	// Get current time
+	timestamp_t t;
 	t.tv_sec = 0;
 	t.tv_nsec = 0;
 	obc_timesync(&t, 6000);
@@ -1361,7 +1366,7 @@ int hk_write(uint8_t * frameCont )
 	if (res != FR_OK) {
 		printf("\r\n hk_write() fail .. \r\n");
 		f_close(&file);
-		f_mount(0, NULL);
+		f_mount(SD_partition, NULL);
 		return Error;
 	}
 	else {
@@ -2301,19 +2306,19 @@ int scan_files_Delete (
 				case 1:
 					if (timeRec_T1 < (unsigned)t_of_day && timeRec_T2 > (unsigned)t_of_day){
 						printf("mode = 1 delete \n");
-						if (strcmp(path, "0:/HK_DATA") == 0){
+						if (strcmp(path, fileName_HK[SD_partition_flag]) == 0){
 							hk_delete(full_path);
 						}
-						else if (strcmp(path, "0:/INMS_DATA") == 0){
+						else if (strcmp(path, fileName_INMS[SD_partition_flag]) == 0){
 							inms_data_delete(full_path);	
 						}
-						else if (strcmp(path, "0:/SEUV_DATA") == 0){
+						else if (strcmp(path, fileName_SEUV[SD_partition_flag]) == 0){
 							seuv_delete(full_path);	
 						}
-						else if (strcmp(path, "0:/EOP_DATA") == 0){
+						else if (strcmp(path, fileName_EOP[SD_partition_flag]) == 0){
 							eop_delete(full_path);	
 						}
-						else if (strcmp(path, "0:/WOD_DATA") == 0){
+						else if (strcmp(path, fileName_WOD[SD_partition_flag]) == 0){
 							wod_delete(full_path);	
 						}
 					}
@@ -2322,19 +2327,19 @@ int scan_files_Delete (
 				case 2:
 					if (timeRec_T1 > (unsigned)t_of_day){
 						printf("mode = 2 delete \n");
-						if (strcmp(path, "0:/HK_DATA") == 0){
+						if (strcmp(path, fileName_HK[SD_partition_flag]) == 0){
 							hk_delete(full_path);
 						}
-						else if (strcmp(path, "0:/INMS_DATA") == 0){
+						else if (strcmp(path, fileName_INMS[SD_partition_flag]) == 0){
 							inms_data_delete(full_path);	
 						}
-						else if (strcmp(path, "0:/SEUV_DATA") == 0){
+						else if (strcmp(path, fileName_SEUV[SD_partition_flag]) == 0){
 							seuv_delete(full_path);	
 						}
-						else if (strcmp(path, "0:/EOP_DATA") == 0){
+						else if (strcmp(path, fileName_EOP[SD_partition_flag]) == 0){
 							eop_delete(full_path);	
 						}
-						else if (strcmp(path, "0:/WOD_DATA") == 0){
+						else if (strcmp(path, fileName_WOD[SD_partition_flag]) == 0){
 							wod_delete(full_path);	
 						}		    			
 					}
@@ -2343,19 +2348,19 @@ int scan_files_Delete (
 				case 3:
 					if (timeRec_T1 < (unsigned)t_of_day){
 						printf("mode = 3 delete \n");
-						if (strcmp(path, "0:/HK_DATA") == 0){
+						if (strcmp(path, fileName_HK[SD_partition_flag]) == 0){
 							hk_delete(full_path);
 						}
-						else if (strcmp(path, "0:/INMS_DATA") == 0){
+						else if (strcmp(path, fileName_INMS[SD_partition_flag]) == 0){
 							inms_data_delete(full_path);	
 						}
-						else if (strcmp(path, "0:/SEUV_DATA") == 0){
+						else if (strcmp(path, fileName_SEUV[SD_partition_flag]) == 0){
 							seuv_delete(full_path);	
 						}
-						else if (strcmp(path, "0:/EOP_DATA") == 0){
+						else if (strcmp(path, fileName_EOP[SD_partition_flag]) == 0){
 							eop_delete(full_path);	
 						}
-						else if (strcmp(path, "0:/WOD_DATA") == 0){
+						else if (strcmp(path, fileName_WOD[SD_partition_flag]) == 0){
 							wod_delete(full_path);	
 						}
 					}
@@ -2368,3 +2373,10 @@ int scan_files_Delete (
 	}
 	return res;
 }
+/* ---------------------------------------------------  */	
+/* ---------------- Self defined String ----------------*/
+const char* fileName_HK[2] 		= { "0:/HK_DATA",	"1:/HK_DATA"	};
+const char* fileName_INMS[2] 	= { "0:/INMS_DATA",	"1:/INMS_DATA"	};
+const char* fileName_SEUV[2]	= { "0:/SEUV_DATA",	"1:/SEUV_DATA"	};
+const char* fileName_EOP[2]		= { "0:/EOP_DATA",	"1:/EOP_DATA"	};
+const char* fileName_WOD[2]		= { "0:/WOD_DATA", 	"1:/WOD_DATA"	};

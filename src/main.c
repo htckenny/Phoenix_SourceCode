@@ -158,8 +158,8 @@ int main(void) {
 	xTaskCreate(vTaskInit, (const signed char *) "INIT", 1024*4, NULL, 3, NULL);
 	extern void vTaskServer(void * pvParameters);
 	xTaskCreate(vTaskServer, (const signed char *) "SRV", 1024*4, NULL, 2, NULL);
-	extern void BatteryCheckTask(void * pvParameters);
-	xTaskCreate(BatteryCheckTask, (const signed char *) "BatCk", 1024 * 4, NULL, 2, NULL);
+	// extern void BatteryCheckTask(void * pvParameters);
+	// xTaskCreate(BatteryCheckTask, (const signed char *) "BatCk", 1024 * 4, NULL, 2, NULL);
 	
 	// extern void EOP_Task(void * pvParameters);
 	// xTaskCreate(EOP_Task, (const signed char * ) "EOP", 1024 * 4, NULL, 2, NULL);

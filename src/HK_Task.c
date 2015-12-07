@@ -320,7 +320,7 @@ void HK_Task(void * pvParameters) {
 		if (hk_get() != No_Error)
 			printf("HK get fail\n");
 		else {
-			hk_write(&hk_buffer[0]);
+			hk_write_dup(&hk_buffer[0]);
 			printf("HK Get and Saved\n");
 		}
 	}

@@ -64,6 +64,7 @@ uint8_t schedule_series_number;
 uint8_t schedule_unlink_flag;
 uint8_t idleunlocks;
 uint8_t inms_status;
+uint8_t SD_partition_flag;
 
 typedef struct __attribute__((packed)) {
 

@@ -42,7 +42,7 @@ void decodeService132(uint8_t subType, uint8_t*telecommand) {
 
 			parameters.seuv_period = paras[0];
 			parameters.seuv_sample_rate = paras[1];
-			para_w();
+			para_w_dup();
 
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
 		} else
@@ -53,7 +53,7 @@ void decodeService132(uint8_t subType, uint8_t*telecommand) {
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
 		if (packet_length == 1) {			
 			parameters.seuv_mode = paras[0];	//set the seuv mode 
-			para_w();
+			para_w_dup();
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
 		} 
 		else {
@@ -67,7 +67,7 @@ void decodeService132(uint8_t subType, uint8_t*telecommand) {
 		if (packet_length == 0) {
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
 			/* Read parameter from the FS, should delete this line if parameter_init is already called */
-			para_r();
+			para_r(SD_partition_flag);
 			/* sample SEUV once with gain = 1 */
 			get_a_packet(1);
 			seuvFrame.samples += 0; 

@@ -98,7 +98,7 @@ void Mode_Control(void * pvParameters) {
                     printf("delete eop\n");
                     // vTaskDelete(eop_task);
                     parameters.first_flight = 0;
-                    para_w();
+                    para_w_dup();
                 }
                 printf("Creating tasks of HK, INMS, SEUV ~~~\n");
                 xTaskCreate(HK_Task, (const signed char * ) "HK", 1024 * 4, NULL, 2, &hk_task);

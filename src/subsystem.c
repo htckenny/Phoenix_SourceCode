@@ -39,7 +39,7 @@ uint32_t get_time() {
 
 int parameter_init() {
 
-
+	SD_partition_flag					= 0;
 	HK_frame.sun_light_flag				= 0;
 	inms_status							= 1;
 	inms_task_flag						= 0;
@@ -62,7 +62,7 @@ int parameter_init() {
 	parameters.hk_collect_period         = 60;
 	parameters.beacon_period             = 30;
 	parameters.reboot_count              = 0;
-	parameters.com_bit_rates             = 0x08; // change to 0x01 before flight
+	parameters.com_bit_rates             = 0x08; 	// change to 0x01 before flight
 
 	/*  seuv related  */
 	parameters.seuv_period				= 8;
@@ -87,15 +87,16 @@ int parameter_init() {
 	/* 0 1 2 3 4 5 6 |  7    */
 	/*  sample rate  | Gain  */
 
-	if (para_r() == No_Error) { //if successfully read last parameter from SD card
-		parameters.reboot_count = parameters.reboot_count + 1; //reboot counter+1
-		para_w();    //update to SD Card
-		return No_Error;//success
+ 	/* Read last parameter from SD card */
+	if (para_r(SD_partition_flag) == No_Error) {
+		parameters.reboot_count = parameters.reboot_count + 1; 		//reboot counter + 1
+		para_w_dup();    /* update to SD Card */
+		return No_Error;
 	}
 	else
-		para_w();
-	return Error;
+		para_w_dup();
 
+	return Error;
 }
 
 void deploy_antenna() {

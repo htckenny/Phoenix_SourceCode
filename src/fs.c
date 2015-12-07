@@ -249,7 +249,7 @@ int schedule_reset() {
 	f_mount(0, NULL);
 
 	parameters.schedule_series_number = 0 ;
-	para_w();
+	para_w_dup();
 	schedule_unlink_flag = 1;
 	if (res != FR_OK) {
 		printf("\r\n schedule file f_unlink() fail .. \r\n");
@@ -308,7 +308,7 @@ int schedule_write(uint8_t frameCont[])
 		f_close(&file);
 		f_mount(0, NULL);
 		parameters.schedule_series_number ++;
-		para_w();
+		para_w_dup();
 		return No_Error;
 	}
 }
@@ -1535,11 +1535,18 @@ int eop_delete(char fileName[])
 /*  ---------------------------------------------------  */	
 /** Start of parameter related FS function*/
 
-int para_r()  // serial =1~N
-{ 
 
-	f_mount(0, &fs[0]);
-	char fileName[] = "0:/para.bin";
+int para_r(int SD_partition)  // serial =1~N
+{ 
+	f_mount(SD_partition, &fs[0]);
+
+	char fileName[12];
+
+	if (SD_partition == 0)
+		strcpy(fileName, "0:/para.bin");	
+	else
+		strcpy(fileName, "1:/para.bin");
+
 	res = f_open(&file, fileName, FA_READ | FA_WRITE );
 	if (res != FR_OK) {
 		printf("\r\n f_open() fail .. \r\n");
@@ -1554,25 +1561,33 @@ int para_r()  // serial =1~N
 	if (res != FR_OK) {
 		printf("\r\n para_read() fail .. \r\n");
 		f_close(&file);
-		f_mount(0, NULL);
+		f_mount(SD_partition, NULL);
 		return Error;
 	}
 	else {
-		
 		memcpy(&parameters.first_flight, &buffer, (int)sizeof(parameter_t));
 		hex_dump(&buffer, (int)sizeof(parameter_t));
 		f_close(&file);
-		f_mount(0, NULL);
+		f_mount(SD_partition, NULL);
 		return No_Error;
 	}
 }
-
-int para_w() // serial =1~N
+void para_w_dup(){
+	para_w(0);
+	para_w(1);
+}
+int para_w(int SD_partition) 
 {  
 
+	f_mount(SD_partition, &fs[SD_partition]);
+	char fileName[12];
 
-	f_mount(0, &fs[0]);
-	char fileName[] = "0:/para.bin";
+	if (SD_partition == 0)
+		strcpy(fileName, "0:/para.bin");	
+	else
+		strcpy(fileName, "1:/para.bin");
+
+
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK) {
 		printf("\r\n f_open() fail .. \r\n");
@@ -1586,21 +1601,25 @@ int para_w() // serial =1~N
 	if (res != FR_OK) {
 		printf("\r\n para write() fail .. \r\n");
 		f_close(&file);
-		f_mount(0, NULL);
+		f_mount(SD_partition, NULL);
 		return Error;
 	}
 	else {
 		f_close(&file);
-		f_mount(0, NULL);
+		f_mount(SD_partition, NULL);
 		return No_Error;
 	}
 }
 
-int para_d()  // serial =1~N
+int para_d(int SD_partition)  // serial =1~N
 { 
+	f_mount(SD_partition, &fs[SD_partition]);
+	char fileName[12];
+	if (SD_partition == 0)
+		strcpy(fileName, "0:/para.bin");
+	else
+		strcpy(fileName, "1:/para.bin");
 
-	f_mount(0, &fs[0]);
-	char fileName[] = "0:/para.bin";
 	res = f_unlink(fileName);	  //先刪除
 
 	if (res != FR_OK) {
@@ -1611,7 +1630,6 @@ int para_d()  // serial =1~N
 		printf("\r\n f_unlink() success .. \r\n");
 		return No_Error;
 	}
-
 }
 
 /** End of parameter related FS function*/

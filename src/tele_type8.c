@@ -114,7 +114,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		}
 		printf("Execute Type 8 Sybtype 6 , ShutdownTransmitter \r\n");
 		parameters.shutdown_flag = 1;
-		para_w();
+		para_w_dup();
 		printf("Shutdown Command Detected!! \r\n");
 		if (tx_mode(3) != 0) {  //set transceiver into standby mode
 			printf("tx_mode set fail \r\n");
@@ -133,7 +133,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 //		}
 		printf("Execute Type 8 Sybtype 7 , Resume Transmitter \r\n");
 		parameters.shutdown_flag = 0;
-		para_w();
+		para_w_dup();
 		printf("Shutdown Resume Command Detected!! \r\n");
 		if (tx_mode(1) != 0)   //set transceiver into standby mode
 			printf("tx_mode set fail \r\n");
@@ -150,7 +150,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		}
 		printf("Execute Type 8 Sybtype 8 , Enter_Safe_Threshold \r\n");
 		memcpy(&parameters.vbat_safe_threshold, &paras[0], 2);
-		para_w();
+		para_w_dup();
 		printf("Enter_Safe_Threshold = %d mV\n", parameters.vbat_safe_threshold);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
 		break;
@@ -164,7 +164,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		}
 		printf("Execute Type 8 Sybtype 9 , Leave_Safe_Threshold \r\n");
 		memcpy(&parameters.vbat_recover_threshold, &paras[0], 2);
-		para_w();
+		para_w_dup();
 		printf("Leave_Safe_Threshold = %d mV\n", parameters.vbat_recover_threshold);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
 		break;
@@ -197,9 +197,9 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			break;
 		}
 		printf("Execute Type 8 Sybtype 11 , para_to_default \r\n");
-		para_d();
+		para_d(SD_partition_flag);	
 		parameter_init();
-		para_w();
+		para_w_dup();
 
 		printf("First Flight %d\n", (int) parameters.first_flight);
 		printf("shutdown_flag %d\n", (int) parameters.shutdown_flag);
@@ -290,7 +290,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		
 		// parameters.first_flight = 0;
 		HK_frame.mode_status_flag = 3;
-		para_w();
+		para_w_dup();
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
 
 		break;
@@ -313,7 +313,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			inms_status = 0;
 			printf("disable inms script handler\n");		
 		}
-		para_w();
+		para_w_dup();
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
 		break;
 

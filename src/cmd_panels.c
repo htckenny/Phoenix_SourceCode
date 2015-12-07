@@ -179,7 +179,7 @@ int ct(struct command_context * ctx) {
 	case T8_function_management:
 		decodeService8(serviceSubType, para);
 		break;
-	case T11_OnBoard_Sche:
+	case T11_OnBoard_Schedule:
 		decodeService11(serviceSubType, para);
 		break;
 	case T13_LargeData_Transfer:
@@ -372,7 +372,7 @@ int scheduleWrite(struct command_context * ctx)
 		// }
 	}
 	printf("\ntelecommand scan\n");
-	para_r();
+	para_r(SD_partition_flag);
 
 	if (schedule_write(telecommand) == 1) {
 		return CMD_ERROR_FAIL;
@@ -494,7 +494,7 @@ int shutdown_tm(struct command_context * ctx) {
 	if (off_on == 1)
 	{
 		parameters.shutdown_flag = 1;
-		para_w();
+		para_w_dup();
 		printf("Shutdown Command Detected!! \r\n");
 
 	}
@@ -502,7 +502,7 @@ int shutdown_tm(struct command_context * ctx) {
 	if (off_on == 0)
 	{
 		parameters.shutdown_flag = 0;
-		para_w();
+		para_w_dup();
 		printf("Resume Command Detected!! \r\n");
 
 	}
@@ -532,13 +532,13 @@ int jump_mode(struct command_context * ctx) {
 
 int parawrite(struct command_context * ctx) {
 	parameter_init();
-	para_w();
+	para_w_dup();
 	return CMD_ERROR_NONE;
 }
 
 int pararead(struct command_context * ctx) {
 
-	para_r();
+	para_r(SD_partition_flag);
 	printf("First Flight \t\t\t%d\n", (int) parameters.first_flight);
 	printf("shutdown_flag \t\t\t%d\n", (int) parameters.shutdown_flag);
 	printf("ant_deploy_flag \t\t%d\n", (int) parameters.ant_deploy_flag);
@@ -558,7 +558,7 @@ int pararead(struct command_context * ctx) {
 }
 
 int paradelete(struct command_context * ctx) {
-	para_d();
+	para_d(SD_partition_flag);
 	return CMD_ERROR_NONE;
 }
 
@@ -592,7 +592,7 @@ int data_DUMP(struct command_context * ctx) {
 
 int alldatadelete(struct command_context * ctx) {
 
-	para_d();
+	para_d(SD_partition_flag);
 	inms_data_delete();
 	wod_delete();
 	seuv_delete();

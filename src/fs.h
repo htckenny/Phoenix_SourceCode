@@ -42,9 +42,10 @@ int eop_write(uint8_t frameCont[], int SD_partition);
 int eop_read(char fileName[],void * txbuf);
 int eop_delete();
 /*---------------------------------------------------*/
-int para_w();
-int para_r();
-int para_d();
+void para_w_dup();
+int para_w(int SD_partition);
+int para_r(int SD_partition);
+int para_d(int SD_partition);
 /*---------------------------------------------------*/
 int downlink_data_before_t(uint8_t datatype,uint32_t time1);
 int downlink_data_after_t(uint8_t datatype,uint16_t time1);

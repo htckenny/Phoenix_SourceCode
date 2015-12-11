@@ -19,9 +19,14 @@ uint16_t battery_read() {
 	txbuf[0] = 0x08;   //0d03 ADCS run mode
 	txbuf[1] = 0x00;
 
+	// if (i2c_master_transaction(0, eps_node, &txbuf, 1, &rxbuf, 43, eps_delay) == E_NO_ERR){
+	// 		memcpy(&Vbat, &rxbuf[8],2);	
+	// }
+
 	if (i2c_master_transaction(0, eps_node, &txbuf, 1, 0, 0, eps_delay) == E_NO_ERR){
-		if (i2c_master_transaction(0, eps_node, 0, 0, &rxbuf, 43, eps_delay) == E_NO_ERR){
-			memcpy(&Vbat, &rxbuf[8],2);	
+		vTaskDelay(5);
+		if (i2c_master_transaction(0, eps_node, 0, 0, &rxbuf, 43+2, eps_delay) == E_NO_ERR){
+			memcpy(&Vbat, &rxbuf[10],2);	
 		}
 	}
 
@@ -63,16 +68,18 @@ void Leave_safe_mode()
 	printf("Recover from Safe Mode \n");
 	printf("Recover from Safe Mode \n");
 
-	i2c_frame_t * frame;
-	frame = csp_buffer_get(I2C_MTU);
-	frame->dest = 2;
-	frame->data[0] = EPS_PORT_HARDRESET;
-	frame->len = 1;
-	frame->len_rx = 0;
-	frame->retries = 0;
-	if (i2c_send(0, frame, 0) != E_NO_ERR) {
-		csp_buffer_free(frame);
-	}
+	// i2c_frame_t * frame;
+	// frame = csp_buffer_get(I2C_MTU);
+	// frame->dest = 2;
+	// frame->data[0] = EPS_PORT_HARDRESET;
+	// frame->len = 1;
+	// frame->len_rx = 0;
+	// frame->retries = 0;
+	// if (i2c_send(0, frame, 0) != E_NO_ERR) {
+	// 	csp_buffer_free(frame);
+	// }
+	HK_frame.mode_status_flag = init_mode;
+	// last_mode = HK_frame.mode_status_flag;
 }
 
 void BatteryCheckTask(void * pvParameters) {
@@ -97,7 +104,7 @@ void BatteryCheckTask(void * pvParameters) {
 
 		if (HK_frame.mode_status_flag == safe_mode) {
 			while (1) {
-				vTaskDelay(3000);
+				vTaskDelay(30000);
 
 				vbat = battery_read();
 				printf("vbat = %05u mV \r\n", vbat);
@@ -112,7 +119,7 @@ void BatteryCheckTask(void * pvParameters) {
 				}
 			}
 		}
-		vTaskDelay(3000);
+		vTaskDelay(30000);
 	}
 	/** End of Task, Should Never Reach This */
 	vTaskDelete(NULL);

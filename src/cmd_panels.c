@@ -63,6 +63,11 @@ static const char * name_map[LM70_MAP_SIZE] = { "A1", "A2", "A3", "A4", "A5",
 static int gyro_map[GYRO_MAP_SIZE] = { 1, 3, 5, 8, 10, 12 };
 static int lm70_map[LM70_MAP_SIZE] = { 2, 4, 6, 9, 11, 13 };
 //int max6675_cs  = 1;
+//
+int check_mode(struct command_context * ctx){
+	printf("%d\n", HK_frame.mode_status_flag);
+	return CMD_ERROR_NONE;
+}
 int adcs_switch(struct command_context * ctx){
 	unsigned int buffer;
 	extern void ADCS_Tasks(void * pvParameters);
@@ -908,6 +913,7 @@ struct command panels_subcommands[] = { {
 };
 
 struct command __root_command panels_commands[] = {
+	{ .name = "cm", .help = "cm", .handler = check_mode, },
 	{ .name = "adcss", .help = "adcss [ON = 1 / OFF = 0]", .handler = adcs_switch, },
 	{ .name = "seuvs", .help = "seuvs [ON = 1 / OFF = 0]", .handler = seuv_switch, },
 	{ .name = "tele", .help = "tele [ON = 1 / OFF = 0]", .handler = telecom, },

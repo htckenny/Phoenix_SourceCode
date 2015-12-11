@@ -4,7 +4,7 @@
 #include <util/hexdump.h>
 #include <util/timestamp.h>
 #include <io/nanomind.h>
-
+#include <dev/i2c.h>
 #include "fs.h"
 #include "time.h"
 #include "string.h"
@@ -12,10 +12,15 @@
 #include "parameter.h"
 #include "subsystem.h"
 
-#define INMSWRITEDATA 0
+#define INMSWRITEDATA	0
+#define SDCARDTEST		0
+#define TEST_FILENAME	0
+#define TEST_i2c_tx_len	1
 
 void vTaskfstest(void * pvParameters) {
 
+// uint8_t buffer[300];
+// FILINFO *fno;
 // 	uint8_t con[] = {0x9D, 0x00, 0x1C, 0x96, 0x8D, 0xCE, 0x7E, 0x99, 0x8D, 0xCE, 0x41, 0x01, 0x00, 0x0F, 0x10, 0x41, 0x00
 // 	                 , 0x14, 0x10, 0x42, 0x00, 0x28, 0x10, 0x43, 0x00, 0x00, 0x11, 0x42, 0x00, 0x14, 0x11, 0x43, 0x00, 0x28
 // 	                 , 0x11, 0x42, 0x00, 0x00, 0x12, 0x43, 0x00, 0x14, 0x12, 0x42, 0x00, 0x28, 0x12, 0x43, 0x55, 0x05, 0x00
@@ -170,7 +175,45 @@ void vTaskfstest(void * pvParameters) {
 		// printf("%"PRIu32"\n", timess[0]);
 		// scan_files("INMS_DATA");
 		// printf("total file is %d\n", number);
-		
+		// 
+#if TEST_i2c_tx_len
+	int test_number = 256;
+	uint8_t txbuf[test_number];
+	uint8_t rxbuf[10];
+	int result;
+	for (int i = 0 ; i < test_number ; i++){
+		txbuf[i] = i;
+	}
+	vTaskDelay(3000);
+	while(1) {
+		if ((result = i2c_master_transaction(0, adcs_node, &txbuf, test_number, 0, 0, adcs_delay)) == E_NO_ERR){
+			if (i2c_master_transaction(0, adcs_node, 0, 0, &rxbuf, 10, adcs_delay) == E_NO_ERR){
+				printf("write %d bytes\n", test_number);
+			}
+			hex_dump(rxbuf, 10);
+		}
+		else{
+			printf("error type = %d\n", result);
+		}
+		vTaskDelay(3000);
+	}
+#endif
+
+#if TEST_FILENAME
+	while(1) {
+		for (int i = 0 ; i<2;i++){
+			printf("%s\n", fileName_WOD[i]);
+			printf("%s\n", fileName_EOP[i]);
+			printf("%s\n", fileName_INMS[i]);
+			printf("%s\n", fileName_SEUV[i]);
+			printf("%s\n", fileName_HK[i]);
+		}
+		vTaskDelay(5000);
+
+	}
+
+#endif	
+
 #if INMSWRITEDATA
 	vTaskDelay(5000);
 	printf("start FS test task\n");
@@ -204,6 +247,79 @@ void vTaskfstest(void * pvParameters) {
 
 #endif
 
+#if SDCARDTEST
+	FATFS fs[2];
+	FRESULT res;
+	FIL file, file2;
+	UINT br, bw;
+	vTaskDelay(5000);
+	char testData[] = {0x9D, 0x00, 0x1C, 0x96, 0x8D, 0xCE, 0x7E, 0x99, 0x8D, 0xDF};
+
+
+	f_mount(0, &fs[0]);
+	if (res != FR_OK)
+		printf("\r\n f_mount() 0 fail .. \r\n");
+	else
+		printf("\r\n f_mount() 0 success .. \r\n");
+
+	f_mount(1, &fs[1]);
+	if (res != FR_OK)
+		printf("\r\n f_mount() 1 fail .. \r\n");
+	else
+		printf("\r\n f_mount() 1 success .. \r\n");
+	
+	
+	
+	while(1) {
+
+		res = f_open(&file, "0:/test_0.bin", FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+		if (res != FR_OK)
+			printf("\r\n f_open() 0 fail .. \r\n");
+		else
+			printf("\r\n f_open() 0 success .. \r\n");
+
+
+		res = f_open(&file2, "1:/test_1.bin", FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+		if (res != FR_OK)
+			printf("\r\n f_open() 1 fail .. \r\n");
+		else
+			printf("\r\n f_open() 1 success .. \r\n");
+
+	
+	
+		//將pointer指向文件最後面
+		f_lseek(&file, file.fsize);
+
+		res = f_write(&file, testData, 10, &bw);
+
+		// hex_dump(frameCont, inms_data_length);
+		if (res != FR_OK) {
+			printf("\r\n sd_write() 0 fail .. \r\n");			
+		}
+		else {
+			printf("\r\n sd_write() 0 success .. \r\n");
+			
+		}
+		f_close(&file);
+		
+
+		vTaskDelay(5000);
+		res = f_write(&file2, testData, 10, &bw);
+		if (res != FR_OK) {
+			printf("\r\n sd_write() 1 fail .. \r\n");			
+		}
+		else {
+			printf("\r\n sd_write() 1 success .. \r\n");			
+		}
+		f_close(&file2);
+		
+		vTaskDelay(5000);
+	}
+
+	f_mount(0, NULL);
+	f_mount(1, NULL);
+
+#endif
 
 
 }

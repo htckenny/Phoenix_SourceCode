@@ -15,7 +15,6 @@
 #include "parameter.h"
 #include "Tele_function.h"
 #include "subsystem.h"
-// #include <fat/ff.h>
 #include "fs.h"
 
 #define maxlength 	20
@@ -1190,11 +1189,11 @@ int wod_read(char fileName[], void * txbuf) // serial =1~N
 	}
 }
 
-int wod_delete()
+int wod_delete(char filename[])
 {
-	f_mount(0, &fs[0]);
-	char fileName[] = "0:/wod.bin";
-	res = f_unlink(fileName);	  //先刪除
+	// f_mount(0, &fs[0]);
+	// char fileName[] = "0:/wod.bin";
+	res = f_unlink(filename);	  //先刪除
 
 	if (res != FR_OK) {
 		printf("\r\n f_unlink() fail .. \r\n");
@@ -1418,10 +1417,15 @@ int hk_read(char fileName[], void * txbuf) // serial =1~N
 	}
 }
 
-int hk_delete() 
+int hk_delete(char fileName[]) 
 {
-	f_mount(0, &fs[0]);
-	char fileName[] = "0:/hk.bin";
+	// f_mount(SD_partition, &fs[SD_partition]);
+	// char fileName[40];
+	// if (SD_partition == 0)
+	// 	strcpy(fileName, "0:/HK_DATA/");
+	// else
+	// 	strcpy(fileName, "1:/HK_DATA/");
+
 	res = f_unlink(fileName);	  //先刪除
 
 	if (res != FR_OK) {
@@ -1525,7 +1529,7 @@ int eop_read(char fileName[], void * txbuf)
 int eop_delete(char fileName[]) 
 {
 
-	f_mount(0, &fs[0]);	
+	// f_mount(0, &fs[0]);	
 	res = f_unlink(fileName);	  //先刪除
 
 	if (res != FR_OK) {
@@ -2380,3 +2384,4 @@ const char* fileName_INMS[2] 	= { "0:/INMS_DATA",	"1:/INMS_DATA"	};
 const char* fileName_SEUV[2]	= { "0:/SEUV_DATA",	"1:/SEUV_DATA"	};
 const char* fileName_EOP[2]		= { "0:/EOP_DATA",	"1:/EOP_DATA"	};
 const char* fileName_WOD[2]		= { "0:/WOD_DATA", 	"1:/WOD_DATA"	};
+/* TODO: Test the function scan is okay or not with these predefined filename*/

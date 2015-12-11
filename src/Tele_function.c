@@ -159,8 +159,8 @@ uint16_t CCSDS_GetSequenceCount(uint16_t apid) {
 	// 	    parameters.phoenix_hk_packet_sequence_count + 1;
 	// 	return parameters.phoenix_hk_packet_sequence_count;
 	// }
-	 else
-	 	return 255;
+	else
+		return 255;
 }
 
 // Generates a complete telemetry packet with the values and data specified
@@ -169,87 +169,90 @@ uint8_t CCSDS_GenerateTelemetryPacketWithTime(uint8_t* telemetryBuffer,
         uint8_t serviceSubtype, uint8_t* sourceData, uint8_t sourceDataLength,
         uint32_t time) {
 
-	uint16_t chk;   // CRC syndrome
-	uint16_t sequenceCount;   // Sequence Count of packet
-	uint8_t packetLength;   // Total length of packet
-	uint16_t packetLengthFieldValue;  // Value of Packet Length header field
-	uint8_t*dataPtr;  // For source data copy
-	uint8_t*dataEndPtr;
+	uint16_t chk;   					// CRC syndrome
+	uint16_t sequenceCount;   			// Sequence Count of packet
+	uint8_t packetLength;   			// Total length of packet
+
+	uint16_t packetLengthFieldValue;  	// Value of Packet Length header field
+
+	uint8_t *dataPtr;  					// For source data copy
+	uint8_t *dataEndPtr;
 
 	if (sourceData == NULL)
-		return ERR_MISSING_PARAMETER; // No data
+		return ERR_MISSING_PARAMETER; 	// No data
 	if (telemetryBuffer == NULL)
-		return ERR_MISSING_PARAMETER; // No telemetry buffer
+		return ERR_MISSING_PARAMETER; 	// No telemetry buffer
 	if (telemetryBufferSize == NULL)
-		return ERR_MISSING_PARAMETER; // No telemetry buffer size
+		return ERR_MISSING_PARAMETER; 	// No telemetry buffer size
 
-// Total packet length must be <= than 235 octets (otherwise it cannot be transmitted in COM board)
+	// Total packet length must be <= than 235 octets (otherwise it cannot be transmitted in COM board)
 	if (sourceDataLength > (235 - TM_NONDATA_SIZE - AX25_2ed_size - 1))
 		return ERR_CCSDS_TOO_MUCH_DATA; // Data too big
 
-// Total packet length (not value of packet length field !)
+	// Total packet length (not value of packet length field !)
 	packetLength = TM_NONDATA_SIZE + sourceDataLength;
 
-// Test if telemetry buffer big enough
+	// Test if telemetry buffer big enough
 	if (*telemetryBufferSize < packetLength)
 		return ERR_CCSDS_BUFFER_TOO_SMALL; // Buffer too small
 
-// Get sequence count
+	// Get sequence count
 	sequenceCount = CCSDS_GetSequenceCount(apid);
 
-// Packet Header (Packet ID, Packet Sequence Control and Packet Length) (48 bits)
-// Packet ID (16 bits)
+	// Packet Header (Packet ID, Packet Sequence Control and Packet Length) (48 bits)
+	// Packet ID (16 bits)
 	telemetryBuffer[0] = 0x08 | ((uint8_t)(apid >> 8) & 0x07);
-// Version number (3 bits) = 0, Type (1bit) = 0, Data Field Header Flag (1 bit) = 1, APID (11 bits) -> 3 MSB
+	// Version number (3 bits) = 0, Type (1bit) = 0, Data Field Header Flag (1 bit) = 1, APID (11 bits) -> 3 MSB
 	telemetryBuffer[1] = (uint8_t)(apid);   // APID (11 bits) -> 8 LSB
-// Packet Sequence Control (16 bits)
+	// Packet Sequence Control (16 bits)
 	telemetryBuffer[2] = 0xC0 | ((uint8_t)(sequenceCount >> 8) & 0x3F);
-// Grouping Flag (2 bits), Source Sequence Count (14 bits) -> 6 MSB
+	// Grouping Flag (2 bits), Source Sequence Count (14 bits) -> 6 MSB
 
 	telemetryBuffer[3] = (uint8_t)(sequenceCount);
-// Source Sequence  Count (14 bits) -> 8 LSB
+	// Source Sequence  Count (14 bits) -> 8 LSB
 
-// Packet Length (16 bits)
+	// Packet Length (16 bits)
 	packetLengthFieldValue = packetLength - 7;
-	telemetryBuffer[4] = (uint8_t)(packetLengthFieldValue >> 8); // Packet Length (16 bits) -> 8 MSB
-	telemetryBuffer[5] = (uint8_t)(packetLengthFieldValue); // -> 8 LSB
+	telemetryBuffer[4] = (uint8_t)(packetLengthFieldValue >> 8); 	// Packet Length (16 bits) 	-> 8 MSB
+	telemetryBuffer[5] = (uint8_t)(packetLengthFieldValue); 		// 							-> 8 LSB
 
-// Packet Data Field (Telemetry Data Field Header, Source Data and Packet Error Control) (Variable)
-// Telemetry Data Field Header (56 bits)
-	telemetryBuffer[6] = 0x10; // Spare (1 bit) = 0, PUS Version Number (3 bits) = 1, Spare (4 bits) = 0
-	telemetryBuffer[7] = serviceType; // Service Type (8 bits)
-	telemetryBuffer[8] = serviceSubtype; // Service Subtype (8 bits)
+	// Packet Data Field (Telemetry Data Field Header, Source Data and Packet Error Control) (Variable)
+	// Telemetry Data Field Header (56 bits)
+	telemetryBuffer[6] = 0x10; 				// Spare (1 bit) = 0, PUS Version Number (3 bits) = 1, Spare (4 bits) = 0
+	telemetryBuffer[7] = serviceType; 		// Service Type (8 bits)
+	telemetryBuffer[8] = serviceSubtype; 	// Service Subtype (8 bits)
 
-// Absolute Time (40 bits, 5 octets)
-// CUC with 4 octets of coarse time and 1 octet of fine time
-	telemetryBuffer[9] = (uint8_t)(time >> 24); // C1
-	telemetryBuffer[10] = (uint8_t)(time >> 16); // C2
-	telemetryBuffer[11] = (uint8_t)(time >> 8); // C3
-	telemetryBuffer[12] = (uint8_t)(time); // C4
-	telemetryBuffer[13] = 0; // F1 // TODO: Seems to be always 0
+	// Absolute Time (40 bits, 5 octets)
+	// CUC with 4 octets of coarse time and 1 octet of fine time
+	telemetryBuffer[9] = (uint8_t)(time >> 24); 		// C1
+	telemetryBuffer[10] = (uint8_t)(time >> 16); 		// C2
+	telemetryBuffer[11] = (uint8_t)(time >> 8); 		// C3
+	telemetryBuffer[12] = (uint8_t)(time); 				// C4
+	telemetryBuffer[13] = 0; 							// F1 // TODO: Seems to be always 0
 
-// Copy Source Data (variable length)
+	// Copy Source Data (variable length)
 	dataPtr = (telemetryBuffer + TM_HEADERS_SIZE);
 	dataEndPtr = dataPtr + sourceDataLength;
 	while (dataPtr < dataEndPtr)
 		*(dataPtr++) = *(sourceData++);
 
-// Packet Error Control (16 bits)
-	chk = 0xFFFF; // Init syndrome
+	// Packet Error Control (16 bits)
+	chk = 0xFFFF; 	// Init syndrome
+
 	unsigned int LTbl[256];
 	InitLtbl(LTbl);
-// Compute CRC (all packet data except FCS field)
 
+	// Compute CRC (all packet data except FCS field)
 	for (int i = 0; i < packetLength - 2; i++)
 		chk = crc_opt(telemetryBuffer[i], chk, LTbl);
 
 
 
-// Fill CRC field
+	// Fill CRC field
 	telemetryBuffer[packetLength - 2] = (uint8_t)(chk >> 8);
 	telemetryBuffer[packetLength - 1] = (uint8_t)(chk);
 
-// Return number of bytes written
+	// Return number of bytes written
 	*telemetryBufferSize = packetLength;
 
 	return ERR_SUCCESS;
@@ -294,14 +297,14 @@ uint8_t AX25_GenerateTelemetryPacket_Send(uint8_t* data , uint8_t data_len) {
 	txlen = data_len + AX25_2ed_size + 1;
 	// para_r();
 	// printf("1shut down flag == %d\n", parameters.shutdown_flag);
-	if (parameters.shutdown_flag != 1){
-		printf("send telemetry.. \n");
+	if (parameters.shutdown_flag != 1) {
+		// printf("send telemetry.. \n");
 		if (i2c_master_transaction(0, com_tx_node, &txBuffer, txlen, &rx, 1, com_delay) != E_NO_ERR)
 			return Error;
 	}
 	else
 		printf("transmitter shutdown!!");
-	
+
 	return ERR_SUCCESS;
 }
 
@@ -317,7 +320,7 @@ uint8_t AX25_Send(uint8_t* data , uint8_t data_len) {
 	memcpy(&txBuffer[1], data, data_len);
 	txBuffer[0] = com_tx_send;
 	txlen = data_len + 1;
-	if (parameters.shutdown_flag != 1){
+	if (parameters.shutdown_flag != 1) {
 		if (i2c_master_transaction(0, com_tx_node, &txBuffer, txlen, &rx, 1, com_delay) != E_NO_ERR)
 			return Error;
 	}
@@ -328,40 +331,40 @@ uint8_t AX25_Send(uint8_t* data , uint8_t data_len) {
 /*-----------------------------------------------
  * sendTelecommandReport_Success()
  * -----------------------------------------------
- * Input
- :
- * *telecommand : buffer containing the concerned telecommand packet
- * reportType : contains the success type (received, completed, progress, etc)
+ * Input :
+ * 	*telecommand : buffer containing the concerned telecommand packet
+ *  reportType : contains the success type (received, completed, progress, etc)
  *
  * Output :
  *
- error : No_Error when no error has occured, and error ID otherwise
+ *	error : No_Error when no error has occured, and error ID otherwise
  *
  * Description:
- * This function is called by decodeService8() every time a success message
- * needs to be downlinked to the ground station in a telemetry packet, after
- * a successful step in the execution of a service 8 function.
+ * 	This function is called by decodeService8() every time a success message
+ *  needs to be downlinked to the ground station in a telemetry packet, after
+ *  a successful step in the execution of a service 8 function.
  *
  * -----------------------------------------------*/
-uint8_t sendTelecommandReport_Success(uint8_t* telecommand, uint8_t reportType) {
+uint8_t sendTelecommandReport_Success(uint8_t * telecommand, uint8_t reportType) {
 
 	uint8_t err;
-// CCSDS Source Data
-
+	// CCSDS Source Data
 	uint8_t success[TM_S1_SUCCESS_SIZE];
-// CCSDS Packet length
-
+	// CCSDS Packet length
 	uint8_t packetLength = TM_NONDATA_SIZE + TM_S1_SUCCESS_SIZE;
+
 	uint8_t temporaryBuffer[packetLength];
 
+	// Packet Sequence Control (direct copy from telecommand)
 	success[0] = telecommand[0];
 	success[1] = telecommand[1];
-// Telecommand Packet ID (direct copy from telecommand)
+
+	// Telecommand Packet ID (direct copy from telecommand)
 	success[2] = telecommand[2];
 	success[3] = telecommand[3];
-// Packet Sequence Control (direct copy from telecommand)
 
-// Generate CCSDS telemetry packet
+
+	// Generate CCSDS telemetry packet
 	err = CCSDS_GenerateTelemetryPacket(&temporaryBuffer[0], &packetLength,
 	                                    obc_apid, CCSDS_T1_TELECOMMAND_VERIFICATION, reportType, success,
 	                                    TM_S1_SUCCESS_SIZE);
@@ -375,41 +378,46 @@ uint8_t sendTelecommandReport_Success(uint8_t* telecommand, uint8_t reportType) 
 /*-----------------------------------------------
  * sendTelecommandReport_Failure()
  * -----------------------------------------------
- * Input
- :
- * *telecommand : buffer containing the concerned telecommand packet
- * reportType : contains the success type (received, completed, progress, etc)
- * err : describes the nature of the failure
+ * Input :
+ * 	*telecommand : buffer containing the concerned telecommand packet
+ * 	reportType : contains the success type (received, completed, progress, etc)
+ *  err : describes the nature of the failure
  *
  * Output :
- *
- none
+ *	none
  *
  * Description:
- * This function is called by decodeService8() every time a failure message
- * needs to be downlinked to the ground station in a telemetry packet, after
- * an unsuccesful step in the execution of a service 8 function.
+ * 	This function is called by decodeService8() every time a failure message
+ *  needs to be downlinked to the ground station in a telemetry packet, after
+ *  an unsuccesful step in the execution of a service 8 function.
  *
  * -----------------------------------------------*/
+
 // Sends a telecommand failure report
 // Report type can be any failure subtype of service type 1
 // Returns encountered errors
-uint8_t sendTelecommandReport_Failure(uint8_t* telecommand, uint8_t reportType, uint8_t err) {
-// CCSDS Source Data
+uint8_t sendTelecommandReport_Failure(uint8_t* telecommand, uint8_t reportType, uint8_t err)
+{
+	// CCSDS Source Data
 	uint8_t failure[TM_S1_FAILURE_SIZE];
-// CCSDS Packet length
+	// CCSDS Packet length
 	uint8_t packetLength = TM_NONDATA_SIZE + TM_S1_FAILURE_SIZE;
+
 	uint8_t temporaryBuffer[packetLength];
-// Packet Sequence Control (direct copy from telecommand)
+
+	// Packet Sequence Control (direct copy from telecommand)
 	failure[0] = telecommand[0];
 	failure[1] = telecommand[1];
-// Telecommand Packet ID (direct copy from telecommand)
+
+	// Telecommand Packet ID (direct copy from telecommand)
 	failure[2] = telecommand[2];
 	failure[3] = telecommand[3];
-// Error Code
+
+	// Error Code
 	failure[4] = 0x00;
 	failure[5] = err;
-// Generate CCSDS telemetry packet
+
+	// Generate CCSDS telemetry packet
 	err = CCSDS_GenerateTelemetryPacket(&temporaryBuffer[0], &packetLength,
 	                                    obc_apid, CCSDS_T1_TELECOMMAND_VERIFICATION, reportType, failure,
 	                                    TM_S1_FAILURE_SIZE);
@@ -455,19 +463,19 @@ uint8_t SendDataWithCCSDS_AX25(uint8_t datatype, uint8_t* data) { //add sid then
 	if (datatype == 1) {
 		databuffer[0] = phoenix_hk_sid;
 		datalength = hk_length + 1;
-	} 
+	}
 	else if (datatype == 2) {
 		databuffer[0] = inms_sid;
 		datalength = inms_data_length + 1;
-	} 
+	}
 	else if (datatype == 3) {
 		databuffer[0] = seuv_sid;
 		datalength = seuv_length + 1;
-	} 
+	}
 	else if (datatype == 4) {
 		databuffer[0] = eop_sid;
 		datalength = eop_length + 1;
-	} 
+	}
 	else if (datatype == 5) {
 
 		databuffer[0] = wod_sid;
@@ -515,7 +523,7 @@ void decodeCCSDS_Command(uint8_t * telecommand, uint8_t packet_length) {
 	uint8_t serviceSubType = telecommand[8];
 	uint16_t chk;
 
-// Compute CRC (all packet data except FCS field)
+	// Compute CRC (all packet data except FCS field)
 
 	chk = 0xFFFF; // Init syndrome
 	unsigned int LTbl[256];
@@ -523,11 +531,11 @@ void decodeCCSDS_Command(uint8_t * telecommand, uint8_t packet_length) {
 	for (int i = 0; i < packet_length - 2; i++)
 		chk = crc_opt(telecommand[i], chk, LTbl);
 
-	//Check CRC field
-//	if (telecommand[packet_length - 2] == (uint8_t)(chk >> 8) )
-//		if (telecommand[packet_length - 1] == (uint8_t)(chk)) {
-	//                         printf(" CRC Check  not pass!!!\n");
-	printf("Telecommand Pass CRC Check\n");
+	// Check CRC field
+	// if (telecommand[packet_length - 2] == (uint8_t)(chk >> 8) ) {
+	// if (telecommand[packet_length - 1] == (uint8_t)(chk)) {
+	// printf(" CRC Check  not pass!!!\n");
+	printf("Telecommand Pass CRC Check (No CRC check now)\n");
 	// check CRC end
 
 	switch (serviceType) {
@@ -539,7 +547,7 @@ void decodeCCSDS_Command(uint8_t * telecommand, uint8_t packet_length) {
 	case T8_function_management:
 		decodeService8(serviceSubType, telecommand);
 		break;
-	case T11_OnBoard_Sche:
+	case T11_OnBoard_Schedule:
 		decodeService11(serviceSubType, telecommand);
 		break;
 	case T13_LargeData_Transfer:
@@ -559,5 +567,6 @@ void decodeCCSDS_Command(uint8_t * telecommand, uint8_t packet_length) {
 
 		break;
 	}
-//		}
+	// 	}
+	// }
 }  /* end of decodeCCSDS_Command */

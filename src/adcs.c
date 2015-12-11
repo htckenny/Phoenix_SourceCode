@@ -9,7 +9,7 @@
 #include "subsystem.h"
 #include <dev/i2c.h>
 
-#define adcs_node 0x57
+// #define adcs_node 0x57
 uint8_t txbuf[255];
 uint8_t rxbuf[255];
 
@@ -47,18 +47,19 @@ void ADCS_Tasks(void * pvParameters) {
 
 		//Mode transition
 		txbuf[0] = 0x92;   //0d146 Estimated angular rates
-		i2c_master_transaction(0, adcs_node, &txbuf, 1, &rxbuf, 6, adcs_delay);
-		xrate = rxbuf[0] + (rxbuf[1] << 8); //   *256 = <<8, /256= >>8
-		yrate = rxbuf[2] + (rxbuf[3] << 8); //   *256 = <<8, /256= >>8
-		zrate = rxbuf[4] + (rxbuf[5] << 8); //   *256 = <<8, /256= >>8
+		if (i2c_master_transaction(0, adcs_node, &txbuf, 1, &rxbuf, 6, adcs_delay) == E_NO_ERR) {
+			xrate = rxbuf[0] + (rxbuf[1] << 8); //   *256 = <<8, /256= >>8
+			yrate = rxbuf[2] + (rxbuf[3] << 8); //   *256 = <<8, /256= >>8
+			zrate = rxbuf[4] + (rxbuf[5] << 8); //   *256 = <<8, /256= >>8
+		}
+		printf("ADCS measurement taken\n");
+		// printf("Xrate = %d\n", xrate);
+		// printf("Yrate = %d\n", yrate);
+		// printf("Zrate = %d\n", zrate);
 
-		printf("Xrate = %d\n", xrate);
-		printf("Yrate = %d\n", yrate);
-		printf("Zrate = %d\n", zrate);
+		if ((yrate >= -2700) && (yrate <= -1700)) {			//Please check the negative value
 
-		if ((yrate >= -2700) && (yrate <= -1700)) 	{			//Please check the negative value
-
-			if (flag_TRIAD == 0)	{
+			if (flag_TRIAD == 0) {
 				txbuf[0] = 0x11;   //0d17 Set attitude estimation mode
 				txbuf[1] = 0x05;
 				if (i2c_master_transaction(0, adcs_node, &txbuf, 2, &rxbuf, 0, adcs_delay) == E_NO_ERR)

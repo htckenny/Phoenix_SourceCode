@@ -135,7 +135,7 @@
 /*---------------Service Type---------------*/
 #define T3_SYS_CONF 				3
 #define T8_function_management 		8
-#define T11_OnBoard_Sche 			11 
+#define T11_OnBoard_Schedule		11 
 #define T13_LargeData_Transfer		13
 #define T15_dowlink_management 		15 
 #define T131_ADCS 					131 

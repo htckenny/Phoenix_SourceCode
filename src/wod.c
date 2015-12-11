@@ -237,7 +237,7 @@ void beacon_task(void * pvParameters) {
 		else if (parameters.beacon_period > 0){
 			period = parameters.beacon_period * 1000;
 		}
-		printf("-- Send Beacon --\n");
+		printf("-- Send Beacon with %d--\n", parameters.beacon_period);
 		SendPacketWithCCSDS_AX25(&beacon_frame.mode, 8, obc_apid, 0, 0);
 		vTaskDelay(period);
 	}

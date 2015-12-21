@@ -12,15 +12,17 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <time.h>
-#include <io/nanomind.h>
+#include <nanomind.h>
 #include <dev/i2c.h>
 #include <inttypes.h>
+ #include <stdint.h>
+#include <csp/csp_endian.h>
+ 
 #include "fs.h"
-#include "Tele_function.h"
+#include "tele_function.h"
 #include "parameter.h"
 #include "subsystem.h"
-#include <stdint.h>
-#include <csp/csp_endian.h>
+
 
 #define maxlength 	20
 #define maxNum		50
@@ -114,7 +116,7 @@ void sendCommand (uint8_t * telecommand)
 		// printf("here\n");
 		decodeService3(serviceSubType, telecommand);
 		break ;
-	case T11_OnBoard_Sche :
+	case T11_OnBoard_Schedule :
 		decodeService11(serviceSubType, telecommand);
 		break;
 	case T8_function_management:

@@ -14,9 +14,9 @@
 #include "parameter.h"
 #include "subsystem.h"
 #include "fs.h"
-#include <io/nanomind.h>
+#include <nanomind.h>
 #include <csp/csp_endian.h>
-#include "SEUV_Task.h"
+#include "task_SEUV.h"
 #include <string.h>
 #include <math.h>
 

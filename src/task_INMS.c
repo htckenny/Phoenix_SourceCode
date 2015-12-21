@@ -29,13 +29,12 @@
 
 #include <dev/usart.h>
 #include <io/nanopower2.h>
-#include <io/nanomind.h>
+#include <nanomind.h>
 #include <csp/csp.h>
 #include <csp/csp_endian.h>
 
 #include "parameter.h"
 #include "subsystem.h"
-#include "mpio.h"
 
 #define scriptNum 7
 #define isSimulator 0

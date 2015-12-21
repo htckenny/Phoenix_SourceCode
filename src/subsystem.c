@@ -6,18 +6,19 @@
  */
 
 #include <io/nanopower2.h>
-#include "subsystem.h"
 #include <dev/i2c.h>
 #include <stdint.h>
 #include <inttypes.h>
 #include <string.h>
 #include <math.h>
-#include "parameter.h"
-#include "mpio.h"
 #include <csp/csp_endian.h>
 #include <csp/csp.h>
-#include "fs.h"
 #include <dev/arm/ds1302.h>
+
+#include "subsystem.h"
+#include "parameter.h"
+#include "fs.h"
+#include "../lib/liba712/src/drivers/mpio.h"
 
 
 uint32_t get_time() {

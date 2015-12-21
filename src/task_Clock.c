@@ -4,10 +4,10 @@
 //#include <dev/cpu.h>
 #include <util/delay.h>
 #include "parameter.h"
-#include <io/nanomind.h>
+#include <nanomind.h>
 #include <csp/csp_endian.h>
 #include <dev/i2c.h>
-#include "Tele_function.h"
+#include "tele_function.h"
 #include "subsystem.h"
 #include <string.h>
 #include <time.h>
@@ -52,7 +52,7 @@ void init_time() {
 
 
 
-void Clock_Task(void * pvParameters) {
+void task_Clock(void * pvParameters) {
 
 	if (parameters.first_flight == 1)
 		init_time();

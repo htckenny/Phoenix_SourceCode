@@ -10,21 +10,22 @@
 #include <freertos/task.h>
 #include <dev/cpu.h>
 #include <util/delay.h>
-#include "parameter.h"
-#include <io/nanomind.h>
+ #include <nanomind.h>
 #include <csp/csp_endian.h>
 #include <dev/i2c.h>
-#include "Tele_function.h"
-#include "subsystem.h"
 #include <string.h>
 #include <util/hexdump.h>
 #include <time.h>
 #include <dev/adc.h>
 #include <dev/usart.h>
-#include "mpio.h"
-#include "fs.h"
-#include <io/nanopower2.h>
+ #include <io/nanopower2.h>
 #include <csp/csp.h>
+ 
+#include "parameter.h"
+#include "tele_function.h"
+#include "subsystem.h"
+#include "fs.h"
+
 
 int num;
 uint8_t hk_buffer[200];

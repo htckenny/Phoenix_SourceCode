@@ -13,14 +13,17 @@
 #include <dev/i2c.h>
 #include <util/hexdump.h>
 #include <util/timestamp.h>
-#include <io/nanomind.h>
+// #include <io/nanomind.h>
 #include <csp/csp.h>
 #include <csp/csp_endian.h>
-#include "fs.h"
-#include "parameter.h"
-#include "subsystem.h"
+// #include "fs.h"
+// #include "parameter.h"
+// #include "subsystem.h"
 
-
+#define adcs_node	87
+#define adcs_delay 	100
+#define E_NO_ERR 	0
+ 
 void EOP_Task(void * pvParameters) {
 	uint8_t uchar_eop[28];
 	uint8_t rxbuf[48];
@@ -28,7 +31,7 @@ void EOP_Task(void * pvParameters) {
 	for (int i = 0 ; i < 28 ; i++){
 		uchar_eop[i] = 0;
 	}
-	uint32_t seconds[] = {0};
+	// uint32_t seconds[] = {0};
 	
 	vTaskDelay(3000);
 	while (1) {
@@ -39,12 +42,12 @@ void EOP_Task(void * pvParameters) {
 			printf("Get Time, Attitude, Position from ADCS");
 			memcpy(&uchar_eop[4], &rxbuf[18], 24);
 			hex_dump(uchar_eop, 28);	/* TODO: Delete this when flight */
-			eop_write_dup(uchar_eop);
+			// eop_write_dup(uchar_eop);
 		}
 		else {
 			printf("Error, cannot communicate with ADCS\n");
 		}
-		eop_write_dup(uchar_eop);
+		// eop_write_dup(uchar_eop);
 		vTaskDelay(10000);
 	}
 	/** End of init */

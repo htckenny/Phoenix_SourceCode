@@ -3,7 +3,7 @@
 #include <fat_sd/ff.h>
 #include <dev/i2c.h>
 
-#include <io/nanomind.h>
+#include <nanomind.h>
 #include <util/hexdump.h>
 #include <util/timestamp.h>
 #include <csp/csp_endian.h>
@@ -13,7 +13,7 @@
 #include <string.h>
 
 #include "parameter.h"
-#include "Tele_function.h"
+#include "tele_function.h"
 #include "subsystem.h"
 #include "fs.h"
 

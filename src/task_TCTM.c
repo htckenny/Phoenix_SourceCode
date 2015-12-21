@@ -7,7 +7,7 @@
 #include <util/hexdump.h>
 #include "parameter.h"
 #include "subsystem.h"
-#include "Tele_function.h"
+#include "tele_function.h"
 
 void delete_buf() {
 

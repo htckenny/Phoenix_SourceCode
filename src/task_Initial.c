@@ -21,7 +21,7 @@
 #include <inttypes.h>
 #include <string.h>
 #include <math.h>
-#include "Tele_function.h"
+#include "tele_function.h"
 
 #define E_NO_ERR -1
 extern void BatteryCheckTask(void * pvParameters);

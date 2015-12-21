@@ -10,12 +10,12 @@
 #include <util/log.h>
 #include <util/delay.h>
 #include <io/nanopower2.h>
-#include <io/nanomind.h>
+#include <nanomind.h>
 #include <csp/csp.h>
 #include <csp/csp_endian.h>
 #include "parameter.h"
 #include "subsystem.h"
-#include "Tele_function.h"
+#include "tele_function.h"
 
 #define __max(a,b) \
    ({__typeof__ (a) _a = (a); \

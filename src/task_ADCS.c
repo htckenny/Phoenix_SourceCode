@@ -37,9 +37,9 @@ void ADCS_Tasks(void * pvParameters) {
 	if (i2c_master_transaction(0, adcs_node, &txbuf, 2, &rxbuf, 0, adcs_delay) == E_NO_ERR)
 		printf("ID:17\tSet estimation mode into MEMS rate sensing\n");
 
-	int16_t xrate; //X-axis angular rates
-	int16_t yrate; //Z-axis angular rates
-	int16_t zrate; //Z-axis angular rates
+	int16_t xrate=0; //X-axis angular rates
+	int16_t yrate=0; //Z-axis angular rates
+	int16_t zrate=0; //Z-axis angular rates
 	uint8_t flag_mag = 0; //Magnetometer deployment flag
 	uint8_t flag_TRIAD = 0; //TRIAD flag
 

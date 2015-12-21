@@ -1,17 +1,17 @@
-#include <freertos/FreeRTOS.h>
-#include "parameter.h"
-#include "crc16.h"
 #include <dev/i2c.h>
-#include "Tele_function.h"
+#include <util/timestamp.h>
 #include <util/hexdump.h>
-#include "fs.h"
+#include <freertos/FreeRTOS.h>
 #include <string.h>
-#include <io/nanomind.h>
+#include <nanomind.h>
 #include <csp/csp_endian.h>
 #include <time.h>
-#include "SEUV_Task.h"
-#include "Tele_function.h"
+/* Self defined header file*/
 #include "subsystem.h"
+#include "parameter.h"
+#include "tele_function.h"
+#include "fs.h"
+#include "task_SEUV.h"
 
 /*------------------------------------------Telecommand-----------------------------------*/
 #define script_first_part		9

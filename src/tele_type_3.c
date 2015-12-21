@@ -3,16 +3,16 @@
 #include <util/hexdump.h>
 #include <freertos/FreeRTOS.h>
 #include <string.h>
-#include <io/nanomind.h>
+#include <nanomind.h>
 #include <csp/csp_endian.h>
 #include <time.h>
 /* Self defined header file*/
 #include "subsystem.h"
 #include "parameter.h"
-#include "crc16.h"
-#include "Tele_function.h"
+#include "tele_function.h"
 #include "fs.h"
-#include "SEUV_Task.h"
+#include "task_SEUV.h"
+
 /* Definition of the service sub type*/
 #define Report_HK_State		1		/* Report House Keeping Data */
 #define Report_COM_HK_1		2		/* Report Communication Board House Keeping Data */

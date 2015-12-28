@@ -374,397 +374,397 @@ int schedule_read(uint8_t * txbuf)
 /*  ---------------------------------------------------  */	
 /** Start of old downlink/delete related FS function*/
 
-int downlink_data_before_t(uint8_t datatype, uint32_t time1) {
-	/*      Now T1 is not convert yet, please check T1 endian to h      */
+// int downlink_data_before_t(uint8_t datatype, uint32_t time1) {
+// 	/*      Now T1 is not convert yet, please check T1 endian to h      */
 
-	char * fileName;
-	uint8_t size;
-	uint32_t datatime;
+// 	char * fileName;
+// 	uint8_t size;
+// 	uint32_t datatime;
 
-	if (datatype == 1) {
-		fileName = "0:/hk.bin";
-		size = hk_length;
-	}
-	else if (datatype == 2) {
-		fileName = "0:/inms.bin";
-		size = inms_data_length;
-	}
-	else if (datatype == 3) {
-		fileName = "0:/seuv.bin";
-		size = seuv_length;
-	}
-	else if (datatype == 4) {
-		fileName = "0:/eop.bin";
-		size = eop_length;
-	}
-	else if (datatype == 5) {
-		fileName = "0:/wod.bin";
-		size = wod_length;
-	}
-	else
-		return Error;
+// 	if (datatype == 1) {
+// 		fileName = "0:/hk.bin";
+// 		size = hk_length;
+// 	}
+// 	else if (datatype == 2) {
+// 		fileName = "0:/inms.bin";
+// 		size = inms_data_length;
+// 	}
+// 	else if (datatype == 3) {
+// 		fileName = "0:/seuv.bin";
+// 		size = seuv_length;
+// 	}
+// 	else if (datatype == 4) {
+// 		fileName = "0:/eop.bin";
+// 		size = eop_length;
+// 	}
+// 	else if (datatype == 5) {
+// 		fileName = "0:/wod.bin";
+// 		size = wod_length;
+// 	}
+// 	else
+// 		return Error;
 
-	f_mount(0, &fs[0]);
-	res = f_open(&file, fileName, FA_READ | FA_WRITE );
-	if (res != FR_OK)
-	{
-		printf("\r\n f_open() fail .. \r\n");
-		return Error;
-	}
+// 	f_mount(0, &fs[0]);
+// 	res = f_open(&file, fileName, FA_READ | FA_WRITE );
+// 	if (res != FR_OK)
+// 	{
+// 		printf("\r\n f_open() fail .. \r\n");
+// 		return Error;
+// 	}
 	
-	while (1) {
-		res = f_read(&file, &buffer, size, &br);
-		if (res == FR_OK) {
-			memcpy(&datatime, &buffer, 4);
-			// printf("data time 1 = %"PRIu32"\n", datatime);
-			datatime = csp_ntoh32(datatime);
-			// printf("data time 1 = %"PRIu32"\n", datatime);
+// 	while (1) {
+// 		res = f_read(&file, &buffer, size, &br);
+// 		if (res == FR_OK) {
+// 			memcpy(&datatime, &buffer, 4);
+// 			// printf("data time 1 = %"PRIu32"\n", datatime);
+// 			datatime = csp_ntoh32(datatime);
+// 			// printf("data time 1 = %"PRIu32"\n", datatime);
 
-			if (datatime <= time1)
-				SendDataWithCCSDS_AX25(datatype, &buffer[0]);
-		}
-		else {
-			f_close(&file);
-			f_mount(0, NULL);
-			return Error;
-		}
+// 			if (datatime <= time1)
+// 				SendDataWithCCSDS_AX25(datatype, &buffer[0]);
+// 		}
+// 		else {
+// 			f_close(&file);
+// 			f_mount(0, NULL);
+// 			return Error;
+// 		}
 
-		if (f_eof(&file))
-			break;
-	}
-
-
-	f_close(&file);
-	f_mount(0, NULL);
-	return No_Error;
-}
-
-int downlink_data_after_t(uint8_t datatype, uint16_t time1) {
-	/*      Now T1 is not convert yet, please check T1 endian to h      */
-	char * fileName;
-	uint8_t size;
-	uint32_t datatime;
-	if (datatype == 1) {
-		fileName = "0:/hk.bin";
-		size = hk_length;
-	}
-	else if (datatype == 2) {
-		fileName = "0:/inms.bin";
-		size = inms_data_length;
-	}
-	else if (datatype == 3) {
-		fileName = "0:/seuv.bin";
-		size = seuv_length;
-	}
-	else if (datatype == 4) {
-		fileName = "0:/eop.bin";
-		size = eop_length;
-	}
-	else if (datatype == 5) {
-		fileName = "0:/wod.bin";
-		size = wod_length;
-	}
-	else
-		return Error;
-
-	f_mount(0, &fs[0]);
-	res = f_open(&file, fileName, FA_READ | FA_WRITE );
-	if (res != FR_OK)
-	{
-		printf("\r\n f_open() fail .. \r\n");
-		return Error;
-	}
-
-	while (1) {
+// 		if (f_eof(&file))
+// 			break;
+// 	}
 
 
-		res = f_read(&file, &buffer, size, &br);
-		if (res == FR_OK) {
-			memcpy(&datatime, &buffer, 4);
-			datatime = csp_ntoh32(datatime);
-			if ((datatime > time1) | (datatime == time1))
-				SendDataWithCCSDS_AX25(datatype, &buffer[0]);
-		}
-		else {
-			f_close(&file);
-			f_mount(0, NULL);
-			return Error;
-		}
+// 	f_close(&file);
+// 	f_mount(0, NULL);
+// 	return No_Error;
+// }
 
-		if (f_eof(&file))
-			break;
-	}
+// int downlink_data_after_t(uint8_t datatype, uint16_t time1) {
+// 	/*      Now T1 is not convert yet, please check T1 endian to h      */
+// 	char * fileName;
+// 	uint8_t size;
+// 	uint32_t datatime;
+// 	if (datatype == 1) {
+// 		fileName = "0:/hk.bin";
+// 		size = hk_length;
+// 	}
+// 	else if (datatype == 2) {
+// 		fileName = "0:/inms.bin";
+// 		size = inms_data_length;
+// 	}
+// 	else if (datatype == 3) {
+// 		fileName = "0:/seuv.bin";
+// 		size = seuv_length;
+// 	}
+// 	else if (datatype == 4) {
+// 		fileName = "0:/eop.bin";
+// 		size = eop_length;
+// 	}
+// 	else if (datatype == 5) {
+// 		fileName = "0:/wod.bin";
+// 		size = wod_length;
+// 	}
+// 	else
+// 		return Error;
 
-	f_close(&file);
-	f_mount(0, NULL);
-	return No_Error;
-}
-int downlink_data_between_t(uint8_t datatype, uint16_t time1, uint16_t time2) {
-	char * fileName;
-	uint8_t size;
-	uint32_t datatime;
-	if (datatype == 1) {
-		fileName = "0:/hk.bin";
-		size = hk_length;
-	}
-	else if (datatype == 2) {
-		fileName = "0:/inms.bin";
-		size = inms_data_length;
-	}
-	else if (datatype == 3) {
-		fileName = "0:/seuv.bin";
-		size = seuv_length;
-	}
-	else if (datatype == 5) {
-		fileName = "0:/wod.bin";
-		size = wod_length;
-	}
-	else
-		return Error;
+// 	f_mount(0, &fs[0]);
+// 	res = f_open(&file, fileName, FA_READ | FA_WRITE );
+// 	if (res != FR_OK)
+// 	{
+// 		printf("\r\n f_open() fail .. \r\n");
+// 		return Error;
+// 	}
 
-	f_mount(0, &fs[0]);
-	res = f_open(&file, fileName, FA_READ | FA_WRITE );
-	if (res != FR_OK) {
-		printf("\r\n f_open() fail .. \r\n");
-		return Error;
-	}
-	while (1) {
-		res = f_read(&file, &buffer, size, &br);
-		if (res == FR_OK) {
-			memcpy(&datatime, &buffer, 4);
-			datatime = csp_ntoh32(datatime);
-			if ((datatime < time1) | (datatime == time1)) {
-				if ((datatime > time2) | (datatime == time2)) {
-					SendDataWithCCSDS_AX25(datatype, &buffer[0]);
-				}
-			}
-
-			if ((datatime < time2) | (datatime == time2)) {
-				if ((datatime > time1) | (datatime == time1)) {
-					SendDataWithCCSDS_AX25(datatype, &buffer[0]);
-				}
-			}
-		}
-		else {
-			f_close(&file);
-			f_mount(0, NULL);
-			return Error;
-		}
-		if (f_eof(&file))
-			break;
-	}
-	f_close(&file);
-	f_mount(0, NULL);
-	return No_Error;
-}
+// 	while (1) {
 
 
-int delete_data_before_t(uint8_t datatype, uint32_t time1) {
-	/*      Now T1 is not convert yet, please check T1 endian to h      */
-	char * fileName;
-	uint8_t size;
-	uint32_t datatime;
-	int count = 0;
-	int a;
-	if (datatype == 1) {
-		fileName = "0:/hk.bin";
-		size = hk_length;
-	}
-	else if (datatype == 2) {
-		fileName = "0:/inms.bin";
-		size = inms_data_length;
-	}
-	else if (datatype == 3) {
-		fileName = "0:/seuv.bin";
-		size = seuv_length;
-	}
-	else if (datatype == 4) {
-		fileName = "0:/eop.bin";
-		size = eop_length;
-	}
-	else if (datatype == 5) {
-		fileName = "0:/wod.bin";
-		size = wod_length;
-	}
-	else
-		return Error;
+// 		res = f_read(&file, &buffer, size, &br);
+// 		if (res == FR_OK) {
+// 			memcpy(&datatime, &buffer, 4);
+// 			datatime = csp_ntoh32(datatime);
+// 			if ((datatime > time1) | (datatime == time1))
+// 				SendDataWithCCSDS_AX25(datatype, &buffer[0]);
+// 		}
+// 		else {
+// 			f_close(&file);
+// 			f_mount(0, NULL);
+// 			return Error;
+// 		}
 
-	f_mount(0, &fs[0]);
-	res = f_open(&file, fileName, FA_READ | FA_WRITE );
-	if (res != FR_OK)
-	{
-		printf("\r\n f_open() fail .. \r\n");
-		return Error;
-	}
+// 		if (f_eof(&file))
+// 			break;
+// 	}
 
-	while (1) {
-		res = f_read(&file, &buffer, size, &br);
-		if (res == FR_OK) {
-			memcpy(&datatime, &buffer, 4);
-			datatime = csp_ntoh32(datatime);
+// 	f_close(&file);
+// 	f_mount(0, NULL);
+// 	return No_Error;
+// }
+// int downlink_data_between_t(uint8_t datatype, uint16_t time1, uint16_t time2) {
+// 	char * fileName;
+// 	uint8_t size;
+// 	uint32_t datatime;
+// 	if (datatype == 1) {
+// 		fileName = "0:/hk.bin";
+// 		size = hk_length;
+// 	}
+// 	else if (datatype == 2) {
+// 		fileName = "0:/inms.bin";
+// 		size = inms_data_length;
+// 	}
+// 	else if (datatype == 3) {
+// 		fileName = "0:/seuv.bin";
+// 		size = seuv_length;
+// 	}
+// 	else if (datatype == 5) {
+// 		fileName = "0:/wod.bin";
+// 		size = wod_length;
+// 	}
+// 	else
+// 		return Error;
 
-			if ((datatime < time1) | (datatime == time1)) {
-				f_lseek(&file, count * size);
-				for (a = 0; a < size; a++)
-					buffer[a] = 0;
-				res = f_write(&file, &buffer, size, &bw);
-			}
+// 	f_mount(0, &fs[0]);
+// 	res = f_open(&file, fileName, FA_READ | FA_WRITE );
+// 	if (res != FR_OK) {
+// 		printf("\r\n f_open() fail .. \r\n");
+// 		return Error;
+// 	}
+// 	while (1) {
+// 		res = f_read(&file, &buffer, size, &br);
+// 		if (res == FR_OK) {
+// 			memcpy(&datatime, &buffer, 4);
+// 			datatime = csp_ntoh32(datatime);
+// 			if ((datatime < time1) | (datatime == time1)) {
+// 				if ((datatime > time2) | (datatime == time2)) {
+// 					SendDataWithCCSDS_AX25(datatype, &buffer[0]);
+// 				}
+// 			}
 
-		}
-		else {
-			f_close(&file);
-			f_mount(0, NULL);
-			return Error;
-		}
-		if (res != FR_OK)
-			return Error;
-		if (f_eof(&file))
-			break;
-		count++;
-	}
-	f_close(&file);
-	f_mount(0, NULL);
-	return No_Error;
-}
-
-int delete_data_after_t(uint8_t datatype, uint16_t time1) {
-	/*      Now T1 is not convert yet, please check T1 endian to h      */
-	char * fileName;
-	uint8_t size;
-	uint32_t datatime;
-	int count = 0;
-	int a;
-	if (datatype == 1) {
-		fileName = "0:/hk.bin";
-		size = hk_length;
-	}
-	else if (datatype == 2) {
-		fileName = "0:/inms.bin";
-		size = inms_data_length;
-	}
-	else if (datatype == 3) {
-		fileName = "0:/seuv.bin";
-		size = seuv_length;
-	}
-	else if (datatype == 4) {
-		fileName = "0:/eop.bin";
-		size = eop_length;
-	}
-	else if (datatype == 5) {
-		fileName = "0:/wod.bin";
-		size = wod_length;
-	}
-	else
-		return Error;
-
-	f_mount(0, &fs[0]);
-	res = f_open(&file, fileName, FA_READ | FA_WRITE );
-	if (res != FR_OK)
-	{
-		printf("\r\n f_open() fail .. \r\n");
-		return Error;
-	}
-
-	while (1) {
+// 			if ((datatime < time2) | (datatime == time2)) {
+// 				if ((datatime > time1) | (datatime == time1)) {
+// 					SendDataWithCCSDS_AX25(datatype, &buffer[0]);
+// 				}
+// 			}
+// 		}
+// 		else {
+// 			f_close(&file);
+// 			f_mount(0, NULL);
+// 			return Error;
+// 		}
+// 		if (f_eof(&file))
+// 			break;
+// 	}
+// 	f_close(&file);
+// 	f_mount(0, NULL);
+// 	return No_Error;
+// }
 
 
-		res = f_read(&file, &buffer, size, &br);
-		if (res == FR_OK) {
-			memcpy(&datatime, &buffer, 4);
-			datatime = csp_ntoh32(datatime);
-			if ((datatime > time1) | (datatime == time1)) {
-				f_lseek(&file, count * size);
-				for (a = 0; a < size; a++) {
-					buffer[a] = 0;
-				}
-				res = f_write(&file, &buffer, size, &bw);
-			}
-		}
-		else {
-			f_close(&file);
-			f_mount(0, NULL);
-			return Error;
-		}
-		if (res != FR_OK)
-			return Error;
-		if (f_eof(&file))
-			break;
-		count++;
-	}
-	f_close(&file);
-	f_mount(0, NULL);
-	return No_Error;
-}
-int delete_data_between_t(uint8_t datatype, uint16_t time1, uint16_t time2) {
-	char * fileName;
-	uint8_t size;
-	uint32_t datatime;
-	int count = 0;
-	int a;
-	if (datatype == 1) {
-		fileName = "0:/hk.bin";
-		size = hk_length;
-	}
-	else if (datatype == 2) {
-		fileName = "0:/inms.bin";
-		size = inms_data_length;
-	}
-	else if (datatype == 3) {
-		fileName = "0:/seuv.bin";
-		size = seuv_length;
-	}
-	else if (datatype == 5) {
-		fileName = "0:/wod.bin";
-		size = wod_length;
-	}
-	else
-		return Error;
+// int delete_data_before_t(uint8_t datatype, uint32_t time1) {
+// 	/*      Now T1 is not convert yet, please check T1 endian to h      */
+// 	char * fileName;
+// 	uint8_t size;
+// 	uint32_t datatime;
+// 	int count = 0;
+// 	int a;
+// 	if (datatype == 1) {
+// 		fileName = "0:/hk.bin";
+// 		size = hk_length;
+// 	}
+// 	else if (datatype == 2) {
+// 		fileName = "0:/inms.bin";
+// 		size = inms_data_length;
+// 	}
+// 	else if (datatype == 3) {
+// 		fileName = "0:/seuv.bin";
+// 		size = seuv_length;
+// 	}
+// 	else if (datatype == 4) {
+// 		fileName = "0:/eop.bin";
+// 		size = eop_length;
+// 	}
+// 	else if (datatype == 5) {
+// 		fileName = "0:/wod.bin";
+// 		size = wod_length;
+// 	}
+// 	else
+// 		return Error;
 
-	f_mount(0, &fs[0]);
-	res = f_open(&file, fileName, FA_READ | FA_WRITE );
-	if (res != FR_OK)
-	{
-		printf("\r\n f_open() fail .. \r\n");
-		return Error;
-	}
+// 	f_mount(0, &fs[0]);
+// 	res = f_open(&file, fileName, FA_READ | FA_WRITE );
+// 	if (res != FR_OK)
+// 	{
+// 		printf("\r\n f_open() fail .. \r\n");
+// 		return Error;
+// 	}
 
-	while (1) {
-		res = f_read(&file, &buffer, size, &br);
-		if (res == FR_OK) {
-			memcpy(&datatime, &buffer, 4);
-			datatime = csp_ntoh32(datatime);
-			if ((datatime < time1) | (datatime == time1)) {
-				if ((datatime > time2) | (datatime == time2)) {
-					f_lseek(&file, count * size);
-					for (a = 0; a < size; a++)
-						buffer[a] = 0;
-					res = f_write(&file, &buffer, size, &bw);
-				}
-			}
-			if ((datatime < time2) | (datatime == time2)) {
-				if ((datatime > time1) | (datatime == time1)) {
-					f_lseek(&file, count * size);
-					for (a = 0; a < size; a++)
-						buffer[a] = 0;
-					res = f_write(&file, &buffer, size, &bw);
-				}
-			}
-		}
-		else {
-			f_close(&file);
-			f_mount(0, NULL);
-			return Error;
-		}
-		if (res != FR_OK)
-			return Error;
-		if (f_eof(&file))
-			break;
-		count++;
-	}
-	f_close(&file);
-	f_mount(0, NULL);
-	return No_Error;
-}
+// 	while (1) {
+// 		res = f_read(&file, &buffer, size, &br);
+// 		if (res == FR_OK) {
+// 			memcpy(&datatime, &buffer, 4);
+// 			datatime = csp_ntoh32(datatime);
+
+// 			if ((datatime < time1) | (datatime == time1)) {
+// 				f_lseek(&file, count * size);
+// 				for (a = 0; a < size; a++)
+// 					buffer[a] = 0;
+// 				res = f_write(&file, &buffer, size, &bw);
+// 			}
+
+// 		}
+// 		else {
+// 			f_close(&file);
+// 			f_mount(0, NULL);
+// 			return Error;
+// 		}
+// 		if (res != FR_OK)
+// 			return Error;
+// 		if (f_eof(&file))
+// 			break;
+// 		count++;
+// 	}
+// 	f_close(&file);
+// 	f_mount(0, NULL);
+// 	return No_Error;
+// }
+
+// int delete_data_after_t(uint8_t datatype, uint16_t time1) {
+// 	/*      Now T1 is not convert yet, please check T1 endian to h      */
+// 	char * fileName;
+// 	uint8_t size;
+// 	uint32_t datatime;
+// 	int count = 0;
+// 	int a;
+// 	if (datatype == 1) {
+// 		fileName = "0:/hk.bin";
+// 		size = hk_length;
+// 	}
+// 	else if (datatype == 2) {
+// 		fileName = "0:/inms.bin";
+// 		size = inms_data_length;
+// 	}
+// 	else if (datatype == 3) {
+// 		fileName = "0:/seuv.bin";
+// 		size = seuv_length;
+// 	}
+// 	else if (datatype == 4) {
+// 		fileName = "0:/eop.bin";
+// 		size = eop_length;
+// 	}
+// 	else if (datatype == 5) {
+// 		fileName = "0:/wod.bin";
+// 		size = wod_length;
+// 	}
+// 	else
+// 		return Error;
+
+// 	f_mount(0, &fs[0]);
+// 	res = f_open(&file, fileName, FA_READ | FA_WRITE );
+// 	if (res != FR_OK)
+// 	{
+// 		printf("\r\n f_open() fail .. \r\n");
+// 		return Error;
+// 	}
+
+// 	while (1) {
+
+
+// 		res = f_read(&file, &buffer, size, &br);
+// 		if (res == FR_OK) {
+// 			memcpy(&datatime, &buffer, 4);
+// 			datatime = csp_ntoh32(datatime);
+// 			if ((datatime > time1) | (datatime == time1)) {
+// 				f_lseek(&file, count * size);
+// 				for (a = 0; a < size; a++) {
+// 					buffer[a] = 0;
+// 				}
+// 				res = f_write(&file, &buffer, size, &bw);
+// 			}
+// 		}
+// 		else {
+// 			f_close(&file);
+// 			f_mount(0, NULL);
+// 			return Error;
+// 		}
+// 		if (res != FR_OK)
+// 			return Error;
+// 		if (f_eof(&file))
+// 			break;
+// 		count++;
+// 	}
+// 	f_close(&file);
+// 	f_mount(0, NULL);
+// 	return No_Error;
+// }
+// int delete_data_between_t(uint8_t datatype, uint16_t time1, uint16_t time2) {
+// 	char * fileName;
+// 	uint8_t size;
+// 	uint32_t datatime;
+// 	int count = 0;
+// 	int a;
+// 	if (datatype == 1) {
+// 		fileName = "0:/hk.bin";
+// 		size = hk_length;
+// 	}
+// 	else if (datatype == 2) {
+// 		fileName = "0:/inms.bin";
+// 		size = inms_data_length;
+// 	}
+// 	else if (datatype == 3) {
+// 		fileName = "0:/seuv.bin";
+// 		size = seuv_length;
+// 	}
+// 	else if (datatype == 5) {
+// 		fileName = "0:/wod.bin";
+// 		size = wod_length;
+// 	}
+// 	else
+// 		return Error;
+
+// 	f_mount(0, &fs[0]);
+// 	res = f_open(&file, fileName, FA_READ | FA_WRITE );
+// 	if (res != FR_OK)
+// 	{
+// 		printf("\r\n f_open() fail .. \r\n");
+// 		return Error;
+// 	}
+
+// 	while (1) {
+// 		res = f_read(&file, &buffer, size, &br);
+// 		if (res == FR_OK) {
+// 			memcpy(&datatime, &buffer, 4);
+// 			datatime = csp_ntoh32(datatime);
+// 			if ((datatime < time1) | (datatime == time1)) {
+// 				if ((datatime > time2) | (datatime == time2)) {
+// 					f_lseek(&file, count * size);
+// 					for (a = 0; a < size; a++)
+// 						buffer[a] = 0;
+// 					res = f_write(&file, &buffer, size, &bw);
+// 				}
+// 			}
+// 			if ((datatime < time2) | (datatime == time2)) {
+// 				if ((datatime > time1) | (datatime == time1)) {
+// 					f_lseek(&file, count * size);
+// 					for (a = 0; a < size; a++)
+// 						buffer[a] = 0;
+// 					res = f_write(&file, &buffer, size, &bw);
+// 				}
+// 			}
+// 		}
+// 		else {
+// 			f_close(&file);
+// 			f_mount(0, NULL);
+// 			return Error;
+// 		}
+// 		if (res != FR_OK)
+// 			return Error;
+// 		if (f_eof(&file))
+// 			break;
+// 		count++;
+// 	}
+// 	f_close(&file);
+// 	f_mount(0, NULL);
+// 	return No_Error;
+// }
 /** End of old downlink/delete related FS function*/
 /*  ---------------------------------------------------  */	
 /** Start of INMS data related FS function*/
@@ -821,13 +821,13 @@ int inms_data_write(uint8_t frameCont[], int SD_partition)
 	if (res != FR_OK) {
 		printf("\r\n inms_write() fail .. \r\n");
 		f_close(&file);
-		f_mount(0, NULL);
+		f_mount(SD_partition, NULL);
 		return Error;
 	}
 	else {
 		printf("\r\n inms_write() success .. \r\n");
 		f_close(&file);
-		f_mount(0, NULL);
+		f_mount(SD_partition, NULL);
 		return No_Error;
 	}
 }
@@ -1083,8 +1083,8 @@ int inms_script_length(int buffNum) {
 	}
 
 	res = f_read(&file, buffer, 2, &br);
-	printf("buffer0 = %02X\n", buffer[0]);
-	printf("buffer1 = %02X\n", buffer[1]);
+	// printf("buffer0 = %02X\n", buffer[0]);
+	// printf("buffer1 = %02X\n", buffer[1]);
 	if (res == FR_OK) {
 		if (buffer[0] != 0)
 			packlength = buffer[0] + (buffer[1] << 8);

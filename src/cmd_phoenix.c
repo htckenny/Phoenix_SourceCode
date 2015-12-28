@@ -1,7 +1,8 @@
 /*
  * cmd_phoenix.c
  *
- *  Created on: 25/12/2015
+ *  Created on: 	2015/12/25
+ *  Last updated:	2015/12/28
  *      Author: Kenny Huang
  */
 
@@ -532,6 +533,7 @@ int pararead(struct command_context * ctx) {
 	printf("inms_store_count \t\t%d\n", (int) parameters.inms_store_count);
 	printf("seuv_store_count \t\t%d\n", (int) parameters.seuv_store_count);
 	printf("hk_store_count \t\t\t%d\n", (int) parameters.hk_store_count);
+	printf("eop_store_count \t\t\t%d\n", (int) parameters.eop_store_count);
 	printf("obc_packet_sequence_count \t%d\n", (int) parameters.obc_packet_sequence_count);
 	printf("vbat_recover_threshold \t\t%d\n", (int) parameters.vbat_recover_threshold);
 	printf("vbat_safe_threshold \t\t%d\n", (int) parameters.vbat_safe_threshold);

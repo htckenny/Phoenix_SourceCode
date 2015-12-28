@@ -28,9 +28,22 @@
 #include "tele_function.h"
 #include "fs.h"
 
-int test(struct command_context *ctx) { 
-	printf("test!!!!\n");
-	return CMD_ERROR_NONE; 
+int INMS_switch(struct command_context * ctx){
+	unsigned int buffer;
+	extern void vTaskinms(void * pvParameters);
+	if (ctx->argc < 2) {
+		return CMD_ERROR_SYNTAX;
+	}
+	if (sscanf(ctx->argv[1], "%u", &buffer) != 1) {
+		return CMD_ERROR_SYNTAX;
+	}
+	if (buffer == 1){
+		xTaskCreate(vTaskinms, (const signed char * ) "INMS", 1024 * 4, NULL, 1, &inms_task);
+	}
+	else if (buffer == 0) {
+		vTaskDelete(inms_task);
+	}	
+	return CMD_ERROR_NONE;
 }
 int check_mode(struct command_context * ctx){
 	printf("%d\n", HK_frame.mode_status_flag);
@@ -526,6 +539,8 @@ int pararead(struct command_context * ctx) {
 	printf("SEUV mode \t\t\t%d\n", (int) parameters.seuv_mode);
 	printf("SEUV period \t\t\t%d\n", (int) parameters.seuv_period);
 	printf("SEUV sample rate \t\t%d\n", (int) parameters.seuv_sample_rate);
+	printf("SD_partition_flag \t\t%d\n", (int) SD_partition_flag);
+	printf("inms_status\t\t\t%d\n", (int) inms_status);
 
 	return CMD_ERROR_NONE;
 }
@@ -676,11 +691,7 @@ int comhk(struct command_context * ctx) {
 }
 
 command_t __root_command ph_commands[] = {
-	{
-		.name = "ph",
-		.help = "PHOENIX",
-		.handler = test,		
-	},
+	{ .name = "inmss", .help = "PHOENIX: inmss [ON = 1 / OFF = 0]", .handler = INMS_switch, },
 	{ .name = "cm", .help = "PHOENIX: cm", .handler = check_mode, },
 	{ .name = "adcss", .help = "PHOENIX: adcss [ON = 1 / OFF = 0]", .handler = adcs_switch, },
 	{ .name = "seuvs", .help = "PHOENIX: seuvs [ON = 1 / OFF = 0]", .handler = seuv_switch, },

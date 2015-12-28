@@ -36,11 +36,14 @@
 #include "parameter.h"
 #include "subsystem.h"
 
-#define scriptNum 7
-#define isSimulator 0
+#define scriptNum 			7
+#define isSimulator 		0
+#define delay_time_based	configTICK_RATE_HZ
+
 typedef struct __attribute__((packed)) {
 	int tt_hour, tt_min, tt_sec, tt_seq;
 } timetable;
+
 int rec[scriptNum];
 
 int scriptRunning = 0;		/* initializing for identifying which script is running */
@@ -265,9 +268,9 @@ void vTaskInmsReceive(void * pvParameters) {
 void vTaskinms(void * pvParameters) {
 	
 	printf("Start INMS task......\n");
-	vTaskDelay(5000);
+	vTaskDelay(5 * delay_time_based);
 	while (1) {
-		vTaskDelay(1000);
+		vTaskDelay(3 * delay_time_based);
 		if (inms_status == 1) { 
 			// printf(" %d \n", parameters.inms_function);
 			//  if(parameters.inms_function==0)
@@ -330,7 +333,7 @@ void vTaskinms(void * pvParameters) {
 				printf("[%d] => %d\n", i, rec[i]);
 			}
 
-			vTaskDelay(2000);
+			vTaskDelay(2 * delay_time_based);
 
 			/* for temporary setting,  now only have idle0.bin, idle1.bin*/
 			if (isSimulator) {
@@ -465,10 +468,10 @@ void vTaskinms(void * pvParameters) {
 							break;
 						}
 					
-						vTaskDelay(1000);
+						vTaskDelay(1 * delay_time_based);
 						first_time = timeGet(0);
 						// printf("time = %" PRIu32 "\n",first_time);
-						printf("diff = %" PRIu32 "\n", epoch_sec[rec[i]] - first_time);
+						printf("\t\t\t\tdiff = %" PRIu32 "\n", epoch_sec[rec[i]] - first_time);
 						printf("\E[1A\r");
 					}
 				}
@@ -482,7 +485,7 @@ void vTaskinms(void * pvParameters) {
 						ttflag = 0;
 						// break;
 					}
-					vTaskDelay(1000);
+					vTaskDelay(1 * delay_time_based);
 					refTime = timeGet(1);  //get the small clock time
 
 					tTable_24  = timetable_t[ttflag].tt_hour * 3600 + timetable_t[ttflag].tt_min * 60 +  timetable_t[ttflag].tt_sec;
@@ -541,7 +544,7 @@ void vTaskinms(void * pvParameters) {
 							if (script[rec[i]][flag + 2] == 241) {   																 //OBC_SU_ON  = 241
 								int numGabage = 0;
 								power_control(4, ON);	//command EPS to POWER ON INMS
-								vTaskDelay(500);
+								vTaskDelay(0.5 * delay_time_based);
 
 								numGabage = usart_messages_waiting(2);
 								while (numGabage != 0) {
@@ -563,7 +566,7 @@ void vTaskinms(void * pvParameters) {
 							else if (script[rec[i]][flag + 2] == 242) { 														//OBC_SU_OFF = 242
 	 							printf("delete inms task receive\n");
 								vTaskDelete(inms_task_receive);
-								vTaskDelay(500);
+								vTaskDelay(0.5 * delay_time_based);
 								power_control(4, OFF);	//command EPS to POWER OFF INMS
 
 								/*----For simulator----*/
@@ -596,7 +599,7 @@ void vTaskinms(void * pvParameters) {
 									printf("%d-----------%d\n", delayTimeNow - tempTime, delayTimeTarget - tempTime);
 									printf("\E[1A\r");
 									delayTimeNow = delayTimeNow + 1;
-									vTaskDelay(1000);
+									vTaskDelay(1 * delay_time_based);
 								}
 
 								/*delay*/
@@ -607,7 +610,7 @@ void vTaskinms(void * pvParameters) {
 									usart_putstr(2, (char *)&script[rec[i]][flag + j], 1); //(char *) check !!
 									printf("COMMAND : %02x \n", script[rec[i]][flag + j]);
 								}
-								vTaskDelay(200);
+								vTaskDelay(0.2 * delay_time_based);
 							}
 							/*delay*/
 							delayTimeNow = refTime;
@@ -701,12 +704,12 @@ void vTaskInmsCurrentMonitor(void * pvParameters) {
 		// if (parameters.inms_function == 0)
 		// 	vTaskDelete(NULL);
 
-		vTaskDelay(5000);
+		vTaskDelay(5 * delay_time_based);
 	}
 }
 
 void vTaskInmsErrorHandle(void * pvParameters) {
-	vTaskDelay(5000);
+	vTaskDelay(5 * delay_time_based);
 	uint8_t rsp_err_code = 0;
 	uint8_t seq_cnt = 0;
 	uint8_t obcerrpacket[174];
@@ -814,7 +817,7 @@ void vTaskInmsErrorHandle(void * pvParameters) {
 			vTaskSuspend(inms_task);
 			printf("suspend inms for 60 sec\n");
 				
-			vTaskDelay(60 * 1000); //ICD p50  wait 60 seconds
+			vTaskDelay(60 * delay_time_based); //ICD p50  wait 60 seconds
 			/* turn on INMS */
 			vTaskResume(inms_task);
 			// power_control(4,ON);
@@ -827,7 +830,7 @@ void vTaskInmsErrorHandle(void * pvParameters) {
 		}
 		// if (parameters.inms_function == 0)
 			// vTaskDelete(NULL);
-		vTaskDelay(1000);
+		vTaskDelay(1 * delay_time_based);
 	}
 }
 

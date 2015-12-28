@@ -17,7 +17,8 @@ void inms_script_read(int buffNum,int packlength,void * txbuf);
 int inms_script_length(int buffNum);
 /*---------------------------------------------------*/
 /*             		  INMS Data                      */
-int inms_data_write(uint8_t frameCont[]);
+void inms_data_write_dup(uint8_t frameCont[]);
+int inms_data_write(uint8_t frameCont[], int SD_partition);
 int inms_data_read(char fileName[], void * txbuf);      					 // serial= which packet you want to read , Range 1~N
 int inms_data_delete();                                                       //return 0 when success, return -1 when fail.
 /*---------------------------------------------------*/

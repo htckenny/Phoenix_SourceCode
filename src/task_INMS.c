@@ -813,7 +813,7 @@ void vTaskInmsErrorHandle(void * pvParameters) {
 				errPacketTotal[i] = obcerrpacket[i - 22];
 			}
 			// hex_dump(errPacketTotal,196);
-			inms_data_write(errPacketTotal);
+			inms_data_write_dup(errPacketTotal);
 			vTaskSuspend(inms_task);
 			printf("suspend inms for 60 sec\n");
 				

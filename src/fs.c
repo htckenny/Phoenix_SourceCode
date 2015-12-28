@@ -768,19 +768,27 @@ int delete_data_between_t(uint8_t datatype, uint16_t time1, uint16_t time2) {
 /** End of old downlink/delete related FS function*/
 /*  ---------------------------------------------------  */	
 /** Start of INMS data related FS function*/
-int inms_data_write(uint8_t frameCont[])
+void inms_data_write_dup(uint8_t frameCont[])
 {
-	f_mount(0, &fs[0]);
+	uint8_t frame[inms_data_length];
+	memcpy(frame, frameCont, inms_data_length);
+	inms_data_write(frame, 0);
+	inms_data_write(frame, 1);
+}
+int inms_data_write(uint8_t frameCont[], int SD_partition)
+{
+	f_mount(SD_partition, &fs[SD_partition]);
 	struct tm  ts;
 	char buf[80];
-	char s[] = "0:/INMS_DATA/";
+
 	char fileName[40];
-
-	timestamp_t t;
-
-	strcpy(fileName, s);
+	if (SD_partition == 0)
+		strcpy(fileName, "0:INMS_DATA");
+	else
+		strcpy(fileName, "1:INMS_DATA");
 
 	/* Get current time */
+	timestamp_t t;
 	t.tv_sec = 0;
 	t.tv_nsec = 0;
 	obc_timesync(&t, 6000);
@@ -1599,21 +1607,22 @@ int para_w(int SD_partition)
 
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK) {
-		printf("\r\n f_open() fail .. \r\n");
+		printf("\r\npara f_open() %d fail .. \r\n", SD_partition);
 	}
 	else {
-		printf("\r\n f_write open() success .. \r\n");
+		printf("\r\npara f_open() %d success .. \r\n", SD_partition);
 	}
 
 	res = f_write(&file, &parameters.first_flight, (int)sizeof(parameter_t), &br);
 
 	if (res != FR_OK) {
-		printf("\r\n para write() fail .. \r\n");
+		printf("\r\n para f_write() %d fail .. \r\n", SD_partition);
 		f_close(&file);
 		f_mount(SD_partition, NULL);
 		return Error;
 	}
 	else {
+		printf("\r\n para f_write() %d success .. \r\n", SD_partition);
 		f_close(&file);
 		f_mount(SD_partition, NULL);
 		return No_Error;

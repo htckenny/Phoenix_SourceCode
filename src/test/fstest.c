@@ -3,7 +3,7 @@
 #include <fat_sd/ff.h>
 #include <util/hexdump.h>
 #include <util/timestamp.h>
-#include <io/nanomind.h>
+#include <nanomind.h>
 #include <dev/i2c.h>
 #include "fs.h"
 #include "time.h"
@@ -15,7 +15,8 @@
 #define INMSWRITEDATA	0
 #define SDCARDTEST		0
 #define TEST_FILENAME	0
-#define TEST_i2c_tx_len	1
+#define TEST_i2c_tx_len	0
+#define Test_Delay		1
 
 void vTaskfstest(void * pvParameters) {
 
@@ -320,7 +321,13 @@ void vTaskfstest(void * pvParameters) {
 	f_mount(1, NULL);
 
 #endif
-
+#if Test_Delay
+	int delay = 1;
+	while(1){
+		printf("Test delay with %d s\n", delay);
+		vTaskDelay(delay * 1000);
+	}
+#endif
 
 }
 

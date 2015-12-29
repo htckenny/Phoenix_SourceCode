@@ -11,7 +11,6 @@
 #include "parameter.h"
 #include "tele_function.h"
 #include "fs.h"
-#include "task_SEUV.h"
 
 /* Definition of the subtype */
 #define Enable_Subsystem			1				/* (?)This function is not used */
@@ -32,6 +31,7 @@
 #define enter_nominal_mode			16				/* Enter Nominal mode to start science related task */
 #define INMS_Script_State			17				/* Set INMS handler to enable/ disable */
 #define SD_partition 				18				/* Set which partition would like to read from */
+#define INMS_timeout_change			19
 
 void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	uint8_t txBuffer[200];
@@ -334,14 +334,30 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			SD_partition_flag = 1;
 			printf("Set SD Read to partition [1]\n");		
 		}
+		else
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+
 		para_w_dup();
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
+		break;
+	/*---------------  ID:19 Set INMS timeout value  ----------------*/		
+	case INMS_timeout_change:
+		if (para_length == 2)
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
+			break;
+		}
+		printf("Execute Type 8 Sybtype 19, change INMS timeout \r\n");
+		memcpy(&parameters.INMS_timeout, &paras[0], 2);
+		para_w_dup();
+		printf("change INMS timeout to %d s\n", parameters.INMS_timeout);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
 		break;
-
 	/*----------------------------Otherwise----------------*/
 	default:
 		sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 
-		break;
+	break;
 	}
 }

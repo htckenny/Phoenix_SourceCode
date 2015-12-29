@@ -136,7 +136,6 @@ uint16_t fletcher(uint8_t *script, size_t length) {
  //    printf("%" PRIu16 "\n", sum2 << 8 | sum1 ); 
  //    return sum2 << 8 | sum1;
 
-
 	uint16_t C0_int = 0, C1_int = 0;
 	uint16_t XSUM_W = 0xFFFF;	//0xFFFF = 0d65535
 	for (unsigned int i = 0; i < length; i++) {
@@ -214,7 +213,7 @@ void vTaskInmsReceive(void * pvParameters) {
 		/*
 			INMS requirement generate packet within 400 seconds
 		 */
-		if (receiveFlag >= 400) {
+		if (receiveFlag >= parameters.INMS_timeout) {
 			obcSuErrFlag = 1;
 		}
 		numReceive = usart_messages_waiting(2);

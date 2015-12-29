@@ -22,13 +22,229 @@
 #include <csp/csp_endian.h>
 #include <util/hexdump.h>
 #include <dev/i2c.h>
-
+#include <dev/usart.h>
 
 #include "parameter.h"
 #include "subsystem.h"
 #include "tele_function.h"
 #include "fs.h"
 
+int INMSsend_handler(struct command_context * ctx) {
+
+	unsigned int cmd1;
+	unsigned int cmd2;
+	unsigned int cmd3;
+	unsigned int cmd4;
+	unsigned int cmd5;
+	unsigned int cmd6;
+	unsigned int cmd7;
+	unsigned int cmd8;
+
+
+
+	if (!(ctx->argc >= 4 && ctx->argc <= 9)) {
+		printf("inms check length error\r\n");
+		return CMD_ERROR_SYNTAX;
+	}
+	if (sscanf(ctx->argv[1], "%X", &cmd1) != 1) {
+		printf("inms cmd1 error\r\n");
+		return CMD_ERROR_SYNTAX;
+	}
+	if (sscanf(ctx->argv[2], "%X", &cmd2) != 1) {
+		printf("inms cmd2 error\r\n");
+		return CMD_ERROR_SYNTAX;
+	}
+	if (sscanf(ctx->argv[3], "%X", &cmd3) != 1) {
+		printf("inms cmd3 error\r\n");
+		return CMD_ERROR_SYNTAX;
+	}
+	if (ctx->argc == 5) {
+		if (sscanf(ctx->argv[4], "%X", &cmd4) != 1) {
+			printf("inms cmd4 error\r\n");
+			return CMD_ERROR_SYNTAX;
+		}
+	}
+	if (ctx->argc == 8) {
+		if (sscanf(ctx->argv[4], "%X", &cmd4) != 1) {
+			printf("inms cmd4 error\r\n");
+			return CMD_ERROR_SYNTAX;
+		}
+		if (sscanf(ctx->argv[5], "%X", &cmd5) != 1) {
+			printf("inms cmd5 error\r\n");
+			return CMD_ERROR_SYNTAX;
+		}
+		if (sscanf(ctx->argv[6], "%X", &cmd6) != 1) {
+			printf("inms cmd6 error\r\n");
+			return CMD_ERROR_SYNTAX;
+		}
+		if (sscanf(ctx->argv[7], "%X", &cmd7) != 1) {
+			printf("inms cmd7 error\r\n");
+			return CMD_ERROR_SYNTAX;
+		}
+	}
+	if (ctx->argc == 9) {
+		if (sscanf(ctx->argv[4], "%X", &cmd4) != 1) {
+			printf("inms cmd4 error\r\n");
+			return CMD_ERROR_SYNTAX;
+		}
+		if (sscanf(ctx->argv[5], "%X", &cmd5) != 1) {
+			printf("inms cmd5 error\r\n");
+			return CMD_ERROR_SYNTAX;
+		}
+		if (sscanf(ctx->argv[6], "%X", &cmd6) != 1) {
+			printf("inms cmd6 error\r\n");
+			return CMD_ERROR_SYNTAX;
+		}
+		if (sscanf(ctx->argv[7], "%X", &cmd7) != 1) {
+			printf("inms cmd7 error\r\n");
+			return CMD_ERROR_SYNTAX;
+		}
+		if (sscanf(ctx->argv[8], "%X", &cmd8) != 1) {
+			printf("inms check point5 error\r\n");
+			return CMD_ERROR_SYNTAX;
+		}
+	}
+
+
+	char cmd01 = (char)cmd1;
+	char cmd02 = (char)cmd2;
+	char cmd03 = (char)cmd3;
+	char cmd04 = (char)cmd4;
+	char cmd05 = (char)cmd5;
+	char cmd06 = (char)cmd6;
+	char cmd07 = (char)cmd7;
+	char cmd08 = (char)cmd8;
+
+
+
+
+
+	//	char inmscmd[]= {0xF1,0x01,0x01};
+	printf("send uart to port 2\n\r");
+	int nums = 0;
+	char uchar[174 * 10];
+
+
+	usart_putstr(2, &cmd01, 1);
+	usart_putstr(2, &cmd02, 1);
+	usart_putstr(2, &cmd03, 1);
+	if (ctx->argc == 5) {
+		usart_putstr(2, &cmd04, 1);
+	}
+	if (ctx->argc == 8) {
+		usart_putstr(2, &cmd04, 1);
+		usart_putstr(2, &cmd05, 1);
+		usart_putstr(2, &cmd06, 1);
+		usart_putstr(2, &cmd07, 1);
+	}
+	if (ctx->argc == 9) {
+		usart_putstr(2, &cmd04, 1);
+		usart_putstr(2, &cmd05, 1);
+		usart_putstr(2, &cmd06, 1);
+		usart_putstr(2, &cmd07, 1);
+		usart_putstr(2, &cmd08, 1);
+	}
+
+	//inms 0x04 0x02 0x02 0x40
+	vTaskDelay(2000);
+	nums = usart_messages_waiting(2);
+	//printf(" %d \n\r ",nums);
+	if (nums != 0) {
+		printf("seems get something!\n\r");
+		for (int f = 0; f < nums; f++) {
+			uchar[f] = usart_getc(2);
+			//printf("%x",uchar[f]);
+			//printf("0x%02x", uchar[f]);
+		}
+		printf("\n");
+	}
+	hex_dump(uchar, nums);
+	return CMD_ERROR_NONE;
+}
+int INMSreceive_handler(struct command_context * ctx) {
+
+	//	char inmscmd[]= {0xF1,0x01,0x01};
+	printf("receive  uart from port 2\n\r");
+	int nums = 0;
+	char uchar[174 * 10];
+
+
+	nums = usart_messages_waiting(2);
+	//printf(" %d \n\r ",nums);
+	if (nums != 0) {
+		printf("seems get something!\n\r");
+		for (int f = 0; f < nums; f++) {
+			uchar[f] = usart_getc(2);
+			//printf("%x",uchar[f]);
+			//printf("0x%02x", uchar[f]);
+		}
+		printf("\n");
+	}
+	hex_dump(uchar, nums);
+	return CMD_ERROR_NONE;
+}
+int I2Csend_handler(struct command_context * ctx) {
+	unsigned int rx;
+	unsigned int  node;
+	unsigned int  para[255];
+	int i;
+	if (ctx->argc < 3) {
+		return CMD_ERROR_SYNTAX;
+	}
+	if (sscanf(ctx->argv[1], "%u", &node) != 1) {
+		return CMD_ERROR_SYNTAX;
+	}
+	if (sscanf(ctx->argv[2], "%u", &rx) != 1) {
+		return CMD_ERROR_SYNTAX;
+	}
+
+	if (ctx->argc > 3) {
+		for (i = 0; i < (ctx->argc - 3); i++) {
+			sscanf(ctx->argv[i + 3], "%u", &para[i]);
+		}
+	}
+
+//-------------finish read typing-----------------//
+
+	uint8_t val[rx];
+	uint8_t tx[255];
+	printf("Send I2C Message [node %2X  rx %d ", node, rx);
+	if (ctx->argc > 3) {
+		printf("parameter");
+		for (i = 0; i < (ctx->argc - 3); i++) {
+			printf("%2X  ", para[i]);
+			tx[i] = (uint8_t)para[i];
+		}
+	}
+	printf("] \n");
+
+	if (ctx->argc > 3) {
+		if ( i2c_master_transaction(0, node, &tx, ctx->argc - 3, 0, 0, 1000) != E_NO_ERR) {
+			// printf("No reply from node %x \r\n", node);
+			// return CMD_ERROR_NONE;
+		}
+		vTaskDelay(10);
+		if ( i2c_master_transaction(0, node, 0, 0, &val, rx, 1000) != E_NO_ERR) {
+			printf("No reply from node %x \r\n", node);
+			return CMD_ERROR_NONE;
+		}
+		// if ( i2c_master_transaction(0, node, &tx, ctx->argc - 3, &val, rx, 1000) != E_NO_ERR) {
+		// 	printf("No reply from node %x \r\n", node);
+		// 	return CMD_ERROR_NONE;
+		// }
+
+	}
+	else {
+		if ( i2c_master_transaction(0, node, 0, 0, &val, rx, 1000) != E_NO_ERR) {
+			printf("No reply from node %x \r\n", node);
+			return CMD_ERROR_NONE;
+		}
+	}
+
+	if (rx > 0)
+		hex_dump(&val, rx);
+	return CMD_ERROR_NONE;
+}
 int INMS_switch(struct command_context * ctx){
 	unsigned int buffer;
 	extern void vTaskinms(void * pvParameters);
@@ -693,6 +909,9 @@ int comhk(struct command_context * ctx) {
 }
 
 command_t __root_command ph_commands[] = {
+	{ .name = "inmsR", .help = "PHOENIX: inms ", .handler = INMSreceive_handler, }, 
+	{ .name = "inms", .help = "PHOENIX: inms <cmd1> <cmd2> <cmd3> <cmd4> ....", .usage = "<cmd1>", .handler = INMSsend_handler, }, 
+	{ .name = "i2c", .help = "PHOENIX: i2c <node> <rx>  will have <para> *N byte ?",	.usage = "<node> <rx> <para *n>", .handler = I2Csend_handler, },
 	{ .name = "inmss", .help = "PHOENIX: inmss [ON = 1 / OFF = 0]", .handler = INMS_switch, },
 	{ .name = "cm", .help = "PHOENIX: cm", .handler = check_mode, },
 	{ .name = "adcss", .help = "PHOENIX: adcss [ON = 1 / OFF = 0]", .handler = adcs_switch, },

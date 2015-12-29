@@ -21,7 +21,7 @@ void ADCS_Task(void * pvParameters) {
 	//Start detumbling
 	txbuf[0] = 0x03;   //0d03 ADCS run mode
 	txbuf[1] = 0x01;
-	if (i2c_master_transaction(0, adcs_node, &txbuf, 2, &rxbuf, 0, adcs_delay) == E_NO_ERR)
+	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 2, &rxbuf, 0, adcs_delay) == E_NO_ERR)
 		printf("ID:3\tSet ADCS run mode into enabled\n");
 
 	txbuf[0] = 0x12;   //0d18 Set attitude control mode

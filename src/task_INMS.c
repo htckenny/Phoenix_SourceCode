@@ -116,38 +116,23 @@ void inmssort(uint32_t *sec) {
 	bubblesort(refsec);
 }
 /*FLETCHER-16  checksum based on REQ: INMS-I-127*/
-uint16_t fletcher(uint8_t *script, size_t length) {
-	
-	/* Another way of implementing Flectcher-16 checksum*/
-	// uint16_t sum1 = 0xff, sum2 = 0xff;
-
- //    while (length) {
- //            size_t tlen = length > 20 ? 20 : length;
- //            length -= tlen;
- //            do {
- //                sum2 += sum1 += *script++;
- //            } while (--tlen);
- //            sum1 = (sum1 & 0xff) + (sum1 >> 8);
- //            sum2 = (sum2 & 0xff) + (sum2 >> 8);
- //    }
- //    /* Second reduction step to reduce sums to 8 bits */
- //    sum1 = (sum1 & 0xff) + (sum1 >> 8);
- //    sum2 = (sum2 & 0xff) + (sum2 >> 8);
- //    printf("%" PRIu16 "\n", sum2 << 8 | sum1 ); 
- //    return sum2 << 8 | sum1;
+uint16_t fletcher(uint8_t *script, size_t length) {	
 
 	uint16_t C0_int = 0, C1_int = 0;
 	uint16_t XSUM_W = 0xFFFF;	//0xFFFF = 0d65535
+
 	for (unsigned int i = 0; i < length; i++) {
 		C0_int = C0_int + script[i];
 		C1_int = C1_int + C0_int;
 		C0_int = (C0_int) % (255);
 		C1_int = (C1_int) % (255);
 	}
+
 	XSUM_W = (C0_int) || (C1_int << 8);
 	printf("sum = %d\n", XSUM_W);
 	return XSUM_W;
 }
+
 /*Return the system time with big clock(Real seconds) or small clock(86400)*/
 uint32_t timeGet (int clockType) {
 	uint32_t onBoardTime = 0;
@@ -160,6 +145,11 @@ uint32_t timeGet (int clockType) {
 	return onBoardTime;
 }
 
+/**
+ * This function is used to determine if the next script is coming or not
+ * @param  currentScript the next script's ref num
+ * @return               1: if the next script is coming, 0: No script is coming
+ */
 int inmsJumpScriptCheck (int currentScript) {
 	/*After finish each command, perform this check to see if the next script is coming */
 	uint32_t timeRef ;
@@ -173,17 +163,16 @@ int inmsJumpScriptCheck (int currentScript) {
 	printf("\t\t\t\tepoch =  %" PRIu32 "\n", epoch_sec[rec[currentScript]]);
 	printf("\E[2A\r");
 
-	if (timeRef > epoch_sec[rec[currentScript]] - 10) {
-		return 1;
-	}
-	else
-		return 0;
+	// if {
+	// 	return 1;
+	// }
+	// else
+	// 	return 0;
+	return (timeRef > epoch_sec[rec[currentScript]] - 10) ? 1 : 0;
 }
 
-
 /**
- * This task is used for receiving the packet from INMS, should check the Rx buffer every one seconds
- * @param
+ * This task is used for receiving the packet from INMS, should check the Rx buffer every one second
  */
 void vTaskInmsReceive(void * pvParameters) {
 	int numReceive = 0;

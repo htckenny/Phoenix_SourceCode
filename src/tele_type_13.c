@@ -11,7 +11,6 @@
 #include "parameter.h"
 #include "tele_function.h"
 #include "fs.h"
-#include "task_SEUV.h"
 
 /*------------------------------------------Telecommand-----------------------------------*/
 #define script_first_part		9

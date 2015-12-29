@@ -11,7 +11,6 @@
 #include "parameter.h"
 #include "tele_function.h"
 #include "fs.h"
-#include "task_SEUV.h"
 
 extern void vTaskSchedule(void * pvParameters);
 

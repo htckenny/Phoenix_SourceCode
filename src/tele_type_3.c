@@ -11,7 +11,6 @@
 #include "parameter.h"
 #include "tele_function.h"
 #include "fs.h"
-#include "task_SEUV.h"
 
 /* Definition of the service sub type*/
 #define Report_HK_State		1		/* Report House Keeping Data */

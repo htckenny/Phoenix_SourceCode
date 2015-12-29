@@ -31,7 +31,7 @@
 #define enter_nominal_mode			16				/* Enter Nominal mode to start science related task */
 #define INMS_Script_State			17				/* Set INMS handler to enable/ disable */
 #define SD_partition 				18				/* Set which partition would like to read from */
-#define INMS_timeout_change			19
+#define INMS_timeout_change			19				/* Set INMS timeout value */
 
 void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	uint8_t txBuffer[200];

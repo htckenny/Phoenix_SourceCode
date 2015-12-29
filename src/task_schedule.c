@@ -182,7 +182,7 @@ uint32_t update_time()
 	return t.tv_sec ;
 }
 /* the main task, keep scaning if there's updated schedule, and follows the time to send command  */
-void vTaskSchedule(void * pvParameters)
+void Schedule_Task(void * pvParameters)
 {
 	// schedule_series_number = 1;
 	uint32_t sche_time[maxNum] = { 0 };

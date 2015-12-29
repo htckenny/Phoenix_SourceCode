@@ -224,7 +224,7 @@ int getWodFrame(int fnum) {
  * This task is used for generate beacon signal, and tranmit to the GS
  * @param pvParameters [description]
  */
-void beacon_task(void * pvParameters) {
+void beacon_Task(void * pvParameters) {
 
 	int period = 30000;		//Normally the beacon period is 30 sec
 	vTaskDelay(60000);
@@ -243,10 +243,10 @@ void beacon_task(void * pvParameters) {
 	}
 }
 
-void vTaskwod(void * pvParameters) {
+void WOD_Task(void * pvParameters) {
 	printf("Active WOD Task\n");
 	vTaskDelay(60000);
-	xTaskCreate(beacon_task, (const signed char *) "beacon", 1024 * 4, NULL, 2, NULL);
+	xTaskCreate(beacon_Task, (const signed char *) "beacon", 1024 * 4, NULL, 2, NULL);
 
 	while (1) {
 

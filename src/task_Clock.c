@@ -52,7 +52,7 @@ void init_time() {
 
 
 
-void task_Clock(void * pvParameters) {
+void Clock_Task(void * pvParameters) {
 
 	if (parameters.first_flight == 1)
 		init_time();

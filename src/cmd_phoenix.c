@@ -268,7 +268,7 @@ int check_mode(struct command_context * ctx){
 }
 int adcs_switch(struct command_context * ctx){
 	unsigned int buffer;
-	extern void ADCS_Tasks(void * pvParameters);
+	extern void ADCS_Task(void * pvParameters);
 	if (ctx->argc < 2) {
 		return CMD_ERROR_SYNTAX;
 	}
@@ -276,7 +276,7 @@ int adcs_switch(struct command_context * ctx){
 		return CMD_ERROR_SYNTAX;
 	}
 	if (buffer == 1){
-		xTaskCreate(ADCS_Tasks, (const signed char * ) "ADCS", 1024 * 4, NULL, 1, &adcs_task);
+		xTaskCreate(ADCS_Task, (const signed char * ) "ADCS", 1024 * 4, NULL, 1, &adcs_task);
 	}
 	else if (buffer == 0) {
 		vTaskDelete(adcs_task);

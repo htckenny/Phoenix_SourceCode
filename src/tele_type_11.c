@@ -12,7 +12,7 @@
 #include "tele_function.h"
 #include "fs.h"
 
-extern void vTaskSchedule(void * pvParameters);
+extern void Schedule_Task(void * pvParameters);
 
 void decodeService11(uint8_t subType, uint8_t *telecommand) {
 	uint8_t completionError = ERR_SUCCESS;
@@ -42,7 +42,7 @@ void decodeService11(uint8_t subType, uint8_t *telecommand) {
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  // acceptance success
 
 		if (schedule_task_flag == 0) {
-			xTaskCreate(vTaskSchedule, (const signed char*) "Sched", 1024 * 4, NULL, 3, &schedule_task);
+			xTaskCreate(Schedule_Task, (const signed char*) "Sched", 1024 * 4, NULL, 3, &schedule_task);
 			schedule_task_flag = 1 ;
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
 		}

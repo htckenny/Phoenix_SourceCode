@@ -47,8 +47,8 @@ void hook_init(void) {
 
 	/* Start Self-defined Tasks */
 
-	// extern void BatteryCheckTask(void * pvParameters);
-	// xTaskCreate(BatteryCheckTask, (const signed char *) "BatCk", 1024 * 4, NULL, 2, NULL);
+	// extern void BatteryCheck_Task(void * pvParameters);
+	// xTaskCreate(BatteryCheck_Task, (const signed char *) "BatCk", 1024 * 4, NULL, 2, NULL);
 	
 	// extern void EOP_Task(void * pvParameters);
 	// xTaskCreate(EOP_Task, (const signed char * ) "EOP", 1024 * 4, NULL, 2, NULL);
@@ -59,8 +59,8 @@ void hook_init(void) {
 	// extern void Telecom_Task(void * pvParameters);
 	// xTaskCreate(Telecom_Task, (const signed char * ) "COM", 1024 * 4, NULL, 2, NULL);
 	
-	// extern void vTaskwod(void * pvParameters);
-	// xTaskCreate(vTaskwod, (const signed char * ) "WOD", 1024 * 4, NULL, 2, &wod_task);
+	// extern void WOD_Task(void * pvParameters);
+	// xTaskCreate(WOD_Task, (const signed char * ) "WOD", 1024 * 4, NULL, 2, NULL);
 	
 	// extern void vTaskinms(void * pvParameters);
 	// xTaskCreate(vTaskinms, (const signed char *) "INMS", 1024*4, NULL, 2, NULL);
@@ -71,17 +71,17 @@ void hook_init(void) {
 	// extern void vTaskfstest(void * pvParameters);
 	// xTaskCreate(vTaskfstest, (const signed char *) "FS_T", 1024*4, NULL, 2, NULL);
 	
-	// extern void Mode_Control(void * pvParameters);
-	// xTaskCreate(Mode_Control, (const signed char *) "MC", 1024*4, NULL, 2, NULL);
+	// extern void ModeControl_Task(void * pvParameters);
+	// xTaskCreate(ModeControl_Task, (const signed char *) "MC", 1024*4, NULL, 2, NULL);
 	
-	// extern void vTaskSchedule(void * pvParameters);
-	// xTaskCreate(vTaskSchedule, (const signed char * ) "SCHE", 1024 * 4, NULL,2,NULL);
+	// extern void Schedule_Task(void * pvParameters);
+	// xTaskCreate(Schedule_Task, (const signed char * ) "SCHE", 1024 * 4, NULL,2,NULL);
 	
 	// extern void thermal_test(void * pvParameters);
 	// xTaskCreate(thermal_test, (const signed char *) "T_Test", 1024*4, NULL, 2, NULL);
 	
-	// extern void ADCS_Tasks(void * pvParameters);
-	// xTaskCreate(ADCS_Tasks, (const signed char * ) "ADCS", 1024 * 4, NULL,2,NULL);
+	// extern void ADCS_Task(void * pvParameters);
+	// xTaskCreate(ADCS_Task, (const signed char * ) "ADCS", 1024 * 4, NULL,2,NULL);
 	
 	// extern void vTaskInmsErrorHandle(void * pvParameters);
 	// extern void vTaskInmsCurrentMonitor(void * pvParameters);

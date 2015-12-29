@@ -101,15 +101,21 @@ typedef struct __attribute__((packed)) {
 	uint32_t seuv_store_count;			// Number of packets stored in satellite
 	uint32_t hk_store_count;			// Number of packets stored in satellite
 	uint32_t eop_store_count;
+
 	/* Protocol sequence count */
 	uint16_t obc_packet_sequence_count;	//used in packing CCSDS header apid
 	uint8_t ax25_sequence_count;		//used in packing ax25  2nd header
 	uint8_t tc_count;					//used in packing ax25  2nd header
+
 	/* battery*/
 	uint16_t vbat_recover_threshold;	// Leave safe mode threshold(mV), should be 7000 in default
 	uint16_t vbat_safe_threshold;		// Enter Safe Mode threshold(mV), should be 7500 in default
+
 	/* Schedule related */
 	uint8_t schedule_series_number;
+
+	/* INMS related */
+	uint16_t INMS_timeout;
 } parameter_t;
 
 parameter_t parameters;

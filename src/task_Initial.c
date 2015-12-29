@@ -24,9 +24,9 @@
 #include "tele_function.h"
 
 #define E_NO_ERR -1
-extern void BatteryCheckTask(void * pvParameters);
+extern void BatteryCheck_Task(void * pvParameters);
 extern void Telecom_Task(void * pvParameters);
-extern void vTaskwod(void * pvParameters);
+extern void WOD_Task(void * pvParameters);
 
 
 void Init_Task(void * pvParameters) {
@@ -39,7 +39,7 @@ void Init_Task(void * pvParameters) {
 
 	/* Activate Battery check task */
 	if (bat_check_task == NULL)
-		xTaskCreate(BatteryCheckTask, (const signed char *) "BatCk", 1024 * 4, NULL, 2, &bat_check_task);
+		xTaskCreate(BatteryCheck_Task, (const signed char *) "BatCk", 1024 * 4, NULL, 2, &bat_check_task);
 	
 	/* Idle 30 minutes in first flight  */
 	if (parameters.ant_deploy_flag == 0) {
@@ -74,7 +74,7 @@ void Init_Task(void * pvParameters) {
 	}
 	/* Activate WOD collecting task, and start to transmit the beacon */
 	if (wod_task == NULL){
-		xTaskCreate(vTaskwod, (const signed char * ) "WOD", 1024 * 4, NULL, 2, &wod_task);
+		xTaskCreate(WOD_Task, (const signed char * ) "WOD", 1024 * 4, NULL, 2, &wod_task);
 	}
 
 	/* change to the ADCS mode */ 

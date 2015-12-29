@@ -82,7 +82,7 @@ void Leave_safe_mode()
 	// last_mode = HK_frame.mode_status_flag;
 }
 
-void BatteryCheckTask(void * pvParameters) {
+void BatteryCheck_Task(void * pvParameters) {
 	uint16_t vbat;
 	vTaskDelay(3000);
 	printf("Battery Check Task activated \r\n");

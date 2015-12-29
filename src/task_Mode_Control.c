@@ -67,7 +67,7 @@ void Enter_Safe_Mode(int last_mode) {
     }
 }
 
-void Mode_Control(void * pvParameters) {
+void ModeControl_Task(void * pvParameters) {
     /* Mode 1 = INIT Mode
      * Mode 2 = ADCS MODE
      * MODE 3 = PAYLOAD MODE

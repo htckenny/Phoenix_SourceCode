@@ -14,7 +14,7 @@ uint8_t txbuf[255];
 uint8_t rxbuf[255];
 
 
-void ADCS_Tasks(void * pvParameters) {
+void ADCS_Task(void * pvParameters) {
 
 	vTaskDelay(10000); //Delay 10s when start ADCS
 

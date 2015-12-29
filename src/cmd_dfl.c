@@ -261,8 +261,9 @@ int I2Csend_handler(struct command_context * ctx) {
 	if (ctx->argc > 3) {
 		if ( i2c_master_transaction(0, node, &tx, ctx->argc - 3, 0, 0, 1000) != E_NO_ERR) {
 			// printf("No reply from node %x \r\n", node);
-			return CMD_ERROR_NONE;
+			// return CMD_ERROR_NONE;
 		}
+		vTaskDelay(10);
 		if ( i2c_master_transaction(0, node, 0, 0, &val, rx, 1000) != E_NO_ERR) {
 			printf("No reply from node %x \r\n", node);
 			return CMD_ERROR_NONE;

@@ -70,7 +70,6 @@ void Init_Task(void * pvParameters) {
 	printf("Active Telecom Task, User can start to upload Ground Telecommand\n");
 	/* Activate telecom task, enable receiver to receive command from GS */
 	if (com_task == NULL){
-		printf("COM task = null\n");
 		xTaskCreate(Telecom_Task, (const signed char * ) "COM", 1024 * 4, NULL, 2, &com_task);
 	}
 	/* Activate WOD collecting task, and start to transmit the beacon */

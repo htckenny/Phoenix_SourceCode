@@ -8,17 +8,19 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <math.h>
+#include <string.h>
 #include <util/timestamp.h>
 #include <util/hexdump.h>
 #include <dev/i2c.h>
+#include <nanomind.h>
+#include <csp/csp_endian.h>
+
 #include "parameter.h"
 #include "subsystem.h"
 #include "fs.h"
-#include <nanomind.h>
-#include <csp/csp_endian.h>
+
 #include "task_SEUV.h"
-#include <string.h>
-#include <math.h>
+
 
 /**
  * This function is used for calculate the average and the standard deviation of the SEUV data
@@ -246,7 +248,7 @@ void SolarEUV_Task(void * pvParameters) {
         }
         /* Set the delay time during one sampling operation*/
         xLastWakeTime = xTaskGetTickCount();
-        printf("mode = %d\n", parameters.seuv_mode);
+        // printf("mode = %d\n", parameters.seuv_mode);
         if (parameters.seuv_mode == 0x01) {         /* Mode A: check if the CubeSat is in the sun light area */
             if (HK_frame.sun_light_flag == 1) {     /* If True, get a packet */
                 get_a_packet(1);
@@ -257,8 +259,8 @@ void SolarEUV_Task(void * pvParameters) {
             get_a_packet(1);
             get_a_packet(8);
         }
-        else if (parameters.seuv_mode == 0x03) {    
-            printf("No measurement taken\n");
+        else if (parameters.seuv_mode == 0x03) {    /* Mode C: Standby Mode */   
+            printf("[SEUV] No measurement taken\n");
         }
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
     }

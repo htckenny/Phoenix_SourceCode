@@ -68,7 +68,7 @@ void BatteryCheck_Task(void * pvParameters) {
 				vTaskDelay(30 * delay_time_based);
 
 				vbat = battery_read();
-				printf("vbat = %05u mV \r\n", vbat);
+				printf("(safe)vbat = %04u mV \r\n", vbat);
 
 				if ( (int)vbat > (int)parameters.vbat_recover_threshold) {
 					if (parameters.vbat_recover_threshold != 0) {

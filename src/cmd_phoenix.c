@@ -39,7 +39,7 @@ int mode_switch(struct command_context * ctx){
 		return CMD_ERROR_SYNTAX;
 	}
 	if (buffer == 1){
-		xTaskCreate(ModeControl_Task, (const signed char * ) "ADCS", 1024 * 4, NULL, 1, &mode_task);
+		xTaskCreate(ModeControl_Task, (const signed char * ) "MC", 1024 * 4, NULL, 1, &mode_task);
 	}
 	else if (buffer == 0) {
 		vTaskDelete(mode_task);

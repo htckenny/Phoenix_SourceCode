@@ -22,13 +22,12 @@ xTaskHandle inms_task_receive;
 xTaskHandle schedule_task;
 xTaskHandle com_task;
 xTaskHandle bat_check_task;
-
+xTaskHandle mode_task;
 
 #define safe_mode 0
 #define init_mode 1
 #define adcs_mode 2
 #define payload_mode 3
-
 
 
 typedef struct __attribute__((packed)) {

@@ -321,11 +321,19 @@ void vTaskfstest(void * pvParameters) {
 	f_mount(1, NULL);
 
 #endif
+
 #if Test_Delay
+	portTickType xLastWakeTime;
+    portTickType xFrequency = 1000;
+	xFrequency = 1 * delay_time_based;
 	int delay = 1;
 	while(1){
+		xLastWakeTime = xTaskGetTickCount();
+
 		printf("Test delay with %d s\n", delay);
-		vTaskDelay(delay * 1000);
+
+		vTaskDelayUntil(&xLastWakeTime, xFrequency);
+		// vTaskDelay(delay * 1000);
 	}
 #endif
 

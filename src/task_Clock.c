@@ -58,7 +58,7 @@ void Clock_Task(void * pvParameters) {
 		init_time();
 
 	while (1) {
-		vTaskDelay(600000);
+		vTaskDelay(600 * delay_time_based);
 		gps_timesyn();
 	}
 

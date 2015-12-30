@@ -29,6 +29,24 @@
 #include "tele_function.h"
 #include "fs.h"
 
+int mode_switch(struct command_context * ctx){
+	unsigned int buffer;
+	extern void ModeControl_Task(void * pvParameters);
+	if (ctx->argc < 2) {
+		return CMD_ERROR_SYNTAX;
+	}
+	if (sscanf(ctx->argv[1], "%u", &buffer) != 1) {
+		return CMD_ERROR_SYNTAX;
+	}
+	if (buffer == 1){
+		xTaskCreate(ModeControl_Task, (const signed char * ) "ADCS", 1024 * 4, NULL, 1, &mode_task);
+	}
+	else if (buffer == 0) {
+		vTaskDelete(mode_task);
+	}	
+	return CMD_ERROR_NONE;
+}
+
 int INMSsend_handler(struct command_context * ctx) {
 
 	unsigned int cmd1;
@@ -39,8 +57,6 @@ int INMSsend_handler(struct command_context * ctx) {
 	unsigned int cmd6;
 	unsigned int cmd7;
 	unsigned int cmd8;
-
-
 
 	if (!(ctx->argc >= 4 && ctx->argc <= 9)) {
 		printf("inms check length error\r\n");
@@ -105,7 +121,6 @@ int INMSsend_handler(struct command_context * ctx) {
 		}
 	}
 
-
 	char cmd01 = (char)cmd1;
 	char cmd02 = (char)cmd2;
 	char cmd03 = (char)cmd3;
@@ -115,15 +130,10 @@ int INMSsend_handler(struct command_context * ctx) {
 	char cmd07 = (char)cmd7;
 	char cmd08 = (char)cmd8;
 
-
-
-
-
 	//	char inmscmd[]= {0xF1,0x01,0x01};
 	printf("send uart to port 2\n\r");
 	int nums = 0;
 	char uchar[174 * 10];
-
 
 	usart_putstr(2, &cmd01, 1);
 	usart_putstr(2, &cmd02, 1);
@@ -146,15 +156,13 @@ int INMSsend_handler(struct command_context * ctx) {
 	}
 
 	//inms 0x04 0x02 0x02 0x40
-	vTaskDelay(2000);
+	vTaskDelay(2 * delay_time_based);
 	nums = usart_messages_waiting(2);
 	//printf(" %d \n\r ",nums);
 	if (nums != 0) {
 		printf("seems get something!\n\r");
 		for (int f = 0; f < nums; f++) {
 			uchar[f] = usart_getc(2);
-			//printf("%x",uchar[f]);
-			//printf("0x%02x", uchar[f]);
 		}
 		printf("\n");
 	}
@@ -163,11 +171,9 @@ int INMSsend_handler(struct command_context * ctx) {
 }
 int INMSreceive_handler(struct command_context * ctx) {
 
-	//	char inmscmd[]= {0xF1,0x01,0x01};
 	printf("receive  uart from port 2\n\r");
 	int nums = 0;
 	char uchar[174 * 10];
-
 
 	nums = usart_messages_waiting(2);
 	//printf(" %d \n\r ",nums);
@@ -175,8 +181,6 @@ int INMSreceive_handler(struct command_context * ctx) {
 		printf("seems get something!\n\r");
 		for (int f = 0; f < nums; f++) {
 			uchar[f] = usart_getc(2);
-			//printf("%x",uchar[f]);
-			//printf("0x%02x", uchar[f]);
 		}
 		printf("\n");
 	}
@@ -185,8 +189,8 @@ int INMSreceive_handler(struct command_context * ctx) {
 }
 int I2Csend_handler(struct command_context * ctx) {
 	unsigned int rx;
-	unsigned int  node;
-	unsigned int  para[255];
+	unsigned int node;
+	unsigned int para[255];
 	int i;
 	if (ctx->argc < 3) {
 		return CMD_ERROR_SYNTAX;
@@ -220,19 +224,12 @@ int I2Csend_handler(struct command_context * ctx) {
 
 	if (ctx->argc > 3) {
 		if ( i2c_master_transaction(0, node, &tx, ctx->argc - 3, 0, 0, 1000) != E_NO_ERR) {
-			// printf("No reply from node %x \r\n", node);
-			// return CMD_ERROR_NONE;
 		}
 		vTaskDelay(10);
 		if ( i2c_master_transaction(0, node, 0, 0, &val, rx, 1000) != E_NO_ERR) {
 			printf("No reply from node %x \r\n", node);
 			return CMD_ERROR_NONE;
 		}
-		// if ( i2c_master_transaction(0, node, &tx, ctx->argc - 3, &val, rx, 1000) != E_NO_ERR) {
-		// 	printf("No reply from node %x \r\n", node);
-		// 	return CMD_ERROR_NONE;
-		// }
-
 	}
 	else {
 		if ( i2c_master_transaction(0, node, 0, 0, &val, rx, 1000) != E_NO_ERR) {
@@ -240,7 +237,6 @@ int I2Csend_handler(struct command_context * ctx) {
 			return CMD_ERROR_NONE;
 		}
 	}
-
 	if (rx > 0)
 		hex_dump(&val, rx);
 	return CMD_ERROR_NONE;
@@ -647,7 +643,7 @@ int ccsds_send(struct command_context * ctx) {
 	while (1) {
 		if (SendPacketWithCCSDS_AX25(&txbuf, length, obc_apid, type, subtype) != ERR_SUCCESS)
 			break;
-		vTaskDelay(10000);
+		vTaskDelay(10 * delay_time_based);
 	}
 //   SendPacketWithCCSDS_AX25(&txbuf,length,obc_apid,type,subtype);
 
@@ -909,6 +905,7 @@ int comhk(struct command_context * ctx) {
 }
 
 command_t __root_command ph_commands[] = {
+	{ .name = "mcs", .help = "PHOENIX: mcs [ON = 1 / OFF = 0]", .handler = mode_switch, }, 
 	{ .name = "inmsR", .help = "PHOENIX: inms ", .handler = INMSreceive_handler, }, 
 	{ .name = "inms", .help = "PHOENIX: inms <cmd1> <cmd2> <cmd3> <cmd4> ....", .usage = "<cmd1>", .handler = INMSsend_handler, }, 
 	{ .name = "i2c", .help = "PHOENIX: i2c <node> <rx>  will have <para> *N byte ?",	.usage = "<node> <rx> <para *n>", .handler = I2Csend_handler, },

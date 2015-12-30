@@ -199,7 +199,7 @@ void thermal_test(void * pvParameters) {
 	char uchar[174 * 10];
 	num = 0;
 	power_OFF_ALL();
-	vTaskDelay(2000);
+	vTaskDelay(2 * delay_time_based);
 
 
 	power_control(4, ON);
@@ -239,7 +239,7 @@ void thermal_test(void * pvParameters) {
 
 			printf("OBC time is: %s\r\n", ctime(&tt));
 		}
-		vTaskDelay(1000);
+		vTaskDelay(1 * delay_time_based);
 	}
 }
 
@@ -311,9 +311,9 @@ void HK_Task(void * pvParameters) {
 	while (1) {
 
 		if (parameters.first_flight == 1)
-			vTaskDelay(3000);  //30000
+			vTaskDelay(3 * delay_time_based);  //30000
 		else
-			vTaskDelay(6000);  //60000
+			vTaskDelay(6 * delay_time_based);  //60000
 
 		clean_hk_buffer();
 		clean_all();

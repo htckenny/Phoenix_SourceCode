@@ -16,7 +16,7 @@ uint8_t rxbuf[255];
 
 void ADCS_Task(void * pvParameters) {
 
-	vTaskDelay(10000); //Delay 10s when start ADCS
+	vTaskDelay(10 * delay_time_based); //Delay 10s when start ADCS
 
 	//Start detumbling
 	txbuf[0] = 0x03;   //0d03 ADCS run mode
@@ -71,7 +71,7 @@ void ADCS_Task(void * pvParameters) {
 
 			//Mode transition to Y-momentum with EKF
 			if (xrate <= 500 && xrate >= -500 && yrate >= -2700 && yrate <= -1700 && zrate <= 500 && zrate >= -500) {
-				vTaskDelay(300000); // Continue using TRIAD for 300s
+				vTaskDelay(300 * delay_time_based); // Continue using TRIAD for 300s
 
 				txbuf[0] = 0x12;   //0d18 Set attitude control mode
 				txbuf[1] = 0x03;
@@ -153,7 +153,7 @@ void ADCS_Task(void * pvParameters) {
 				printf("Magnetometer mounting gamma= %d\n", (rxbuf[118] + (rxbuf[119] << 8)));
 			}
 		}
-		vTaskDelay(5000);
+		vTaskDelay(5 * delay_time_based);
 	}
 	/** End of ADCS TASK, Should never reach this line  */
 	vTaskDelete(NULL);

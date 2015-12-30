@@ -15,7 +15,7 @@
 #include <nanomind.h>
 #include <dev/i2c.h>
 #include <inttypes.h>
- #include <stdint.h>
+#include <stdint.h>
 #include <csp/csp_endian.h>
  
 #include "fs.h"
@@ -263,10 +263,10 @@ void Schedule_Task(void * pvParameters)
 					*tele_buf = 0;
 					break;
 				}
-				vTaskDelay(1000);
+				vTaskDelay(1 * delay_time_based);
 			}
 		}
-		vTaskDelay(3000);
+		vTaskDelay(3 * delay_time_based);
 		// printf("there are %d command in the list\n", lastNum);
 		// printf("\E[1A\r");
 	}

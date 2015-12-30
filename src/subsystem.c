@@ -40,6 +40,7 @@ uint32_t get_time() {
 
 int parameter_init() {
 
+
 	SD_partition_flag					= 0;
 	HK_frame.sun_light_flag				= 0;
 	inms_status							= 1;
@@ -81,8 +82,10 @@ int parameter_init() {
 	parameters.seuv_mode				= 0x03;
 
 	/* battery*/
-	parameters.vbat_recover_threshold    = 7500;
-	parameters.vbat_safe_threshold       = 7000;
+	parameters.vbat_recover_threshold	= 7500;
+	parameters.vbat_safe_threshold		= 7000;
+
+	parameters.INMS_timeout 				= 400;
 
 	seuvFrame.samples = parameters.seuv_sample_rate << 1 ;		/* samples */
 	/* 0 1 2 3 4 5 6 |  7    */
@@ -105,7 +108,7 @@ void deploy_antenna() {
 
 	txdata[0] = ant_arm;    // arm ant board
 	i2c_master_transaction(0, ant_node, &txdata, 1, 0, 0, 0);
-	vTaskDelay(100);
+	vTaskDelay(0.1 * delay_time_based);
 	txdata[0] = ant_deploy;    // deploy ant board one by one
 	txdata[1] = ant_deploy_timeout;
 	i2c_master_transaction(0, ant_node, &txdata, 2, 0, 0, 0);
@@ -185,17 +188,17 @@ void power_control(int device, int stats) {
 		/*      INMS Power GPIO Control        */
 		if (stats == ON) {
 			io_set(5);
-			vTaskDelay(300);
+			vTaskDelay(0.3 * delay_time_based);
 			io_set(1);
-			vTaskDelay(1000);
+			vTaskDelay(1 * delay_time_based);
 			io_clear(5);
 			io_clear(1);
 		}
 		else if (stats == OFF) {
 			io_set(6);
-			vTaskDelay(300);
+			vTaskDelay(0.3 * delay_time_based);
 			io_set(0);
-			vTaskDelay(1000);
+			vTaskDelay(1 * delay_time_based);
 			io_clear(6);
 			io_clear(0);
 		}

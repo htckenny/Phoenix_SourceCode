@@ -226,13 +226,13 @@ int getWodFrame(int fnum) {
  */
 void beacon_Task(void * pvParameters) {
 
-	int period = 30000;		//Normally the beacon period is 30 sec
-	vTaskDelay(60000);
+	int period = 30 * delay_time_based;		//Normally the beacon period is 30 sec
+	vTaskDelay(60 * delay_time_based);
 
 	while (1) {
 
 		if (parameters.first_flight == 1){
-			period = 10000;		// when early orbit, beacon period = 10 sec
+			period = 10 * delay_time_based;		// when early orbit, beacon period = 10 sec
 		}
 		else if (parameters.beacon_period > 0){
 			period = parameters.beacon_period * 1000;
@@ -245,7 +245,7 @@ void beacon_Task(void * pvParameters) {
 
 void WOD_Task(void * pvParameters) {
 	printf("Active WOD Task\n");
-	vTaskDelay(60000);
+	vTaskDelay(60 * delay_time_based);
 	xTaskCreate(beacon_Task, (const signed char *) "beacon", 1024 * 4, NULL, 2, NULL);
 
 	while (1) {
@@ -260,7 +260,7 @@ void WOD_Task(void * pvParameters) {
 				printf("--------WOD Frame %d get FAIL!--------\n", i);
 				i = 0;
 			}
-			vTaskDelay(60000);
+			vTaskDelay(60 * delay_time_based);
 		}
 
 		if (wod_write(&wod[0]) != No_Error) {

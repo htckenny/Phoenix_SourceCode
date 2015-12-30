@@ -3,9 +3,10 @@
 #include "parameter.h"
 #include "subsystem.h"
 #include "fs.h"
+
 extern void EOP_Task(void * pvParameters);
 extern void Init_Task(void * pvParameters);
-extern void ADCS_Tasks(void * pvParameters);
+extern void ADCS_Task(void * pvParameters);
 extern void HK_Task(void * pvParameters);
 extern void SolarEUV_Task(void * pvParameters);
 extern void vTaskInmsErrorHandle(void * pvParameters);
@@ -77,7 +78,7 @@ void ModeControl_Task(void * pvParameters) {
     uint8_t lastmode ;
     /* power off all configurable device for insurance. */
     power_OFF_ALL();   
-    vTaskDelay(2000);  // waiting for power off being applied
+    vTaskDelay(2 * delay_time_based);  // waiting for power off being applied
 
     /* Set satellite to enter INIT mode */
     HK_frame.mode_status_flag = 1; 
@@ -93,11 +94,7 @@ void ModeControl_Task(void * pvParameters) {
              /* desire to Enter the Initial mode */
             if (HK_frame.mode_status_flag == 1 /*&& parameters.first_flight != 1*/) { 
                 printf("---------------------Enter Init Mode----------------------\n");
-                // if(parameters.first_flight==1){
-                //     xTaskCreate(EOP_Task, (const signed char * ) "EOP", 1024 * 4, NULL,1, &eop_task);
-                //     // xTaskCreate(GPS_Task, (const signed char * ) "GPS", 1024 * 4, NULL, 1, &gps_task);
-                //     // TODO: implement GPS task and activate this line
-                // }
+              
                 if (init_task == NULL)
                     xTaskCreate(Init_Task, (const signed char *) "Init", 1024 * 4, NULL, 2, &init_task);  
                 
@@ -115,13 +112,13 @@ void ModeControl_Task(void * pvParameters) {
                     //     xTaskCreate(GPS_Task, (const signed char * ) "GPS", 1024 * 4, NULL, 1, &gps_task);
                 }
                 if (adcs_task == NULL)
-                    xTaskCreate(ADCS_Tasks, (const signed char * ) "ADCS", 1024 * 4, NULL, 1, &adcs_task);
+                    xTaskCreate(ADCS_Task, (const signed char * ) "ADCS", 1024 * 4, NULL, 1, &adcs_task);
 
                 lastmode = HK_frame.mode_status_flag; // ENTER ADCS MODE DONE!
             }
             /* desire to Enter the Payload Mode. */
             else if (HK_frame.mode_status_flag == 3) {
-                vTaskDelay(3000);
+                vTaskDelay(3 * delay_time_based);
 
                 printf("-------------------Enter Payload Mode----------------------\n");
                 if (parameters.first_flight == 1){
@@ -148,7 +145,7 @@ void ModeControl_Task(void * pvParameters) {
             }
         }
         /* Check if the mode is changed or not every second */
-        vTaskDelay(1000); 
+        vTaskDelay(1 * delay_time_based); 
     }
     /* End of this Task, Should Never Reach This Line */
     vTaskDelete(NULL);

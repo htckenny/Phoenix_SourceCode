@@ -71,69 +71,22 @@ int schedule_shift(uint8_t *frameCont)
 	if (schedule_read(sche_buf) == Error)
 		return Error;
 	else {
-		// printf("sche_buf = %d\n", sche_buf[1][0]);
 		lastNum = findMaxBuf(sche_buf);
-		// vTaskDelay(5000);
 	}
 	printf("lastNum = %d\n", lastNum);
 	memcpy(&shift_time, frameCont, 4);
 	shift_time = csp_ntoh32(shift_time);
 	printf("in shift time = %ld\n", shift_time);
-	// shift_time = csp_ntoh32(shift_time);
+
 	for (int i = 0 ; i < lastNum ; i++) {
 		memcpy(&sche_time[i], &sche_buf[i * 20 + 2], 4);
-		sche_time[i] = csp_ntoh32(sche_time[i]);
-		// sche_time[i] = (sche_buf[i][1] << 24)
-		// 	+ (sche_buf[i][2] << 16)
-		// 	+ (sche_buf[i][3] << 8)
-		// 	+ (sche_buf[i][4])
-		// 	+ (sche_buf[i][5] >> 8);
-		// for (int i = 0 ; i < 4 ; i++){
-		// 	printf("frameCont[%d] = %d\n", i, frameCont[i]);
-		// }
-		
-		// printf("s before = %d\n", shift_time);
-
-		// shift_time = (frameCont[0] << 24)
-		// 	+ (frameCont[1] << 16)
-		// 	+ (frameCont[2] << 8)
-		// 	+ (frameCont[3]);
+		sche_time[i] = csp_ntoh32(sche_time[i]);		
 
 		sche_time[i] += shift_time ;
 		printf("%d %" PRIu32 "\n", i, sche_time[i]);
 		sche_time[i] = csp_ntoh32(sche_time[i]);
-		memcpy(&sche_buf[i * 20 + 2], &sche_time[i], 4);
-		// for (int i = 0; i < 4; i++){
-		// 	printf("sche_buf[%d] = %d\n",i , sche_buf[i]);
-		// }
-		// sche_buf[i][4] = sche_time[i] >> 24 ;
-		// sche_buf[i][3] = ((sche_time[i] - (sche_buf[i][4] << 24)) >> 16);
-		// sche_buf[i][2] = ((sche_time[i] - (sche_buf[i][4] << 24) - (sche_buf[i][3] << 16))>> 8);
-		// sche_buf[i][1] = (sche_time[i] - (sche_buf[i][4] << 24) - (sche_buf[i][3] << 16) - (sche_buf[i][2] << 8));
+		memcpy(&sche_buf[i * 20 + 2], &sche_time[i], 4);		
 	}
-
-
-
-	// if(schedule_read(&sche_buf) == Error)
-	// 	return Error;
-	// else{
-	// 	lastNum = findMaxBuf(sche_buf);
-	// }
-	// printf("lastNum = %d\n", lastNum);
-//	int buffer_length[lastNum];
-	// for (int j = 0 ; j < lastNum; j++){
-	// 	for (int i = 0 ; i < 200 ; i++){
-	// 		printf("buf = %d\n", sche_buf[j][i]);
-	// 		if (sche_buf[j][i] == 0x0a){
-	// 			buffer_length[j] = i ;
-	// 			printf("fuck\n");
-	// 			break;
-	// 		}
-	// 	}
-	// }
-	// for(int i = 0 ; i < lastNum ; i++){
-	// 	printf("buffer lenght = %d\n",buffer_length[i]);
-	// }
 
 	if (schedule_reset() == 1) {
 		return Error;
@@ -166,18 +119,9 @@ int schedule_delete(int range, uint8_t * frameCont)
 	uint32_t time_t2 = { 0 };
 
 	memcpy(&time_t1, &frameCont[10], 4);
-	// time_t1 = (frameCont[10] << 24)
-	// 	+ (frameCont[11] << 16)
-	// 	+ (frameCont[12] << 8)
-	// 	+ (frameCont[13])
-	// 	+ (frameCont[14] >> 8);
+	
 	if (range == 1) {
-		memcpy(&time_t2, &frameCont[15], 4);
-		// time_t2 = (frameCont[15] << 24)
-		// 	+ (frameCont[16] << 16)
-		// 	+ (frameCont[17] << 8)
-		// 	+ (frameCont[18])
-		// 	+ (frameCont[19] >> 8);
+		memcpy(&time_t2, &frameCont[15], 4);		
 	}
 	time_t1 = csp_ntoh32(time_t1);
 	time_t2 = csp_ntoh32(time_t2);
@@ -187,11 +131,7 @@ int schedule_delete(int range, uint8_t * frameCont)
 	printf("last num = %d \n", lastNum);
 	for (int i = 0 ; i < lastNum ; i++) {
 		memcpy(&sche_time[i], &sche_buf[i * 20 + 2], 4);
-		// sche_time[i] = (sche_buf[i][1] << 24)
-		// 	+ (sche_buf[i][2] << 16)
-		// 	+ (sche_buf[i][3] << 8)
-		// 	+ (sche_buf[i][4])
-		// 	+ (sche_buf[i][5] >> 8);
+		
 		sche_time[i] = csp_ntoh32(sche_time[i]);
 		printf("sch time = %" PRIu32 "\n", sche_time[i] );
 		switch (range) {
@@ -313,10 +253,7 @@ int schedule_write(uint8_t frameCont[])
 }
 int schedule_read(uint8_t * txbuf)
 {
-	// printf("%d", parameters.sche_store_count);
-	// char *
-	// printf("inside \n");
-	// uint8_t buf[50][50];
+	
 	f_mount(0, &fs[0]);
 	char fileName[] = "0:/OnB_Sch.bin";
 	// int total_line = 0;
@@ -2155,7 +2092,7 @@ int scan_files_Downlink (
 							SendDataWithCCSDS_AX25(5, &wod_data[0]);
 						}
 						// SendPacketWithCCSDS_AX25(&beacon_frame.mode, 8, obc_apid, 0, 0);
-						vTaskDelay(500);
+						vTaskDelay(0.5 * delay_time_based);
 					}
 					break;
 				case 2:
@@ -2189,7 +2126,7 @@ int scan_files_Downlink (
 							hex_dump(&wod_data, wod_length);
 							SendDataWithCCSDS_AX25(5, &wod_data[0]);
 						}
-						vTaskDelay(500);
+						vTaskDelay(0.5 * delay_time_based);
 					}
 					break;
 				case 3:
@@ -2223,7 +2160,7 @@ int scan_files_Downlink (
 							hex_dump(&wod_data, wod_length);
 							SendDataWithCCSDS_AX25(5, &wod_data[0]);
 						}
-						vTaskDelay(500);
+						vTaskDelay(0.5 * delay_time_based);
 					}
 					break;
 				default:

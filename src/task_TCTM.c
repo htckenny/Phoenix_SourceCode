@@ -15,28 +15,24 @@ void delete_buf() {
 	i2c_master_transaction(0, com_rx_node, &txdata, 1, 0, 0, com_delay);
 }
 
-void Read_Execute() {  // read incoming command
-
+/* Read incoming commnad */
+void Read_Execute() {  
 
 	uint8_t txdata = com_rx_get;
-
 	uint8_t val[201];  // expect  1+200 byte response , first byte is length1~200
 
 	if ( i2c_master_transaction(0, com_rx_node, &txdata, 1, &val, 200, com_delay) == E_NO_ERR) {
-		hex_dump(&val[0], 6);    // get command   print in
+		hex_dump(&val[0], 6);    // get command  print in
 		hex_dump(&val[6], val[0]); // Byte 0~1=packet data length, byte 2~5= signal strength , byte 6~N = data part
 		delete_buf();   // delete one frame in receive buffer
 		decodeCCSDS_Command(&val[6], val[0]);
-
-
 	}
 	else
 		printf("read Telecommand Fails\n");
 }
 
-
-int CIC() {  //check incoming command
-
+/* Check incoming command */
+int CIC() { 
 
 	uint8_t txdata = com_rx_check;
 	uint8_t val;  // have 1 byte response
@@ -56,6 +52,7 @@ void Telecom_Task(void * pvParameters) {
 
 	set_Call_Sign(0);
 	set_tx_rate(8);
+
 	if (parameters.shutdown_flag == 1) {
 		printf("Shutdown Command Detected!! \r\n");
 	}
@@ -92,14 +89,10 @@ void Telecom_Task(void * pvParameters) {
 			printf("Find %d frame in receive buffer \r\n", flag);
 			Read_Execute();
 			printf("--------------------------------------------- \r\n");
-			vTaskDelay(100);
+			vTaskDelay(0.1 * delay_time_based);
 		}
 
 		if (flag > 40 || flag == 0)
-			vTaskDelay(1000);
+			vTaskDelay(1 * delay_time_based);
 	}
 }
-
-
-
-

@@ -12,6 +12,10 @@
 
 
 /* !!!!!!!!!!!!!!!!!!!!!!!! UINT = LSB !!!!!!!!!!!!!! */
+
+/* Tick */
+#define delay_time_based	configTICK_RATE_HZ
+ 
 /* I2C parameters*/
 #define i2c_max_size 		246
 #define com_tx_max 			235  // include i2c command = 236 Max per I2C Send

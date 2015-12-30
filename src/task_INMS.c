@@ -38,7 +38,7 @@
 
 #define scriptNum 			7
 #define isSimulator 		0
-#define delay_time_based	configTICK_RATE_HZ
+
 
 typedef struct __attribute__((packed)) {
 	int tt_hour, tt_min, tt_sec, tt_seq;
@@ -191,7 +191,7 @@ void vTaskInmsReceive(void * pvParameters) {
 		ucharTotal[k] = 0;
 	}
 	portTickType xLastWakeTime;
-	const portTickType xFrequency = 1500;
+	const portTickType xFrequency = 1.5 * delay_time_based;
 
 	while (1) {
 		/*response_pkt*/
@@ -610,7 +610,7 @@ void vTaskinms(void * pvParameters) {
 							}
 							tempTime = delayTimeNow;
 							portTickType xLastWakeTime;
-							const portTickType xFrequency = 1000;
+							const portTickType xFrequency = 1 * delay_time_based;
 
 							while (delayTimeTarget != delayTimeNow) {
 								xLastWakeTime = xTaskGetTickCount();

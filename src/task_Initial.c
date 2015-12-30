@@ -24,6 +24,7 @@
 #include "tele_function.h"
 
 #define E_NO_ERR -1
+ 
 extern void BatteryCheck_Task(void * pvParameters);
 extern void Telecom_Task(void * pvParameters);
 extern void WOD_Task(void * pvParameters);
@@ -50,7 +51,7 @@ void Init_Task(void * pvParameters) {
 
 	while (parameters.ant_deploy_flag == 0) {
 		static int count = 0;
-		vTaskDelay(5000);
+		vTaskDelay(5 * delay_time_based);
 		count += 5;
 		printf("----------------------------------------------------- \r\n");
 		printf("Left %d second to deploy devices \r\n", (1800 - count));

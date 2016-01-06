@@ -9,26 +9,50 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
-xTaskHandle init_task;
+xTaskHandle mode_task;
+xTaskHandle bat_check_task;
+xTaskHandle com_task;
 xTaskHandle wod_task;
+
+xTaskHandle init_task;
 xTaskHandle adcs_task;
 xTaskHandle seuv_task;
 xTaskHandle eop_task;
 xTaskHandle hk_task;
+
 xTaskHandle inms_error_handle;
 xTaskHandle inms_current_moniter;
 xTaskHandle inms_task;
 xTaskHandle inms_task_receive;
+
 xTaskHandle schedule_task;
-xTaskHandle com_task;
-xTaskHandle bat_check_task;
-xTaskHandle mode_task;
+
 
 #define safe_mode 0
 #define init_mode 1
 #define adcs_mode 2
 #define payload_mode 3
 
+typedef struct __attribute__((packed)) {
+	uint8_t mode_task;
+	uint8_t bat_check_task;
+	uint8_t com_task;
+	uint8_t wod_task;
+
+	uint8_t init_task;
+	uint8_t adcs_task;
+	uint8_t seuv_task;
+	uint8_t eop_task;
+	uint8_t hk_task;
+
+	uint8_t inms_error_handle;
+	uint8_t inms_current_moniter;
+	uint8_t inms_task;
+	uint8_t inms_task_receive;
+
+	uint8_t schedule_task;
+} status_frame_t;
+status_frame_t status_frame;
 
 typedef struct __attribute__((packed)) {
 	uint8_t mode_status_flag;						/* Flag indicates that which mode is the Cubesat in */
@@ -39,7 +63,6 @@ typedef struct __attribute__((packed)) {
 	uint16_t interface_temp;						/* Interface Board temperature */
 	uint16_t interface_thermistor;					/* Interface Board thermistor temperature */
 } hk_frame_t;
-
 hk_frame_t HK_frame;
 
 
@@ -54,7 +77,6 @@ typedef struct __attribute__((packed)) {
 	uint8_t tempBat;
 
 } beacon_frame_t;
-
 beacon_frame_t beacon_frame;
 
 uint8_t inms_task_flag;
@@ -66,6 +88,7 @@ uint8_t schedule_unlink_flag;
 uint8_t idleunlocks;
 uint8_t inms_status;
 uint8_t SD_partition_flag;
+uint8_t Test_Script;
 
 typedef struct __attribute__((packed)) {
 
@@ -116,7 +139,6 @@ typedef struct __attribute__((packed)) {
 	/* INMS related */
 	uint16_t INMS_timeout;
 } parameter_t;
-
 parameter_t parameters;
 
 typedef struct __attribute__((packed)) {
@@ -141,7 +163,6 @@ typedef struct __attribute__((packed)) {
 	uint8_t strategy;
 
 } adcs_para_t;
-
 adcs_para_t adcs_para;
 
 

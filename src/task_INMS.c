@@ -251,7 +251,7 @@ void vTaskinms(void * pvParameters) {
 	vTaskDelay(5 * delay_time_based);
 	while (1) {
 		vTaskDelay(3 * delay_time_based);
-		if (inms_status == 1) { 
+		if (parameters.inms_status == 1) { 
 			int len[scriptNum];	// the length of each script
 			for (int i = 0; i < scriptNum; i++) {
 				epoch_sec[i] = 0;
@@ -331,7 +331,7 @@ void vTaskinms(void * pvParameters) {
 			printf("[-------------STEP #4 : Recording TimeTable with structure-------------]\n");
 			/* STEP #4 Record the TimeTable with structure */
 			for (int i = 0; i < scriptNum; i++) {
-				if (inms_status == 0)
+				if (parameters.inms_status == 0)
 					break;
 				/*Initialize*/
 				int flag = 0;		//record which byte is running now
@@ -464,7 +464,7 @@ void vTaskinms(void * pvParameters) {
 				while (1) {
 					if (inmsJumpScriptCheck(i) && i != scriptNum - 1)
 						break;
-					if (inms_status == 0)
+					if (parameters.inms_status == 0)
 						break;
 					//printf("virtual clock = %d\n",virtual_clock);  //-----need  test------//
 					if (seqcount > ttflagMax) {

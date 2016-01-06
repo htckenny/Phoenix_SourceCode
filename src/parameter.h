@@ -86,8 +86,7 @@ uint8_t schedule_new_command_flag;
 uint8_t schedule_series_number;
 uint8_t schedule_unlink_flag;
 uint8_t idleunlocks;
-uint8_t inms_status;
-uint8_t SD_partition_flag;
+
 uint8_t Test_Script;
 
 typedef struct __attribute__((packed)) {
@@ -138,6 +137,9 @@ typedef struct __attribute__((packed)) {
 
 	/* INMS related */
 	uint16_t INMS_timeout;
+	uint8_t inms_status;
+	
+	uint8_t SD_partition_flag;
 } parameter_t;
 parameter_t parameters;
 

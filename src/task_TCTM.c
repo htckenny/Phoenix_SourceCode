@@ -47,8 +47,8 @@ int CIC() {
 void Telecom_Task(void * pvParameters) {
 
 	uint8_t flag;
-	int tx_wdt_flag = 0;
-	uint8_t txdata = com_tx_hk;
+	// int tx_wdt_flag = 0;
+	// uint8_t txdata = com_tx_hk;
 
 	set_Call_Sign(0);
 	set_tx_rate(8);
@@ -63,24 +63,24 @@ void Telecom_Task(void * pvParameters) {
 	while (1) {
 
 		/*-------Avoid COM WDT(1 minute) reset itself ---------*/
-		tx_wdt_flag++;
-		if (tx_wdt_flag >= 25) {
-			txdata = com_tx_hk;
-			i2c_master_transaction(0, com_tx_node, &txdata, 1, &txdata, 1, com_delay);
+		// tx_wdt_flag++;
+		// if (tx_wdt_flag >= 25) {
+		// 	txdata = com_tx_hk;
+		// 	i2c_master_transaction(0, com_tx_node, &txdata, 1, &txdata, 1, com_delay);
 
-			// get_time();   /// remove it in the future
+		// 	// get_time();   /// remove it in the future
 
-			if ((txdata < 12) && (parameters.com_bit_rates == 8)) {
-				set_tx_rate(parameters.com_bit_rates);
-				set_Call_Sign(0);
-			}
-			if ((txdata > 3) && (parameters.com_bit_rates == 1)) {
-				set_tx_rate(parameters.com_bit_rates);
-				set_Call_Sign(0);
-			}
+		// 	if ((txdata < 12) && (parameters.com_bit_rates == 8)) {
+		// 		set_tx_rate(parameters.com_bit_rates);
+		// 		set_Call_Sign(0);
+		// 	}
+		// 	if ((txdata > 3) && (parameters.com_bit_rates == 1)) {
+		// 		set_tx_rate(parameters.com_bit_rates);
+		// 		set_Call_Sign(0);
+		// 	}
 
-			tx_wdt_flag = 0;
-		}
+		// 	tx_wdt_flag = 0;
+		// }
 		/*----------------------------------*/
 		flag = CIC();
 

@@ -18,12 +18,53 @@
 #define Report_EPS_HK		3		/* Report EPS House Keeping Data */
 #define Report_Parameter	4		/* Report All System Parameters */
 #define Report_COM_HK_2		5		/* Report COM Board Baud Rate */
+#define Report_Task_Status	6		/* Report all the task status */
+#define Report_ADCS_HK		7		/* Report ADCS House Keeping Data */
+#define Report_Script_Stat	8		/* Report INMS script's status */
+
+#define scriptNum 7
+
+extern uint16_t fletcher(uint8_t *script, size_t length);
+
+void perform_fletcher(uint8_t * check_sum_final) {
+	int maxlength = 0;
+	int script_length[scriptNum];
+	uint16_t xsum[scriptNum];
+
+	printf("length read\n");
+	for (int i = 0; i < scriptNum; i++) {
+		script_length[i] = inms_script_length(i);
+		if (script_length[i] >= maxlength) {
+			maxlength = script_length[i];
+		}
+	}
+	uint8_t script[scriptNum][maxlength];
+
+	printf("data read\n");
+	for (int i = 0 ; i < scriptNum ; i++){
+		inms_script_read(i, script_length[i], &script[i]);
+		xsum[i] = fletcher(script[i], script_length[i]);
+
+		/* No error */
+		if (xsum[i] == 0 && script_length[i] == script[i][0] + (script[i][1] << 8)) {
+			check_sum_final[i] = 0;		
+		}
+		/* Error with length */
+		else if (script_length[i] != script[i][0] + (script[i][1] << 8)) {
+			check_sum_final[i] = 1;
+		}
+		/* Error with checksum */
+		else if (xsum[i] != 0){
+			check_sum_final[i] = 2;
+		}
+	}
+}
 
 /* telecommand Service 3  */
 void decodeService3(uint8_t subType, uint8_t*telecommand) {
 	uint8_t txBuffer[254];
 	uint8_t txlen;
-    uint16_t buffs;
+	uint16_t buffs;
 	uint8_t i2c_tx[10];
 	uint8_t type = 3;
 	uint8_t completionError;
@@ -44,16 +85,16 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 		memcpy(&txBuffer[9], &parameters.hk_store_count, 4);
 		memcpy(&txBuffer[13], &parameters.wod_store_count, 4);
 
-		buffs=Interface_3V3_current_get();
+		buffs = Interface_3V3_current_get();
 		memcpy(&txBuffer[17], &buffs, 2);
 
-		buffs=Interface_5V_current_get();
+		buffs = Interface_5V_current_get();
 		memcpy(&txBuffer[19], &buffs, 2);
 
-		buffs=Interface_tmp_get();
+		buffs = Interface_tmp_get();
 		memcpy(&txBuffer[21], &buffs, 2);
 
-		buffs=Interface_inms_thermistor_get();
+		buffs = Interface_inms_thermistor_get();
 		memcpy(&txBuffer[23], &buffs, 2);
 
 		txlen = 25;
@@ -72,7 +113,7 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 			txlen = com_rx_hk_len;
 			SendPacketWithCCSDS_AX25(&txBuffer, txlen, obc_apid, type, subType);
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
-		} 
+		}
 		else {
 			completionError = I2C_READ_ERROR;
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
@@ -101,12 +142,6 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 	case Report_Parameter:
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
 
-		// memcpy(&txBuffer[0], &parameters.vbat_safe_threshold, 2);
-		// memcpy(&txBuffer[2], &parameters.vbat_recover_threshold, 2);
-		// txBuffer[4] = parameters.hk_collect_period;
-		// txBuffer[5] = parameters.seuv_period;
-		// txBuffer[6] = parameters.beacon_period;
-		// printf("%d\n", sizeof(parameter_t));
 		memcpy(txBuffer, &parameters.first_flight, sizeof(parameter_t));
 		txlen = sizeof(parameter_t);
 		SendPacketWithCCSDS_AX25(&txBuffer, txlen, obc_apid, type, subType);
@@ -122,12 +157,60 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 			txlen = 1;
 			SendPacketWithCCSDS_AX25(&txBuffer, txlen, obc_apid, type, subType);
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
-		} 
+		}
 		else {
 			completionError = I2C_READ_ERROR;
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 		}
 
+		break;
+	/*---------------ID:6 Report_Task_Status    ----------------*/
+	case Report_Task_Status:
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+
+		if (status_update() == E_NO_ERR) {
+			printf("[TM 3-6]\n");
+			printf("Task Name\t\tStatus\n");
+			printf("---------------------\n");
+			printf("Mode_task\t\t%d\n", status_frame.mode_task);
+			printf("BatC_task\t\t%d\n", status_frame.bat_check_task);
+			printf("COM_task\t\t%d\n", status_frame.com_task);
+			printf("WOD_task\t\t%d\n", status_frame.wod_task);
+
+			printf("init_task\t\t%d\n", status_frame.init_task);
+			printf("adcs_task\t\t%d\n", status_frame.adcs_task);
+			printf("seuv_task\t\t%d\n", status_frame.seuv_task);
+			printf("EOP_task\t\t%d\n", status_frame.eop_task);
+			printf("HK_task\t\t\t%d\n", status_frame.hk_task);
+
+			printf("I_EH_task\t\t%d\n", status_frame.inms_error_handle);
+			printf("I_CM_task\t\t%d\n", status_frame.inms_current_moniter);
+			printf("I_SH_task\t\t%d\n", status_frame.inms_task);
+			printf("I_RH_task\t\t%d\n", status_frame.inms_task_receive);	
+
+			printf("Sche_task\t\t%d\n", status_frame.schedule_task);	
+
+			memcpy(&txBuffer[0], &status_frame.mode_task, 14);
+
+			txlen = 14;
+			SendPacketWithCCSDS_AX25(&txBuffer, txlen, obc_apid, type, subType);
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		}
+		else {
+			completionError = FS_IO_ERR;
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+		}
+		break;
+	/*--------------- ID:8 Report INMS script's status ----------------*/	
+	case Report_Script_Stat:
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+
+		perform_fletcher(txBuffer);
+		hex_dump(&txBuffer, scriptNum);
+
+		txlen = 7;
+		SendPacketWithCCSDS_AX25(&txBuffer, txlen, obc_apid, type, subType);
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
 
 	default:
@@ -136,3 +219,6 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 		break;
 	}
 }
+
+
+

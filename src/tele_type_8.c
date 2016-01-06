@@ -42,9 +42,8 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	uint16_t para_length = (telecommand[4] << 8) + telecommand[5] - 4;
 	uint8_t type = 8;
 	uint8_t paras[180];
-	// printf("telecommand[4] = %u\n", telecommand[4]);
-	// printf("telecommand[5] = %u\n", telecommand[5]);
-	// printf("para_len = %u\n", para_length);
+	uint16_t threshold;
+	
 
 	if (para_length > 0)
 		memcpy(&paras, telecommand + 9, para_length);
@@ -124,12 +123,6 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 
 	/*---------------ID:7 ResumeTransmitter----------------*/
 	case  ResumeTransmitter:
-//	if(para_length==0)
-//	sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
-//		else{
-//			sendTelecommandReport_Failure(telecommand,CCSDS_T1_ACCEPTANCE_FAIL,CCSDS_ERR_ILLEGAL_TYPE); // send acceptance fail
-//			break;
-//		}
 		printf("Execute Type 8 Sybtype 7 , Resume Transmitter \r\n");
 		parameters.shutdown_flag = 0;
 		para_w_dup();
@@ -148,7 +141,11 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			break;
 		}
 		printf("Execute Type 8 Sybtype 8 , Enter_Safe_Threshold \r\n");
-		memcpy(&parameters.vbat_safe_threshold, &paras[0], 2);
+
+		memcpy(&threshold, &paras, 2);
+		threshold = csp_ntoh16(threshold);
+		
+		memcpy(&parameters.vbat_safe_threshold, &threshold, 2);
 		para_w_dup();
 		printf("Enter_Safe_Threshold = %d mV\n", parameters.vbat_safe_threshold);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
@@ -162,7 +159,11 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			break;
 		}
 		printf("Execute Type 8 Sybtype 9 , Leave_Safe_Threshold \r\n");
-		memcpy(&parameters.vbat_recover_threshold, &paras[0], 2);
+
+		memcpy(&threshold, &paras, 2);
+		threshold = csp_ntoh16(threshold);
+		
+		memcpy(&parameters.vbat_recover_threshold, &threshold, 2);
 		para_w_dup();
 		printf("Leave_Safe_Threshold = %d mV\n", parameters.vbat_recover_threshold);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
@@ -349,7 +350,12 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			break;
 		}
 		printf("Execute Type 8 Sybtype 19, change INMS timeout \r\n");
-		memcpy(&parameters.INMS_timeout, &paras[0], 2);
+
+		uint16_t timeout;
+		memcpy(&timeout, &paras, 2);
+		timeout = csp_ntoh16(timeout);
+
+		memcpy(&parameters.INMS_timeout, &timeout, 2);
 		para_w_dup();
 		printf("change INMS timeout to %d s\n", parameters.INMS_timeout);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report

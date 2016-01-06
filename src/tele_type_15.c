@@ -157,6 +157,16 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 					break;
 				}
 			}
+			/* INMS Script */
+			else if (paras[0] == 6) {
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
+				
+				for (int i = 0 ; i < 7 ; i++){
+					inms_script_delete(i);
+				}
+				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
+				break;
+			}
 			else
 				sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); //accept fail
 

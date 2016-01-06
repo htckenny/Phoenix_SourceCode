@@ -29,6 +29,31 @@
 #include "tele_function.h"
 #include "fs.h"
 
+int measure_INMS_current(struct command_context * ctx){
+	uint16_t current_3V3, current_5V0;
+	
+	current_5V0 = Interface_5V_current_get();
+	current_3V3 = Interface_3V3_current_get();
+
+	printf("5V Supply: %f mA\n", (double)current_5V0 / 4.7);
+	printf("3.3V Supply: %f mA\n", (double)current_3V3 / 68);
+
+	return CMD_ERROR_NONE;
+}
+
+int load_INMS_script(struct command_context * ctx){
+	unsigned int buffer;
+
+	if (ctx->argc < 2) {
+		return CMD_ERROR_SYNTAX;
+	}
+	if (sscanf(ctx->argv[1], "%u", &buffer) != 1) {
+		return CMD_ERROR_SYNTAX;
+	}
+	Test_Script = buffer;
+	return CMD_ERROR_NONE;
+}
+
 int mode_switch(struct command_context * ctx){
 	unsigned int buffer;
 	extern void ModeControl_Task(void * pvParameters);
@@ -251,7 +276,9 @@ int INMS_switch(struct command_context * ctx){
 		return CMD_ERROR_SYNTAX;
 	}
 	if (buffer == 1){
-		xTaskCreate(vTaskinms, (const signed char * ) "INMS", 1024 * 4, NULL, 1, &inms_task);
+		// xTaskCreate(vTaskinms, (const signed char * ) "INMS", 1024 * 4, NULL, 2, &inms_task);
+		extern void vTaskInmsErrorHandle(void * pvParameters);
+		xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "INMS_EH", 1024 * 4, NULL, 2, &inms_error_handle);
 	}
 	else if (buffer == 0) {
 		vTaskDelete(inms_task);
@@ -329,11 +356,7 @@ int ir(struct command_context * ctx) {
 	printf("slot  = %d\n", buffer);
 	len = inms_script_length((int)buffer);
 	uint8_t script[len] ;
-	// for (int i = 0 ; i < len ; i++){
-	// 	script[i] = 0;
-	// }
-	
-	// printf("%d\n",len );
+
 	inms_script_read(buffer, len, &script);
 	// printf("%d\n", script[304]);
 	hex_dump(&script, len);
@@ -737,7 +760,14 @@ int parawrite(struct command_context * ctx) {
 
 int pararead(struct command_context * ctx) {
 
-	para_r(SD_partition_flag);
+	int SD;
+
+	if (ctx->argc != 2)
+		return CMD_ERROR_SYNTAX;
+	if (sscanf(ctx->argv[1], "%u", &SD) != 1)
+		return CMD_ERROR_SYNTAX;
+
+	para_r(SD);
 	printf("First Flight \t\t\t%d\n", (int) parameters.first_flight);
 	printf("shutdown_flag \t\t\t%d\n", (int) parameters.shutdown_flag);
 	printf("ant_deploy_flag \t\t%d\n", (int) parameters.ant_deploy_flag);
@@ -904,7 +934,10 @@ int comhk(struct command_context * ctx) {
 	return CMD_ERROR_NONE;
 }
 
-command_t __root_command ph_commands[] = {
+command_t __root_command ph_commands[] = {	
+
+	{ .name = "ic", .help = "PHOENIX: ic", .handler = measure_INMS_current, }, 	
+	{ .name = "isn", .help = "PHOENIX: isn [buffer]", .handler = load_INMS_script, }, 
 	{ .name = "mcs", .help = "PHOENIX: mcs [ON = 1 / OFF = 0]", .handler = mode_switch, }, 
 	{ .name = "inmsR", .help = "PHOENIX: inms ", .handler = INMSreceive_handler, }, 
 	{ .name = "inms", .help = "PHOENIX: inms <cmd1> <cmd2> <cmd3> <cmd4> ....", .usage = "<cmd1>", .handler = INMSsend_handler, }, 
@@ -940,7 +973,7 @@ command_t __root_command ph_commands[] = {
 	{ .name = "T_test", .help = "PHOENIX: Activate/OFF Thermal Task,switch 1=on, 0 =off", .usage = "T_test <switch>", .handler = T_test, },
 	{ .name = "shutdown_tm", .help = "PHOENIX: change transceiver standby mode", .usage = "shutdown_transmitter <switch>", .handler = shutdown_tm, },
 	{ .name = "parawrite", .help = "PHOENIX: write para setting in FS", .handler = parawrite, },
-	{ .name = "pararead", .help = "PHOENIX: read on board parameter setting in FS", .handler = pararead, },
+	{ .name = "pararead", .help = "PHOENIX: read on board parameter setting in FS", .usage = "<partition(0, 1)>", .handler = pararead, },
 	{ .name = "paradelete", .help = "PHOENIX: delete parameters.bin", .handler = paradelete, },
 	{ .name = "T_data_del", .help = "PHOENIX: delete t_obc.bin t_inms.bin", .handler = T_data_del, },
 	{ .name = "alldatadelete", .help = "PHOENIX: delete all on board data.bin", .handler = alldatadelete, },

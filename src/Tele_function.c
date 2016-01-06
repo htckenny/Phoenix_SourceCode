@@ -270,7 +270,7 @@ uint8_t CCSDS_GenerateTelemetryPacket(uint8_t* telemetryBuffer,
 	t.tv_sec = 0;
 	t.tv_nsec = 0;
 	obc_timesync(&t, 6000);
-	time = t.tv_sec;
+	time = t.tv_sec - 946684800;
 
 	return CCSDS_GenerateTelemetryPacketWithTime(telemetryBuffer,
 	        telemetryBufferSize, apid, serviceType, serviceSubtype, sourceData,
@@ -523,51 +523,50 @@ void decodeCCSDS_Command(uint8_t * telecommand, uint8_t packet_length) {
 	uint8_t serviceType =  telecommand[7];
 	uint8_t serviceSubType = telecommand[8];
 	uint16_t chk;
+	unsigned int LTbl[256];
 
 	// Compute CRC (all packet data except FCS field)
-
-	chk = 0xFFFF; // Init syndrome
-	unsigned int LTbl[256];
+	chk = 0xFFFF; 
+	
 	InitLtbl(LTbl);
 	for (int i = 0; i < packet_length - 2; i++)
 		chk = crc_opt(telecommand[i], chk, LTbl);
 
+	printf("crc check performing (testing) \n");
 	// Check CRC field
-	// if (telecommand[packet_length - 2] == (uint8_t)(chk >> 8) ) {
-	// if (telecommand[packet_length - 1] == (uint8_t)(chk)) {
-	// printf(" CRC Check  not pass!!!\n");
-	printf("Telecommand Pass CRC Check (No CRC check now)\n");
-	// check CRC end
+	if (telecommand[packet_length - 2] == (uint8_t)(chk >> 8) && telecommand[packet_length - 1] == (uint8_t)(chk) ) {
+		printf("Telecommand Pass CRC Check (Has CRC check now)\n");
+		
+		switch (serviceType) {
 
-	switch (serviceType) {
+		case T3_SYS_CONF:
+			decodeService3(serviceSubType, telecommand);
+			break;
+		case T8_function_management:
+			decodeService8(serviceSubType, telecommand);
+			break;
+		case T11_OnBoard_Schedule:
+			decodeService11(serviceSubType, telecommand);
+			break;
+		case T13_LargeData_Transfer:
+			decodeService13(serviceSubType, telecommand);
+			break;
+		case T15_dowlink_management:
+			decodeService15(serviceSubType, telecommand);
+			break;
+		case T131_ADCS:
+			decodeService131(serviceSubType, telecommand);
+			break;
+		case  T132_SEUV:
+			decodeService132(serviceSubType, telecommand);
+			break;
+		default:
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 
-
-	case T3_SYS_CONF:
-		decodeService3(serviceSubType, telecommand);
-		break;
-	case T8_function_management:
-		decodeService8(serviceSubType, telecommand);
-		break;
-	case T11_OnBoard_Schedule:
-		decodeService11(serviceSubType, telecommand);
-		break;
-	case T13_LargeData_Transfer:
-		decodeService13(serviceSubType, telecommand);
-		break;
-	case T15_dowlink_management:
-		decodeService15(serviceSubType, telecommand);
-		break;
-	case T131_ADCS:
-		decodeService131(serviceSubType, telecommand);
-		break;
-	case  T132_SEUV:
-		decodeService132(serviceSubType, telecommand);
-		break;
-	default:
-		sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
-
-		break;
+			break;
+		}
 	}
-	// 	}
-	// }
+	else {
+		printf(" CRC Check not pass!!!\n");
+	}
 }  /* end of decodeCCSDS_Command */

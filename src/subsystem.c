@@ -20,6 +20,41 @@
 #include "fs.h"
 #include "../lib/liba712/src/drivers/mpio.h"
 
+int status_update(){
+	if (mode_task != NULL)
+		status_frame.mode_task = 1;
+	if (bat_check_task != NULL)
+		status_frame.bat_check_task = 1;
+	if (com_task != NULL)
+		status_frame.com_task = 1;			
+	if (wod_task != NULL)
+		status_frame.wod_task = 1;
+
+	if (init_task != NULL)
+		status_frame.init_task = 1;
+	if (adcs_task != NULL)
+		status_frame.adcs_task = 1;
+	if (seuv_task != NULL)
+		status_frame.seuv_task = 1;
+	if (eop_task != NULL)
+		status_frame.eop_task = 1;
+	if (hk_task != NULL)
+		status_frame.hk_task = 1;
+
+	if (inms_error_handle != NULL)
+		status_frame.inms_error_handle = 1;
+	if (inms_current_moniter != NULL)
+		status_frame.inms_current_moniter = 1;
+	if (inms_task != NULL)
+		status_frame.inms_task = 1;
+	if (inms_task_receive != NULL)
+		status_frame.inms_task_receive = 1;
+
+	if (schedule_task != NULL)
+		status_frame.schedule_task = 1;		
+
+	return E_NO_ERR;
+}
 
 uint32_t get_time() {
 
@@ -59,12 +94,13 @@ int parameter_init() {
 	parameters.tc_count                  = 0;
 
 	/* System Configuration */
-	parameters.first_flight              = 1;
-	parameters.shutdown_flag             = 0;
-	parameters.hk_collect_period         = 60;
-	parameters.beacon_period             = 30;
-	parameters.reboot_count              = 0;
-	parameters.com_bit_rates             = 0x08; 	// change to 0x01 before flight
+	parameters.first_flight				= 1;		/* indicates if this is the first flight */
+	parameters.shutdown_flag			= 0;
+	parameters.ant_deploy_flag			= 0;		/* indicates that antenna already deployed or not */
+	parameters.hk_collect_period		= 60;
+	parameters.beacon_period			= 30;
+	parameters.reboot_count				= 0;
+	parameters.com_bit_rates			= 0x01; 	// change to 0x01 before flight
 
 	/*  seuv related  */
 	parameters.seuv_period				= 8;
@@ -85,7 +121,7 @@ int parameter_init() {
 	parameters.vbat_recover_threshold	= 7500;
 	parameters.vbat_safe_threshold		= 7000;
 
-	parameters.INMS_timeout 				= 400;
+	parameters.INMS_timeout 			= 400;
 
 	seuvFrame.samples = parameters.seuv_sample_rate << 1 ;		/* samples */
 	/* 0 1 2 3 4 5 6 |  7    */
@@ -211,11 +247,9 @@ void power_control(int device, int stats) {
 			io_clear(2);
 	}
 }
+/** Power off all the subsystems */
 
 void power_OFF_ALL() {
-	/**
-	 * Power off all the subsystems
-	 */
 	power_control(1, OFF);
 	power_control(2, OFF);
 	power_control(3, OFF);
@@ -230,7 +264,7 @@ uint16_t Interface_tmp_get() {
 	tx[1] = 0xF0;
 
 	i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
-	if (i2c_master_transaction(0, interface_node, 0 , 0, &rx, 4, seuv_delay) == E_NO_ERR) {
+	if (i2c_master_transaction(0, interface_node, 0 , 0, &rx, 4, interface_delay) == E_NO_ERR) {
 		return (rx[0] << 8) + rx[1];
 	} 
 	else
@@ -242,8 +276,8 @@ uint16_t Interface_inms_thermistor_get() {
 	tx[0] = 0xD0;	//0d208
 	tx[1] = 0xD0;
 
-	i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
-	if (i2c_master_transaction(0, interface_node, 0 , 0, &rx, 4, seuv_delay) == E_NO_ERR) {
+	// i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
+	if (i2c_master_transaction_2(0, interface_node, &tx, 2, &rx, 4, interface_delay) == E_NO_ERR) {
 		return (rx[0] << 8) + rx[1];
 	} 
 	else
@@ -255,8 +289,8 @@ uint16_t Interface_3V3_current_get() {
 	tx[0] = 0x90;	//0d144
 	tx[1] = 0x90;
 
-	i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
-	if (i2c_master_transaction(0, interface_node, 0 , 0, &rx, 4, seuv_delay) == E_NO_ERR) {
+	// i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
+	if (i2c_master_transaction_2(0, interface_node, &tx, 2, &rx, 4, interface_delay) == E_NO_ERR) {
 		return (rx[0] << 8) + rx[1];
 	} 
 	else
@@ -269,7 +303,7 @@ uint16_t Interface_5V_current_get() {
 	tx[1] = 0xB0;
 
 	i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
-	if (i2c_master_transaction(0, interface_node, 0 , 0, &rx, 4, seuv_delay) == E_NO_ERR) {
+	if (i2c_master_transaction(0, interface_node, 0 , 0, &rx, 4, interface_delay) == E_NO_ERR) {
 		return (rx[0] << 8) + rx[1];
 	} 
 	else

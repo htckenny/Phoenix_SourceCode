@@ -15,7 +15,7 @@
 
 /* Tick */
 #define delay_time_based	configTICK_RATE_HZ
- 
+
 /* I2C parameters*/
 #define i2c_max_size 		246
 #define com_tx_max 			235  // include i2c command = 236 Max per I2C Send
@@ -66,7 +66,7 @@
 #define adcs_hk_length 		48
 #define seuv_data_length 	5
 
-#define com_delay 			1000
+#define com_delay 			10	//1000
 #define eps_delay 			7
 #define seuv_delay 			10
 #define interface_delay 	7
@@ -108,7 +108,7 @@
 #define I2C_SEND_ERROR 						0xA0
 #define I2C_READ_ERROR 						0xA1
 #define CCSDS_PACKET_ERROR 					0xB0
-#define FS_IO_ERR      						11
+#define FS_IO_ERR      						0x0B
 
 /*----------------APID----------------*/
 // Each downlink type shall have a dedicated APID
@@ -167,4 +167,6 @@ uint16_t Interface_3V3_current_get();
 uint16_t Interface_5V_current_get();
 uint16_t Interface_tmp_get();
 uint16_t Interface_inms_thermistor_get();
+int status_update();
+
 #endif /* SUBSYSTEM_H_ */

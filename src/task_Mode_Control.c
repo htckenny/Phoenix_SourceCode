@@ -133,10 +133,10 @@ void ModeControl_Task(void * pvParameters) {
                     xTaskCreate(HK_Task, (const signed char * ) "HK", 1024 * 4, NULL, 2, &hk_task);
                 if (seuv_task == NULL)
                     xTaskCreate(SolarEUV_Task, (const signed char * ) "SEUV", 1024 * 4, NULL, 3, &seuv_task);
-                // if (inms_error_handle == NULL)
-                //     xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "InmsEH", 1024 * 4, NULL, 2, &inms_error_handle);
-                // if (inms_current_moniter == NULL)
-                    // xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "inms_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
+                if (inms_error_handle == NULL)
+                    xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "InmsEH", 1024 * 4, NULL, 2, &inms_error_handle);
+                if (inms_current_moniter == NULL)
+                    xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "InmsCM", 1024 * 4, NULL, 2, &inms_current_moniter);
                 lastmode = HK_frame.mode_status_flag;   // ENTER PAYLOAD MODE DONE!
             }
             /* desire to Enter the Safe Mode. */

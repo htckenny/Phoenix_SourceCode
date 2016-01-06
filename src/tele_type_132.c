@@ -37,27 +37,28 @@ void decodeService132(uint8_t subType, uint8_t*telecommand) {
 	/*--------------- ID:1 configure ----------------*/
 	case configure:
 		if (packet_length == 2) {
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 
 			parameters.seuv_period = paras[0];
 			parameters.seuv_sample_rate = paras[1];
-			para_w_dup();
+			para_w_flash();
 
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
-		} else
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); //accept fail
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
+		} 
+		else
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
 		break;
 	/*--------------- ID:2 change_mode ----------------*/
 	case change_mode:
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 		if (packet_length == 1) {			
 			parameters.seuv_mode = paras[0];	//set the seuv mode 
-			para_w_dup();
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+			para_w_flash();
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		} 
 		else {
 			completionError = I2C_READ_ERROR;
-			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); 
 		}
 
 		break;
@@ -66,7 +67,7 @@ void decodeService132(uint8_t subType, uint8_t*telecommand) {
 		if (packet_length == 0) {
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
 			/* Read parameter from the FS, should delete this line if parameter_init is already called */
-			para_r(SD_partition_flag);
+			para_r_flash();
 			/* sample SEUV once with gain = 1 */
 			get_a_packet(1);
 			seuvFrame.samples += 0; 

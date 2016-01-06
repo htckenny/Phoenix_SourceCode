@@ -15,6 +15,7 @@
 int inms_script_write(int buffNum,uint8_t scriptCont[], int delete_flag, int length);
 void inms_script_read(int buffNum,int packlength,void * txbuf);
 int inms_script_length(int buffNum);
+int inms_script_delete(int buffNum);
 /*---------------------------------------------------*/
 /*             		  INMS Data                      */
 void inms_data_write_dup(uint8_t frameCont[]);

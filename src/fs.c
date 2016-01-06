@@ -7,6 +7,7 @@
 #include <util/hexdump.h>
 #include <util/timestamp.h>
 #include <csp/csp_endian.h>
+#include <sys/time.h>
 #include <time.h>
 #include <stdint.h>
 #include <inttypes.h>
@@ -720,9 +721,9 @@ int inms_data_write(uint8_t frameCont[], int SD_partition)
 
 	char fileName[40];
 	if (SD_partition == 0)
-		strcpy(fileName, "0:INMS_DATA");
+		strcpy(fileName, "0:INMS_DATA/");
 	else
-		strcpy(fileName, "1:INMS_DATA");
+		strcpy(fileName, "1:INMS_DATA/");
 
 	/* Get current time */
 	timestamp_t t;
@@ -756,13 +757,13 @@ int inms_data_write(uint8_t frameCont[], int SD_partition)
 
 	// hex_dump(frameCont, inms_data_length);
 	if (res != FR_OK) {
-		printf("\r\n inms_write() fail .. \r\n");
+		printf("\rinms_write() %d fail .. \r\n", SD_partition);
 		f_close(&file);
 		f_mount(SD_partition, NULL);
 		return Error;
 	}
 	else {
-		printf("\r\n inms_write() success .. \r\n");
+		printf("\rinms_write() %d success .. \r\n", SD_partition);
 		f_close(&file);
 		f_mount(SD_partition, NULL);
 		return No_Error;
@@ -824,7 +825,7 @@ int inms_data_delete(char fileName[]) {
 int inms_script_write(int buffNum, uint8_t scriptCont[], int delete_flag, int length) {
 
 	f_mount(0, &fs[0]);
-	f_mount(1, &fs[1]);
+	// f_mount(1, &fs[1]);
 	char fileName[100];
 
 	if (buffNum == 8)
@@ -897,11 +898,8 @@ void inms_script_read(int buffNum, int packlength, void * txbuf) {
 
 	f_mount(0, &fs[0]);
 
-	char fileName[100];
-	if (buffNum == 8) {
-		strcpy(fileName, "0:/INMS/Running.bin");
-	}
-	else if (buffNum == 0) {
+	char fileName[20];
+	if (buffNum == 0) {
 		strcpy(fileName, "0:/INMS/IDLE0.bin");
 	}
 	else if (buffNum == 1) {
@@ -925,15 +923,22 @@ void inms_script_read(int buffNum, int packlength, void * txbuf) {
 	else if (buffNum == 7) {
 		strcpy(fileName, "0:/INMS/IDLE7.bin");
 	}
+	else if (buffNum == 8) {
+		strcpy(fileName, "0:/INMS/IDLE8.bin");
+	}
+	else if(buffNum == 10) {
+		strcpy(fileName, "0:/INMS/Running.bin");
+	}	
+
 
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 
 	if (res != FR_OK) {
 		printf("f_open() fail .. \r\n");
 	}
-	else {
-		printf("f_open() success .. \r\n");
-	}
+	// else {
+		// printf("f_open() success .. \r\n");
+	// }/
 	// int c = 0;
 	// while (1) {
 	// res = f_read(&file, &buffer, packlength, &br); 
@@ -953,19 +958,13 @@ void inms_script_read(int buffNum, int packlength, void * txbuf) {
 	while (1) {
 		res = f_read(&file, buffer, 1, &br); 
 
-		// if (res == FR_OK) {
-		// 	printf("f_read() success .. \r\n");
-		// }
-		// else {
-		// 	printf("f_read() fail .. \r\n");
-		// }
-		
-		// memcpy(&txbuf[c++], &buffer, 1);
 		memcpy(txbuf + c, &buffer, 1);
-		c = c + 1;
-		if (f_eof(&file)) {break;}
+		c++;
+		if (f_eof(&file)) {
+			break;
+		}
 	}
-	printf("%d\n", c);
+	// hex_dump(&txbuf, packlength);
 
 	f_close(&file);
 	f_mount(0, NULL);
@@ -976,46 +975,49 @@ int inms_script_length(int buffNum) {
 
 	f_mount(0, &fs[0]);
 	int packlength = 0;
-	char fileName[100];
-	// printf("i  = %d \n", buffNum);
-	if (buffNum == 8) {
-		strcpy(fileName, "0:/INMS/Running.bin");
-	}
-	else if (buffNum == 0) {
-		strcpy(fileName, "0:/INMS/Idle0.bin");
+	char fileName[20];
+
+	if (buffNum == 0) {
+		strcpy(fileName, "0:/INMS/IDLE0.bin");
 	}
 	else if (buffNum == 1) {
-		strcpy(fileName, "0:/INMS/Idle1.bin");
+		strcpy(fileName, "0:/INMS/IDLE1.bin");
 	}
 	else if (buffNum == 2) {
-		strcpy(fileName, "0:/INMS/Idle2.bin");
+		strcpy(fileName, "0:/INMS/IDLE2.bin");
 	}
 	else if (buffNum == 3) {
-		strcpy(fileName, "0:/INMS/Idle3.bin");
+		strcpy(fileName, "0:/INMS/IDLE3.bin");
 	}
 	else if (buffNum == 4) {
-		strcpy(fileName, "0:/INMS/Idle4.bin");
+		strcpy(fileName, "0:/INMS/IDLE4.bin");
 	}
 	else if (buffNum == 5) {
-		strcpy(fileName, "0:/INMS/Idle5.bin");
+		strcpy(fileName, "0:/INMS/IDLE5.bin");
 	}
 	else if (buffNum == 6) {
-		strcpy(fileName, "0:/INMS/Idle6.bin");
+		strcpy(fileName, "0:/INMS/IDLE6.bin");
 	}
 	else if (buffNum == 7) {
 		strcpy(fileName, "0:/INMS/IDLE7.bin");
 	}
+	else if (buffNum == 8) {
+		strcpy(fileName, "0:/INMS/IDLE8.bin");
+	}
+	else if(buffNum == 10) {
+		strcpy(fileName, "0:/INMS/Running.bin");
+	}	
 
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 
 	if (res != FR_OK) {
-		printf("\r\n f_open() fail .. \r\n");
+		printf("\r\nf_open() fail .. \r\n");
 	}
-	else {
-		printf("\r\n f_open() success .. \r\n");
-	}
+	// else {
+		// printf("\r\nf_open() success .. \r\n");
+	// }
 
-	for (int i = 0; i < 300; i++) {
+	for (int i = 0; i < 2; i++) {
 		buffer[i] = 0;
 	}
 
@@ -1029,13 +1031,51 @@ int inms_script_length(int buffNum) {
 			packlength = 0;
 	}
 	else {
-		printf("\r\n f_read() fail .. \r\n");
+		printf("\r\n[inms_script_length]f_read() fail .. \r\n");
 	}
 
 	printf("packlength : %d\n", packlength);
 	f_close(&file);
 	f_mount(0, NULL);
 	return packlength;
+}
+int inms_script_delete(int buffNum) {
+
+	f_mount(0, &fs[0]);
+
+	if (buffNum == 0) {		
+		res = f_unlink("0:/INMS/IDLE0.bin");	  
+	}
+	else if (buffNum == 1) {
+		res = f_unlink("0:/INMS/IDLE1.bin");	
+	}
+	else if (buffNum == 2) {
+		res = f_unlink("0:/INMS/IDLE2.bin");	
+	}
+	else if (buffNum == 3) {
+		res = f_unlink("0:/INMS/IDLE3.bin");	
+	}
+	else if (buffNum == 4) {
+		res = f_unlink("0:/INMS/IDLE4.bin");	
+	}
+	else if (buffNum == 5) {
+		res = f_unlink("0:/INMS/IDLE5.bin");	
+	}
+	else if (buffNum == 6) {
+		res = f_unlink("0:/INMS/IDLE6.bin");	
+	}
+	else if (buffNum == 7) {
+		res = f_unlink("0:/INMS/IDLE7.bin");	
+	}
+	else if (buffNum == 8) {
+		res = f_unlink("0:/INMS/IDLE8.bin");	
+	}
+	else if(buffNum == 10) {
+		res = f_unlink("0:/INMS/Running.bin");	
+	}	
+		
+	f_mount(0, NULL);
+	return No_Error;
 }
 /** End of INMS data/script related FS function*/
 /*  ---------------------------------------------------  */	
@@ -1175,7 +1215,6 @@ int seuv_write()
 	// Format time, "ddd yyyy-mm-dd hh:mm:ss zzz"
 	ts = *localtime(&tt);
 	strftime(buf, sizeof(buf), "%Y%m%d_%H%M%S", &ts);
-
 	strcat(fileName, buf);
 	strcat(fileName, "_SEUV_TW01");
 	strcat(fileName, ".dat");

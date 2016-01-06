@@ -76,17 +76,14 @@ uint32_t get_time() {
 int parameter_init() {
 
 
-	SD_partition_flag					= 0;
 	HK_frame.sun_light_flag				= 0;
-	inms_status							= 1;
-	inms_task_flag						= 0;
-	inms_task_receive_flag				= 0;
+
 
 	/*--File System store count--*/
-	parameters.wod_store_count           = 0;
-	parameters.inms_store_count          = 0;
-	parameters.seuv_store_count          = 0;
-	parameters.hk_store_count            = 0;
+	parameters.wod_store_count			= 0;
+	parameters.inms_store_count			= 0;
+	parameters.seuv_store_count			= 0;
+	parameters.hk_store_count			= 0;
 
 	/* Protocol sequence count */
 	parameters.obc_packet_sequence_count = 0;
@@ -122,19 +119,30 @@ int parameter_init() {
 	parameters.vbat_safe_threshold		= 7000;
 
 	parameters.INMS_timeout 			= 400;
-
+	parameters.inms_status				= 1;
+	parameters.SD_partition_flag		= 0;
+	
 	seuvFrame.samples = parameters.seuv_sample_rate << 1 ;		/* samples */
 	/* 0 1 2 3 4 5 6 |  7    */
 	/*  sample rate  | Gain  */
 
- 	/* Read last parameter from SD card */
-	if (para_r(SD_partition_flag) == No_Error) {
-		parameters.reboot_count = parameters.reboot_count + 1; 		//reboot counter + 1
-		para_w_dup();    /* update to SD Card */
+	/* Read last parameter from FLASH */
+	if (para_r_flash() == No_Error) {
+		parameters.reboot_count ++;
+		para_w_flash();
 		return No_Error;
 	}
 	else
-		para_w_dup();
+		para_w_flash();
+
+ 	/* Read last parameter from SD card */
+	// if (para_r(SD_partition_flag) == No_Error) {
+	// 	parameters.reboot_count = parameters.reboot_count + 1;
+	// 	para_w_dup();    /* update to SD Card */
+	// 	return No_Error;
+	// }
+	// else
+	// 	para_w_dup();
 
 	return Error;
 }

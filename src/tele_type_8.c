@@ -112,7 +112,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		}
 		printf("Execute Type 8 Sybtype 6 , ShutdownTransmitter \r\n");
 		parameters.shutdown_flag = 1;
-		para_w_dup();
+		para_w_flash();
 		printf("Shutdown Command Detected!! \r\n");
 		if (tx_mode(3) != 0) {  //set transceiver into standby mode
 			printf("tx_mode set fail \r\n");
@@ -125,7 +125,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	case  ResumeTransmitter:
 		printf("Execute Type 8 Sybtype 7 , Resume Transmitter \r\n");
 		parameters.shutdown_flag = 0;
-		para_w_dup();
+		para_w_flash();
 		printf("Shutdown Resume Command Detected!! \r\n");
 		if (tx_mode(1) != 0)   //set transceiver into standby mode
 			printf("tx_mode set fail \r\n");
@@ -146,7 +146,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		threshold = csp_ntoh16(threshold);
 		
 		memcpy(&parameters.vbat_safe_threshold, &threshold, 2);
-		para_w_dup();
+		para_w_flash();
 		printf("Enter_Safe_Threshold = %d mV\n", parameters.vbat_safe_threshold);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
 		break;
@@ -164,7 +164,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		threshold = csp_ntoh16(threshold);
 		
 		memcpy(&parameters.vbat_recover_threshold, &threshold, 2);
-		para_w_dup();
+		para_w_flash();
 		printf("Leave_Safe_Threshold = %d mV\n", parameters.vbat_recover_threshold);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
 		break;
@@ -197,9 +197,9 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			break;
 		}
 		printf("Execute Type 8 Sybtype 11 , para_to_default \r\n");
-		para_d(SD_partition_flag);	
+		para_d_flash();	
 		parameter_init();
-		para_w_dup();
+		// para_w_flash();
 
 		printf("First Flight %d\n", (int) parameters.first_flight);
 		printf("shutdown_flag %d\n", (int) parameters.shutdown_flag);
@@ -290,7 +290,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		
 		// parameters.first_flight = 0;
 		HK_frame.mode_status_flag = 3;
-		para_w_dup();
+		para_w_flash();
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
 
 		break;
@@ -306,14 +306,14 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		
 		// parameters.first_flight = 0;
 		if (paras[0] == 1) {
-			inms_status = 1;
+			parameters.inms_status = 1;
 			printf("enable inms script handler\n");			
 		}	//enable
 		else if (paras[0] == 0){
-			inms_status = 0;
+			parameters.inms_status = 0;
 			printf("disable inms script handler\n");		
 		}
-		para_w_dup();
+		para_w_flash();
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
 		break;
 	/*---------------  ID:18 Set SD partition label number  ----------------*/		
@@ -328,11 +328,11 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		
 		// parameters.first_flight = 0;
 		if (paras[0] == 0) {
-			SD_partition_flag = 0;
+			parameters.SD_partition_flag = 0;
 			printf("Set SD Read to partition [0]\n");			
 		}	
 		else if (paras[0] == 1){
-			SD_partition_flag = 1;
+			parameters.SD_partition_flag = 1;
 			printf("Set SD Read to partition [1]\n");		
 		}
 		else

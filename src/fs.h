@@ -45,6 +45,10 @@ int eop_write(uint8_t frameCont[], int SD_partition);
 int eop_read(char fileName[],void * txbuf);
 int eop_delete();
 /*---------------------------------------------------*/
+void para_d_flash();
+void para_w_flash();
+int para_r_flash();
+
 void para_w_dup();
 int para_w(int SD_partition);
 int para_r(int SD_partition);

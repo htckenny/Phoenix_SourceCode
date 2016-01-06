@@ -1,17 +1,19 @@
+#include <stdint.h>
+#include <string.h>
+#include <inttypes.h>
+#include <time.h>
+#include <unistd.h>
+#include <fcntl.h>
+
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-#include <fat_sd/ff.h>
-#include <dev/i2c.h>
-
-#include <nanomind.h>
 #include <util/hexdump.h>
 #include <util/timestamp.h>
 #include <csp/csp_endian.h>
-#include <sys/time.h>
-#include <time.h>
-#include <stdint.h>
-#include <inttypes.h>
-#include <string.h>
+#include <dev/i2c.h>
+#include <nanomind.h>
+#include <fat_sd/ff.h>
+#include <vfs/vfs.h>
 
 #include "parameter.h"
 #include "tele_function.h"
@@ -938,7 +940,7 @@ void inms_script_read(int buffNum, int packlength, void * txbuf) {
 	}
 	// else {
 		// printf("f_open() success .. \r\n");
-	// }/
+	// }
 	// int c = 0;
 	// while (1) {
 	// res = f_read(&file, &buffer, packlength, &br); 
@@ -1527,7 +1529,97 @@ int eop_delete(char fileName[])
 }
 /*  ---------------------------------------------------  */	
 /** Start of parameter related FS function*/
+void para_d_flash() {
+	struct stat st;
+	int ret;
 
+	/* Get args */
+	char path[] = "/boot/para.bin";
+	
+
+	if (stat(path, &st) < 0) {
+		printf("rm: cannot stat %s\r\n", path);
+	}
+
+	if (st.st_mode & S_IFDIR)
+		ret = rmdir(path);
+	else
+		ret = remove(path);
+
+	if (ret != 0) {
+		printf("rm: cannot remove %s\r\n", path);
+	}
+}
+void para_w_flash(){
+	int fd, bytes;
+	int size = (int)sizeof(parameter_t);
+	
+	char path[] = "/boot/para.bin";
+	
+	/* Open file */
+	fd = open(path, O_CREAT | O_TRUNC | O_RDWR);
+	if (fd < 0) {
+		printf("Failed to open %s\r\n", path);
+	}
+	/* write Data into flash */
+	bytes = write(fd, &parameters.first_flight, size);
+
+	if (bytes != size) {
+		printf("Failed to write test data to %s (wrote %d bytes)\r\n", path, bytes);
+	}
+	else {
+		printf("Success write into para.bin\n");
+	}
+	close(fd);
+}
+int para_r_flash(){
+
+	char * buf;
+	struct stat stat_buf;
+	size_t size;
+
+	char path[] = "/boot/para.bin";
+	
+	/* Open file */
+	FILE * fp = fopen(path, "r");
+	if (!fp) {
+		printf("read: cannot open %s\r\n", path);
+	}
+
+	/* Read file size */
+	if (stat(path, &stat_buf) != 0) {
+		printf("read: cannot stat %s\r\n", path);
+		goto err_stat;
+	}
+
+	size = stat_buf.st_size;
+
+	/* Allocate buffer */
+	buf = pvPortMalloc(size);
+	if (!buf) {
+		printf("read: cannot allocate memory for %s\r\n", path);
+		goto err_stat;
+	}
+
+	/* Read file */
+	if (fread(buf, 1, size, fp) != size) {
+		printf("read: failed to read %zu bytes from %s\r\n", size, path);
+		goto err;
+	}
+
+	/* Finally, hexdump */
+	printf("Success read from para.bin\n");
+	hex_dump(buf, size);
+	memcpy(&parameters.first_flight, buf, size);
+	fclose(fp);
+	return No_Error;
+err:
+	vPortFree(buf);
+	return Error;
+err_stat:
+	fclose(fp);
+	return Error;
+}
 
 int para_r(int SD_partition)  // serial =1~N
 { 
@@ -1565,6 +1657,8 @@ int para_r(int SD_partition)  // serial =1~N
 		return No_Error;
 	}
 }
+
+
 void para_w_dup(){
 	para_w(0);
 	para_w(1);
@@ -2295,19 +2389,19 @@ int scan_files_Delete (
 				case 1:
 					if (timeRec_T1 < (unsigned)t_of_day && timeRec_T2 > (unsigned)t_of_day){
 						printf("mode = 1 delete \n");
-						if (strcmp(path, fileName_HK[SD_partition_flag]) == 0){
+						if (strcmp(path, fileName_HK[parameters.SD_partition_flag]) == 0){
 							hk_delete(full_path);
 						}
-						else if (strcmp(path, fileName_INMS[SD_partition_flag]) == 0){
+						else if (strcmp(path, fileName_INMS[parameters.SD_partition_flag]) == 0){
 							inms_data_delete(full_path);	
 						}
-						else if (strcmp(path, fileName_SEUV[SD_partition_flag]) == 0){
+						else if (strcmp(path, fileName_SEUV[parameters.SD_partition_flag]) == 0){
 							seuv_delete(full_path);	
 						}
-						else if (strcmp(path, fileName_EOP[SD_partition_flag]) == 0){
+						else if (strcmp(path, fileName_EOP[parameters.SD_partition_flag]) == 0){
 							eop_delete(full_path);	
 						}
-						else if (strcmp(path, fileName_WOD[SD_partition_flag]) == 0){
+						else if (strcmp(path, fileName_WOD[parameters.SD_partition_flag]) == 0){
 							wod_delete(full_path);	
 						}
 					}
@@ -2316,19 +2410,19 @@ int scan_files_Delete (
 				case 2:
 					if (timeRec_T1 > (unsigned)t_of_day){
 						printf("mode = 2 delete \n");
-						if (strcmp(path, fileName_HK[SD_partition_flag]) == 0){
+						if (strcmp(path, fileName_HK[parameters.SD_partition_flag]) == 0){
 							hk_delete(full_path);
 						}
-						else if (strcmp(path, fileName_INMS[SD_partition_flag]) == 0){
+						else if (strcmp(path, fileName_INMS[parameters.SD_partition_flag]) == 0){
 							inms_data_delete(full_path);	
 						}
-						else if (strcmp(path, fileName_SEUV[SD_partition_flag]) == 0){
+						else if (strcmp(path, fileName_SEUV[parameters.SD_partition_flag]) == 0){
 							seuv_delete(full_path);	
 						}
-						else if (strcmp(path, fileName_EOP[SD_partition_flag]) == 0){
+						else if (strcmp(path, fileName_EOP[parameters.SD_partition_flag]) == 0){
 							eop_delete(full_path);	
 						}
-						else if (strcmp(path, fileName_WOD[SD_partition_flag]) == 0){
+						else if (strcmp(path, fileName_WOD[parameters.SD_partition_flag]) == 0){
 							wod_delete(full_path);	
 						}		    			
 					}
@@ -2337,19 +2431,19 @@ int scan_files_Delete (
 				case 3:
 					if (timeRec_T1 < (unsigned)t_of_day){
 						printf("mode = 3 delete \n");
-						if (strcmp(path, fileName_HK[SD_partition_flag]) == 0){
+						if (strcmp(path, fileName_HK[parameters.SD_partition_flag]) == 0){
 							hk_delete(full_path);
 						}
-						else if (strcmp(path, fileName_INMS[SD_partition_flag]) == 0){
+						else if (strcmp(path, fileName_INMS[parameters.SD_partition_flag]) == 0){
 							inms_data_delete(full_path);	
 						}
-						else if (strcmp(path, fileName_SEUV[SD_partition_flag]) == 0){
+						else if (strcmp(path, fileName_SEUV[parameters.SD_partition_flag]) == 0){
 							seuv_delete(full_path);	
 						}
-						else if (strcmp(path, fileName_EOP[SD_partition_flag]) == 0){
+						else if (strcmp(path, fileName_EOP[parameters.SD_partition_flag]) == 0){
 							eop_delete(full_path);	
 						}
-						else if (strcmp(path, fileName_WOD[SD_partition_flag]) == 0){
+						else if (strcmp(path, fileName_WOD[parameters.SD_partition_flag]) == 0){
 							wod_delete(full_path);	
 						}
 					}

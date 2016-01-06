@@ -54,15 +54,14 @@ void Enter_Safe_Mode(int last_mode) {
             printf("Shutting Down INMS current task \n");
             vTaskDelete(inms_current_moniter);
         }
-
-        if (inms_task_flag == 1){
+        if (inms_task != NULL){
+            printf("Shutting Down INMS task \n");
             vTaskDelete(inms_task);
-            inms_task_flag = 0;
         }
 
-        if (inms_task_receive_flag == 1){
+        if (inms_task_receive != NULL){
+            printf("Shutting Down INMS receive task \n");
             vTaskDelete(inms_task_receive);
-            inms_task_receive_flag = 0;
         }
         power_OFF_ALL();
     }
@@ -126,7 +125,7 @@ void ModeControl_Task(void * pvParameters) {
                     if (eop_task != NULL)
                         vTaskDelete(eop_task);
                     parameters.first_flight = 0;
-                    para_w_dup();
+                    para_w_flash();
                 }
                 printf("Creating tasks of HK, INMS, SEUV ~~~\n");
                 if (hk_task == NULL)

@@ -5,16 +5,15 @@
  *  Last updated:	2015/12/28
  *      Author: Kenny Huang
  */
-
-#include <inttypes.h>
-#include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include <malloc.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <inttypes.h>
+#include <time.h> 
+#include <unistd.h>
+#include <fcntl.h>
 
 #include <nanomind.h>
-
 #include <util/console.h>
 #include <util/timestamp.h>
 #include <util/vermagic.h>
@@ -23,15 +22,160 @@
 #include <util/hexdump.h>
 #include <dev/i2c.h>
 #include <dev/usart.h>
+#include <vfs/vfs.h>
 
 #include "parameter.h"
 #include "subsystem.h"
 #include "tele_function.h"
 #include "fs.h"
 
-int measure_INMS_current(struct command_context * ctx){
-	uint16_t current_3V3, current_5V0;
+int moveScriptFromSD (struct command_context *ctx) {
 	
+	int in, out, fdold, fdnew;
+	char old[20], new[21], buf[512];
+
+	char slot[]="0";
+	/* Get args */
+	if (ctx->argc != 1)
+		return CMD_ERROR_SYNTAX;
+	
+	for (int i = 0 ; i < 7 ; i++){
+
+		sprintf(slot, "%d", i);
+		strcpy(old, "/sd/INMS/idle");
+		strcat(old, slot);
+		strcat(old, ".bin");	
+			
+		strcpy(new, "/boot/INMS/idle");
+		strcat(new, slot);
+		strcat(new, ".bin");
+
+		fdold = open(old, O_RDONLY);
+		if (fdold < 0) {
+			printf("cp: failed to open %s\r\n", old);
+			return CMD_ERROR_FAIL;
+		}
+
+		fdnew = open(new, O_CREAT | O_TRUNC | O_WRONLY);
+		if (fdnew < 0) {
+			printf("cp: failed to open %s\r\n", old);
+			close(fdold);
+			return CMD_ERROR_FAIL;
+		}
+		do {
+			in = read(fdold, buf, sizeof(buf));
+			if (in > 0) {
+				out = write(fdnew, buf, in);
+				if (in != out) {
+					printf("cp: failed to write to %s\r\n", new);
+					close(fdold);
+					close(fdnew);
+					return CMD_ERROR_FAIL;
+				}
+			}
+		} while (in > 1);
+
+		printf("cp: success to write to %s\r\n", new);
+		close(fdold);
+		close(fdnew);
+	}
+	return CMD_ERROR_NONE;
+}
+
+int UFFS_test(struct command_context *ctx) {
+
+	int i, fd, bytes;
+	int size = 5;
+	unsigned int ms;
+	portTickType start_time, stop_time;
+
+	/* Get args */
+	char path[] = "/boot/INMS/idle0.bin";
+
+	// if (ctx->argc < 2 || sscanf(ctx->argv[1], "%s", path) != 1)
+	// 	return CMD_ERROR_SYNTAX;
+
+	// if (ctx->argc > 2) {
+	// 	size = atoi(ctx->argv[2]);
+	// 	if (!size)
+	// 		return CMD_ERROR_SYNTAX;
+	// }
+
+	/* Open file */
+	fd = open(path, O_CREAT | O_TRUNC | O_RDWR);
+	if (fd < 0) {
+		printf("Failed to open %s\r\n", path);
+		return CMD_ERROR_FAIL;
+	}
+
+	/* Time writing */
+	char * data_w = pvPortMalloc(5);
+	// char data_w[] = {0x01, 0x02, 0x03, 0x04, 0x05};
+	if (data_w == NULL) {
+		printf("Failed to allocate memory buffer\r\n");
+		goto err_open;
+	}
+
+	/* Create test pattern */
+	for (i = 0; i < size; i++)
+		data_w[i] = i & 0xff;
+
+	start_time = xTaskGetTickCount();
+	bytes = write(fd, data_w, size);
+	if (bytes != size) {
+		printf("Failed to write test data to %s (wrote %d bytes)\r\n", path, bytes);
+		goto err_write;
+	}
+
+	fsync(fd);
+	stop_time = xTaskGetTickCount();
+	ms = (stop_time - start_time) * (1000 / configTICK_RATE_HZ);
+	printf("Wrote %u bytes in %u ms (%u KBytes/sec)\r\n", size, ms, size / ms);
+	// close(fd);
+
+	/* Go to beginning */
+	// lseek(fd, 0, SEEK_SET);
+
+	// // /* Time reading */
+	// char * data_r = pvPortMalloc(size);
+	// if (data_w == NULL) {
+	// 	printf("Failed to allocate memory buffer\r\n");
+	// 	goto err_write;
+	// }
+
+	// start_time = xTaskGetTickCount();
+	// bytes = read(fd, data_r, size);
+	// if (bytes != size) {
+	// 	printf("Failed to read test data from %s (read %u bytes)\r\n", path, bytes);
+	// 	goto err_read;
+	// }
+
+	// fsync(fd);
+	// stop_time = xTaskGetTickCount();
+	// ms = (stop_time - start_time) * (1000/configTICK_RATE_HZ);
+	// printf("Read %u bytes in %u ms (%u KBytes/sec)\r\n", size, ms, size/ms);
+
+	// /* Verify data */
+	// if (memcmp(data_w, data_r, size) != 0) {
+	// 	printf("Failed to verify data (read != written)!\r\n");
+	// } else {
+	// 	printf("Succesfully verified data\r\n");
+	// }
+
+// err_read:
+	// vPortFree(data_r);
+err_write:
+	vPortFree(data_w);
+err_open:
+	close(fd);
+
+	return CMD_ERROR_NONE;
+
+}
+
+int measure_INMS_current(struct command_context * ctx) {
+	uint16_t current_3V3, current_5V0;
+
 	current_5V0 = Interface_5V_current_get();
 	current_3V3 = Interface_3V3_current_get();
 
@@ -41,7 +185,7 @@ int measure_INMS_current(struct command_context * ctx){
 	return CMD_ERROR_NONE;
 }
 
-int load_INMS_script(struct command_context * ctx){
+int load_INMS_script(struct command_context * ctx) {
 	unsigned int buffer;
 
 	if (ctx->argc < 2) {
@@ -54,7 +198,7 @@ int load_INMS_script(struct command_context * ctx){
 	return CMD_ERROR_NONE;
 }
 
-int mode_switch(struct command_context * ctx){
+int mode_switch(struct command_context * ctx) {
 	unsigned int buffer;
 	extern void ModeControl_Task(void * pvParameters);
 	if (ctx->argc < 2) {
@@ -63,12 +207,12 @@ int mode_switch(struct command_context * ctx){
 	if (sscanf(ctx->argv[1], "%u", &buffer) != 1) {
 		return CMD_ERROR_SYNTAX;
 	}
-	if (buffer == 1){
+	if (buffer == 1) {
 		xTaskCreate(ModeControl_Task, (const signed char * ) "MC", 1024 * 4, NULL, 1, &mode_task);
 	}
 	else if (buffer == 0) {
 		vTaskDelete(mode_task);
-	}	
+	}
 	return CMD_ERROR_NONE;
 }
 
@@ -266,7 +410,7 @@ int I2Csend_handler(struct command_context * ctx) {
 		hex_dump(&val, rx);
 	return CMD_ERROR_NONE;
 }
-int INMS_switch(struct command_context * ctx){
+int INMS_switch(struct command_context * ctx) {
 	unsigned int buffer;
 	extern void vTaskinms(void * pvParameters);
 	if (ctx->argc < 2) {
@@ -275,21 +419,21 @@ int INMS_switch(struct command_context * ctx){
 	if (sscanf(ctx->argv[1], "%u", &buffer) != 1) {
 		return CMD_ERROR_SYNTAX;
 	}
-	if (buffer == 1){
+	if (buffer == 1) {
 		// xTaskCreate(vTaskinms, (const signed char * ) "INMS", 1024 * 4, NULL, 2, &inms_task);
 		extern void vTaskInmsErrorHandle(void * pvParameters);
 		xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "INMS_EH", 1024 * 4, NULL, 2, &inms_error_handle);
 	}
 	else if (buffer == 0) {
 		vTaskDelete(inms_task);
-	}	
+	}
 	return CMD_ERROR_NONE;
 }
-int check_mode(struct command_context * ctx){
+int check_mode(struct command_context * ctx) {
 	printf("%d\n", HK_frame.mode_status_flag);
 	return CMD_ERROR_NONE;
 }
-int adcs_switch(struct command_context * ctx){
+int adcs_switch(struct command_context * ctx) {
 	unsigned int buffer;
 	extern void ADCS_Task(void * pvParameters);
 	if (ctx->argc < 2) {
@@ -298,16 +442,16 @@ int adcs_switch(struct command_context * ctx){
 	if (sscanf(ctx->argv[1], "%u", &buffer) != 1) {
 		return CMD_ERROR_SYNTAX;
 	}
-	if (buffer == 1){
+	if (buffer == 1) {
 		xTaskCreate(ADCS_Task, (const signed char * ) "ADCS", 1024 * 4, NULL, 1, &adcs_task);
 	}
 	else if (buffer == 0) {
 		vTaskDelete(adcs_task);
-	}	
+	}
 	return CMD_ERROR_NONE;
 }
 
-int seuv_switch(struct command_context * ctx){
+int seuv_switch(struct command_context * ctx) {
 	unsigned int buffer;
 	extern void SolarEUV_Task(void * pvParameters);
 	if (ctx->argc < 2) {
@@ -316,15 +460,15 @@ int seuv_switch(struct command_context * ctx){
 	if (sscanf(ctx->argv[1], "%u", &buffer) != 1) {
 		return CMD_ERROR_SYNTAX;
 	}
-	if (buffer == 1){
+	if (buffer == 1) {
 		xTaskCreate(SolarEUV_Task, (const signed char * ) "SEUV", 1024 * 4, NULL, 3, &seuv_task);
 	}
 	else if (buffer == 0) {
 		vTaskDelete(seuv_task);
-	}	
+	}
 	return CMD_ERROR_NONE;
 }
-int telecom(struct command_context * ctx){
+int telecom(struct command_context * ctx) {
 	unsigned int buffer;
 	extern void Telecom_Task(void * pvParameters);
 	if (ctx->argc < 2) {
@@ -333,15 +477,15 @@ int telecom(struct command_context * ctx){
 	if (sscanf(ctx->argv[1], "%u", &buffer) != 1) {
 		return CMD_ERROR_SYNTAX;
 	}
-	if (buffer == 1){
+	if (buffer == 1) {
 		xTaskCreate(Telecom_Task, (const signed char * ) "COM", 1024 * 4, NULL, 2, &com_task);
 	}
 	else if (buffer == 0) {
 		vTaskDelete(com_task);
-	}	
+	}
 	return CMD_ERROR_NONE;
 }
-int ir(struct command_context * ctx) { 
+int ir(struct command_context * ctx) {
 
 	unsigned int buffer;
 	int len;
@@ -360,11 +504,11 @@ int ir(struct command_context * ctx) {
 	inms_script_read(buffer, len, &script);
 	// printf("%d\n", script[304]);
 	hex_dump(&script, len);
-	
+
 	return CMD_ERROR_NONE;
 }
 // Simulate receive telecommand and execute it
-int ct(struct command_context * ctx) { 
+int ct(struct command_context * ctx) {
 
 	unsigned int serviceType;
 	unsigned int serviceSubType;
@@ -406,7 +550,7 @@ int ct(struct command_context * ctx) {
 		break;
 	case T13_LargeData_Transfer:
 		decodeService13(serviceSubType, para);
-		break;	
+		break;
 	case T15_dowlink_management:
 		decodeService15(serviceSubType, para);
 		break;
@@ -442,7 +586,7 @@ int jumpTime(struct command_context * ctx)
 	return CMD_ERROR_NONE;
 }
 int scheduleDelete(struct command_context * ctx) {
-	
+
 	uint32_t time_absolute_1, time_absolute_2;
 	uint8_t telecommand[256] = {0};
 	// uint8_t length = (ctx->argc) - 4;
@@ -454,19 +598,19 @@ int scheduleDelete(struct command_context * ctx) {
 	}
 	if (sscanf(ctx->argv[1], "%u", &range) != 1) {
 		return CMD_ERROR_SYNTAX;
-	}	
+	}
 	if (sscanf(ctx->argv[2], "%" PRIu32 "", &time_absolute_1) != 1) {
 		return CMD_ERROR_SYNTAX;
-	}	
-	if (range == 1){
+	}
+	if (range == 1) {
 		if (sscanf(ctx->argv[3], "%" PRIu32 "", &time_absolute_2) != 1) {
 			return CMD_ERROR_SYNTAX;
-		}	
+		}
 	}
 	/* length of the telecommand */
 	telecommand[4] = ctx->argc + 5 ;
 	/* 4 bytes time */
-	
+
 	telecommand[5] = 0;
 	telecommand[7] = 11;
 	telecommand[8] = 6;
@@ -521,7 +665,7 @@ int scheduleRelated(struct command_context * ctx) {
 	case 3 :
 		printf("time_shift = %" PRIu32 "\n", time_shift);
 		memcpy(&telecommand, &time_shift, 4);
-		for (int i = 0; i < 4 ;i++){
+		for (int i = 0; i < 4 ; i++) {
 			printf("%d\n", telecommand[i]);
 		}
 		if (schedule_shift(telecommand) == 1)
@@ -594,7 +738,7 @@ int scheduleWrite(struct command_context * ctx)
 		// }
 	}
 	printf("\ntelecommand scan\n");
-	para_r(SD_partition_flag);
+	para_r_flash();
 
 	if (schedule_write(telecommand) == 1) {
 		return CMD_ERROR_FAIL;
@@ -716,7 +860,7 @@ int shutdown_tm(struct command_context * ctx) {
 	if (off_on == 1)
 	{
 		parameters.shutdown_flag = 1;
-		para_w_dup();
+		para_w_flash();
 		printf("Shutdown Command Detected!! \r\n");
 
 	}
@@ -724,7 +868,7 @@ int shutdown_tm(struct command_context * ctx) {
 	if (off_on == 0)
 	{
 		parameters.shutdown_flag = 0;
-		para_w_dup();
+		para_w_flash();
 		printf("Resume Command Detected!! \r\n");
 
 	}
@@ -754,20 +898,20 @@ int jump_mode(struct command_context * ctx) {
 
 int parawrite(struct command_context * ctx) {
 	parameter_init();
-	para_w_dup();
 	return CMD_ERROR_NONE;
 }
 
 int pararead(struct command_context * ctx) {
 
-	int SD;
+	// int SD;
 
-	if (ctx->argc != 2)
+	if (ctx->argc != 1)
 		return CMD_ERROR_SYNTAX;
-	if (sscanf(ctx->argv[1], "%u", &SD) != 1)
-		return CMD_ERROR_SYNTAX;
+	// if (sscanf(ctx->argv[1], "%u", &SD) != 1)
+	// 	return CMD_ERROR_SYNTAX;
 
-	para_r(SD);
+	// para_r(SD);
+	para_r_flash();
 	printf("First Flight \t\t\t%d\n", (int) parameters.first_flight);
 	printf("shutdown_flag \t\t\t%d\n", (int) parameters.shutdown_flag);
 	printf("ant_deploy_flag \t\t%d\n", (int) parameters.ant_deploy_flag);
@@ -783,14 +927,15 @@ int pararead(struct command_context * ctx) {
 	printf("SEUV mode \t\t\t%d\n", (int) parameters.seuv_mode);
 	printf("SEUV period \t\t\t%d\n", (int) parameters.seuv_period);
 	printf("SEUV sample rate \t\t%d\n", (int) parameters.seuv_sample_rate);
-	printf("SD_partition_flag \t\t%d\n", (int) SD_partition_flag);
-	printf("inms_status\t\t\t%d\n", (int) inms_status);
+	printf("reboot_count \t\t\t%d\n", (int) parameters.reboot_count);
+	printf("SD_partition_flag \t\t%d\n", (int) parameters.SD_partition_flag);
+	printf("inms_status\t\t\t%d\n", (int) parameters.inms_status);
 
 	return CMD_ERROR_NONE;
 }
 
 int paradelete(struct command_context * ctx) {
-	para_d(SD_partition_flag);
+	para_d_flash();
 	return CMD_ERROR_NONE;
 }
 
@@ -810,13 +955,13 @@ int data_DUMP(struct command_context * ctx) {
 
 	if (type == 1)
 		inms_data_dump();
-	if (type == 2)
+	else if (type == 2)
 		wod_data_dump();
-	if (type == 3)
+	else if (type == 3)
 		seuv_data_dump();
-	if (type == 4)
+	else if (type == 4)
 		hk_data_dump();
-	if (type == 5)
+	else if (type == 5)
 		thermal_data_dump();
 
 	return CMD_ERROR_NONE;
@@ -824,7 +969,7 @@ int data_DUMP(struct command_context * ctx) {
 
 int alldatadelete(struct command_context * ctx) {
 
-	para_d(SD_partition_flag);
+	para_d_flash();
 	inms_data_delete();
 	wod_delete();
 	seuv_delete();
@@ -898,7 +1043,7 @@ int seuvwrite(struct command_context * ctx) {
 	// 	printf("ERROR!!  Get no reply from SEUV \r\n");
 	if (i2c_master_transaction(0, addra, &txdata, 1, 0, 0, seuv_delay) == E_NO_ERR) {
 		printf("configured SEUV: %x\r\n", node);
-	} 
+	}
 	else
 		printf("ERROR!!  Get no reply from SEUV \r\n");
 
@@ -924,23 +1069,25 @@ int comhk(struct command_context * ctx) {
 	i2c_master_transaction(0, com_rx_node, &txdata, 1, 0, 0, com_delay) ;
 	if (i2c_master_transaction(0, com_rx_node, 0, 0, &val, com_rx_hk_length, com_delay) == E_NO_ERR) {
 		hex_dump(&val, com_rx_hk_length);
-	} 
+	}
 	// if (i2c_master_transaction(0, com_rx_node, &txdata, 1, &val, com_rx_hk_length, com_delay) == E_NO_ERR) {
 	// 	hex_dump(&val, com_rx_hk_length);
-	// } 
+	// }
 	else
 		printf("ERROR!!  Get no reply from COM \r\n");
 
 	return CMD_ERROR_NONE;
 }
 
-command_t __root_command ph_commands[] = {	
+command_t __root_command ph_commands[] = {
 
-	{ .name = "ic", .help = "PHOENIX: ic", .handler = measure_INMS_current, }, 	
-	{ .name = "isn", .help = "PHOENIX: isn [buffer]", .handler = load_INMS_script, }, 
-	{ .name = "mcs", .help = "PHOENIX: mcs [ON = 1 / OFF = 0]", .handler = mode_switch, }, 
-	{ .name = "inmsR", .help = "PHOENIX: inms ", .handler = INMSreceive_handler, }, 
-	{ .name = "inms", .help = "PHOENIX: inms <cmd1> <cmd2> <cmd3> <cmd4> ....", .usage = "<cmd1>", .handler = INMSsend_handler, }, 
+	{ .name = "mSFD", .help = "PHOENIX: mSFD", .handler = moveScriptFromSD, },
+	{ .name = "ut", .help = "PHOENIX: ut", .handler = UFFS_test, },
+	{ .name = "ic", .help = "PHOENIX: ic", .handler = measure_INMS_current, },
+	{ .name = "isn", .help = "PHOENIX: isn [buffer]", .handler = load_INMS_script, },
+	{ .name = "mcs", .help = "PHOENIX: mcs [ON = 1 / OFF = 0]", .handler = mode_switch, },
+	{ .name = "inmsR", .help = "PHOENIX: inms ", .handler = INMSreceive_handler, },
+	{ .name = "inms", .help = "PHOENIX: inms <cmd1> <cmd2> <cmd3> <cmd4> ....", .usage = "<cmd1>", .handler = INMSsend_handler, },
 	{ .name = "i2c", .help = "PHOENIX: i2c <node> <rx>  will have <para> *N byte ?",	.usage = "<node> <rx> <para *n>", .handler = I2Csend_handler, },
 	{ .name = "inmss", .help = "PHOENIX: inmss [ON = 1 / OFF = 0]", .handler = INMS_switch, },
 	{ .name = "cm", .help = "PHOENIX: cm", .handler = check_mode, },

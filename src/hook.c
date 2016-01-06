@@ -3,7 +3,7 @@
 #include <freertos/task.h>
 #include <freertos/semphr.h>
 #include "../lib/liba712/src/drivers/mpio.h"
-// #include "drivers/mpio.h"
+#include "parameter.h"
 /**
  * hook_main:
  * This function is called by the board initialization routine in the file
@@ -57,7 +57,7 @@ void hook_init(void) {
 	// xTaskCreate(HK_Task, (const signed char * ) "HK", 1024 * 4, NULL, 2, NULL);
 
 	// extern void Telecom_Task(void * pvParameters);
-	// xTaskCreate(Telecom_Task, (const signed char * ) "COM", 1024 * 4, NULL, 2, NULL);
+	// xTaskCreate(Telecom_Task, (const signed char * ) "COM", 1024 * 4, NULL, 2, &com_task);
 	
 	// extern void WOD_Task(void * pvParameters);
 	// xTaskCreate(WOD_Task, (const signed char * ) "WOD", 1024 * 4, NULL, 2, NULL);
@@ -71,6 +71,9 @@ void hook_init(void) {
 	// extern void vTaskfstest(void * pvParameters);
 	// xTaskCreate(vTaskfstest, (const signed char *) "FS_T", 1024*4, NULL, 2, NULL);
 	
+	// extern void vTaskInmsReceive(void * pvParameters);
+	// xTaskCreate(vTaskInmsReceive, (const signed char*) "INMSR", 1024 * 4, NULL, 2, &inms_task_receive);
+
 	// extern void ModeControl_Task(void * pvParameters);
 	// xTaskCreate(ModeControl_Task, (const signed char *) "MC", 1024*4, NULL, 2, NULL);
 	
@@ -84,8 +87,8 @@ void hook_init(void) {
 	// xTaskCreate(ADCS_Task, (const signed char * ) "ADCS", 1024 * 4, NULL,2,NULL);
 	
 	// extern void vTaskInmsErrorHandle(void * pvParameters);
-	// extern void vTaskInmsCurrentMonitor(void * pvParameters);
 	// xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "INMS_EH", 1024 * 4, NULL, 2, &inms_error_handle);
+	// extern void vTaskInmsCurrentMonitor(void * pvParameters);
  	// xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "INMS_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
 	
 	// Implement your code here

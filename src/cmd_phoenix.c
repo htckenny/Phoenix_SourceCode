@@ -82,97 +82,6 @@ int moveScriptFromSD (struct command_context *ctx) {
 	return CMD_ERROR_NONE;
 }
 
-int UFFS_test(struct command_context *ctx) {
-
-	int i, fd, bytes;
-	int size = 5;
-	unsigned int ms;
-	portTickType start_time, stop_time;
-
-	/* Get args */
-	char path[] = "/boot/INMS/idle0.bin";
-
-	// if (ctx->argc < 2 || sscanf(ctx->argv[1], "%s", path) != 1)
-	// 	return CMD_ERROR_SYNTAX;
-
-	// if (ctx->argc > 2) {
-	// 	size = atoi(ctx->argv[2]);
-	// 	if (!size)
-	// 		return CMD_ERROR_SYNTAX;
-	// }
-
-	/* Open file */
-	fd = open(path, O_CREAT | O_TRUNC | O_RDWR);
-	if (fd < 0) {
-		printf("Failed to open %s\r\n", path);
-		return CMD_ERROR_FAIL;
-	}
-
-	/* Time writing */
-	char * data_w = pvPortMalloc(5);
-	// char data_w[] = {0x01, 0x02, 0x03, 0x04, 0x05};
-	if (data_w == NULL) {
-		printf("Failed to allocate memory buffer\r\n");
-		goto err_open;
-	}
-
-	/* Create test pattern */
-	for (i = 0; i < size; i++)
-		data_w[i] = i & 0xff;
-
-	start_time = xTaskGetTickCount();
-	bytes = write(fd, data_w, size);
-	if (bytes != size) {
-		printf("Failed to write test data to %s (wrote %d bytes)\r\n", path, bytes);
-		goto err_write;
-	}
-
-	fsync(fd);
-	stop_time = xTaskGetTickCount();
-	ms = (stop_time - start_time) * (1000 / configTICK_RATE_HZ);
-	printf("Wrote %u bytes in %u ms (%u KBytes/sec)\r\n", size, ms, size / ms);
-	// close(fd);
-
-	/* Go to beginning */
-	// lseek(fd, 0, SEEK_SET);
-
-	// // /* Time reading */
-	// char * data_r = pvPortMalloc(size);
-	// if (data_w == NULL) {
-	// 	printf("Failed to allocate memory buffer\r\n");
-	// 	goto err_write;
-	// }
-
-	// start_time = xTaskGetTickCount();
-	// bytes = read(fd, data_r, size);
-	// if (bytes != size) {
-	// 	printf("Failed to read test data from %s (read %u bytes)\r\n", path, bytes);
-	// 	goto err_read;
-	// }
-
-	// fsync(fd);
-	// stop_time = xTaskGetTickCount();
-	// ms = (stop_time - start_time) * (1000/configTICK_RATE_HZ);
-	// printf("Read %u bytes in %u ms (%u KBytes/sec)\r\n", size, ms, size/ms);
-
-	// /* Verify data */
-	// if (memcmp(data_w, data_r, size) != 0) {
-	// 	printf("Failed to verify data (read != written)!\r\n");
-	// } else {
-	// 	printf("Succesfully verified data\r\n");
-	// }
-
-// err_read:
-	// vPortFree(data_r);
-err_write:
-	vPortFree(data_w);
-err_open:
-	close(fd);
-
-	return CMD_ERROR_NONE;
-
-}
-
 int measure_INMS_current(struct command_context * ctx) {
 	uint16_t current_3V3, current_5V0;
 
@@ -890,8 +799,6 @@ int jump_mode(struct command_context * ctx) {
 
 	HK_frame.mode_status_flag = (uint8_t)mode;
 
-
-
 	return CMD_ERROR_NONE;
 }
 
@@ -903,14 +810,9 @@ int parawrite(struct command_context * ctx) {
 
 int pararead(struct command_context * ctx) {
 
-	// int SD;
-
 	if (ctx->argc != 1)
 		return CMD_ERROR_SYNTAX;
-	// if (sscanf(ctx->argv[1], "%u", &SD) != 1)
-	// 	return CMD_ERROR_SYNTAX;
 
-	// para_r(SD);
 	para_r_flash();
 	printf("First Flight \t\t\t%d\n", (int) parameters.first_flight);
 	printf("shutdown_flag \t\t\t%d\n", (int) parameters.shutdown_flag);
@@ -1082,7 +984,6 @@ int comhk(struct command_context * ctx) {
 command_t __root_command ph_commands[] = {
 
 	{ .name = "mSFD", .help = "PHOENIX: mSFD", .handler = moveScriptFromSD, },
-	{ .name = "ut", .help = "PHOENIX: ut", .handler = UFFS_test, },
 	{ .name = "ic", .help = "PHOENIX: ic", .handler = measure_INMS_current, },
 	{ .name = "isn", .help = "PHOENIX: isn [buffer]", .handler = load_INMS_script, },
 	{ .name = "mcs", .help = "PHOENIX: mcs [ON = 1 / OFF = 0]", .handler = mode_switch, },

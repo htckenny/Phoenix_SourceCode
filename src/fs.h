@@ -13,9 +13,13 @@
 /*---------------------------------------------------*/
 /*             		  INMS Script                    */
 int inms_script_write(int buffNum,uint8_t scriptCont[], int delete_flag, int length);
+int inms_script_write_flash(int buffNum,uint8_t scriptCont[], int delete_flag, int length);
 void inms_script_read(int buffNum,int packlength,void * txbuf);
+int inms_script_read_flash(int buffNum,int packlength,void * txbuf);
 int inms_script_length(int buffNum);
+int inms_script_length_flash(int buffNum);
 int inms_script_delete(int buffNum);
+int inms_script_delete_flash(int buffNum);
 /*---------------------------------------------------*/
 /*             		  INMS Data                      */
 void inms_data_write_dup(uint8_t frameCont[]);

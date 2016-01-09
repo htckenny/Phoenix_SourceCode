@@ -18,6 +18,8 @@
 #define download_data 9
 #define delete_data 10
 
+extern void beacon_Task(void * pvParameters);
+
 void decodeService15(uint8_t subType, uint8_t*telecommand) {
 
 	uint32_t T1;
@@ -37,7 +39,8 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 		printf("download_data  \n");
 
 		if (packet_length > 5) {
-			vTaskSuspend(beacon_task);
+			if (beacon_task != NULL)
+				vTaskDelete(beacon_task);
 
 			memcpy(&T1, &paras[2], 4);
 			if (paras[1] == 1){								/* mode is 1 => need T1 and T2 */
@@ -85,6 +88,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 			}
 			/* WOD */
 			else if (paras[0] == 5) {
+				printf("f = %s\n", fileName_WOD[parameters.SD_partition_flag]);
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
 				if (scan_files_Downlink (fileName_WOD[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error){
 					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
@@ -95,7 +99,8 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 				sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); //accept fail
 			}
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
-			vTaskResume(beacon_task);
+
+			xTaskCreate(beacon_Task, (const signed char *) "beacon", 1024 * 4, NULL, 2, &beacon_task);
 		} 
 		else
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); //accept fail
@@ -159,7 +164,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
 				
 				for (int i = 0 ; i < 7 ; i++){
-					inms_script_delete(i);
+					inms_script_delete_flash(i);
 				}
 				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
 				break;

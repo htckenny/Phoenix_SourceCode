@@ -38,7 +38,7 @@ void  decodeService13(uint8_t subType, uint8_t *telecommand) {
 		sendTelecommandReport_Success_INMS(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
 		printf("first\n");
 		if (paras[1] == 1) {
-			if(inms_script_write(paras[0], &paras[2], 1, packet_length-2) == No_Error) {
+			if(inms_script_write_flash(paras[0], &paras[2], 1, packet_length-2) == No_Error) {
 				script_length = (paras[2] + (paras[3] << 8));
 				sendTelecommandReport_Success_INMS(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
 			} 
@@ -55,7 +55,7 @@ void  decodeService13(uint8_t subType, uint8_t *telecommand) {
 		sendTelecommandReport_Success_INMS(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
 		printf("second\n");
 		if (paras[1] != 1) {
-			if (inms_script_write(paras[0], &paras[2], 0, packet_length -2) == No_Error )
+			if (inms_script_write_flash(paras[0], &paras[2], 0, packet_length -2) == No_Error )
 				sendTelecommandReport_Success_INMS(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 			else
 				sendTelecommandReport_Failure_INMS(telecommand, CCSDS_S3_COMPLETE_FAIL, ERR_F_READ);
@@ -69,13 +69,13 @@ void  decodeService13(uint8_t subType, uint8_t *telecommand) {
 		sendTelecommandReport_Success_INMS(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS); 
 		printf("final\n");
 		if (paras[1] == 1){
-			if (inms_script_write(paras[0], &paras[2], 1, (paras[2] + (paras[3] << 8))) == No_Error) 	
+			if (inms_script_write_flash(paras[0], &paras[2], 1, (paras[2] + (paras[3] << 8))) == No_Error) 	
 				sendTelecommandReport_Success_INMS(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 			else
 				sendTelecommandReport_Failure_INMS(telecommand, CCSDS_S3_COMPLETE_FAIL, ERR_F_READ);
 		}
 		else if (paras[1] > 1){
-			if (inms_script_write(paras[0], &paras[2], 0, script_length - (paras[1] - 1) * 150) == No_Error) 	
+			if (inms_script_write_flash(paras[0], &paras[2], 0, script_length - (paras[1] - 1) * 150) == No_Error) 	
 				sendTelecommandReport_Success_INMS(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 			else
 				sendTelecommandReport_Failure_INMS(telecommand, CCSDS_S3_COMPLETE_FAIL, ERR_F_READ);

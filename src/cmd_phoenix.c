@@ -32,17 +32,20 @@
 int moveScriptFromSD (struct command_context *ctx) {
 	
 	int in, out, fdold, fdnew;
-	char old[20], new[21], buf[512];
-
+	char old[21], new[21], buf[512];
+	char sd[] = "0";
 	char slot[]="0";
 	/* Get args */
 	if (ctx->argc != 1)
 		return CMD_ERROR_SYNTAX;
 	
+	sprintf(sd, "%d", parameters.SD_partition_flag);
 	for (int i = 0 ; i < 7 ; i++){
 
 		sprintf(slot, "%d", i);
-		strcpy(old, "/sd/INMS/idle");
+		strcpy(old, "/sd");
+		strcat(old, sd);
+		strcat(old, "/INMS/idle");
 		strcat(old, slot);
 		strcat(old, ".bin");	
 			
@@ -87,8 +90,6 @@ int measure_INMS_current(struct command_context * ctx) {
 
 	current_5V0 = Interface_5V_current_get();
 	current_3V3 = Interface_3V3_current_get();
-	hex_dump(&current_5V0, 2);
-	hex_dump(&current_3V3, 2);
 
 	printf("5V Supply: %3f mA\n", (double)current_5V0 / 4.7);
 	printf("3.3V Supply: %3f mA\n", (double)current_3V3 / 68);
@@ -331,14 +332,15 @@ int INMS_switch(struct command_context * ctx) {
 		return CMD_ERROR_SYNTAX;
 	}
 	if (buffer == 1) {
-		xTaskCreate(vTaskinms, (const signed char * ) "INMS", 1024 * 4, NULL, 2, &inms_task);
-		// extern void vTaskInmsErrorHandle(void * pvParameters);
-		// xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "INMS_EH", 1024 * 4, NULL, 2, &inms_error_handle);
+		// xTaskCreate(vTaskinms, (const signed char * ) "INMS", 1024 * 4, NULL, 2, &inms_task);
+		extern void vTaskInmsErrorHandle(void * pvParameters);
+		xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "INMS_EH", 1024 * 4, NULL, 2, &inms_error_handle);
 		extern void vTaskInmsCurrentMonitor(void * pvParameters);
  		xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "INMS_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
 	}
 	else if (buffer == 0) {
 		vTaskDelete(inms_error_handle);
+		vTaskDelete(inms_current_moniter);
 	}
 	return CMD_ERROR_NONE;
 }
@@ -403,7 +405,6 @@ int ir(struct command_context * ctx) {
 	unsigned int buffer;
 	int len;
 
-
 	if (ctx->argc < 2) {
 		return CMD_ERROR_SYNTAX;
 	}
@@ -411,12 +412,14 @@ int ir(struct command_context * ctx) {
 		return CMD_ERROR_SYNTAX;
 	}
 	printf("slot  = %d\n", buffer);
-	len = inms_script_length((int)buffer);
+	len = inms_script_length_flash((int)buffer);
 	uint8_t script[len] ;
-
-	inms_script_read(buffer, len, &script);
-	// printf("%d\n", script[304]);
-	hex_dump(&script, len);
+	printf("length = %d\n", len);
+	if(inms_script_read_flash(buffer, len, &script) == No_Error)
+		hex_dump(&script, len);
+	else {
+		return CMD_ERROR_FAIL;
+	}
 
 	return CMD_ERROR_NONE;
 }

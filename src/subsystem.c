@@ -187,12 +187,12 @@ void power_control(int device, int stats) {
 		/* channel 0 = ADCS 5V */
 		eps_switch.channel = 0;
 		memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
-		i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
+		i2c_master_transaction_2(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
 
 		/* channel 3 = ADCS 3.3V */
 		eps_switch.channel = 3;
 		memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
-		i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
+		i2c_master_transaction_2(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
 	}
 	/* GPS  */
 	else if (device == 2) {
@@ -200,7 +200,7 @@ void power_control(int device, int stats) {
 		eps_switch.channel = 4;
 
 		memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
-		i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
+		i2c_master_transaction_2(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
 	}
 	/* SEUV */
 	else if (device == 3) {
@@ -208,23 +208,23 @@ void power_control(int device, int stats) {
 			/* channel 2 = SEUV 5V */
 			eps_switch.channel = 2;
 			memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
-			i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
+			i2c_master_transaction_2(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
 
 			/* channel 5 = SEUV 3.3V */
 			eps_switch.channel = 5;
 			memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
-			i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
+			i2c_master_transaction_2(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
 		}
 		else if (stats == OFF) {
 			/* channel 5 = SEUV 3.3V */
 			eps_switch.channel = 5;
 			memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
-			i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
+			i2c_master_transaction_2(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
 
 			/* channel 2 = SEUV 5V */
 			eps_switch.channel = 2;
 			memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
-			i2c_master_transaction(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
+			i2c_master_transaction_2(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
 		}
 	}
 	/* INMS */
@@ -271,8 +271,8 @@ uint16_t Interface_tmp_get() {
 	tx[0] = 0xF0;	//0d240
 	tx[1] = 0xF0;
 
-	i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
-	if (i2c_master_transaction(0, interface_node, 0 , 0, &rx, 4, interface_delay) == E_NO_ERR) {
+	// i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
+	if (i2c_master_transaction_2(0, interface_node, &tx , 2, &rx, 4, interface_delay) == E_NO_ERR) {
 		return (rx[0] << 8) + rx[1];
 	} 
 	else

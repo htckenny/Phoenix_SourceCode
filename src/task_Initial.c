@@ -39,8 +39,8 @@ void Init_Task(void * pvParameters) {
 		printf("Loaded parameter from fs\n");
 
 	/* Activate Battery check task */
-	if (bat_check_task == NULL)
-		xTaskCreate(BatteryCheck_Task, (const signed char *) "BatCk", 1024 * 4, NULL, 1, &bat_check_task);
+	// if (bat_check_task == NULL)
+	// 	xTaskCreate(BatteryCheck_Task, (const signed char *) "BatCk", 1024 * 4, NULL, 1, &bat_check_task);
 	
 	/* Idle 30 minutes in first flight  */
 	if (parameters.ant_deploy_flag == 0) {

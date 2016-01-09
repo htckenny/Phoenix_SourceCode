@@ -260,7 +260,7 @@ void vTaskinms(void * pvParameters) {
 			/* STEP #1 Get the length of all of the scripts*/
 			for (int i = 0; i < scriptNum; i++) {
 				printf("script %d: ", i);
-				len[i] = inms_script_length(i);
+				len[i] = inms_script_length_flash(i);
 				if (len[i] >= maxlength) {
 					maxlength = len[i];
 				}
@@ -274,7 +274,7 @@ void vTaskinms(void * pvParameters) {
 			 * and perform Fletcher-16 checksum and additional check
 			 */
 			for (int i = 0; i < scriptNum; i++) {
-				inms_script_read(i, len[i], &script[i]);
+				inms_script_read_flash(i, len[i], &script[i]);
 				uint16_t xsum = fletcher(script[i], len[i]);
 				if (xsum == 0) {
 					printf("No. %d script XSUM through Fletcher-16 [PASS]\n", i);
@@ -686,7 +686,7 @@ void vTaskInmsErrorHandle(void * pvParameters) {
 	}
 	for (int i = 0; i < scriptNum; i++) {
 		printf("script %d: ", i);
-		len[i] = inms_script_length(i);
+		len[i] = inms_script_length_flash(i);
 		if (len[i] >= maxlength) {
 			maxlength = len[i];
 		}
@@ -697,7 +697,7 @@ void vTaskInmsErrorHandle(void * pvParameters) {
 	// 	script[i] = (uint8_t *)malloc(sizeof(int) * len[i]);
 	// }
 	for (int i = 0; i < scriptNum; i++) {
-		inms_script_read(i, len[i], &script[i]);
+		inms_script_read_flash(i, len[i], &script[i]);
 		// printf("num = %d\n", i);
 	}
 	if (inms_task == NULL)

@@ -30,10 +30,11 @@ void perform_fletcher(uint8_t * check_sum_final) {
 	int maxlength = 0;
 	int script_length[scriptNum];
 	uint16_t xsum[scriptNum];
+	int results;
 
 	printf("length read\n");
 	for (int i = 0; i < scriptNum; i++) {
-		script_length[i] = inms_script_length(i);
+		script_length[i] = inms_script_length_flash(i);
 		if (script_length[i] >= maxlength) {
 			maxlength = script_length[i];
 		}
@@ -42,21 +43,25 @@ void perform_fletcher(uint8_t * check_sum_final) {
 
 	printf("data read\n");
 	for (int i = 0 ; i < scriptNum ; i++){
-		inms_script_read(i, script_length[i], &script[i]);
+		results = inms_script_read_flash(i, script_length[i], &script[i]);
 		xsum[i] = fletcher(script[i], script_length[i]);
 
+		// printf("%x\n", script_length[i]);
+		// printf("%x\n", script[i][0] + (script[i][1] << 8));
+
 		/* No error */
-		if (xsum[i] == 0 && script_length[i] == script[i][0] + (script[i][1] << 8)) {
+		if (xsum[i] == 0 && results == No_Error ) {
 			check_sum_final[i] = 0;		
 		}
-		/* Error with length */
-		else if (script_length[i] != script[i][0] + (script[i][1] << 8)) {
+		/* Error with no script */
+		else if (results == Error){
 			check_sum_final[i] = 1;
 		}
 		/* Error with checksum */
 		else if (xsum[i] != 0){
 			check_sum_final[i] = 2;
 		}
+		
 	}
 }
 

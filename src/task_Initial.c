@@ -40,7 +40,7 @@ void Init_Task(void * pvParameters) {
 
 	/* Activate Battery check task */
 	if (bat_check_task == NULL)
-		xTaskCreate(BatteryCheck_Task, (const signed char *) "BatCk", 1024 * 4, NULL, 2, &bat_check_task);
+		xTaskCreate(BatteryCheck_Task, (const signed char *) "BatCk", 1024 * 4, NULL, 1, &bat_check_task);
 	
 	/* Idle 30 minutes in first flight  */
 	if (parameters.ant_deploy_flag == 0) {

@@ -255,15 +255,15 @@ uint8_t hk_get() {
 
 	/* get adcs hk1			ID = 136, Current ADCS state */
 	txbuf = 0x88;  
-	if (i2c_master_transaction(0, adcs_node, &txbuf, 1, &hk_buffer[4], 48, adcs_delay) != E_NO_ERR)
+	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &hk_buffer[4], 48, adcs_delay) != E_NO_ERR)
 		return Error;
 	/* get adcs hk2:		ID = 137, Calibrated sensor measurements */
 	txbuf = 0x89;
-	if (i2c_master_transaction(0, adcs_node, &txbuf, 1, &hk_buffer[52], 36, adcs_delay) != E_NO_ERR)
+	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &hk_buffer[52], 36, adcs_delay) != E_NO_ERR)
 		return Error;
 	/* get adcs hk3:		ID = 138, Actuator commands */
 	txbuf = 0x8A;
-	if (i2c_master_transaction(0, adcs_node, &txbuf, 1, &hk_buffer[88], 12, adcs_delay) != E_NO_ERR)
+	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &hk_buffer[88], 12, adcs_delay) != E_NO_ERR)
 		return Error;
 
 	/* get System Status */
@@ -296,7 +296,7 @@ uint8_t hk_get() {
 	 */
 	
 	// Finish collecting, dump the complete frame.
-	hex_dump(&hk_buffer[0], hk_length);
+	// hex_dump(&hk_buffer[0], hk_length);
 
 	return No_Error;
 
@@ -311,9 +311,9 @@ void HK_Task(void * pvParameters) {
 	while (1) {
 
 		if (parameters.first_flight == 1)
-			vTaskDelay(3 * delay_time_based);  //30000
+			vTaskDelay(30 * delay_time_based);  //30000
 		else
-			vTaskDelay(6 * delay_time_based);  //60000
+			vTaskDelay(60 * delay_time_based);  //60000
 
 		clean_hk_buffer();
 		clean_all();

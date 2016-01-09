@@ -19,8 +19,7 @@ uint16_t battery_read() {
 	if (i2c_master_transaction_2(0, eps_node, &txbuf, 1, &rxbuf, 43+2, eps_delay) == E_NO_ERR){
 		memcpy(&Vbat, &rxbuf[10],2);	
 	}
-
-	return Vbat;
+	return csp_ntoh16(Vbat);
 }
 
 void Leave_safe_mode()
@@ -50,7 +49,7 @@ void BatteryCheck_Task(void * pvParameters) {
 
 	while (1) {
 		vbat = battery_read();
-		printf("vbat = %04u mV \r\n", vbat);
+		printf("vbat = %" PRIu16 " mV\n", vbat);
 
 		if ( (int) vbat < (int) parameters.vbat_safe_threshold) {
 			vbat = battery_read();
@@ -68,7 +67,7 @@ void BatteryCheck_Task(void * pvParameters) {
 				vTaskDelay(30 * delay_time_based);
 
 				vbat = battery_read();
-				printf("(safe)vbat = %04u mV \r\n", vbat);
+				printf("(safe)vbat = %04u mV \r\n", csp_ntoh16(vbat));
 
 				if ( (int)vbat > (int)parameters.vbat_recover_threshold) {
 					if (parameters.vbat_recover_threshold != 0) {

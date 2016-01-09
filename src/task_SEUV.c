@@ -118,7 +118,7 @@ uint8_t seuv_take_data(uint8_t ch, int gain, uint8_t *frame) {
     }
     
     if (i2c_master_transaction_2(0, seuv_node, &tx, 1, &rx, seuv_data_length, seuv_delay) == E_NO_ERR){
-        hex_dump(&rx, 5); 
+        // hex_dump(&rx, 5); 
         memcpy(frame, rx, 3);
     }
     else
@@ -231,7 +231,7 @@ void get_a_packet(int gain) {
             printf("Fail to get SEUV data\n");
         }   
         /* Power off SEUV */
-        power_control(3, OFF);
+        // power_control(3, OFF);
     }
 }
 
@@ -239,7 +239,7 @@ void SolarEUV_Task(void * pvParameters) {
 
     portTickType xLastWakeTime;
     portTickType xFrequency = delay_time_based;
-    parameter_init();
+    // parameter_init();
     while (1) {
 
         if (parameters.seuv_period != 0) {
@@ -255,12 +255,13 @@ void SolarEUV_Task(void * pvParameters) {
                 get_a_packet(8);
             }      
         }
-        else if (parameters.seuv_mode == 0x02) {    /* Mode B: Keep sampling every 8 seconds */           
+        else if (parameters.seuv_mode == 0x02) {    /* Mode B: Keep sampling every 8 seconds */          
             get_a_packet(1);
+            vTaskDelay(1 * delay_time_based);
             get_a_packet(8);
         }
         else if (parameters.seuv_mode == 0x03) {    /* Mode C: Standby Mode */   
-            printf("[SEUV] No measurement taken\n");
+            // printf("[SEUV] No measurement taken\n");
         }
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
     }

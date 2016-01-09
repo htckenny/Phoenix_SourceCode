@@ -79,6 +79,10 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
 
+		/* EOP mode */
+		if (HK_frame.mode_status_flag == 2 && parameters.first_flight == 1)
+			HK_frame.mode_status_flag = 5;
+		
 		memcpy(&txBuffer[0], &HK_frame.mode_status_flag, 1);
 		memcpy(&txBuffer[1], &parameters.inms_store_count, 4);
 		memcpy(&txBuffer[5], &parameters.seuv_store_count, 4);
@@ -176,6 +180,7 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 			printf("BatC_task\t\t%d\n", status_frame.bat_check_task);
 			printf("COM_task\t\t%d\n", status_frame.com_task);
 			printf("WOD_task\t\t%d\n", status_frame.wod_task);
+			printf("WOD_task\t\t%d\n", status_frame.beacon_task);
 
 			printf("init_task\t\t%d\n", status_frame.init_task);
 			printf("adcs_task\t\t%d\n", status_frame.adcs_task);
@@ -190,9 +195,9 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 
 			printf("Sche_task\t\t%d\n", status_frame.schedule_task);	
 
-			memcpy(&txBuffer[0], &status_frame.mode_task, 14);
+			memcpy(&txBuffer[0], &status_frame.mode_task, 15);
 
-			txlen = 14;
+			txlen = 15;
 			SendPacketWithCCSDS_AX25(&txBuffer, txlen, obc_apid, type, subType);
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}

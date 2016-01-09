@@ -132,7 +132,7 @@ int getWodFrame(int fnum) {
 
 	uint16_t val[7];
 	txdata[0] = com_rx_hk;
-	if (i2c_master_transaction(0, com_rx_node, &txdata, 1, &val, com_rx_hk_len, com_delay) == E_NO_ERR) {
+	if (i2c_master_transaction_2(0, com_rx_node, &txdata, 1, &val, com_rx_hk_len, com_delay) == E_NO_ERR) {
 		tempComm  = __max(__min(floor(4 * (float)(189.5522-0.0546*val[5] ) + 60), 255), 0);
 	} else
 		return Error;
@@ -235,7 +235,7 @@ void beacon_Task(void * pvParameters) {
 			period = 10 * delay_time_based;		// when early orbit, beacon period = 10 sec
 		}
 		else if (parameters.beacon_period > 0){
-			period = parameters.beacon_period * 1000;
+			period = parameters.beacon_period * delay_time_based;
 		}
 		printf("-- Send Beacon with %d--\n", parameters.beacon_period);
 		SendPacketWithCCSDS_AX25(&beacon_frame.mode, 8, obc_apid, 0, 0);
@@ -246,7 +246,7 @@ void beacon_Task(void * pvParameters) {
 void WOD_Task(void * pvParameters) {
 	printf("Active WOD Task\n");
 	vTaskDelay(60 * delay_time_based);
-	xTaskCreate(beacon_Task, (const signed char *) "beacon", 1024 * 4, NULL, 2, NULL);
+	xTaskCreate(beacon_Task, (const signed char *) "beacon", 1024 * 4, NULL, 2, &beacon_task);
 
 	while (1) {
 

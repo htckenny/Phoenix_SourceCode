@@ -87,9 +87,11 @@ int measure_INMS_current(struct command_context * ctx) {
 
 	current_5V0 = Interface_5V_current_get();
 	current_3V3 = Interface_3V3_current_get();
+	hex_dump(&current_5V0, 2);
+	hex_dump(&current_3V3, 2);
 
-	printf("5V Supply: %f mA\n", (double)current_5V0 / 4.7);
-	printf("3.3V Supply: %f mA\n", (double)current_3V3 / 68);
+	printf("5V Supply: %3f mA\n", (double)current_5V0 / 4.7);
+	printf("3.3V Supply: %3f mA\n", (double)current_3V3 / 68);
 
 	return CMD_ERROR_NONE;
 }
@@ -329,12 +331,14 @@ int INMS_switch(struct command_context * ctx) {
 		return CMD_ERROR_SYNTAX;
 	}
 	if (buffer == 1) {
-		// xTaskCreate(vTaskinms, (const signed char * ) "INMS", 1024 * 4, NULL, 2, &inms_task);
-		extern void vTaskInmsErrorHandle(void * pvParameters);
-		xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "INMS_EH", 1024 * 4, NULL, 2, &inms_error_handle);
+		xTaskCreate(vTaskinms, (const signed char * ) "INMS", 1024 * 4, NULL, 2, &inms_task);
+		// extern void vTaskInmsErrorHandle(void * pvParameters);
+		// xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "INMS_EH", 1024 * 4, NULL, 2, &inms_error_handle);
+		extern void vTaskInmsCurrentMonitor(void * pvParameters);
+ 		xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "INMS_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
 	}
 	else if (buffer == 0) {
-		vTaskDelete(inms_task);
+		vTaskDelete(inms_error_handle);
 	}
 	return CMD_ERROR_NONE;
 }
@@ -555,7 +559,7 @@ int scheduleRelated(struct command_context * ctx) {
 	switch (command_type) {
 	/* schedule reset */
 	case 1 :
-		if (schedule_reset() == 1) {
+		if (schedule_reset_flash() == 1) {
 			return CMD_ERROR_FAIL;
 		}
 		else {
@@ -649,7 +653,7 @@ int scheduleWrite(struct command_context * ctx)
 	printf("\ntelecommand scan\n");
 	para_r_flash();
 
-	if (schedule_write(telecommand) == 1) {
+	if (schedule_write_flash(telecommand) == 1) {
 		return CMD_ERROR_FAIL;
 	}
 	else {

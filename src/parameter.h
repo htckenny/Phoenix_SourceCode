@@ -13,6 +13,7 @@ xTaskHandle mode_task;
 xTaskHandle bat_check_task;
 xTaskHandle com_task;
 xTaskHandle wod_task;
+xTaskHandle beacon_task;
 
 xTaskHandle init_task;
 xTaskHandle adcs_task;
@@ -38,6 +39,7 @@ typedef struct __attribute__((packed)) {
 	uint8_t bat_check_task;
 	uint8_t com_task;
 	uint8_t wod_task;
+	uint8_t beacon_task;
 
 	uint8_t init_task;
 	uint8_t adcs_task;
@@ -79,9 +81,6 @@ typedef struct __attribute__((packed)) {
 } beacon_frame_t;
 beacon_frame_t beacon_frame;
 
-uint8_t inms_task_flag;
-uint8_t inms_task_receive_flag;
-uint8_t schedule_task_flag;
 uint8_t schedule_new_command_flag;
 uint8_t schedule_series_number;
 uint8_t schedule_unlink_flag;

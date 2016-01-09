@@ -74,6 +74,9 @@ int thurmal_2_w();
 int thurmal_1_w();
 /*---------------------------------------------------*/
 /*                 Schedule related                  */
+int schedule_reset_flash();
+int schedule_write_flash(uint8_t * frameCont);
+int schedule_read_flash(uint8_t * txbuf);
 int schedule_write(uint8_t * frameCont);
 int schedule_read(uint8_t * txbuf);
 int schedule_reset();
@@ -85,10 +88,10 @@ int schedule_dump();
 int scan_files_Downlink (char* path, int mode, uint32_t timeRec_T1, uint32_t timeRec_T2) ;   	
 int scan_files_Delete (char* path, int mode, uint32_t timeRec_T1, uint32_t timeRec_T2) ;   	
 
-extern const char* fileName_HK[2];
-extern const char* fileName_INMS[2];
-extern const char* fileName_SEUV[2];
-extern const char* fileName_EOP[2];
-extern const char* fileName_WOD[2];
+extern char* fileName_HK[2];
+extern char* fileName_INMS[2];
+extern char* fileName_SEUV[2];
+extern char* fileName_EOP[2];
+extern char* fileName_WOD[2];
 
 #endif /* FS_H_ */

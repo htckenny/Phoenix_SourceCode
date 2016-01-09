@@ -102,6 +102,7 @@ void ModeControl_Task(void * pvParameters) {
             /* desire to Enter the ADCS mode */
             else if (HK_frame.mode_status_flag == 2) { 
                 printf("---------------------Enter ADCS Mode----------------------\n");
+                power_control(1, ON); 
                 if(parameters.first_flight==1){
                     if (eop_task == NULL)
                         xTaskCreate(EOP_Task, (const signed char * ) "EOP", 1024 * 4, NULL,1, &eop_task);
@@ -135,7 +136,7 @@ void ModeControl_Task(void * pvParameters) {
                 if (inms_error_handle == NULL)
                     xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "InmsEH", 1024 * 4, NULL, 2, &inms_error_handle);
                 if (inms_current_moniter == NULL)
-                    xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "InmsCM", 1024 * 4, NULL, 2, &inms_current_moniter);
+                    xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "InmsCM", 1024 * 4, NULL, 3, &inms_current_moniter);
                 lastmode = HK_frame.mode_status_flag;   // ENTER PAYLOAD MODE DONE!
             }
             /* desire to Enter the Safe Mode. */

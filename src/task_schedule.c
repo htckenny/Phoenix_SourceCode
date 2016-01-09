@@ -73,26 +73,14 @@ void schedule_sort(int number)
 	uint32_t sche_time [maxNum] = {0};
 	uint32_t sche_time_sort [maxNum] = {0};
 
-
 	for (int i = 0 ; i < number ; i++) {
 		memcpy(&sche_time[i], &sche_buf[2 + i * 20], 4);
 		memcpy(&sche_time_sort[i], &sche_buf[2 + i * 20], 4);
-		// sche_time[i] = 	(sche_buf[i][1] << 24)
-		//                 + (sche_buf[i][2] << 16)
-		//                 + (sche_buf[i][3] << 8)
-		//                 + (sche_buf[i][4])
-		//                 + (sche_buf[i][5] >> 8);
-		// sche_time_sort[i] =  (sche_buf[i][1] << 24)
-		//                      + (sche_buf[i][2] << 16)
-		//                      + (sche_buf[i][3] << 8)
-		//                      + (sche_buf[i][4])
-		//                      + (sche_buf[i][5] >> 8);
 		sche_time[i] = csp_ntoh32(sche_time[i]) ;
 		sche_time_sort[i] = csp_ntoh32(sche_time_sort[i]) ;                    
 	}
 	
 	quicksort(sche_time_sort, 0, number - 1);
-
 
 	for (int i = 0 ; i < number ; i++) {
 		for (int j = 0 ; j < number ; j++) {
@@ -191,7 +179,7 @@ void Schedule_Task(void * pvParameters)
 	onBoardTime = update_time();
 	uint8_t tele_buf[210];
 	// printf("Before schedule read\n");
-	schedule_read(sche_buf);
+	schedule_read_flash(sche_buf);
 	// printf("After schedule read\n");
 	int lastNum = 0;
 	lastNum = findMaxBuf(sche_buf);
@@ -207,7 +195,7 @@ void Schedule_Task(void * pvParameters)
 		}
 		else {
 			// printf("%d\n", sche_buf);
-			schedule_read(sche_buf);
+			schedule_read_flash(sche_buf);
 			lastNum = findMaxBuf(sche_buf);
 			// printf("Here!!\n");
 		}
@@ -245,7 +233,7 @@ void Schedule_Task(void * pvParameters)
 					break;
 				}
 				printf("sche_time = %" PRIu32 " onBoardTime = %" PRIu32 "\n", sche_time[sort_seq[i]], onBoardTime);
-				// printf("\E[1A\r");
+				printf("\E[1A\r");
 
 				onBoardTime = update_time();
 				/* determine if the schedule time has exceeded */

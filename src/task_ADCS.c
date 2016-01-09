@@ -29,12 +29,12 @@ void ADCS_Task(void * pvParameters) {
 	txbuf[2] = 0x00;
 	txbuf[3] = 0x00;
 	txbuf[4] = 0x00;
-	if (i2c_master_transaction(0, adcs_node, &txbuf, 5, &rxbuf, 0, adcs_delay) == E_NO_ERR)
+	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 5, &rxbuf, 0, adcs_delay) == E_NO_ERR)
 		printf("ID:18\tSet control mode into detumbling\n");
 
 	txbuf[0] = 0x11;   //0d17 Set attitude estimation mode
 	txbuf[1] = 0x01;
-	if (i2c_master_transaction(0, adcs_node, &txbuf, 2, &rxbuf, 0, adcs_delay) == E_NO_ERR)
+	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 2, &rxbuf, 0, adcs_delay) == E_NO_ERR)
 		printf("ID:17\tSet estimation mode into MEMS rate sensing\n");
 
 	int16_t xrate=0; //X-axis angular rates
@@ -47,12 +47,12 @@ void ADCS_Task(void * pvParameters) {
 
 		//Mode transition
 		txbuf[0] = 0x92;   //0d146 Estimated angular rates
-		if (i2c_master_transaction(0, adcs_node, &txbuf, 1, &rxbuf, 6, adcs_delay) == E_NO_ERR) {
+		if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 6, adcs_delay) == E_NO_ERR) {
 			xrate = rxbuf[0] + (rxbuf[1] << 8); //   *256 = <<8, /256= >>8
 			yrate = rxbuf[2] + (rxbuf[3] << 8); //   *256 = <<8, /256= >>8
 			zrate = rxbuf[4] + (rxbuf[5] << 8); //   *256 = <<8, /256= >>8
 		}
-		printf("ADCS measurement taken\n");
+		// printf("ADCS measurement taken\n");
 		// printf("Xrate = %d\n", xrate);
 		// printf("Yrate = %d\n", yrate);
 		// printf("Zrate = %d\n", zrate);
@@ -62,7 +62,7 @@ void ADCS_Task(void * pvParameters) {
 			if (flag_TRIAD == 0) {
 				txbuf[0] = 0x11;   //0d17 Set attitude estimation mode
 				txbuf[1] = 0x05;
-				if (i2c_master_transaction(0, adcs_node, &txbuf, 2, &rxbuf, 0, adcs_delay) == E_NO_ERR)
+				if (i2c_master_transaction_2(0, adcs_node, &txbuf, 2, &rxbuf, 0, adcs_delay) == E_NO_ERR)
 				{
 					printf("ID:17\tSet estimation mode into magnetometer and fine sun TRIAD algorithm\n");
 					flag_TRIAD = 1;
@@ -100,8 +100,9 @@ void ADCS_Task(void * pvParameters) {
 		//Change magnetometer configuration after deployment
 		if (flag_mag == 0) {
 			txbuf[0] = 0xA6;   //0d166 Raw CSS,CSS4 is below magnetometer
-			if (i2c_master_transaction(0, adcs_node, &txbuf, 1, &rxbuf, 6, adcs_delay) == E_NO_ERR)
-				printf("CSS4 measurement= %d\n", rxbuf[3]);
+			if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 6, adcs_delay) == E_NO_ERR){
+				// printf("CSS4 measurement= %d\n", rxbuf[3]);
+			}
 		}
 
 		if ((rxbuf[3] >= 100) && flag_mag == 0)	{

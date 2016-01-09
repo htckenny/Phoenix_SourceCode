@@ -310,8 +310,8 @@ uint16_t Interface_5V_current_get() {
 	tx[0] = 0xB0;	//0x176
 	tx[1] = 0xB0;
 
-	i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
-	if (i2c_master_transaction(0, interface_node, 0 , 0, &rx, 4, interface_delay) == E_NO_ERR) {
+	// i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
+	if (i2c_master_transaction_2(0, interface_node, &tx , 2, &rx, 4, interface_delay) == E_NO_ERR) {
 		return (rx[0] << 8) + rx[1];
 	} 
 	else

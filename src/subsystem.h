@@ -112,7 +112,7 @@
 
 /*----------------APID----------------*/
 // Each downlink type shall have a dedicated APID
-#define inms_apid 		1
+#define inms_apid 		14
 #define phoenix_hk_apid 2
 #define seuv_apid 		3
 #define eop_apid		4

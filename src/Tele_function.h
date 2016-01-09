@@ -11,7 +11,9 @@
 
 uint8_t CCSDS_GenerateTelemetryPacket(uint8_t* telemetryBuffer,uint8_t* telemetryBufferSize, uint16_t apid, uint8_t serviceType,uint8_t serviceSubtype, uint8_t* sourceData, uint8_t sourceDataLength);
 uint8_t sendTelecommandReport_Success(uint8_t* telecommand, uint8_t reportType);
+uint8_t sendTelecommandReport_Success_INMS(uint8_t * telecommand, uint8_t reportType);
 uint8_t sendTelecommandReport_Failure(uint8_t* telecommand, uint8_t reportType,uint8_t err);
+uint8_t sendTelecommandReport_Failure_INMS(uint8_t* telecommand, uint8_t reportType,uint8_t err);
 void decodeCCSDS_Command(uint8_t * telecommand, uint8_t packet_length);
 uint8_t SendDataWithCCSDS_AX25(uint8_t datatype,uint8_t* data);
 uint8_t SendPacketWithCCSDS_AX25(void * hkBuffer,uint8_t hkBufferLength,uint8_t apid,uint8_t type,uint8_t subTypes);

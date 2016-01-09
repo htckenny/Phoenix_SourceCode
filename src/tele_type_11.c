@@ -12,12 +12,6 @@
 #include "tele_function.h"
 #include "fs.h"
 
-extern void Schedule_Task(void * pvParameters);
-
-void decodeService11(uint8_t subType, uint8_t *telecommand) {
-	uint8_t completionError = ERR_SUCCESS;
-	// note: parameter start from telecommand[9]
-	/*------------------------------------------Telecommand-----------------------------------*/
 #define Enable_Telecommand_Release		1
 #define Disable_Telecommand_Release		2
 #define Reset_Command_Schedule 			3
@@ -25,6 +19,12 @@ void decodeService11(uint8_t subType, uint8_t *telecommand) {
 #define Delete_Telecommand				6
 #define Time_Shifting					15
 #define Dump_Command					17
+
+extern void Schedule_Task(void * pvParameters);
+
+void decodeService11(uint8_t subType, uint8_t *telecommand) {
+	uint8_t completionError = ERR_SUCCESS;
+	/*------------------------------------------Telecommand-----------------------------------*/
 
 	uint16_t packet_length = (telecommand[4] << 8 ) + telecommand[5];
 
@@ -35,29 +35,26 @@ void decodeService11(uint8_t subType, uint8_t *telecommand) {
 		memcpy(&paras[1], telecommand + 9, packet_length - 4); // !!!!!!!!!!!!!!!!!!!!!!!!
 	switch (subType) {
 
-	//send acceptance report
 
 	/*---------------ID:1 Enable_Telecommand_Release----------------*/
 	case Enable_Telecommand_Release:
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  // acceptance success
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 
-		if (schedule_task_flag == 0) {
+		if (schedule_task == NULL) {
 			xTaskCreate(Schedule_Task, (const signed char*) "Sched", 1024 * 4, NULL, 3, &schedule_task);
-			schedule_task_flag = 1 ;
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		}
 		else {
 			printf("The task has already exist.\n");
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		}
 		break;
 
 	/*---------------ID:2 Disable_Telecommand_Release----------------*/
 	case Disable_Telecommand_Release:
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  // acceptance success
-		if (schedule_task_flag == 1) {
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
+		if (schedule_task != NULL) {
 			vTaskDelete(schedule_task);
-			schedule_task_flag = 0;
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
 		}
 		else {
@@ -71,7 +68,7 @@ void decodeService11(uint8_t subType, uint8_t *telecommand) {
 		// It shall clear all entries in the command schedule. The command schedule shall be disabled.
 
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  // acceptance success
-		if (schedule_reset() == Error) {
+		if (schedule_reset_flash() == Error) {
 			printf("schedule reset failed\n");
 			completionError = FS_IO_ERR;
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
@@ -90,7 +87,7 @@ void decodeService11(uint8_t subType, uint8_t *telecommand) {
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  // acceptance success
 
 		// schedule_write need to check
-		if (schedule_write(paras) == Error) {
+		if (schedule_write_flash(paras) == Error) {
 			completionError = FS_IO_ERR;
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
 		}

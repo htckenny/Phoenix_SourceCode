@@ -68,8 +68,6 @@ void Telecom_Task(void * pvParameters) {
 		// 	txdata = com_tx_hk;
 		// 	i2c_master_transaction(0, com_tx_node, &txdata, 1, &txdata, 1, com_delay);
 
-		// 	// get_time();   /// remove it in the future
-
 		// 	if ((txdata < 12) && (parameters.com_bit_rates == 8)) {
 		// 		set_tx_rate(parameters.com_bit_rates);
 		// 		set_Call_Sign(0);
@@ -78,9 +76,10 @@ void Telecom_Task(void * pvParameters) {
 		// 		set_tx_rate(parameters.com_bit_rates);
 		// 		set_Call_Sign(0);
 		// 	}
-
 		// 	tx_wdt_flag = 0;
-		// }
+		// }		
+		parameters.com_bit_rates = (parameters.first_flight == 1) ? 1 : 8;
+		set_tx_rate(parameters.com_bit_rates);
 		/*----------------------------------*/
 		flag = CIC();
 

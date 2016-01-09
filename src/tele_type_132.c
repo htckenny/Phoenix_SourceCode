@@ -54,6 +54,12 @@ void decodeService132(uint8_t subType, uint8_t*telecommand) {
 		if (packet_length == 1) {			
 			parameters.seuv_mode = paras[0];	//set the seuv mode 
 			para_w_flash();
+			if (parameters.seuv_mode == 2){
+            				power_control(3, ON);
+			}
+			if (parameters.seuv_mode == 3){
+            				power_control(3, OFF);
+			}
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		} 
 		else {
@@ -68,6 +74,7 @@ void decodeService132(uint8_t subType, uint8_t*telecommand) {
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
 			/* Read parameter from the FS, should delete this line if parameter_init is already called */
 			para_r_flash();
+			power_control(3, ON);
 			/* sample SEUV once with gain = 1 */
 			get_a_packet(1);
 			seuvFrame.samples += 0; 
@@ -82,7 +89,7 @@ void decodeService132(uint8_t subType, uint8_t*telecommand) {
 			seuvFrame.samples -= 1; 
 			hex_dump(SEUV_data, 37);
 			SendDataWithCCSDS_AX25(3, SEUV_data);
-
+			power_control(3, OFF);
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
 		}
 		else {

@@ -364,7 +364,6 @@ uint8_t sendTelecommandReport_Success(uint8_t * telecommand, uint8_t reportType)
 	success[2] = telecommand[2];
 	success[3] = telecommand[3];
 
-
 	// Generate CCSDS telemetry packet
 	err = CCSDS_GenerateTelemetryPacket(&temporaryBuffer[0], &packetLength,
 	                                    obc_apid, CCSDS_T1_TELECOMMAND_VERIFICATION, reportType, success,
@@ -375,7 +374,34 @@ uint8_t sendTelecommandReport_Success(uint8_t * telecommand, uint8_t reportType)
 	}
 	return err;
 }
+uint8_t sendTelecommandReport_Success_INMS(uint8_t * telecommand, uint8_t reportType) {
 
+	uint8_t err;
+	// CCSDS Source Data
+	uint8_t success[TM_S1_SUCCESS_SIZE];
+	// CCSDS Packet length
+	uint8_t packetLength = TM_NONDATA_SIZE + TM_S1_SUCCESS_SIZE;
+
+	uint8_t temporaryBuffer[packetLength];
+
+	// Packet Sequence Control (direct copy from telecommand)
+	success[0] = telecommand[0];
+	success[1] = telecommand[1];
+
+	// Telecommand Packet ID (direct copy from telecommand)
+	success[2] = telecommand[2];
+	success[3] = telecommand[3];
+
+	// Generate CCSDS telemetry packet
+	err = CCSDS_GenerateTelemetryPacket(&temporaryBuffer[0], &packetLength,
+	                                    inms_apid, CCSDS_T1_TELECOMMAND_VERIFICATION, reportType, success,
+	                                    TM_S1_SUCCESS_SIZE);
+
+	if (err == ERR_SUCCESS) {
+		return AX25_GenerateTelemetryPacket_Send(&temporaryBuffer[0] , packetLength);
+	}
+	return err;
+}
 /*-----------------------------------------------
  * sendTelecommandReport_Failure()
  * -----------------------------------------------
@@ -429,7 +455,38 @@ uint8_t sendTelecommandReport_Failure(uint8_t* telecommand, uint8_t reportType, 
 
 	return err;
 }
+uint8_t sendTelecommandReport_Failure_INMS(uint8_t* telecommand, uint8_t reportType, uint8_t err)
+{
+	// CCSDS Source Data
+	uint8_t failure[TM_S1_FAILURE_SIZE];
+	// CCSDS Packet length
+	uint8_t packetLength = TM_NONDATA_SIZE + TM_S1_FAILURE_SIZE;
 
+	uint8_t temporaryBuffer[packetLength];
+
+	// Packet Sequence Control (direct copy from telecommand)
+	failure[0] = telecommand[0];
+	failure[1] = telecommand[1];
+
+	// Telecommand Packet ID (direct copy from telecommand)
+	failure[2] = telecommand[2];
+	failure[3] = telecommand[3];
+
+	// Error Code
+	failure[4] = 0x00;
+	failure[5] = err;
+
+	// Generate CCSDS telemetry packet
+	err = CCSDS_GenerateTelemetryPacket(&temporaryBuffer[0], &packetLength,
+	                                    inms_apid, CCSDS_T1_TELECOMMAND_VERIFICATION, reportType, failure,
+	                                    TM_S1_FAILURE_SIZE);
+
+	if (err == ERR_SUCCESS)
+		return AX25_GenerateTelemetryPacket_Send(&temporaryBuffer[0], packetLength);
+
+
+	return err;
+}
 
 
 uint8_t SendPacketWithCCSDS_AX25(void * hkBuffer, uint8_t hkBufferLength, uint8_t apid, uint8_t type, uint8_t subTypes) {

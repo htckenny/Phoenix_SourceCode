@@ -32,6 +32,8 @@
 #define INMS_Script_State			17				/* Set INMS handler to enable/ disable */
 #define SD_partition 				18				/* Set which partition would like to read from */
 #define INMS_timeout_change			19				/* Set INMS timeout value */
+#define INMS_restart				20				/* Restart INMS script handler, do this after upload new script*/
+
 
 void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	uint8_t txBuffer[200];
@@ -288,7 +290,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		}
 		printf("Execute Type 8 Sybtype 16 ,enter nominal mode  \r\n");
 		
-		// parameters.first_flight = 0;
+		parameters.first_flight = 0;
 		HK_frame.mode_status_flag = 3;
 		para_w_flash();
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
@@ -338,7 +340,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		else
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 
-		para_w_dup();
+		para_w_flash();
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		break;
 	/*---------------  ID:19 Set INMS timeout value  ----------------*/		
@@ -356,10 +358,37 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		timeout = csp_ntoh16(timeout);
 
 		memcpy(&parameters.INMS_timeout, &timeout, 2);
-		para_w_dup();
+		para_w_flash();
 		printf("change INMS timeout to %d s\n", parameters.INMS_timeout);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
 		break;
+	/*---------------  ID:20 Restart INMS handler ----------------*/		
+	case INMS_restart:
+		if (para_length == 0)
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
+			break;
+		}
+		printf("Execute Type 8 Sybtype 20, Restart INMS task \r\n");
+		/* Payload mode */
+		if (HK_frame.mode_status_flag == 3) {
+			if (inms_task != NULL){
+				power_control(4, OFF);
+				vTaskDelete(inms_task);
+				printf("Restart INMS task\n");
+				vTaskDelay(2 * delay_time_based);
+				extern void vTaskinms(void * pvParameters);
+				xTaskCreate(vTaskinms, (const signed char*) "INMS", 1024 * 4, NULL, 2, &inms_task);
+			}
+		}
+		else{
+			printf("Not in nominal mode\n");
+		}
+		// printf("change INMS timeout to %d s\n", parameters.INMS_timeout);
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+		break;
+
 	/*----------------------------Otherwise----------------*/
 	default:
 		sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);

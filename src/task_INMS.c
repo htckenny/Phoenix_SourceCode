@@ -38,7 +38,7 @@
 
 #define scriptNum 			7
 #define isSimulator 		0
-
+#define isFunctionTest		0
 
 typedef struct __attribute__((packed)) {
 	int tt_hour, tt_min, tt_sec, tt_seq;
@@ -155,8 +155,8 @@ int inmsJumpScriptCheck (int currentScript) {
 
 	// printf("\t\t\t\t\t\ttimer =  %" PRIu32 "\n", timeRef);
 	// printf("\t\t\t\t\t\tepoch =  %" PRIu32 "\n", epoch_sec[rec[currentScript]]);
-	printf("\t\t\t\t\t\tNext Script:  %" PRIu32 "\n", epoch_sec[rec[currentScript]] - timeRef);
-	printf("\E[1A\r");
+	printf("\n\t\t\t\t\t\tNext Script:  %" PRIu32 "\n", epoch_sec[rec[currentScript]] - timeRef);
+	printf("\E[2A\r");
 
 	/* jump to next script if the time is within 10 seconds */
 	return (timeRef > epoch_sec[rec[currentScript]] - 10) ? 1 : 0;
@@ -199,7 +199,7 @@ void vTaskInmsReceive(void * pvParameters) {
 		if (numReceive != 0) {
 			printf("numReceive = %d\n", numReceive);
 		}
-		int ADCSexist = 0;
+		int ADCSexist = 1;
 		if ( numReceive  != 0) {
 			printf("Get %d response packet!\n", numReceive + 22);
 			t.tv_sec = 0;
@@ -208,9 +208,9 @@ void vTaskInmsReceive(void * pvParameters) {
 			if (ADCSexist == 1) {
 				
 				memcpy(&ucharAdcs[0], &t.tv_sec, 4);
-				if (i2c_master_transaction(0, adcs_node, &txbuf, 1, &rxbuf, 48, adcs_delay) == E_NO_ERR) {
+				if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 48, adcs_delay) == E_NO_ERR) {
 					memcpy(&ucharAdcs[4], &rxbuf[18], 18);
-					printf("Get Time, Attitude, Position from ADCS");
+					printf("Get Time, Attitude, Position from ADCS\n");
 				}
 				else {
 					printf("Get data from ADCS FAILED \r\n");
@@ -309,7 +309,7 @@ void vTaskinms(void * pvParameters) {
 				printf("[%d] => %d\n", i, rec[i]);
 			}
 
-			vTaskDelay(2 * delay_time_based);
+			vTaskDelay(1 * delay_time_based);
 
 			/* for temporary setting,  now only have idle0.bin, idle1.bin*/
 			if (isSimulator) {
@@ -322,7 +322,9 @@ void vTaskinms(void * pvParameters) {
 			 * rec[0] = 1;
 			 * rec[1] = 0;
 			 */
-			rec[0] = Test_Script;	
+			if (isFunctionTest)
+				rec[0] = Test_Script;	
+			
 			printf("After Modification\n");
 			for (int i = 0; i < scriptNum; i++) {
 				printf("[%d] => %d\n", i, rec[i]);
@@ -342,7 +344,7 @@ void vTaskinms(void * pvParameters) {
 				scriptRunning =  rec[i];	//for the need to jump to the next script
 
 				while (script[rec[i]][flag] != 0x55) {		//0x55 = EOT
-					printf(" cmd= %d\n", script[rec[i]][flag]);
+					// printf(" cmd= %d\n", script[rec[i]][flag]);
 					// S1 = 0x41
 					if (script[rec[i]][flag] == 0x41)	{ 									
 						timetable_t[ttflag].tt_hour	=  script[rec[i]][flag - 1];
@@ -385,7 +387,7 @@ void vTaskinms(void * pvParameters) {
 					printf("hour:%d, min:%d, sec:%d, seq:%d\n", timetable_t[ttflag].tt_hour, timetable_t[ttflag].tt_min, timetable_t[ttflag].tt_sec, timetable_t[ttflag].tt_seq);
 					flag ++;
 					ttflag++;
-					printf("flag = %d, ttflag = %d\n", flag, ttflag);
+					// printf("flag = %d, ttflag = %d\n", flag, ttflag);
 					if (flag >= 1000)
 						break;
 				}
@@ -393,7 +395,7 @@ void vTaskinms(void * pvParameters) {
 				ttflag--;
 
 				int ttflagMax = ttflag;
-				printf("ttflagMax = %d\n", ttflagMax );
+				// printf("ttflagMax = %d\n", ttflagMax );
 				printf("[-------------STEP #5 : Checking the correctness of the sequence-------------]\n");
 
 				/*Check if the first sequence is S1 [Req-INMS-I-228]*/
@@ -449,16 +451,16 @@ void vTaskinms(void * pvParameters) {
 				uint32_t first_time = 0 ;
 				if (i == 0){
 					while(1){
-						if (first_time > epoch_sec[rec[i]]){
-							break;
-						}
-					
-						vTaskDelay(1 * delay_time_based);
+						
 						first_time = timeGet(0);
 						first_time -= 946684800;
 						// printf("time = %" PRIu32 "\n",first_time);
-						printf("\t\t\t\t\t\tdiff = %" PRIu32 "\n", epoch_sec[rec[i]] - first_time);
-						printf("\E[1A\r");
+						printf("\n\t\t\t\t\t\tdiff = %" PRIu32 "\n", epoch_sec[rec[i]] - first_time);
+						printf("\E[2A\r");
+
+						if (first_time > epoch_sec[rec[i]] - 5)
+							break;
+						vTaskDelay(1 * delay_time_based);
 					}
 				}
 				while (1) {
@@ -476,8 +478,8 @@ void vTaskinms(void * pvParameters) {
 
 					tTable_24  = timetable_t[ttflag].tt_hour * 3600 + timetable_t[ttflag].tt_min * 60 +  timetable_t[ttflag].tt_sec;
 					if (printTime == 1) {
-						printf("%" PRIu32 " -- %" PRIu32 "\n", refTime, tTable_24);
-						printf("\E[1A\r");
+						printf("\n%" PRIu32 " -- %" PRIu32 "\n", refTime, tTable_24);
+						printf("\E[2A\r");
 
 					}
 					if ((refTime  ==  tTable_24 ) || ((refTime - 1 ) ==  tTable_24 )  ) {
@@ -530,10 +532,8 @@ void vTaskinms(void * pvParameters) {
 									usart_getc(2);
 									numGabage = usart_messages_waiting(2);
 								}
-								// printf("2\n");
+								// if (inms_task_receive == NULL)
 								xTaskCreate(vTaskInmsReceive, (const signed char*) "INMSR", 1024 * 4, NULL, 2, &inms_task_receive);
-								inms_task_receive_flag = 1;
-
 								/* ---- For simulator ---- */
 								if (isSimulator) {
 									for (int j = 2; j <= leng + 3; j++) {
@@ -547,6 +547,7 @@ void vTaskinms(void * pvParameters) {
 							/* OBC_SU_OFF = 0xF2 = 0d242 */
 							else if (script[rec[i]][flag + 2] == 242) { 	
 	 							printf("delete inms task receive\n");
+	 							// if (inms_task_receive != NULL)
 								vTaskDelete(inms_task_receive);
 								vTaskDelay(0.5 * delay_time_based);
 								power_control(4, OFF);	//command EPS to POWER OFF INMS
@@ -580,8 +581,8 @@ void vTaskinms(void * pvParameters) {
 								delayTimeTarget = delayTimeNow + script[rec[i]][flag + 1] * 60 + script[rec[i]][flag];
 								tempTime = delayTimeNow;
 								while (delayTimeTarget != delayTimeNow) {
-									printf("%d-----------%d\n", delayTimeNow - tempTime, delayTimeTarget - tempTime);
-									printf("\E[1A\r");
+									printf("\n%d-----------%d\n", delayTimeNow - tempTime, delayTimeTarget - tempTime);
+									printf("\E[2A\r");
 									delayTimeNow = delayTimeNow + 1;
 									vTaskDelay(1 * delay_time_based);
 								}
@@ -608,8 +609,8 @@ void vTaskinms(void * pvParameters) {
 
 							while (delayTimeTarget != delayTimeNow) {
 								xLastWakeTime = xTaskGetTickCount();
-								printf("%d-----------%d\n", delayTimeNow - tempTime, delayTimeTarget - tempTime);
-								printf("\E[1A\r");
+								printf("\n%d-----------%d\n", delayTimeNow - tempTime, delayTimeTarget - tempTime);
+								printf("\E[2A\r");
 								delayTimeNow = delayTimeNow + 1;
 								vTaskDelayUntil( &xLastWakeTime, xFrequency );
 							}
@@ -637,51 +638,36 @@ void vTaskinms(void * pvParameters) {
  *
  */
 void vTaskInmsCurrentMonitor(void * pvParameters) {
-	int currentValue_5	=	0;
-	int currentValue_33	=	0;
+	uint16_t currentValue_5		=	0;
+	uint16_t currentValue_33	=	0;
 	/**
 	 * INMS_ICD issue 10
 	 * The nominal current for +5V and +3V3 voltage rails are:
 	 *  +5V : 140mA (168 mA peak during SU_SCI)
 	 *  +3V3: 15mA
 	 */
-	int overCurrent_5 	= 	300;	/* mA */
-	int overCurrent_33 	= 	50;	/* mA */
+	double overCurrent_5 		= 	300;	/* mA */
+	double overCurrent_33 		= 	50;		/* mA */
 
-	uint8_t Current_5V_reg	=	0xB0;
-	uint8_t Current_33V_reg	=	0x90;
-
-	uint8_t uchar5[4];
-	uint8_t uchar33[4];
 
 	while (1) {
-		/*
-			Get current sensor data from ADC
-		 */
-		if (i2c_master_transaction(0, 109, &Current_5V_reg, 1, &uchar5, 4, 2) == E_NO_ERR) {
-			// printf("Get 5V Current information");
-		}
-		if (i2c_master_transaction(0, 109, &Current_33V_reg, 1, &uchar33, 4, 2) == E_NO_ERR) {
-			// printf("Get 3.3V Current information");
-		}
-		/**
-		 * These formula is calculated depends on the electrical circuit
-		 */
-		currentValue_5 	= ((uchar5[0] << 8) + (uchar5[1])) / (0.47 / 2 * 20);
-		currentValue_33 = ((uchar33[0] << 8) + (uchar33[1])) / (6.8 / 2 * 20);
+		/* Get current sensor data from ADC */
+		currentValue_5 = Interface_5V_current_get() ;
+		currentValue_33 = Interface_3V3_current_get();
 
-		// printf("Current_5V: %d mA\n",currentValue_5);
-		// printf("Current_3.3V: %d mA\n",currentValue_33);
+		printf("\n\t\tCurrent_5V: %.3lf mA\n", (double)currentValue_5/ 4.7);
+		printf("\t\tCurrent_3.3V: %.3lf mA\n", (double)currentValue_33 / 68);
+		// printf("%" PRIu16 "  -  %" PRIu16 "\n", currentValue_5, overCurrent_5);
 
-		if (currentValue_5 >= overCurrent_5) {
+		printf("\E[3A\r");
+		if ((double)currentValue_5/ 4.7 >= overCurrent_5) {
 			obcSuErrFlag = 4;
 			printf("Over-current Condition Detected, 5V: %d mA\n", currentValue_5);
 		}
-		if (currentValue_33 >= overCurrent_33) {
+		if ((double)currentValue_33 / 68 >= overCurrent_33) {
 			obcSuErrFlag = 4;
 			printf("Over-current Condition Detected, 3V: %d mA\n", currentValue_33);
 		}
-
 		vTaskDelay(5 * delay_time_based);
 	}
 }
@@ -714,8 +700,8 @@ void vTaskInmsErrorHandle(void * pvParameters) {
 		inms_script_read(i, len[i], &script[i]);
 		// printf("num = %d\n", i);
 	}
-	xTaskCreate( vTaskinms, (const signed char*) "INMS", 1024 * 4, NULL, 2, &inms_task);
-	inms_task_flag = 1;
+	if (inms_task == NULL)
+		xTaskCreate( vTaskinms, (const signed char*) "INMS", 1024 * 4, NULL, 2, &inms_task);
 	while (1) {
 		// printf("obcSuErrFlag = %d\n", obcSuErrFlag);
 		switch (obcSuErrFlag)  {
@@ -759,9 +745,10 @@ void vTaskInmsErrorHandle(void * pvParameters) {
 		}
 		if (rsp_err_code != 0) {
 			power_control(4, OFF);
-			vTaskDelete(inms_task_receive);
-			if (i2c_master_transaction(0, adcs_node, &txbuf, 1, &ucharAdcs, 22, 2) == E_NO_ERR) {
-				printf("Get Time, Attitude, Position from ADCS");
+			if (inms_task_receive != NULL)
+				vTaskDelete(inms_task_receive);
+			if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &ucharAdcs, 22, 2) == E_NO_ERR) {
+				printf("Get Time, Attitude, Position from ADCS\n");
 			}
 			obcerrpacket[0] = 0xfa;
 			obcerrpacket[1] = seq_cnt; //not sure what is it

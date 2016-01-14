@@ -6,6 +6,7 @@
 #include <nanomind.h>
 #include <csp/csp_endian.h>
 #include <time.h>
+#include <fat_sd/ff.h>
 /* Self defined header file*/
 #include "subsystem.h"
 #include "parameter.h"
@@ -14,7 +15,7 @@
 
 /* Definition of the subtype */
 #define Enable_Subsystem			1				/* (?)This function is not used */
-#define Disable_Subsystem			2				/* (?)This function is not used */	
+#define Disable_Subsystem			2				/* (?)This function is not used */
 #define reboot						3				/* Reboot the whole system */
 #define Sync_Time					4				/* Sync the OBC time*/
 #define DTTest						5				/* Test Downlink 200 Bytes*/
@@ -33,19 +34,19 @@
 #define SD_partition 				18				/* Set which partition would like to read from */
 #define INMS_timeout_change			19				/* Set INMS timeout value */
 #define INMS_restart				20				/* Restart INMS script handler, do this after upload new script*/
-
+#define SD_card_format				30				/* Format SD card, and create default folders */
 
 void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	uint8_t txBuffer[200];
 	timestamp_t t;
 	time_t tt;
 	uint8_t completionError = I2C_SEND_ERROR;
-	
+
 	uint16_t para_length = (telecommand[4] << 8) + telecommand[5] - 4;
 	uint8_t type = 8;
 	uint8_t paras[180];
 	uint16_t threshold;
-	
+
 
 	if (para_length > 0)
 		memcpy(&paras, telecommand + 9, para_length);
@@ -80,7 +81,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		memcpy(&t.tv_sec, &paras[0], 4);
 		t.tv_sec = csp_ntoh32(t.tv_sec);
 		t.tv_sec += 946684800 ;
-		
+
 		obc_timesync(&t, 1000);
 		tt = t.tv_sec ;
 		printf("OBC time Sync by telecommand to : %s\r\n", ctime(&tt));
@@ -146,7 +147,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 
 		memcpy(&threshold, &paras, 2);
 		threshold = csp_ntoh16(threshold);
-		
+
 		memcpy(&parameters.vbat_safe_threshold, &threshold, 2);
 		para_w_flash();
 		printf("Enter_Safe_Threshold = %d mV\n", parameters.vbat_safe_threshold);
@@ -164,7 +165,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 
 		memcpy(&threshold, &paras, 2);
 		threshold = csp_ntoh16(threshold);
-		
+
 		memcpy(&parameters.vbat_recover_threshold, &threshold, 2);
 		para_w_flash();
 		printf("Leave_Safe_Threshold = %d mV\n", parameters.vbat_recover_threshold);
@@ -199,7 +200,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			break;
 		}
 		printf("Execute Type 8 Sybtype 11 , para_to_default \r\n");
-		para_d_flash();	
+		para_d_flash();
 		parameter_init();
 		// para_w_flash();
 
@@ -289,14 +290,14 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			break;
 		}
 		printf("Execute Type 8 Sybtype 16 ,enter nominal mode  \r\n");
-		
+
 		parameters.first_flight = 0;
 		HK_frame.mode_status_flag = 3;
 		para_w_flash();
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
 
 		break;
-	/*---------------  ID:17 Enable / Disable INMS script handler  ----------------*/	
+	/*---------------  ID:17 Enable / Disable INMS script handler  ----------------*/
 	case INMS_Script_State:
 		if (para_length == 1)
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
@@ -305,20 +306,20 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			break;
 		}
 		printf("Execute Type 8 Sybtype 17\r\n");
-		
+
 		// parameters.first_flight = 0;
 		if (paras[0] == 1) {
 			parameters.inms_status = 1;
-			printf("enable inms script handler\n");			
+			printf("enable inms script handler\n");
 		}	//enable
-		else if (paras[0] == 0){
+		else if (paras[0] == 0) {
 			parameters.inms_status = 0;
-			printf("disable inms script handler\n");		
+			printf("disable inms script handler\n");
 		}
 		para_w_flash();
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
 		break;
-	/*---------------  ID:18 Set SD partition label number  ----------------*/		
+	/*---------------  ID:18 Set SD partition label number  ----------------*/
 	case SD_partition:
 		if (para_length == 1)
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
@@ -327,28 +328,27 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			break;
 		}
 		printf("Execute Type 8 Sybtype 18\r\n");
-		
-		// parameters.first_flight = 0;
+
 		if (paras[0] == 0) {
 			parameters.SD_partition_flag = 0;
-			printf("Set SD Read to partition [0]\n");			
-		}	
-		else if (paras[0] == 1){
+			printf("Set SD Read to partition [0]\n");
+		}
+		else if (paras[0] == 1) {
 			parameters.SD_partition_flag = 1;
-			printf("Set SD Read to partition [1]\n");		
+			printf("Set SD Read to partition [1]\n");
 		}
 		else
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 
 		para_w_flash();
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
-	/*---------------  ID:19 Set INMS timeout value  ----------------*/		
+	/*---------------  ID:19 Set INMS timeout value  ----------------*/
 	case INMS_timeout_change:
 		if (para_length == 2)
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 		else {
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 			break;
 		}
 		printf("Execute Type 8 Sybtype 19, change INMS timeout \r\n");
@@ -362,18 +362,18 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		printf("change INMS timeout to %d s\n", parameters.INMS_timeout);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
 		break;
-	/*---------------  ID:20 Restart INMS handler ----------------*/		
+	/*---------------  ID:20 Restart INMS handler ----------------*/
 	case INMS_restart:
 		if (para_length == 0)
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 		else {
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 			break;
 		}
 		printf("Execute Type 8 Sybtype 20, Restart INMS task \r\n");
 		/* Payload mode */
 		if (HK_frame.mode_status_flag == 3) {
-			if (inms_task != NULL){
+			if (inms_task != NULL) {
 				power_control(4, OFF);
 				vTaskDelete(inms_task);
 				printf("Restart INMS task\n");
@@ -382,17 +382,57 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 				xTaskCreate(vTaskinms, (const signed char*) "INMS", 1024 * 4, NULL, 2, &inms_task);
 			}
 		}
-		else{
+		else {
 			printf("Not in nominal mode\n");
 		}
-		// printf("change INMS timeout to %d s\n", parameters.INMS_timeout);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
 		break;
+	/*---------------  ID:30 Format SD and Initialize ----------------*/
+	case SD_card_format:
+		if (para_length == 1)
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); // send acceptance fail
+			break;
+		}
+		printf("Execute Type 8 Sybtype 30\r\n");
+		FATFS fs;
+		FIL file;
+		BYTE label;
+		label = paras[0];
+		if (f_mount(label, NULL) == FR_OK)
+			printf("unmount %d\n", label);
 
+		if (f_mount(label, &fs) == FR_OK)
+			printf("mount %d\n", label);
+
+		if (paras[0] == 0) {
+			f_mkfs(0, 0, 0);
+			f_mkdir("0:/INMS_DATA");
+			f_mkdir("0:/EOP_DATA");
+			f_mkdir("0:/WOD_DATA");
+			f_mkdir("0:/HK_DATA");
+			f_mkdir("0:/SEUV_DATA");
+			f_open(&file, "0:/partition0.bin", FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+		}
+		else if (paras[0] == 1) {
+			f_mkfs(1, 0, 0);
+			f_mkdir("1:/INMS_DATA");
+			f_mkdir("1:/EOP_DATA");
+			f_mkdir("1:/WOD_DATA");
+			f_mkdir("1:/HK_DATA");
+			f_mkdir("1:/SEUV_DATA");
+			f_open(&file, "1:/partition0.bin", FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+		}		
+		else
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		break;
 	/*----------------------------Otherwise----------------*/
 	default:
 		sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 
-	break;
+		break;
 	}
 }

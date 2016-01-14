@@ -161,14 +161,14 @@ void get_a_packet(int gain) {
     /* Take data from SEUV in numbers of samples [Gain = 1]*/
     if (gain == 1) {
         /* Power on SEUV */
-        power_control(3, ON);
+        // power_control(3, ON);
         vTaskDelay(2 * delay_time_based);
-
+        count = 0;
         for (int i = 0 ; i < parameters.seuv_sample_rate ; i++){
-            seuv_take_data(1, 1, &frame_1[3 * i]);  
-            seuv_take_data(2, 1, &frame_2[3 * i]);  
-            seuv_take_data(3, 1, &frame_3[3 * i]);  
-            seuv_take_data(4, 1, &frame_4[3 * i]);  
+            count += seuv_take_data(1, 1, &frame_1[3 * i]);  
+            count += seuv_take_data(2, 1, &frame_2[3 * i]);  
+            count += seuv_take_data(3, 1, &frame_3[3 * i]);  
+            count += seuv_take_data(4, 1, &frame_4[3 * i]);  
         }
         printf("Gain 1 : take data\n");
         if (count == 0) {
@@ -177,20 +177,14 @@ void get_a_packet(int gain) {
             calculate_avg_std(3, frame_3, parameters.seuv_sample_rate);
             calculate_avg_std(4, frame_4, parameters.seuv_sample_rate);
 
-            printf("1 A = %f\n", seuvFrame.ch1AVG);
-            printf("1 S = %f\n", seuvFrame.ch1STD);
-            printf("2 A = %f\n", seuvFrame.ch2AVG);
-            printf("2 S = %f\n", seuvFrame.ch2STD);
-            printf("3 A = %f\n", seuvFrame.ch3AVG);
-            printf("3 S = %f\n", seuvFrame.ch3STD);
-            printf("4 A = %f\n", seuvFrame.ch4AVG);
-            printf("4 S = %f\n", seuvFrame.ch4STD);
+            printf("1 A = %.3f , S = %.3f", seuvFrame.ch1AVG, seuvFrame.ch1STD);
+            printf("2 A = %.3f , S = %.3f", seuvFrame.ch2AVG, seuvFrame.ch2STD);
+            printf("3 A = %.3f , S = %.3f", seuvFrame.ch3AVG, seuvFrame.ch3STD);
+            printf("4 A = %.3f , S = %.3f", seuvFrame.ch4AVG, seuvFrame.ch4STD);
+
             seuvFrame.samples += 0 ; 
             // printf("sample = %d\n", seuvFrame.samples);
-            if (seuv_write() == No_Error)
-                printf("Write a packet into SEUV.bin\n");
-            else
-                printf("Fail to write into SEUV.bin\n");
+            seuv_write_dup();
             seuvFrame.samples -= 0 ; 
         }
         else {
@@ -200,11 +194,12 @@ void get_a_packet(int gain) {
     else if (gain == 8) {
         printf("Gain 8 : take data\n");
         //channel 1~4 sample 50 times
+        count = 0;
         for (int i = 0 ; i < parameters.seuv_sample_rate ; i++){     
-            seuv_take_data(1, 8, &frame_1[3 * i]);  
-            seuv_take_data(2, 8, &frame_2[3 * i]);  
-            seuv_take_data(3, 8, &frame_3[3 * i]);  
-            seuv_take_data(4, 8, &frame_4[3 * i]);  
+            count +=seuv_take_data(1, 8, &frame_1[3 * i]);  
+            count +=seuv_take_data(2, 8, &frame_2[3 * i]);  
+            count +=seuv_take_data(3, 8, &frame_3[3 * i]);  
+            count +=seuv_take_data(4, 8, &frame_4[3 * i]);  
         }
         if (count == 0) {       
             calculate_avg_std(1, frame_1, parameters.seuv_sample_rate);      
@@ -212,19 +207,13 @@ void get_a_packet(int gain) {
             calculate_avg_std(3, frame_3, parameters.seuv_sample_rate);
             calculate_avg_std(4, frame_4, parameters.seuv_sample_rate);
 
-            printf("1 A = %f\n", seuvFrame.ch1AVG);
-            printf("1 S = %f\n", seuvFrame.ch1STD);
-            printf("2 A = %f\n", seuvFrame.ch2AVG);
-            printf("2 S = %f\n", seuvFrame.ch2STD);
-            printf("3 A = %f\n", seuvFrame.ch3AVG);
-            printf("3 S = %f\n", seuvFrame.ch3STD);
-            printf("4 A = %f\n", seuvFrame.ch4AVG);
-            printf("4 S = %f\n", seuvFrame.ch4STD);
+            printf("1 A = %.3f , S = %.3f", seuvFrame.ch1AVG, seuvFrame.ch1STD);
+            printf("2 A = %.3f , S = %.3f", seuvFrame.ch2AVG, seuvFrame.ch2STD);
+            printf("3 A = %.3f , S = %.3f", seuvFrame.ch3AVG, seuvFrame.ch3STD);
+            printf("4 A = %.3f , S = %.3f", seuvFrame.ch4AVG, seuvFrame.ch4STD);
+
             seuvFrame.samples += 1 ; 
-            if (seuv_write() == No_Error)
-                printf("Write a packet into SEUV.bin\n");
-            else
-                printf("Fail to write into SEUV.bin\n");
+            seuv_write_dup();
             seuvFrame.samples -= 1 ; 
         }
         else {

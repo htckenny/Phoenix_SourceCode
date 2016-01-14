@@ -22,16 +22,15 @@
 void decodeService132(uint8_t subType, uint8_t*telecommand) {
 
 	uint8_t completionError = 0;
-	uint8_t SEUV_data[37];
+	uint8_t SEUV_data[seuv_length];
 
 	/*------------------------------------------Telecommand-----------------------------------*/
 	/* note: parameter start from telecommand[9]*/
 
 	uint16_t packet_length = (telecommand[4] << 8) + telecommand[5] - 4;
-	uint8_t paras[180];
-	printf("packet_length = %d\n", packet_length);
+	uint8_t paras[5];
 	if (packet_length > 0)
-		memcpy(&paras, telecommand + 9, packet_length); // !!!!!!!!!!!!!!!!!!!!!!!!
+		memcpy(&paras, telecommand + 9, packet_length); 
 	switch (subType) {
 
 	/*--------------- ID:1 configure ----------------*/
@@ -52,48 +51,64 @@ void decodeService132(uint8_t subType, uint8_t*telecommand) {
 	case change_mode:
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 		if (packet_length == 1) {			
+
+			if (parameters.seuv_mode == 2) {
+				if (paras[0] == 3) {
+					power_control(3, OFF);
+				}
+			}
+			else if (parameters.seuv_mode == 3) {
+				if (paras[0] == 2) {
+					power_control(3, ON);
+				}
+			}
+			else {
+				goto err;
+			}
 			parameters.seuv_mode = paras[0];	//set the seuv mode 
 			para_w_flash();
-			if (parameters.seuv_mode == 2){
-            				power_control(3, ON);
-			}
-			if (parameters.seuv_mode == 3){
-            				power_control(3, OFF);
-			}
+
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
+			err:
+				completionError = PARA_ERR;
+				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); 
 		} 
-		else {
-			completionError = I2C_READ_ERROR;
-			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); 
-		}
+		else
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
 
 		break;
 	/*--------------- ID:3 Execute a sampling and downlink ----------------*/
 	case Execute_sampling_downlink:
 		if (packet_length == 0) {
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
-			/* Read parameter from the FS, should delete this line if parameter_init is already called */
-			para_r_flash();
-			power_control(3, ON);
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS); 
+			if (parameters.seuv_mode == 2) {
+				vTaskSuspend(seuv_task);
+			}
+			else if (parameters.seuv_mode == 3) {
+				power_control(3, ON);
+			}
 			/* sample SEUV once with gain = 1 */
 			get_a_packet(1);
-			seuvFrame.samples += 0; 
-			memcpy(&SEUV_data, &seuvFrame, 37);
-			seuvFrame.samples -= 0; 
-			hex_dump(SEUV_data, 37);
+			memcpy(&SEUV_data, &seuvFrame, seuv_length);
+			hex_dump(SEUV_data, seuv_length);
 			SendDataWithCCSDS_AX25(3, SEUV_data);
 			/* sample SEUV once with gain = 8 */
 			get_a_packet(8);
-			seuvFrame.samples += 1; 
-			memcpy(&SEUV_data, &seuvFrame, 37);
-			seuvFrame.samples -= 1; 
-			hex_dump(SEUV_data, 37);
+			seuvFrame.samples ++; 
+			memcpy(&SEUV_data, &seuvFrame, seuv_length);
+			seuvFrame.samples --; 
+			hex_dump(SEUV_data, seuv_length);
 			SendDataWithCCSDS_AX25(3, SEUV_data);
-			power_control(3, OFF);
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+			if (parameters.seuv_mode == 2) {
+				vTaskResume(seuv_task);
+			}
+			else if (parameters.seuv_mode == 3)
+				power_control(3, OFF);
+
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		}
 		else {
-			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 		}		
 		break;
 			

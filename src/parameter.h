@@ -137,7 +137,7 @@ typedef struct __attribute__((packed)) {
 	/* INMS related */
 	uint16_t INMS_timeout;
 	uint8_t inms_status;
-	
+	/* FS related */
 	uint8_t SD_partition_flag;
 } parameter_t;
 parameter_t parameters;

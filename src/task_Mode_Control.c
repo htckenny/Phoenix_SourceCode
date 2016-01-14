@@ -16,16 +16,16 @@ extern void vTaskInmsCurrentMonitor(void * pvParameters);
 void Enter_Safe_Mode(int last_mode) {
 
     /* last mode = Init Mode */
-    if (last_mode == 1) {                                       
+    if (last_mode == 1) {
         vTaskDelete(init_task);
     }
     /* last mode = ADCS Mode */
     if (last_mode == 2){
         vTaskDelete(adcs_task);
         if(parameters.first_flight==1){
-            vTaskDelete(eop_task);                
+            vTaskDelete(eop_task);
         }
-    }                                
+    }
 
     power_control(1, OFF);      // Power OFF    ADCS
     power_control(2, OFF);      // Power OF     GPS
@@ -58,7 +58,6 @@ void Enter_Safe_Mode(int last_mode) {
             printf("Shutting Down INMS task \n");
             vTaskDelete(inms_task);
         }
-
         if (inms_task_receive != NULL){
             printf("Shutting Down INMS receive task \n");
             vTaskDelete(inms_task_receive);

@@ -24,7 +24,7 @@
 #include "tele_function.h"
 
 #define E_NO_ERR -1
- 
+
 extern void BatteryCheck_Task(void * pvParameters);
 extern void Telecom_Task(void * pvParameters);
 extern void WOD_Task(void * pvParameters);
@@ -39,9 +39,9 @@ void Init_Task(void * pvParameters) {
 		printf("Loaded parameter from fs\n");
 
 	/* Activate Battery check task */
-	// if (bat_check_task == NULL)
-	// 	xTaskCreate(BatteryCheck_Task, (const signed char *) "BatCk", 1024 * 4, NULL, 1, &bat_check_task);
-	
+	if (bat_check_task == NULL)
+		xTaskCreate(BatteryCheck_Task, (const signed char *) "BatCk", 1024 * 4, NULL, 1, &bat_check_task);
+
 	/* Idle 30 minutes in first flight  */
 	if (parameters.ant_deploy_flag == 0) {
 		printf("Idle 30 Minutes before deploy  \r\n");
@@ -69,15 +69,15 @@ void Init_Task(void * pvParameters) {
 	printf("-----------------------------------------\n");
 	printf("Active Telecom Task, User can start to upload Ground Telecommand\n");
 	/* Activate telecom task, enable receiver to receive command from GS */
-	if (com_task == NULL){
+	if (com_task == NULL) {
 		xTaskCreate(Telecom_Task, (const signed char * ) "COM", 1024 * 4, NULL, 2, &com_task);
 	}
 	/* Activate WOD collecting task, and start to transmit the beacon */
-	if (wod_task == NULL){
+	if (wod_task == NULL) {
 		xTaskCreate(WOD_Task, (const signed char * ) "WOD", 1024 * 4, NULL, 2, &wod_task);
 	}
 
-	/* change to the ADCS mode */ 
+	/* change to the ADCS mode */
 	HK_frame.mode_status_flag = 2;
 
 

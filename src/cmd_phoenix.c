@@ -40,7 +40,7 @@ int moveScriptFromSD (struct command_context *ctx) {
 		return CMD_ERROR_SYNTAX;
 	
 	sprintf(sd, "%d", parameters.SD_partition_flag);
-	for (int i = 0 ; i < 7 ; i++){
+	for (int i = 0 ; i < scriptNum ; i++){
 
 		sprintf(slot, "%d", i);
 		strcpy(old, "/sd");
@@ -78,7 +78,7 @@ int moveScriptFromSD (struct command_context *ctx) {
 			}
 		} while (in > 1);
 
-		printf("cp: success to write to %s\r\n", new);
+		printf("cp: success write into %s\r\n", new);
 		close(fdold);
 		close(fdnew);
 	}
@@ -290,7 +290,6 @@ int I2Csend_handler(struct command_context * ctx) {
 	}
 
 //-------------finish read typing-----------------//
-
 	uint8_t val[rx];
 	uint8_t tx[255];
 	printf("Send I2C Message [node %2X  rx %d ", node, rx);
@@ -304,16 +303,13 @@ int I2Csend_handler(struct command_context * ctx) {
 	printf("] \n");
 
 	if (ctx->argc > 3) {
-		if ( i2c_master_transaction(0, node, &tx, ctx->argc - 3, 0, 0, 1000) != E_NO_ERR) {
-		}
-		vTaskDelay(10);
-		if ( i2c_master_transaction(0, node, 0, 0, &val, rx, 1000) != E_NO_ERR) {
+		if ( i2c_master_transaction_2(0, node, &tx, ctx->argc - 3, &val, rx, eps_delay) != E_NO_ERR) {
 			printf("No reply from node %x \r\n", node);
 			return CMD_ERROR_NONE;
 		}
 	}
 	else {
-		if ( i2c_master_transaction(0, node, 0, 0, &val, rx, 1000) != E_NO_ERR) {
+		if ( i2c_master_transaction_2(0, node, 0, 0, &val, rx, eps_delay) != E_NO_ERR) {
 			printf("No reply from node %x \r\n", node);
 			return CMD_ERROR_NONE;
 		}
@@ -335,10 +331,11 @@ int INMS_switch(struct command_context * ctx) {
 		// xTaskCreate(vTaskinms, (const signed char * ) "INMS", 1024 * 4, NULL, 2, &inms_task);
 		extern void vTaskInmsErrorHandle(void * pvParameters);
 		xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "INMS_EH", 1024 * 4, NULL, 2, &inms_error_handle);
-		extern void vTaskInmsCurrentMonitor(void * pvParameters);
- 		xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "INMS_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
+		// extern void vTaskInmsCurrentMonitor(void * pvParameters);
+ 		// xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "INMS_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
 	}
 	else if (buffer == 0) {
+		vTaskDelete(inms_task);
 		vTaskDelete(inms_error_handle);
 		vTaskDelete(inms_current_moniter);
 	}
@@ -852,29 +849,6 @@ int T_data_del(struct command_context * ctx) {
 	T_data_d();
 	return CMD_ERROR_NONE;
 }
-int data_DUMP(struct command_context * ctx) {
-	int type;
-	if (ctx->argc != 2)
-		return CMD_ERROR_SYNTAX;
-
-
-	if (sscanf(ctx->argv[1], "%u", &type) != 1)
-		return CMD_ERROR_SYNTAX;
-
-
-	if (type == 1)
-		inms_data_dump();
-	else if (type == 2)
-		wod_data_dump();
-	else if (type == 3)
-		seuv_data_dump();
-	else if (type == 4)
-		hk_data_dump();
-	else if (type == 5)
-		thermal_data_dump();
-
-	return CMD_ERROR_NONE;
-}
 
 int alldatadelete(struct command_context * ctx) {
 
@@ -923,7 +897,7 @@ int seuvread(struct command_context * ctx) {
 
 	uint8_t val[5];
 
-	if (i2c_master_transaction(0, seuv_node, 0, 0, &val, 5, seuv_delay) == E_NO_ERR) {
+	if (i2c_master_transaction_2(0, seuv_node, 0, 0, &val, 5, seuv_delay) == E_NO_ERR) {
 		hex_dump(&val, 5);
 	} else
 		printf("ERROR!!  Get no reply from SEUV \r\n");
@@ -935,22 +909,12 @@ int seuvwrite(struct command_context * ctx) {
 	if (ctx->argc != 2) {
 		return CMD_ERROR_SYNTAX;
 	}
-
 	if (sscanf(ctx->argv[1], "%u", &node) != 1) {
 		return CMD_ERROR_SYNTAX;
 	}
-
 	uint8_t txdata = node;
-	unsigned int addra = 110;
-	// uint8_t val[5];
-
-	// i2c_master_transaction(0, addra, &txdata, 1, 0, 0, seuv_delay) ;
-	// if (i2c_master_transaction(0, addra, &txdata, 1, &val, 5, seuv_delay) == E_NO_ERR) {
-	// 	hex_dump(&val, 5);
-	// 	hex_dump(&val, 5);
-	// } else
-	// 	printf("ERROR!!  Get no reply from SEUV \r\n");
-	if (i2c_master_transaction(0, addra, &txdata, 1, 0, 0, seuv_delay) == E_NO_ERR) {
+	
+	if (i2c_master_transaction_2(0, seuv_node, &txdata, 1, 0, 0, seuv_delay) == E_NO_ERR) {
 		printf("configured SEUV: %x\r\n", node);
 	}
 	else
@@ -1037,7 +1001,6 @@ command_t __root_command ph_commands[] = {
 	{ .name = "seuvdelete", .help = "PHOENIX: delete seuv.bin", .handler = seuvdelete, }	,
 	{ .name = "hkdelete", .help = "PHOENIX: delete hk.bin", .handler = hkdelete, }	,
 	{ .name = "jump_mode", .help = "PHOENIX: jump_mode [mode] // 0=safe mode, 2=adcs mode,3=payload mode", .handler = jump_mode, },
-	{ .name = "data_dump", .help = "PHOENIX: onboard data_dump [type] , 1=inms 2=wod 3=seuv 4=hk 5=thermal ", .usage = "<type> 1=inms 2=wod 3=seuv 4=hk 5=thermal ", .handler = data_DUMP, },
 	{ .name = "idleunlock", .help = "PHOENIX: skip idle 30m step", .handler = idleunlock, },
 	{ .name = "testmode", .help = "PHOENIX: enter  testmode, please reboot satellite if want to leave this mode", .handler = testmode, },
 	{ .name = "seuvwrite", .help = "PHOENIX: configure SEUV", .usage = "<node>", .handler = seuvwrite, },

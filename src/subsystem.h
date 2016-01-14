@@ -12,7 +12,8 @@
 
 
 /* !!!!!!!!!!!!!!!!!!!!!!!! UINT = LSB !!!!!!!!!!!!!! */
-
+/* Script Length */
+#define scriptNum 			7
 /* Tick */
 #define delay_time_based	configTICK_RATE_HZ
 
@@ -109,7 +110,7 @@
 #define I2C_READ_ERROR 						0xA1
 #define CCSDS_PACKET_ERROR 					0xB0
 #define FS_IO_ERR      						0x0B
-
+#define PARA_ERR							0x0c
 /*----------------APID----------------*/
 // Each downlink type shall have a dedicated APID
 #define inms_apid 		14

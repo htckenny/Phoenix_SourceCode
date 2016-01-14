@@ -187,26 +187,15 @@ int getWodFrame(int fnum) {
 	tempEps = __max(__min(floor(4 * ((((float)chkparam->temp[0] + (float)chkparam->temp[1] + (float)chkparam->temp[2]) / 3)) + 60), 255), 0);
 	tempBat = __max(__min(floor(4 * (((float)chkparam->temp[3])) + 60), 255), 0);
 
-	//printf("tmpCOM=%u\n",tempComm);
-	//printf("vbat=%u\n",batVoltage);
-	//printf("ibat=%u\n",batCurrent);
-	//printf("i3.3=%u\n",bus3v3Current);
-	// printf("i5.0=%u\n",bus5v0Current);
-	// printf("tmpEPS=%u\n",tempEps);
-	//  printf("temBAT=%u\n",tempBat);
-
-
-	if (mode)	calbit(fnum);		// wodd.dataSet[fnum].mode = 0 or 1;
-	calmulbit(fnum, 1, batVoltage);	// wodd.dataSet[fnum].bat_voltage = batVoltage;
-	calmulbit(fnum, 2, batCurrent);	// wodd.dataSet[fnum].bat_current=0;
-	calmulbit(fnum, 3, bus3v3Current); // wodd.dataSet[fnum].bus3v3_current=0;
-	calmulbit(fnum, 4, bus5v0Current); // wodd.dataSet[fnum].bus5v0_current=0;
-	calmulbit(fnum, 5, tempComm);		// wodd.dataSet[fnum].comm_temp= tempComm;
-	calmulbit(fnum, 6, tempEps);		// wodd.dataSet[fnum].eps_temp = tempEps;
-	calmulbit(fnum, 7, tempBat);		// wodd.dataSet[fnum].battery_temp = tempBat;
-	//for beacon
-
-
+	if (mode)	calbit(fnum);
+	calmulbit(fnum, 1, batVoltage);
+	calmulbit(fnum, 2, batCurrent);
+	calmulbit(fnum, 3, bus3v3Current);
+	calmulbit(fnum, 4, bus5v0Current);
+	calmulbit(fnum, 5, tempComm);
+	calmulbit(fnum, 6, tempEps);
+	calmulbit(fnum, 7, tempBat);
+	
 	/*beacon message UPDATE */
 	beacon_frame.mode = mode;
 	beacon_frame.batVoltage = batVoltage;
@@ -227,7 +216,7 @@ int getWodFrame(int fnum) {
 void beacon_Task(void * pvParameters) {
 
 	int period = 30 * delay_time_based;		//Normally the beacon period is 30 sec
-	vTaskDelay(60 * delay_time_based);
+	vTaskDelay(period);
 
 	while (1) {
 
@@ -250,8 +239,6 @@ void WOD_Task(void * pvParameters) {
 
 	while (1) {
 
-
-		//get the 32 dataSet . dtime must be modify to 1 minute, i ->32
 		for (int i = 1; i <= 32; i++)
 		{
 			if (getWodFrame(i) == No_Error)
@@ -262,11 +249,7 @@ void WOD_Task(void * pvParameters) {
 			}
 			vTaskDelay(60 * delay_time_based);
 		}
-
-		if (wod_write(&wod[0]) != No_Error) {
-			printf("write WOD into FS error");
-		} else
-			printf("write a WOD into FS ");
+		wod_write_dup(&wod[0]);
 
 		for (int i = 0; i < 232; i++) {
 			wod[i] = 0;

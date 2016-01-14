@@ -22,8 +22,6 @@
 #define Report_ADCS_HK		7		/* Report ADCS House Keeping Data */
 #define Report_Script_Stat	8		/* Report INMS script's status */
 
-#define scriptNum 7
-
 extern uint16_t fletcher(uint8_t *script, size_t length);
 
 void perform_fletcher(uint8_t * check_sum_final) {
@@ -218,7 +216,7 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 		perform_fletcher(txBuffer);
 		hex_dump(&txBuffer, scriptNum);
 
-		txlen = 7;
+		txlen = scriptNum;
 		SendPacketWithCCSDS_AX25(&txBuffer, txlen, obc_apid, type, subType);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;

@@ -21,7 +21,7 @@ void Read_Execute() {
 	uint8_t txdata = com_rx_get;
 	uint8_t val[201];  // expect  1+200 byte response , first byte is length1~200
 
-	if ( i2c_master_transaction(0, com_rx_node, &txdata, 1, &val, 200, com_delay) == E_NO_ERR) {
+	if (i2c_master_transaction_2(0, com_rx_node, &txdata, 1, &val, 200, com_delay) == E_NO_ERR) {
 		hex_dump(&val[0], 6);    // get command  print in
 		hex_dump(&val[6], val[0]); // Byte 0~1=packet data length, byte 2~5= signal strength , byte 6~N = data part
 		delete_buf();   // delete one frame in receive buffer
@@ -35,9 +35,9 @@ void Read_Execute() {
 int CIC() { 
 
 	uint8_t txdata = com_rx_check;
-	uint8_t val;  // have 1 byte response
+	uint8_t val; 
 
-	if ( i2c_master_transaction(0, com_rx_node, &txdata, 1, &val, 1, com_delay) == E_NO_ERR) {
+	if (i2c_master_transaction_2(0, com_rx_node, &txdata, 1, &val, 1, com_delay) == E_NO_ERR) {
 		return (uint8_t)val;
 	}
 	else
@@ -78,8 +78,7 @@ void Telecom_Task(void * pvParameters) {
 		// 	}
 		// 	tx_wdt_flag = 0;
 		// }		
-		parameters.com_bit_rates = (parameters.first_flight == 1) ? 1 : 8;
-		set_tx_rate(parameters.com_bit_rates);
+
 		/*----------------------------------*/
 		flag = CIC();
 
@@ -93,5 +92,8 @@ void Telecom_Task(void * pvParameters) {
 
 		if (flag > 40 || flag == 0)
 			vTaskDelay(1 * delay_time_based);
+
+		parameters.com_bit_rates = (parameters.first_flight == 1) ? 1 : 8;
+		set_tx_rate(parameters.com_bit_rates);
 	}
 }

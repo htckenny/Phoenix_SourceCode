@@ -75,10 +75,7 @@ uint32_t get_time() {
 
 int parameter_init() {
 
-
 	HK_frame.sun_light_flag				= 0;
-
-
 	/*--File System store count--*/
 	parameters.wod_store_count			= 0;
 	parameters.inms_store_count			= 0;
@@ -134,16 +131,6 @@ int parameter_init() {
 	}
 	else
 		para_w_flash();
-
- 	/* Read last parameter from SD card */
-	// if (para_r(SD_partition_flag) == No_Error) {
-	// 	parameters.reboot_count = parameters.reboot_count + 1;
-	// 	para_w_dup();    /* update to SD Card */
-	// 	return No_Error;
-	// }
-	// else
-	// 	para_w_dup();
-
 	return Error;
 }
 
@@ -295,10 +282,9 @@ uint16_t Interface_3V3_current_get() {
 	uint8_t rx[5];
 	uint8_t tx[2];
 	tx[0] = 0x90;	//0d144
-	tx[1] = 0x90;
+	// tx[1] = 0x90;
 
-	// i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
-	if (i2c_master_transaction_2(0, interface_node, &tx, 2, &rx, 4, interface_delay) == E_NO_ERR) {
+	if (i2c_master_transaction_2(0, interface_node, &tx, 1, &rx, 4, interface_delay) == E_NO_ERR) {
 		return (rx[0] << 8) + rx[1];
 	} 
 	else
@@ -308,10 +294,9 @@ uint16_t Interface_5V_current_get() {
 	uint8_t rx[5];
 	uint8_t tx[2];
 	tx[0] = 0xB0;	//0x176
-	tx[1] = 0xB0;
+	// tx[1] = 0xB0;
 
-	// i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
-	if (i2c_master_transaction_2(0, interface_node, &tx , 2, &rx, 4, interface_delay) == E_NO_ERR) {
+	if (i2c_master_transaction_2(0, interface_node, &tx , 1, &rx, 4, interface_delay) == E_NO_ERR) {
 		return (rx[0] << 8) + rx[1];
 	} 
 	else

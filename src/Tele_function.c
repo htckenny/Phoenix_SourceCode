@@ -43,16 +43,8 @@ int set_tx_rate(uint8_t mode) {
 	uint8_t txbuf[2];
 	txbuf[0] = com_tx_rate;
 	txbuf[1] = mode;
-	if (mode == 1)
-		if (i2c_master_transaction(0, com_tx_node, &txbuf, 2, 0, 0, com_delay) == E_NO_ERR)
-			return No_Error;
-		else
-			return Error;
-	else if (mode == 8)
-		if (i2c_master_transaction(0, com_tx_node, &txbuf, 2, 0, 0, com_delay) == E_NO_ERR)
-			return No_Error;
-		else
-			return Error;
+	if (i2c_master_transaction_2(0, com_tx_node, &txbuf, 2, 0, 0, com_delay) == E_NO_ERR)
+		return No_Error;
 	else
 		return Error;
 
@@ -70,7 +62,7 @@ void set_Call_Sign(int SSID) {
 	txdata[6] = 83;
 	txdata[7] = 0x60 + 2 * (uint8_t)SSID;
 
-	i2c_master_transaction(0, com_tx_node, &txdata, 8, 0, 0, com_delay);
+	i2c_master_transaction_2(0, com_tx_node, &txdata, 8, 0, 0, com_delay);
 
 	txdata[0] = 0x23; 	// set FROM Call-Sign //
 	txdata[1] = 84; 	// TW01TN
@@ -111,17 +103,17 @@ uint8_t AX25_Sequence_Count() {
 
 // Generates sequenceCount , reset if overflow
 uint16_t CCSDS_GetSequenceCount(uint16_t apid) {
-
-	if (apid == obc_apid) {   //obc related command
+	/* OBC related command */
+	if (apid == obc_apid) {
 		if (parameters.obc_packet_sequence_count == 16383) {
 			parameters.obc_packet_sequence_count = 0;
-			return parameters.obc_packet_sequence_count;
 		}
-		parameters.obc_packet_sequence_count ++ ;
+		else
+			parameters.obc_packet_sequence_count ++ ;
 		return parameters.obc_packet_sequence_count;
 	}
-
-	// else if (apid == inms_apid) {   //obc related command
+	/* OBC related command */
+	// else if (apid == inms_apid) {
 	// 	if (parameters.inms_packet_sequence_count == 16383) {
 	// 		parameters.inms_packet_sequence_count = 0;
 	// 		return parameters.inms_packet_sequence_count;
@@ -289,17 +281,14 @@ uint8_t AX25_GenerateTelemetryPacket_Send(uint8_t* data , uint8_t data_len) {
 
 	memcpy(&txBuffer[5], data, data_len);
 	txBuffer[0] = com_tx_send;
-	txBuffer[1] = 0; //Frame Identification(8bits)
-	txBuffer[2] = AX25_Sequence_Count(); //Master Frame Count
-	txBuffer[3] = txBuffer[2];          // Virtual Channel Frame Count
-	txBuffer[4] = 0x00; //First Header Point : 0xFE = no packet fragment inside
+	txBuffer[1] = 0; 						// Frame Identification(8bits)
+	txBuffer[2] = AX25_Sequence_Count(); 	// Master Frame Count
+	txBuffer[3] = txBuffer[2];				// Virtual Channel Frame Count
+	txBuffer[4] = 0x00; 					// First Header Point : 0xFE = no packet fragment inside
 
-	txBuffer[data_len + AX25_2ed_size] = TC_Count(); //tc_count
+	txBuffer[data_len + AX25_2ed_size] = TC_Count();
 	txlen = data_len + AX25_2ed_size + 1;
-	// para_r();
-	// printf("1shut down flag == %d\n", parameters.shutdown_flag);
 	if (parameters.shutdown_flag != 1) {
-		// printf("send telemetry.. \n");
 		if (i2c_master_transaction(0, com_tx_node, &txBuffer, txlen, &rx, 1, com_delay) != E_NO_ERR)
 			return Error;
 	}
@@ -583,8 +572,8 @@ void decodeCCSDS_Command(uint8_t * telecommand, uint8_t packet_length) {
 	unsigned int LTbl[256];
 
 	// Compute CRC (all packet data except FCS field)
-	chk = 0xFFFF; 
-	
+	chk = 0xFFFF;
+
 	InitLtbl(LTbl);
 	for (int i = 0; i < packet_length - 2; i++)
 		chk = crc_opt(telecommand[i], chk, LTbl);
@@ -593,7 +582,7 @@ void decodeCCSDS_Command(uint8_t * telecommand, uint8_t packet_length) {
 	// Check CRC field
 	if (telecommand[packet_length - 2] == (uint8_t)(chk >> 8) && telecommand[packet_length - 1] == (uint8_t)(chk) ) {
 		printf("Telecommand Pass CRC Check (Has CRC check now)\n");
-		
+
 		switch (serviceType) {
 
 		case T3_SYS_CONF:

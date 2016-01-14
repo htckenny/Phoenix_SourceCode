@@ -2,7 +2,7 @@
  * FS.h
  *
  *  Created on: 	2014/11/20
- *  Last Update: 	2015/09/30
+ *  Last Update: 	2016/01/10
  *  Author: 		rusei, Kenny
  *
  */
@@ -12,13 +12,9 @@
 #include <freertos/task.h>
 /*---------------------------------------------------*/
 /*             		  INMS Script                    */
-int inms_script_write(int buffNum,uint8_t scriptCont[], int delete_flag, int length);
 int inms_script_write_flash(int buffNum,uint8_t scriptCont[], int delete_flag, int length);
-void inms_script_read(int buffNum,int packlength,void * txbuf);
 int inms_script_read_flash(int buffNum,int packlength,void * txbuf);
-int inms_script_length(int buffNum);
 int inms_script_length_flash(int buffNum);
-int inms_script_delete(int buffNum);
 int inms_script_delete_flash(int buffNum);
 /*---------------------------------------------------*/
 /*             		  INMS Data                      */
@@ -28,12 +24,14 @@ int inms_data_read(char fileName[], void * txbuf);      					 // serial= which p
 int inms_data_delete();                                                       //return 0 when success, return -1 when fail.
 /*---------------------------------------------------*/
 /*                Whole Orbit Data                   */
-int wod_write(uint8_t frameCont[]);
+void wod_write_dup(uint8_t frameCont[]);
+int wod_write(uint8_t frameCont[], int SD_partition);
 int wod_read(char fileName[], void * txbuf);
 int wod_delete();
 /*---------------------------------------------------*/
 /*                 Solar EUV Data                    */
-int seuv_write();
+void seuv_write_dup();
+int seuv_write(int SD_partition);
 int seuv_read(char fileName[],void * txbuf);
 int seuv_delete();
 /*---------------------------------------------------*/
@@ -52,11 +50,6 @@ int eop_delete();
 void para_d_flash();
 void para_w_flash();
 int para_r_flash();
-
-void para_w_dup();
-int para_w(int SD_partition);
-int para_r(int SD_partition);
-int para_d(int SD_partition);
 /*---------------------------------------------------*/
 int downlink_data_before_t(uint8_t datatype,uint32_t time1);
 int downlink_data_after_t(uint8_t datatype,uint16_t time1);
@@ -66,11 +59,6 @@ int delete_data_before_t(uint8_t datatype,uint32_t time1);
 int delete_data_after_t(uint8_t datatype,uint16_t time1);
 int delete_data_between_t(uint8_t datatype,uint16_t time1,uint16_t time2);
 /*---------------------------------------------------*/
-int inms_data_dump();
-int wod_data_dump();
-int seuv_data_dump();
-int hk_data_dump();
-int thermal_data_dump();
 
 /*---------------------------------------------------*/
 int T_data_d();

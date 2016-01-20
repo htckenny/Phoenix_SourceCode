@@ -138,7 +138,7 @@ void init_command_buf(uint8_t *sche_buf, int buf_length, uint8_t *final_buf) {
 	
 	memcpy(&final_buf[5], &total_length, 1);
 	final_buf[6] = 0;
-	printf("buf length = %d\n", buf_length);
+	// printf("buf length = %d\n", buf_length);
 	for (int i = 7 ; i < buf_length ; i++) {
 		final_buf[i] = sche_buf[i];
 	}
@@ -183,7 +183,7 @@ void Schedule_Task(void * pvParameters)
 	// printf("After schedule read\n");
 	int lastNum = 0;
 	lastNum = findMaxBuf(sche_buf);
-	printf("last = %d\n", lastNum );
+	// printf("last = %d\n", lastNum );
 	while (1) {
 
 		if (schedule_unlink_flag == 1) {
@@ -195,12 +195,14 @@ void Schedule_Task(void * pvParameters)
 		}
 		else {
 			// printf("%d\n", sche_buf);
-			schedule_read_flash(sche_buf);
-			lastNum = findMaxBuf(sche_buf);
-			// printf("Here!!\n");
+			if (schedule_new_command_flag == 1){
+				schedule_read_flash(sche_buf);
+				lastNum = findMaxBuf(sche_buf);
+				schedule_new_command_flag = 0;
+			}			
 		}
 		schedule_sort(lastNum);
-		printf("last Num : %d\n", lastNum);
+		// printf("last Num : %d\n", lastNum);
 		// schedule_new_command_flag = 0;
 		// }
 		// else {
@@ -209,7 +211,6 @@ void Schedule_Task(void * pvParameters)
 		for (int i = 0 ; i < lastNum ; i++) {
 			/* check if there's new command comming in or something changed in the buffer */
 			if (schedule_new_command_flag == 1) {
-				schedule_new_command_flag = 0;
 				break;
 			}
 			/*
@@ -232,8 +233,10 @@ void Schedule_Task(void * pvParameters)
 				if (schedule_new_command_flag == 1) {
 					break;
 				}
+				// if (onBoardTime - sche_time[sort_seq[i]] < 10){
 				printf("sche_time = %" PRIu32 " onBoardTime = %" PRIu32 "\n", sche_time[sort_seq[i]], onBoardTime);
 				printf("\E[1A\r");
+				// }		
 
 				onBoardTime = update_time();
 				/* determine if the schedule time has exceeded */
@@ -256,6 +259,6 @@ void Schedule_Task(void * pvParameters)
 		}
 		vTaskDelay(3 * delay_time_based);
 		// printf("there are %d command in the list\n", lastNum);
-		// printf("\E[1A\r");
+		// printf("hi\n");
 	}
 }

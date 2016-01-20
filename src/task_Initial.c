@@ -40,7 +40,7 @@ void Init_Task(void * pvParameters) {
 
 	/* Activate Battery check task */
 	if (bat_check_task == NULL)
-		xTaskCreate(BatteryCheck_Task, (const signed char *) "BatCk", 1024 * 4, NULL, 1, &bat_check_task);
+		xTaskCreate(BatteryCheck_Task, (const signed char *) "BatCk", 1024 * 4, NULL, 2, &bat_check_task);
 
 	/* Idle 30 minutes in first flight  */
 	if (parameters.ant_deploy_flag == 0) {
@@ -70,11 +70,11 @@ void Init_Task(void * pvParameters) {
 	printf("Active Telecom Task, User can start to upload Ground Telecommand\n");
 	/* Activate telecom task, enable receiver to receive command from GS */
 	if (com_task == NULL) {
-		xTaskCreate(Telecom_Task, (const signed char * ) "COM", 1024 * 4, NULL, 2, &com_task);
+		xTaskCreate(Telecom_Task, (const signed char * ) "COM", 1024 * 4, NULL, 3, &com_task);
 	}
 	/* Activate WOD collecting task, and start to transmit the beacon */
 	if (wod_task == NULL) {
-		xTaskCreate(WOD_Task, (const signed char * ) "WOD", 1024 * 4, NULL, 2, &wod_task);
+		xTaskCreate(WOD_Task, (const signed char * ) "WOD", 1024 * 4, NULL, 1, &wod_task);
 	}
 
 	/* change to the ADCS mode */

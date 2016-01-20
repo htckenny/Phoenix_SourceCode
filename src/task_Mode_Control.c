@@ -104,14 +104,14 @@ void ModeControl_Task(void * pvParameters) {
                 power_control(1, ON); 
                 if(parameters.first_flight==1){
                     if (eop_task == NULL)
-                        xTaskCreate(EOP_Task, (const signed char * ) "EOP", 1024 * 4, NULL,1, &eop_task);
+                        xTaskCreate(EOP_Task, (const signed char * ) "EOP", 1024 * 4, NULL,2, &eop_task);
                     
                     /* TODO: implement GPS task and activate this line */
                     // if (gps_task == NULL)
                     //     xTaskCreate(GPS_Task, (const signed char * ) "GPS", 1024 * 4, NULL, 1, &gps_task);
                 }
                 if (adcs_task == NULL)
-                    xTaskCreate(ADCS_Task, (const signed char * ) "ADCS", 1024 * 4, NULL, 1, &adcs_task);
+                    xTaskCreate(ADCS_Task, (const signed char * ) "ADCS", 1024 * 4, NULL, 2, &adcs_task);
 
                 lastmode = HK_frame.mode_status_flag; // ENTER ADCS MODE DONE!
             }
@@ -129,13 +129,13 @@ void ModeControl_Task(void * pvParameters) {
                 }
                 printf("Creating tasks of HK, INMS, SEUV ~~~\n");
                 if (hk_task == NULL)
-                    xTaskCreate(HK_Task, (const signed char * ) "HK", 1024 * 4, NULL, 2, &hk_task);
+                    xTaskCreate(HK_Task, (const signed char * ) "HK", 1024 * 4, NULL, 1, &hk_task);
                 if (seuv_task == NULL)
-                    xTaskCreate(SolarEUV_Task, (const signed char * ) "SEUV", 1024 * 4, NULL, 3, &seuv_task);
+                    xTaskCreate(SolarEUV_Task, (const signed char * ) "SEUV", 1024 * 4, NULL, 2, &seuv_task);
                 if (inms_error_handle == NULL)
                     xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "InmsEH", 1024 * 4, NULL, 2, &inms_error_handle);
                 if (inms_current_moniter == NULL)
-                    xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "InmsCM", 1024 * 4, NULL, 3, &inms_current_moniter);
+                    xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "InmsCM", 1024 * 4, NULL, 1, &inms_current_moniter);
                 lastmode = HK_frame.mode_status_flag;   // ENTER PAYLOAD MODE DONE!
             }
             /* desire to Enter the Safe Mode. */

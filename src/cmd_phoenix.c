@@ -29,6 +29,19 @@
 #include "tele_function.h"
 #include "fs.h"
 
+int firstflight_switch(struct command_context * ctx) {
+	unsigned int buffer;
+	if (ctx->argc < 2) {
+		return CMD_ERROR_SYNTAX;
+	}
+	if (sscanf(ctx->argv[1], "%u", &buffer) != 1) {
+		return CMD_ERROR_SYNTAX;
+	}
+	// if (buffer == 1) {
+	parameters.first_flight = buffer;
+	para_w_flash();
+	return CMD_ERROR_NONE;
+}
 int moveScriptFromSD (struct command_context *ctx) {
 	
 	int in, out, fdold, fdnew;
@@ -91,8 +104,8 @@ int measure_INMS_current(struct command_context * ctx) {
 	current_5V0 = Interface_5V_current_get();
 	current_3V3 = Interface_3V3_current_get();
 
-	printf("5V Supply: %3f mA\n", (double)current_5V0 / 4.7);
-	printf("3.3V Supply: %3f mA\n", (double)current_3V3 / 68);
+	printf("5V Supply: %.3f mA\n", (double)current_5V0 / 4.7);
+	printf("3.3V Supply: %.3f mA\n", (double)current_3V3 / 68);
 
 	return CMD_ERROR_NONE;
 }
@@ -303,13 +316,13 @@ int I2Csend_handler(struct command_context * ctx) {
 	printf("] \n");
 
 	if (ctx->argc > 3) {
-		if ( i2c_master_transaction_2(0, node, &tx, ctx->argc - 3, &val, rx, eps_delay) != E_NO_ERR) {
+		if ( i2c_master_transaction_2(0, node, &tx, ctx->argc - 3, &val, rx, 10) != E_NO_ERR) {
 			printf("No reply from node %x \r\n", node);
 			return CMD_ERROR_NONE;
 		}
 	}
 	else {
-		if ( i2c_master_transaction_2(0, node, 0, 0, &val, rx, eps_delay) != E_NO_ERR) {
+		if ( i2c_master_transaction_2(0, node, 0, 0, &val, rx, 10) != E_NO_ERR) {
 			printf("No reply from node %x \r\n", node);
 			return CMD_ERROR_NONE;
 		}
@@ -321,6 +334,7 @@ int I2Csend_handler(struct command_context * ctx) {
 int INMS_switch(struct command_context * ctx) {
 	unsigned int buffer;
 	extern void vTaskinms(void * pvParameters);
+	extern void vTaskInmsReceive(void * pvParameters);
 	if (ctx->argc < 2) {
 		return CMD_ERROR_SYNTAX;
 	}
@@ -328,16 +342,21 @@ int INMS_switch(struct command_context * ctx) {
 		return CMD_ERROR_SYNTAX;
 	}
 	if (buffer == 1) {
-		// xTaskCreate(vTaskinms, (const signed char * ) "INMS", 1024 * 4, NULL, 2, &inms_task);
-		extern void vTaskInmsErrorHandle(void * pvParameters);
-		xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "INMS_EH", 1024 * 4, NULL, 2, &inms_error_handle);
+		// extern void vTaskfstest(void * pvParameters);
+		// xTaskCreate(vTaskfstest, (const signed char * ) "FS_T", 1024 * 4, NULL, 2, NULL);
+		// xTaskCreate(vTaskInmsReceive, (const signed char*) "INMSR", 1024 * 4, NULL, 2, &inms_task_receive);
+		xTaskCreate(vTaskinms, (const signed char * ) "INMS", 1024 * 4, NULL, 2, &inms_task);
+		// extern void vTaskInmsErrorHandle(void * pvParameters);
+		// xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "INMS_EH", 1024 * 4, NULL, 2, &inms_error_handle);
 		// extern void vTaskInmsCurrentMonitor(void * pvParameters);
  		// xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "INMS_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
 	}
 	else if (buffer == 0) {
-		vTaskDelete(inms_task);
-		vTaskDelete(inms_error_handle);
-		vTaskDelete(inms_current_moniter);
+		// xTaskCreate(vTaskfstes, (const signed char * ) "FS_T", 1024 * 4, NULL, 2, &fs_task);
+		vTaskDelete(&inms_task);
+		// vTaskDelete(inms_error_handle);
+		// vTaskDelete(inms_task_receive);
+		// vTaskDelete(inms_current_moniter);
 	}
 	return CMD_ERROR_NONE;
 }
@@ -928,7 +947,7 @@ int comhk2(struct command_context * ctx) {
 	uint8_t txdata = com_tx_hk;
 	uint8_t val;
 
-	if (i2c_master_transaction(0, com_tx_node, &txdata, 1, &val, com_tx_hk_length, com_delay) == E_NO_ERR) {
+	if (i2c_master_transaction_2(0, com_tx_node, &txdata, 1, &val, com_tx_hk_length, com_delay) == E_NO_ERR) {
 		hex_dump(&val, com_tx_hk_length);
 	} else
 		printf("ERROR!!  Get no reply from COM \r\n");
@@ -939,8 +958,8 @@ int comhk(struct command_context * ctx) {
 
 	uint8_t txdata = com_rx_hk;
 	uint8_t val[com_rx_hk_length];
-	i2c_master_transaction(0, com_rx_node, &txdata, 1, 0, 0, com_delay) ;
-	if (i2c_master_transaction(0, com_rx_node, 0, 0, &val, com_rx_hk_length, com_delay) == E_NO_ERR) {
+	// i2c_master_transaction(0, com_rx_node, &txdata, 1, 0, 0, com_delay) ;
+	if (i2c_master_transaction_2(0, com_rx_node, &txdata, 1, &val, com_rx_hk_length, com_delay) == E_NO_ERR) {
 		hex_dump(&val, com_rx_hk_length);
 	}
 	// if (i2c_master_transaction(0, com_rx_node, &txdata, 1, &val, com_rx_hk_length, com_delay) == E_NO_ERR) {
@@ -953,7 +972,7 @@ int comhk(struct command_context * ctx) {
 }
 
 command_t __root_command ph_commands[] = {
-
+	{ .name = "ff", .help = "PHOENIX: first flight switch", .handler = firstflight_switch, },
 	{ .name = "mSFD", .help = "PHOENIX: mSFD", .handler = moveScriptFromSD, },
 	{ .name = "ic", .help = "PHOENIX: ic", .handler = measure_INMS_current, },
 	{ .name = "isn", .help = "PHOENIX: isn [buffer]", .handler = load_INMS_script, },

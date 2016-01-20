@@ -27,7 +27,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 	uint8_t completionError = ERR_F_READ;
 	/*------------------------------------------Telecommand-----------------------------------*/
 
-	uint16_t packet_length = (telecommand[4] << 8) + telecommand[5] -4;
+	uint16_t packet_length = (telecommand[4] << 8) + telecommand[5] - 4;
 
 	uint8_t paras[180];
 	if ( packet_length > 0)
@@ -43,77 +43,94 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 				vTaskDelete(beacon_task);
 
 			memcpy(&T1, &paras[2], 4);
-			if (paras[1] == 1){								/* mode is 1 => need T1 and T2 */
+			if (paras[1] == 1) {								/* mode is 1 => need T1 and T2 */
 				memcpy(&T2, &paras[7], 4);
 			}
-			else if (paras[1] == 2 || paras[1] == 3){		/* mode is 2 or 3 => only need T1 */
+			else if (paras[1] == 2 || paras[1] == 3) {		/* mode is 2 or 3 => only need T1 */
 				T2 = 0;
 			}
 			T1 = csp_ntoh32(T1);
 			T2 = csp_ntoh32(T2);
-			printf("before Time 1 = %"PRIu32" \n", T1);
+			// printf("before Time 1 = %"PRIu32" \n", T1);
 			printf("Date type = %d\n", paras[0]);
 
-			/* PHOENIX HK */
-			if (paras[0] == 1) {
-				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
-				if (scan_files_Downlink (fileName_HK[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error){
-					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
-					break;
+			if (paras[0] >= 1 && paras[0] <= 5) {
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+				/* PHOENIX HK */
+				if (paras[0] == 1) {
+					if (hk_task != NULL)
+						vTaskSuspend(hk_task);
+					if (scan_files_Downlink (fileName_HK[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
+						sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+						break;
+					}
+					if (hk_task != NULL)
+						vTaskResume(hk_task);
 				}
-			}
-			/* INMS */
-			else if (paras[0] == 2) {
-				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
-				if (scan_files_Downlink (fileName_INMS[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error){
-					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
-					break;
+				/* INMS */
+				else if (paras[0] == 2) {
+					if (inms_task != NULL)
+						vTaskSuspend(inms_task);
+					if (scan_files_Downlink (fileName_INMS[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
+						sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+						break;
+					}
+					if (inms_task != NULL)
+						vTaskResume(inms_task);
 				}
-			}
-			/* SEUV */
-			else if (paras[0] == 3) {
-				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
-				if (scan_files_Downlink (fileName_SEUV[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error){
-					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
-					break;
+				/* SEUV */
+				else if (paras[0] == 3) {
+					if (seuv_task != NULL)
+						vTaskSuspend(seuv_task);
+					if (scan_files_Downlink (fileName_SEUV[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
+						sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+						break;
+					}
+					if (seuv_task != NULL)
+						vTaskResume(seuv_task);
 				}
-			}
-			/* EOP */
-			else if (paras[0] == 4) {
-				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
-				if (scan_files_Downlink (fileName_EOP[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error){
-					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
-					break;
+				/* EOP */
+				else if (paras[0] == 4) {
+					if (eop_task != NULL)
+						vTaskSuspend(eop_task);
+					if (scan_files_Downlink (fileName_EOP[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
+						sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+						break;
+					}
+					if (eop_task != NULL)
+						vTaskResume(eop_task);
 				}
-			}
-			/* WOD */
-			else if (paras[0] == 5) {
-				printf("f = %s\n", fileName_WOD[parameters.SD_partition_flag]);
-				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
-				if (scan_files_Downlink (fileName_WOD[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error){
-					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
-					break;
+				/* WOD */
+				else if (paras[0] == 5) {
+					if (wod_task != NULL)
+						vTaskSuspend(wod_task);
+					if (scan_files_Downlink (fileName_WOD[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
+						sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+						break;
+					}
+					if (wod_task != NULL)
+						vTaskResume(wod_task);
 				}
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+				if (beacon_task != NULL)
+					xTaskCreate(beacon_Task, (const signed char *) "beacon", 1024 * 4, NULL, 2, &beacon_task);
 			}
-			else{
-				sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); //accept fail
+			else {
+				sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 			}
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
-
-			xTaskCreate(beacon_Task, (const signed char *) "beacon", 1024 * 4, NULL, 2, &beacon_task);
-		} 
+		}
 		else
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); //accept fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 		break;
 	/*---------------ID:10 delete_data----------------*/
 	case delete_data:
 		if (packet_length > 5) {
 
 			memcpy(&T1, &paras[2], 4);
-			if (paras[1] == 1){								/* mode is 1 => need T1 and T2 */
+			if (paras[1] == 1) {								/* mode is 1 => need T1 and T2 */
 				memcpy(&T2, &paras[7], 4);
 			}
-			else if (paras[1] == 2 || paras[1] == 3){		/* mode is 2 or 3 => only need T1 */
+			else if (paras[1] == 2 || paras[1] == 3) {		/* mode is 2 or 3 => only need T1 */
 				T2 = 0;
 			}
 			T1 = csp_ntoh32(T1);
@@ -122,7 +139,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 			/* PHOENIX HK */
 			if (paras[0] == 1) {
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
-				if (scan_files_Delete (fileName_HK[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error){
+				if (scan_files_Delete (fileName_HK[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
 					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
 					break;
 				}
@@ -130,7 +147,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 			/* INMS */
 			else if (paras[0] == 2) {
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
-				if (scan_files_Delete (fileName_INMS[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error){
+				if (scan_files_Delete (fileName_INMS[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
 					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
 					break;
 				}
@@ -138,7 +155,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 			/* SEUV */
 			else if (paras[0] == 3) {
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
-				if (scan_files_Delete (fileName_SEUV[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error){
+				if (scan_files_Delete (fileName_SEUV[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
 					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
 					break;
 				}
@@ -146,7 +163,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 			/* EOP */
 			else if (paras[0] == 4) {
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
-				if (scan_files_Delete (fileName_EOP[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error){
+				if (scan_files_Delete (fileName_EOP[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
 					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
 					break;
 				}
@@ -154,7 +171,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 			/* WOD */
 			else if (paras[0] == 5) {
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
-				if (scan_files_Delete (fileName_WOD[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error){
+				if (scan_files_Delete (fileName_WOD[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
 					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
 					break;
 				}
@@ -162,8 +179,8 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 			/* INMS Script */
 			else if (paras[0] == 6) {
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
-				
-				for (int i = 0 ; i < 7 ; i++){
+
+				for (int i = 0 ; i < 7 ; i++) {
 					inms_script_delete_flash(i);
 				}
 				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
@@ -173,7 +190,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 				sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); //accept fail
 
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
-		} 
+		}
 		else
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); //accept fail
 		break;
@@ -184,29 +201,3 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 
 	}
 }
-
-/**
- * Old Code
- */
-			// if (paras[1] == 1) {
-			// 	sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
-			// 	if (delete_data_between_t(paras[0], T1, T2) != No_Error) {
-			// 		sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
-			// 		break;
-			// 	}
-			// }
-			// else if (paras[1] == 2) {
-			// 	sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
-			// 	if (delete_data_before_t(paras[0], T1) != No_Error) {
-			// 		sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
-			// 		break;
-			// 	}
-			// }
-			// else if (paras[1] == 3) {
-			// 	sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
-			// 	if (delete_data_after_t(paras[0], T1) != No_Error) {
-			// 		sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
-			// 		break;
-			// 	}
-			// }
-			

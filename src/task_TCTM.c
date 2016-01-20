@@ -12,7 +12,7 @@
 void delete_buf() {
 
 	uint8_t txdata = com_rx_delete;
-	i2c_master_transaction(0, com_rx_node, &txdata, 1, 0, 0, com_delay);
+	i2c_master_transaction_2(0, com_rx_node, &txdata, 1, 0, 0, com_delay);
 }
 
 /* Read incoming commnad */
@@ -92,8 +92,5 @@ void Telecom_Task(void * pvParameters) {
 
 		if (flag > 40 || flag == 0)
 			vTaskDelay(1 * delay_time_based);
-
-		parameters.com_bit_rates = (parameters.first_flight == 1) ? 1 : 8;
-		set_tx_rate(parameters.com_bit_rates);
 	}
 }

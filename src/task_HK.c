@@ -57,10 +57,9 @@ int TS11() {
 	tx[0] = 0xD0;
 	tx[1] = 0xD0;
 
-	i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
-	i2c_master_transaction(0, interface_node, 0 , 0, &rx, 4, seuv_delay);
+	i2c_master_transaction_2(0, interface_node, &tx, 2, &rx, 4, seuv_delay);
 
-	if (i2c_master_transaction(0, interface_node, 0 , 0, &rx, 4, seuv_delay) != E_NO_ERR)
+	if (i2c_master_transaction_2(0, interface_node, 0 , 0, &rx, 4, seuv_delay) != E_NO_ERR)
 		return Error;
 
 	// memcpy(&ThermalFrame.T10,&rx[0],3);
@@ -79,11 +78,10 @@ int TS10() {
 	tx[1] = 0xF0;
 
 
-	i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
-	i2c_master_transaction(0, interface_node, 0 , 0, &rx, 4, seuv_delay);
+	i2c_master_transaction_2(0, interface_node, &tx ,2, &rx, 4, seuv_delay);
 
 
-	if (i2c_master_transaction(0, interface_node, 0 , 0, &rx, 4, seuv_delay) != E_NO_ERR)
+	if (i2c_master_transaction_2(0, interface_node, 0 , 0, &rx, 4, seuv_delay) != E_NO_ERR)
 		return Error;
 
 
@@ -114,7 +112,7 @@ int TS7() {
 	uint8_t txbuffer = 175;
 	uint8_t rxbuffer[6];
 
-	if (i2c_master_transaction(0, adcs_node, &txbuffer, 1, &rxbuffer, 6, adcs_delay) != E_NO_ERR)
+	if (i2c_master_transaction_2(0, adcs_node, &txbuffer, 1, &rxbuffer, 6, adcs_delay) != E_NO_ERR)
 		return Error;
 
 	// ThermalFrame.T7 = (uint16_t)rxbuffer[5];
@@ -127,7 +125,7 @@ int TS6() {
 	uint8_t txbuffer = 0xC0;
 	uint16_t rxbuffer[2];
 
-	if (i2c_master_transaction(0, ant_node, &txbuffer, 1, &rxbuffer, 2, com_delay) != E_NO_ERR)
+	if (i2c_master_transaction_2(0, ant_node, &txbuffer, 1, &rxbuffer, 2, com_delay) != E_NO_ERR)
 		return Error;
 	memcpy(&ThermalFrame.T6, &rxbuffer, 2);
 	// ThermalFrame.T6 = rxbuffer;
@@ -139,7 +137,7 @@ int TS5() {
 	uint8_t txbuffer = com_rx_hk;
 	uint16_t rxbuffer[7];
 
-	if (i2c_master_transaction(0, com_rx_node, &txbuffer, 1, &rxbuffer, 14, com_delay) != E_NO_ERR)
+	if (i2c_master_transaction_2(0, com_rx_node, &txbuffer, 1, &rxbuffer, 14, com_delay) != E_NO_ERR)
 		return Error;
 
 	//rxbuffer=csp_ntoh16(rxbuffer);

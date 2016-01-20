@@ -15,13 +15,12 @@ uint8_t rxbuf[255];
 
 
 void ADCS_Task(void * pvParameters) {
-
-	vTaskDelay(10 * delay_time_based); //Delay 10s when start ADCS
+	vTaskDelay(15 * delay_time_based); //Delay 10s when start ADCS
 
 	//Start detumbling
 	txbuf[0] = 0x03;   //0d03 ADCS run mode
 	txbuf[1] = 0x01;
-	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 2, &rxbuf, 0, adcs_delay) == E_NO_ERR)
+	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 2, 0, 0, adcs_delay) == E_NO_ERR)
 		printf("ID:3\tSet ADCS run mode into enabled\n");
 
 	txbuf[0] = 0x12;   //0d18 Set attitude control mode
@@ -29,17 +28,17 @@ void ADCS_Task(void * pvParameters) {
 	txbuf[2] = 0x00;
 	txbuf[3] = 0x00;
 	txbuf[4] = 0x00;
-	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 5, &rxbuf, 0, adcs_delay) == E_NO_ERR)
+	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 5, 0, 0, adcs_delay) == E_NO_ERR)
 		printf("ID:18\tSet control mode into detumbling\n");
 
 	txbuf[0] = 0x11;   //0d17 Set attitude estimation mode
 	txbuf[1] = 0x01;
-	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 2, &rxbuf, 0, adcs_delay) == E_NO_ERR)
+	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 2, 0, 0, adcs_delay) == E_NO_ERR)
 		printf("ID:17\tSet estimation mode into MEMS rate sensing\n");
 
-	int16_t xrate=0; //X-axis angular rates
-	int16_t yrate=0; //Z-axis angular rates
-	int16_t zrate=0; //Z-axis angular rates
+	int16_t xrate = 0; //X-axis angular rates
+	int16_t yrate = 0; //Z-axis angular rates
+	int16_t zrate = 0; //Z-axis angular rates
 	uint8_t flag_mag = 0; //Magnetometer deployment flag
 	uint8_t flag_TRIAD = 0; //TRIAD flag
 
@@ -51,10 +50,14 @@ void ADCS_Task(void * pvParameters) {
 			xrate = rxbuf[0] + (rxbuf[1] << 8); //   *256 = <<8, /256= >>8
 			yrate = rxbuf[2] + (rxbuf[3] << 8); //   *256 = <<8, /256= >>8
 			zrate = rxbuf[4] + (rxbuf[5] << 8); //   *256 = <<8, /256= >>8
+			printf("\t\t\t\t\t\tYrate = %d\n", yrate);
+			printf("\E[1A\r");
 		}
+		else
+			printf("No reply from ADCS\n");
 		// printf("ADCS measurement taken\n");
 		// printf("Xrate = %d\n", xrate);
-		// printf("Yrate = %d\n", yrate);
+		
 		// printf("Zrate = %d\n", zrate);
 
 		if ((yrate >= -2700) && (yrate <= -1700)) {			//Please check the negative value
@@ -78,12 +81,12 @@ void ADCS_Task(void * pvParameters) {
 				txbuf[2] = 0x00;
 				txbuf[3] = 0x00;
 				txbuf[4] = 0x00;
-				if (i2c_master_transaction(0, adcs_node, &txbuf, 5, &rxbuf, 0, adcs_delay) == E_NO_ERR)
+				if (i2c_master_transaction_2(0, adcs_node, &txbuf, 5, &rxbuf, 0, adcs_delay) == E_NO_ERR)
 					printf("ID:18\tSet control mode into Y-momentum\n");
 
 				txbuf[0] = 0x11;   //0d17 Set attitude estimation mode
 				txbuf[1] = 0x04;
-				if (i2c_master_transaction(0, adcs_node, &txbuf, 2, &rxbuf, 0, adcs_delay) == E_NO_ERR)
+				if (i2c_master_transaction_2(0, adcs_node, &txbuf, 2, &rxbuf, 0, adcs_delay) == E_NO_ERR)
 					printf("ID:17\tSet estimation mode into EKF\n");
 			}
 			else {
@@ -92,7 +95,7 @@ void ADCS_Task(void * pvParameters) {
 				txbuf[2] = 0x00;
 				txbuf[3] = 0x00;
 				txbuf[4] = 0x00;
-				if (i2c_master_transaction(0, adcs_node, &txbuf, 5, &rxbuf, 0, adcs_delay) == E_NO_ERR)
+				if (i2c_master_transaction_2(0, adcs_node, &txbuf, 5, &rxbuf, 0, adcs_delay) == E_NO_ERR)
 					printf("ID:18\tSet control mode into detumbling\n"); //go back to detumbling
 			}
 		}
@@ -100,7 +103,7 @@ void ADCS_Task(void * pvParameters) {
 		//Change magnetometer configuration after deployment
 		if (flag_mag == 0) {
 			txbuf[0] = 0xA6;   //0d166 Raw CSS,CSS4 is below magnetometer
-			if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 6, adcs_delay) == E_NO_ERR){
+			if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 6, adcs_delay) == E_NO_ERR) {
 				// printf("CSS4 measurement= %d\n", rxbuf[3]);
 			}
 		}
@@ -137,18 +140,18 @@ void ADCS_Task(void * pvParameters) {
 			txbuf[28] = 0x00;
 			txbuf[29] = 0x3D;  //S33
 			txbuf[30] = 0x09;
-			if (i2c_master_transaction(0, adcs_node, &txbuf, 31, &rxbuf, 0, adcs_delay) == E_NO_ERR)
+			if (i2c_master_transaction_2(0, adcs_node, &txbuf, 31, &rxbuf, 0, adcs_delay) == E_NO_ERR)
 				printf("ID:86\tSet magnetometer configuration\n");
 			flag_mag = 1;
 
 			//Write the configuration to flash memory
 			txbuf[0] = 0x64;   //0d100 Save current configuration to flash memory
-			if (i2c_master_transaction(0, adcs_node, &txbuf, 1, &rxbuf, 0, adcs_delay) == E_NO_ERR)
+			if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 0, adcs_delay) == E_NO_ERR)
 				printf("ID:100\tSave current configuration to flash memory\n");
 
 			//Check by reading HK
 			txbuf[0] = 0xC0;   //0d192 Current configuration
-			if (i2c_master_transaction(0, adcs_node, &txbuf, 1, &rxbuf, 236, adcs_delay) == E_NO_ERR)	{
+			if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 236, adcs_delay) == E_NO_ERR)	{
 				printf("Magnetometer mounting alpha= %d\n", (rxbuf[114] + (rxbuf[115] << 8)));
 				printf("Magnetometer mounting beta= %d\n", (rxbuf[116] + (rxbuf[117] << 8)));
 				printf("Magnetometer mounting gamma= %d\n", (rxbuf[118] + (rxbuf[119] << 8)));

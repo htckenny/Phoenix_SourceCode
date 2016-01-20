@@ -27,7 +27,7 @@ int tx_mode(uint8_t mode) {
 	uint8_t txdata[2];
 	txdata[0] = com_tx_mode;
 	txdata[1] = mode;
-	if ( i2c_master_transaction(0, com_tx_node, &txdata, 2, 0, 0, com_delay) == E_NO_ERR) {
+	if ( i2c_master_transaction_2(0, com_tx_node, &txdata, 2, 0, 0, com_delay) == E_NO_ERR) {
 		return 0;
 	}
 	else
@@ -73,7 +73,7 @@ void set_Call_Sign(int SSID) {
 	txdata[6] = 78;
 	txdata[7] = 0x60 + 2 * (uint8_t)SSID;
 
-	i2c_master_transaction(0, com_tx_node, &txdata, 8, 0, 0, com_delay);
+	i2c_master_transaction_2(0, com_tx_node, &txdata, 8, 0, 0, com_delay);
 
 
 }
@@ -289,7 +289,7 @@ uint8_t AX25_GenerateTelemetryPacket_Send(uint8_t* data , uint8_t data_len) {
 	txBuffer[data_len + AX25_2ed_size] = TC_Count();
 	txlen = data_len + AX25_2ed_size + 1;
 	if (parameters.shutdown_flag != 1) {
-		if (i2c_master_transaction(0, com_tx_node, &txBuffer, txlen, &rx, 1, com_delay) != E_NO_ERR)
+		if (i2c_master_transaction_2(0, com_tx_node, &txBuffer, txlen, &rx, 1, com_delay) != E_NO_ERR)
 			return Error;
 	}
 	else
@@ -311,7 +311,7 @@ uint8_t AX25_Send(uint8_t* data , uint8_t data_len) {
 	txBuffer[0] = com_tx_send;
 	txlen = data_len + 1;
 	if (parameters.shutdown_flag != 1) {
-		if (i2c_master_transaction(0, com_tx_node, &txBuffer, txlen, &rx, 1, com_delay) != E_NO_ERR)
+		if (i2c_master_transaction_2(0, com_tx_node, &txBuffer, txlen, &rx, 1, com_delay) != E_NO_ERR)
 			return Error;
 	}
 

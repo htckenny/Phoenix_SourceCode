@@ -19,7 +19,7 @@ void gps_timesyn() {
 	timestamp_t t;
 	time_t tt;
 
-	if ( i2c_master_transaction(0, adcs_node, &txbuf, 1, &rxbuf, 6, adcs_delay) == E_NO_ERR) {
+	if ( i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 6, adcs_delay) == E_NO_ERR) {
 
 		t.tv_sec = 0;
 		t.tv_nsec = 0;
@@ -39,7 +39,7 @@ void init_time() {
 	time_t tt;
 	timestamp_t t;
 
-	t.tv_sec  = 473385600;// 473385600 = to 2015/1/1
+	t.tv_sec  = 473385600;	// 473385600 = to 2015/1/1
 	t.tv_nsec = 0;
 
 

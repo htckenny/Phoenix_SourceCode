@@ -138,11 +138,11 @@ void deploy_antenna() {
 	uint8_t txdata[2];
 
 	txdata[0] = ant_arm;    // arm ant board
-	i2c_master_transaction(0, ant_node, &txdata, 1, 0, 0, 0);
+	i2c_master_transaction_2(0, ant_node, &txdata, 1, 0, 0, 0);
 	vTaskDelay(0.1 * delay_time_based);
 	txdata[0] = ant_deploy;    // deploy ant board one by one
 	txdata[1] = ant_deploy_timeout;
-	i2c_master_transaction(0, ant_node, &txdata, 2, 0, 0, 0);
+	i2c_master_transaction_2(0, ant_node, &txdata, 2, 0, 0, 0);
 	printf("Antenna Deployed!!\n");
 }
 

@@ -5,10 +5,11 @@
 #include <util/timestamp.h>
 #include <nanomind.h>
 #include <dev/i2c.h>
-#include "fs.h"
-#include "time.h"
-#include "string.h"
+#include <time.h>
+#include <string.h>
 #include <inttypes.h>
+
+#include "fs.h"
 #include "parameter.h"
 #include "subsystem.h"
 
@@ -16,184 +17,58 @@
 #define SDCARDTEST		0
 #define TEST_FILENAME	0
 #define TEST_i2c_tx_len	0
-#define Test_Delay		1
-
+#define Test_Delay		0
+#define format_SD		0
+#define Test_downlink		0
+#define Test_downlink_2		1
 void vTaskfstest(void * pvParameters) {
 
-// uint8_t buffer[300];
-// FILINFO *fno;
-// 	uint8_t con[] = {0x9D, 0x00, 0x1C, 0x96, 0x8D, 0xCE, 0x7E, 0x99, 0x8D, 0xCE, 0x41, 0x01, 0x00, 0x0F, 0x10, 0x41, 0x00
-// 	                 , 0x14, 0x10, 0x42, 0x00, 0x28, 0x10, 0x43, 0x00, 0x00, 0x11, 0x42, 0x00, 0x14, 0x11, 0x43, 0x00, 0x28
-// 	                 , 0x11, 0x42, 0x00, 0x00, 0x12, 0x43, 0x00, 0x14, 0x12, 0x42, 0x00, 0x28, 0x12, 0x43, 0x55, 0x05, 0x00
-// 	                 , 0xFB, 0x01, 0x01, 0x0A, 0x00, 0x04, 0x02, 0x02, 0x04, 0x05, 0x01, 0x0B, 0x01, 0x03, 0x0A, 0x00, 0xFC
-// 	                 , 0x01, 0x04, 0x02, 0x00, 0xFD, 0x01, 0x05, 0x05, 0x00, 0xFB, 0x01, 0x06, 0x05, 0x00, 0x53, 0x01, 0x07
-// 	                 , 0x0A, 0x00, 0xC9, 0x01, 0x08, 0x08, 0x00, 0x08, 0x06, 0x09, 0x34, 0x80, 0x64, 0x32, 0x64, 0x1E, 0x12
-// 	                 , 0x0B, 0x01, 0x0A, 0x0A, 0x00, 0xFC, 0x01, 0x0B, 0x0A, 0x00, 0xFD, 0x01, 0x0C, 0x05, 0x00, 0xFB, 0x01
-// 	                 , 0x0D, 0x05, 0x00, 0x53, 0x01, 0x0E, 0x0A, 0x00, 0xC9, 0x01, 0x0F, 0x08, 0x00, 0x08, 0x06, 0x10, 0x34
-// 	                 , 0x80, 0x64, 0x32, 0x64, 0x1E, 0x12, 0x0B, 0x01, 0x11, 0x0A, 0x00, 0xFC, 0x01, 0x12, 0x0A, 0x00, 0xFD
-// 	                 , 0x01, 0x13, 0xEF, 0x31
-// 	                };
-// //		uint8_t *conr;
-// //		int len;
-// 	uint8_t cons[] = {0x7D, 0x00, 0xAD, 0x5C, 0x07, 0xCF, 0xAD, 0x5C, 0x07, 0xCF, 0x23, 0x12, 0x00, 0x05, 0x00, 0x41, 0x00
-// 	                  , 0x06, 0x00, 0x42, 0x00, 0x07, 0x00, 0x43, 0x55, 0x02, 0x00, 0xF1, 0x01, 0x01, 0x02, 0x00, 0x04, 0x02
-// 	                  , 0x02, 0x40, 0x02, 0x00, 0x0B, 0x01, 0x03, 0x02, 0x00, 0xF2, 0x01, 0x04, 0x04, 0x00, 0xFE, 0x01, 0x05
-// 	                  , 0x02, 0x00, 0xF1, 0x01, 0x06, 0x02, 0x00, 0x04, 0x02, 0x07, 0x15, 0x02, 0x00, 0x53, 0x01, 0x08, 0x14
-// 	                  , 0x00, 0xC9, 0x01, 0x09, 0x14, 0x00, 0x08, 0x06, 0x0A, 0xC8, 0x8E, 0x02, 0x00, 0x05, 0x02, 0x00, 0x0B
-// 	                  , 0x01, 0x0B, 0x02, 0x00, 0xF2, 0x01, 0x0C, 0x04, 0x00, 0xFE, 0x01, 0x0D, 0x02, 0x00, 0xF1, 0x01, 0x0E
-// 	                  , 0x02, 0x00, 0x04, 0x02, 0x0F, 0x04, 0x02, 0x00, 0x0B, 0x01, 0x10, 0x02, 0x00, 0xF2, 0x01, 0x11, 0x04
-// 	                  , 0x00, 0xFE, 0x01, 0x12, 0x93, 0xFF
-// 	                 };
-// 	uint8_t con6[] = {0x2D, 0x00 , 0xF6 , 0xDF , 0x02 , 0xCF , 0xF5 , 0xDF , 0x02 , 0xCF , 0x23 , 0x12 , 0x12 , 0x0F , 0x0E , 0x41 , 0x12, 0x0F, 0x0E, 0x42, 0x55 , 0x0A , 0x00 , 0x04 , 0x02 , 0x01 , 0x19 , 0x0A , 0x00 , 0xFE , 0x01 , 0x02 , 0x0A , 0x00 , 0x04 , 0x02 , 0x03 , 0x23 , 0x0A , 0x00 , 0xFE , 0x01 , 0x04 , 0xBE , 0xDD};
-	// FRESULT res;
-	// FATFS fs;
-	// f_mount(0, &fs);
-	// res = f_mkdir("0:/INMS_DATA");
-	// res = f_mkdir("0:/EOP_DATA");
-	// res = f_mkdir("0:/WOD_DATA");
-	// res = f_mkdir("0:/HK_DATA");
-	// res = f_mkdir("0:/SEUV_DATA");
-	// f_mount(0, NULL);
-	// while (1){
-	// 	vTaskDelay(1000);
-	// }
-// 	uint8_t con7[] = {  0x08, 0x01, 0x94, 0xD8, 0x02, 0xCF, 0x94, 0xD8,
-// 		                0x02, 0xCF, 0x23, 0x12, 0x30, 0x2B, 0x0D, 0x41,
-// 		                0x55, 0x0A, 0x00, 0x04, 0x02, 0x01, 0x32, 0x0A,
-// 		                0x00, 0x04, 0x02, 0x02, 0x32, 0x0A, 0x00, 0x04,
-// 		                0x02, 0x03, 0x32, 0x0A, 0x00, 0x04, 0x02, 0x04,
-// 		                0x32, 0x0A, 0x00, 0x04, 0x02, 0x05, 0x32, 0x0A,
-// 		                0x00, 0x04, 0x02, 0x06, 0x21, 0x0A, 0x00, 0x04,
-// 		                0x02, 0x07, 0x21, 0x0A, 0x00, 0x04, 0x02, 0x08,
-// 		                0x21, 0x00, 0x01, 0xFE, 0x01, 0x09, 0xCB, 0x2C,
-// 		                0x02, 0xCF, 0x23, 0x12, 0x30, 0x2B, 0x0D, 0x41,
-// 		                0x55, 0x0A, 0x00, 0x04, 0x02, 0x01, 0x32, 0x0A,
-// 		                0x00, 0x04, 0x02, 0x02, 0x32, 0x0A, 0x00, 0x04,
-// 		                0x02, 0x03, 0x32, 0x0A, 0x00, 0x04, 0x02, 0x04,
-// 		                0x32, 0x0A, 0x00, 0x04, 0x02, 0x05, 0x32, 0x0A,
-// 		                0x00, 0x04, 0x02, 0x06, 0x21, 0x0A, 0x00, 0x04,
-// 		                0x02, 0x07, 0x21, 0x0A, 0x00, 0x04, 0x02, 0x08,
-// 		                0x21, 0x00, 0x01, 0xFE, 0x01, 0x09, 0xCB, 0x2C,
-// 		                0x02, 0xCF, 0x23, 0x12, 0x30, 0x2B, 0x0D, 0x41,
-// 		                0x55, 0x0A, 0x00, 0x04, 0x02, 0x01, 0x32, 0x0A,
-// 		                0x00, 0x04, 0x02, 0x02, 0x32, 0x0A, 0x00, 0x04,
-// 		                0x02, 0x03, 0x32, 0x0A, 0x00, 0x04, 0x02, 0x04,
-// 		                0x32, 0x0A, 0x00, 0x04, 0x02, 0x05, 0x32, 0x0A,
-// 		                0x00, 0x04, 0x02, 0x06, 0x21, 0x0A, 0x00, 0x04,
-// 		                0x02, 0x07, 0x21, 0x0A, 0x00, 0x04, 0x02, 0x08,
-// 		                0x21, 0x00, 0x01, 0xFE, 0x01, 0x09, 0xCB, 0x2C,
-// 		                0x02, 0xCF, 0x23, 0x12, 0x30, 0x2B, 0x0D, 0x41,
-// 		                0x55, 0x0A, 0x00, 0x04, 0x02, 0x01, 0x32, 0x0A,
-// 		                0x00, 0x04, 0x02, 0x02, 0x32, 0x0A, 0x00, 0x04,
-// 		                0x02, 0x03, 0x32, 0x0A, 0x00, 0x04, 0x02, 0x04,
-// 		                0x32, 0x0A, 0x00, 0x04, 0x02, 0x05, 0x32, 0x0A,
-// 		                0x00, 0x04, 0x02, 0x06, 0x21, 0x0A, 0x00, 0x04,
-// 		                0x02, 0x07, 0x21, 0x0A, 0x00, 0x04, 0x02, 0x08,
-// 		                0x21, 0x00, 0x01, 0xFE, 0x01, 0x09, 0xCB, 0x2C
-// 		                 };
+#if format_SD
+	FATFS fs;
+	BYTE label;
+	f_mount(parameters.SD_partition_flag, NULL);
+	f_mount(parameters.SD_partition_flag, &fs);
 
-// 	vTaskDelay(3000);
-// 	//inms_script_write(2,"Scheiße");
-// 	// inms_script_write(6,con6);
-// 	// inms_script_write(7,con7);
-// 	// inms_script_write(7,cons);
-// 	inms_script_write(7, con7, 1, con7[0]);
-// 	//vTaskDelay(5000);
-// //		len = inms_script_length(4);
-// //		conr = inms_script_read(3,len);
-// //		printf("len = %d\n",len);
-// 	//printf("con = %d\n",sizeof(con));
-// //		for(int i =0;i<20;i++){
-// //			printf("0x%02X\n",conr[i]);
-// //		}
-// 	//printf("0x%02X\n",*conr);
+	label = parameters.SD_partition_flag;
+	if (parameters.SD_partition_flag == 0) {
+		f_mkfs(label, 0, 0);
+		f_mkdir("0:/INMS_DATA");
+		f_mkdir("0:/EOP_DATA");
+		f_mkdir("0:/WOD_DATA");
+		f_mkdir("0:/HK_DATA");
+		f_mkdir("0:/SEUV_DATA");
+	}
+	else if (parameters.SD_partition_flag == 1) {
+		f_mkfs(label, 0, 0);
+		f_mkdir("1:/INMS_DATA");
+		f_mkdir("1:/EOP_DATA");
+		f_mkdir("1:/WOD_DATA");
+		f_mkdir("1:/HK_DATA");
+		f_mkdir("1:/SEUV_DATA");
+	}
 
-// 	int len;
-// 	len = inms_script_length(7);
-// 	uint8_t script[len];
+	while (1) {
+		vTaskDelay(1000);
+	}
+#endif
 
-// 	while (1) {
-// 		vTaskDelay(3000);
-// 		printf("%d\n",len );
-// 		inms_script_read(7, len, &script);
-// 		printf("before\n");
-// 		hex_dump(script, len);
-// 	}
-//
-//
-//
-//
-	
-	// time_t     now;
-	
-	// char fileName[40];
-	// char s[] = "0:/INMS_DATA/";
-	
-	// vTaskDelay(3000);
-	// uint8_t test[schedule_length*10] ;
-	// para_r();
-	// int number = 0;
-	// uint32_t timess = 946684805;
-	// uint32_t timess_2 = 946684815;
-	
-		// strcpy(fileName, s);
-
-		// Get current time
-		
-		// Format time, "ddd yyyy-mm-dd hh:mm:ss zzz"
-		
-
-		// strcat(fileName, buf);
-		// strcat(fileName, "_INMS_TW01");
-		// strcat(fileName, ".dat");
-		// printf("%s\n", buf);
-		// printf("%s\n", fileName);
-		
-		// printf("fuck!!\n");
-		// schedule_read(test);
-		// printf("total line :%d\n", parameters.schedule_series_number);
-		// for(int i = 0 ; i < parameters.schedule_series_number ; i++){
-		// 	printf("%d\n", i);
-
-		// 	for (int j = 0 ; j < schedule_length ; j++){
-		// 		printf("%02x ", test[j+i*schedule_length]);
-		// 	}
-		// 	printf("\n");
-		// }
-		
-		// 
-		// printf("1\n");
-		// scan_files_Downlink("0:/INMS_DATA", 1, timess, timess_2);
-		// printf("\n");
-		// vTaskDelay(3000);
-		// scan_files_Downlink("0:/INMS_DATA", 2, timess, timess_2);
-		// printf("\n");
-		// vTaskDelay(3000);
-		// scan_files_Downlink("0:/INMS_DATA", 3, timess, timess_2);
-		// printf("\n");
-		// for (int i = 0 ; i < 4 ; i++)
-			// printf("%x\n", timess[0]);
-		// printf("%"PRIu32"\n", timess[0]);
-		// scan_files("INMS_DATA");
-		// printf("total file is %d\n", number);
-		// 
 #if TEST_i2c_tx_len
 	int test_number = 256;
 	uint8_t txbuf[test_number];
 	uint8_t rxbuf[10];
 	int result;
-	for (int i = 0 ; i < test_number ; i++){
+	for (int i = 0 ; i < test_number ; i++) {
 		txbuf[i] = i;
 	}
 	vTaskDelay(3000);
-	while(1) {
-		if ((result = i2c_master_transaction(0, adcs_node, &txbuf, test_number, 0, 0, adcs_delay)) == E_NO_ERR){
-			if (i2c_master_transaction(0, adcs_node, 0, 0, &rxbuf, 10, adcs_delay) == E_NO_ERR){
+	while (1) {
+		if ((result = i2c_master_transaction(0, adcs_node, &txbuf, test_number, 0, 0, adcs_delay)) == E_NO_ERR) {
+			if (i2c_master_transaction(0, adcs_node, 0, 0, &rxbuf, 10, adcs_delay) == E_NO_ERR) {
 				printf("write %d bytes\n", test_number);
 			}
 			hex_dump(rxbuf, 10);
 		}
-		else{
+		else {
 			printf("error type = %d\n", result);
 		}
 		vTaskDelay(3000);
@@ -201,8 +76,8 @@ void vTaskfstest(void * pvParameters) {
 #endif
 
 #if TEST_FILENAME
-	while(1) {
-		for (int i = 0 ; i<2;i++){
+	while (1) {
+		for (int i = 0 ; i < 2; i++) {
 			printf("%s\n", fileName_WOD[i]);
 			printf("%s\n", fileName_EOP[i]);
 			printf("%s\n", fileName_INMS[i]);
@@ -213,37 +88,38 @@ void vTaskfstest(void * pvParameters) {
 
 	}
 
-#endif	
+#endif
 
 #if INMSWRITEDATA
-	vTaskDelay(5000);
+	// FATFS fs;
+	vTaskDelay(3 * delay_time_based);
 	printf("start FS test task\n");
 
 	// f_mount(0, &fs);
 	// struct tm  ts;
-	// char        buf[80];
-	timestamp_t t;
-	t.tv_sec = 0;
-	t.tv_nsec = 0;
-	obc_timesync(&t, 6000);
+	// char buf[80];
+	// timestamp_t t;
+	// t.tv_sec = 0;
+	// t.tv_nsec = 0;
+	// obc_timesync(&t, 6000);
 	// time_t tt = t.tv_sec;
 	uint8_t errPacketTotal [196];
-	for (int i = 0 ; i < 196 ; i++){
+	for (int i = 0 ; i < 196 ; i++) {
 		errPacketTotal[i] = i ;
 	}
 	while (1) {
 		// t.tv_sec = 0;
 		// t.tv_nsec = 0;
 		// obc_timesync(&t, 6000);
-		// tt = t.tv_sec;
+		// time_t tt = t.tv_sec;
 		// time(&tt);
 		// ts = *localtime(&tt);
 		// strftime(buf, sizeof(buf), "%Y%m%d_%H%M%S", &ts);
-		// vTaskDelay(500);
-		memcpy(&errPacketTotal[0], &t.tv_sec, 4);
-		// hex_dump(&errPacketTotal, 196);
-		inms_data_write(errPacketTotal);
-		vTaskDelay(1000);
+		// vTaskDelay(0.5 * delay_time_based);
+		// memcpy(&errPacketTotal[0], &t.tv_sec, 4);
+		hex_dump(&errPacketTotal, 196);
+		inms_data_write_dup(errPacketTotal);
+		vTaskDelay(5 * delay_time_based);
 	}
 
 #endif
@@ -268,10 +144,10 @@ void vTaskfstest(void * pvParameters) {
 		printf("\r\n f_mount() 1 fail .. \r\n");
 	else
 		printf("\r\n f_mount() 1 success .. \r\n");
-	
-	
-	
-	while(1) {
+
+
+
+	while (1) {
 
 		res = f_open(&file, "0:/test_0.bin", FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 		if (res != FR_OK)
@@ -286,8 +162,8 @@ void vTaskfstest(void * pvParameters) {
 		else
 			printf("\r\n f_open() 1 success .. \r\n");
 
-	
-	
+
+
 		//將pointer指向文件最後面
 		f_lseek(&file, file.fsize);
 
@@ -295,25 +171,25 @@ void vTaskfstest(void * pvParameters) {
 
 		// hex_dump(frameCont, inms_data_length);
 		if (res != FR_OK) {
-			printf("\r\n sd_write() 0 fail .. \r\n");			
+			printf("\r\n sd_write() 0 fail .. \r\n");
 		}
 		else {
 			printf("\r\n sd_write() 0 success .. \r\n");
-			
+
 		}
 		f_close(&file);
-		
+
 
 		vTaskDelay(5000);
 		res = f_write(&file2, testData, 10, &bw);
 		if (res != FR_OK) {
-			printf("\r\n sd_write() 1 fail .. \r\n");			
+			printf("\r\n sd_write() 1 fail .. \r\n");
 		}
 		else {
-			printf("\r\n sd_write() 1 success .. \r\n");			
+			printf("\r\n sd_write() 1 success .. \r\n");
 		}
 		f_close(&file2);
-		
+
 		vTaskDelay(5000);
 	}
 
@@ -324,10 +200,10 @@ void vTaskfstest(void * pvParameters) {
 
 #if Test_Delay
 	portTickType xLastWakeTime;
-    portTickType xFrequency = 1000;
+	portTickType xFrequency = 1000;
 	xFrequency = 1 * delay_time_based;
 	int delay = 1;
-	while(1){
+	while (1) {
 		xLastWakeTime = xTaskGetTickCount();
 
 		printf("Test delay with %d s\n", delay);
@@ -337,8 +213,68 @@ void vTaskfstest(void * pvParameters) {
 	}
 #endif
 
+#if Test_downlink
+	vTaskDelay(3 * delay_time_based);
+	printf("start FS test task\n");
+
+	uint8_t errPacketTotal [196];
+	uint16_t serial_number = 0;
+	while (1) {
+		memcpy(&errPacketTotal[0], &serial_number, 2);
+		hex_dump(&errPacketTotal, 196);
+		inms_data_write(errPacketTotal, 0);
+		serial_number ++;
+		vTaskDelay(1 * delay_time_based);
+	}
+#endif
+
+#if Test_downlink_2
+	vTaskDelay(3 * delay_time_based);
+	char fileName[45];
+	char numberc[5];
+	int number = 0;
+
+	uint8_t errPacketTotal [196];
+	uint16_t serial_number = 0;
+	FRESULT res;
+	FIL file;
+	UINT  bw;
+
+while (1) {
+	memcpy(&errPacketTotal[0], &serial_number, 2);
+	hex_dump(&errPacketTotal, 196);
+
+	sprintf(numberc, "%d", number);
+	strcpy(fileName, "0:/EOP_DATA/");
+	strcat(fileName, numberc);
+	strcat(fileName, "TESTDATA_TWO1");
+	strcat(fileName, ".dat");
+	printf("%s\n", fileName);
+
+
+	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+	if (res != FR_OK)
+	{
+		printf("\r\nf_open() fail .. \r\n");
+	}
+	//將pointer指向文件最後面
+	f_lseek(&file, file.fsize);
+
+	res = f_write(&file, errPacketTotal, inms_data_length, &bw);
+
+	if (res != FR_OK) {
+		printf("\rinms_write() fail .. \r\n");
+		f_close(&file);
+	}
+	else {
+		printf("\rinms_write() success .. \r\n");
+		f_close(&file);
+	}
+	serial_number ++;
+	number ++;
+	vTaskDelay(1 * delay_time_based);
 }
+#endif
 
-
-
+}
 

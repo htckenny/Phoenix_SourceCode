@@ -35,6 +35,7 @@
 #define INMS_timeout_change			19				/* Set INMS timeout value */
 #define INMS_restart				20				/* Restart INMS script handler, do this after upload new script*/
 #define SD_card_format				30				/* Format SD card, and create default folders */
+#define SD_unlock				31				/* Unlock SD card */
 
 void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	uint8_t txBuffer[200];
@@ -46,7 +47,9 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	uint8_t type = 8;
 	uint8_t paras[180];
 	uint16_t threshold;
-
+	FATFS fs;
+	FIL file;
+	BYTE label;
 
 	if (para_length > 0)
 		memcpy(&paras, telecommand + 9, para_length);
@@ -54,14 +57,14 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	/*--------------- ID:3 reboot ----------------*/
 	case reboot:
 		if (para_length == 0)
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 		else {
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); // send acceptance fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
 			break;
 		}
 		printf("Execute Type 8 Sybtype 3 , Rebooting \r\n");
 
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		txBuffer[0] = 20;
 		i2c_master_transaction(0, eps_node, &txBuffer, 1, 0, 0, eps_delay);
 
@@ -70,9 +73,9 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 
 	case Sync_Time:
 		if (para_length == 5)
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS); 
 		else {
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); // send acceptance fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
 			break;
 		}
 		printf("Execute Type 8 Sybtype 4 , Sync_Time \r\n");
@@ -85,16 +88,16 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		obc_timesync(&t, 1000);
 		tt = t.tv_sec ;
 		printf("OBC time Sync by telecommand to : %s\r\n", ctime(&tt));
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		break;
 
 
 	/*---------------ID:5 DT 0~200----------------*/
 	case DTTest:
 		if (para_length == 0)
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS); 
 		else {
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); // send acceptance fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
 			break;
 		}
 		printf("Execute Type 8 Sybtype 5 , Downlink 1~200!! \r\n");
@@ -102,26 +105,26 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			txBuffer[a - 1] = a;
 
 		SendPacketWithCCSDS_AX25(&txBuffer, 200, obc_apid, type, subType);
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		break;
 	/*---------------ID:6 ShutdownTransmitter----------------*/
 
 	case  ShutdownTransmitter:
 		if (para_length == 0)
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS); 
 		else {
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); // send acceptance fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
 			break;
 		}
 		printf("Execute Type 8 Sybtype 6 , ShutdownTransmitter \r\n");
 		parameters.shutdown_flag = 1;
 		para_w_flash();
 		printf("Shutdown Command Detected!! \r\n");
-		if (tx_mode(3) != 0) {  //set transceiver into standby mode
+		if (tx_mode(3) != 0) {  
 			printf("tx_mode set fail \r\n");
 		}
 
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
 
 	/*---------------ID:7 ResumeTransmitter----------------*/
@@ -132,15 +135,15 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		printf("Shutdown Resume Command Detected!! \r\n");
 		if (tx_mode(1) != 0)   //set transceiver into standby mode
 			printf("tx_mode set fail \r\n");
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		break;
 
 	/*---------------ID:8 Enter_Safe_Threshold----------------*/
 	case  Enter_Safe_Threshold:
 		if (para_length == 2)
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 		else {
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); // send acceptance fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
 			break;
 		}
 		printf("Execute Type 8 Sybtype 8 , Enter_Safe_Threshold \r\n");
@@ -151,14 +154,14 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		memcpy(&parameters.vbat_safe_threshold, &threshold, 2);
 		para_w_flash();
 		printf("Enter_Safe_Threshold = %d mV\n", parameters.vbat_safe_threshold);
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		break;
 	/*---------------ID:9 Leave_Safe_Threshold----------------*/
 	case  Leave_Safe_Threshold:
 		if (para_length == 2)
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 		else {
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); // send acceptance fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
 			break;
 		}
 		printf("Execute Type 8 Sybtype 9 , Leave_Safe_Threshold \r\n");
@@ -169,14 +172,14 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		memcpy(&parameters.vbat_recover_threshold, &threshold, 2);
 		para_w_flash();
 		printf("Leave_Safe_Threshold = %d mV\n", parameters.vbat_recover_threshold);
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		break;
 	/*---------------ID:10 I2C_COMMAND----------------*/
 	case  I2C_COMMAND:
 		if (para_length >= 2)
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 		else {
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); // send acceptance fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
 			break;
 		}
 		printf("Execute Type 8 Sybtype 10 , I2C_COMMAND node[%d] rx[%d] parameter \r\n", paras[0], para_length - 2);
@@ -184,9 +187,9 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 
 			if (paras[1] != 0)
 				i2c_master_transaction(0, com_tx_node, &txBuffer, paras[1], 0, 0, com_delay);
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		} else
-			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); 
 
 		break;
 
@@ -194,9 +197,9 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	/*---------------ID:11 para_to_default----------------*/
 	case  para_to_default:
 		if (para_length == 0)
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 		else {
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); // send acceptance fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
 			break;
 		}
 		printf("Execute Type 8 Sybtype 11 , para_to_default \r\n");
@@ -214,36 +217,36 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		printf("vbat_recover_threshold %d\n", (int) parameters.vbat_recover_threshold);
 		printf("vbat_safe_threshold %d\n", (int) parameters.vbat_safe_threshold);
 
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		break;
 	/*---------------ID:12 set_tx_rates      ----------------*/
 	case set_tx_rates:
 		if (para_length == 1)
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 		else {
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); // send acceptance fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
 			break;
 		}
 		printf("Execute Type 8 Sybtype 12 ,set_tx_rate \r\n");
 
 		if (set_tx_rate(paras[0]) != Error)
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		else
-			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); 
 		break;
 
 	/*---------------ID:13 set_call_sign      ----------------*/
 	case set_call_sign:
 		if (para_length == 0)
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 		else {
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); // send acceptance fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
 			break;
 		}
 		printf("Execute Type 8 Sybtype 13 ,set_call_sign \r\n");
 		set_Call_Sign(0);
 
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 
 		break;
 
@@ -252,57 +255,59 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		printf("para_length = %d\n", para_length);
 		printf("target = %d\n", paras[0]);
 		if (para_length >= 1) {
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 		}
 		else {
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); // send acceptance fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
 			printf("Wrong!!\n");
 			break;
 		}
 		printf("Execute Type 8 Sybtype 14 ,power_on_target [%d]\r\n", paras[0]);
 		power_control(paras[0], ON);
 
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 
 		break;
 
 	/*---------------ID:15 power_off_target     ----------------*/
 	case power_off_target:
 		if (para_length >= 1) {
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 		}
 		else {
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); // send acceptance fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
 			break;
 		}
 		printf("Execute Type 8 Sybtype 15 ,power_off_target [%d]\r\n", paras[0]);
 
 		power_control(paras[0], OFF);
 
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		break;
 	/*---------------  ID:16 enter nominal mode      ----------------*/
 	case enter_nominal_mode:
 		if (para_length == 0)
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 		else {
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); // send acceptance fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
 			break;
 		}
 		printf("Execute Type 8 Sybtype 16 ,enter nominal mode  \r\n");
 
 		parameters.first_flight = 0;
 		HK_frame.mode_status_flag = 3;
+		parameters.com_bit_rates = 8;
 		para_w_flash();
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+		set_tx_rate(parameters.com_bit_rates);
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 
 		break;
 	/*---------------  ID:17 Enable / Disable INMS script handler  ----------------*/
 	case INMS_Script_State:
 		if (para_length == 1)
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 		else {
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); // send acceptance fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
 			break;
 		}
 		printf("Execute Type 8 Sybtype 17\r\n");
@@ -317,14 +322,14 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			printf("disable inms script handler\n");
 		}
 		para_w_flash();
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		break;
 	/*---------------  ID:18 Set SD partition label number  ----------------*/
 	case SD_partition:
 		if (para_length == 1)
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 		else {
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); // send acceptance fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
 			break;
 		}
 		printf("Execute Type 8 Sybtype 18\r\n");
@@ -360,7 +365,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		memcpy(&parameters.INMS_timeout, &timeout, 2);
 		para_w_flash();
 		printf("change INMS timeout to %d s\n", parameters.INMS_timeout);
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		break;
 	/*---------------  ID:20 Restart INMS handler ----------------*/
 	case INMS_restart:
@@ -385,20 +390,18 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		else {
 			printf("Not in nominal mode\n");
 		}
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		break;
 	/*---------------  ID:30 Format SD and Initialize ----------------*/
 	case SD_card_format:
 		if (para_length == 1)
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance success
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 		else {
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); // send acceptance fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
 			break;
 		}
 		printf("Execute Type 8 Sybtype 30\r\n");
-		FATFS fs;
-		FIL file;
-		BYTE label;
+
 		label = paras[0];
 		if (f_mount(label, NULL) == FR_OK)
 			printf("unmount %d\n", label);
@@ -413,7 +416,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			f_mkdir("0:/WOD_DATA");
 			f_mkdir("0:/HK_DATA");
 			f_mkdir("0:/SEUV_DATA");
-			f_open(&file, "0:/partition0.bin", FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+			f_open(&file, "0:/partition0", FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 		}
 		else if (paras[0] == 1) {
 			f_mkfs(1, 0, 0);
@@ -422,10 +425,31 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			f_mkdir("1:/WOD_DATA");
 			f_mkdir("1:/HK_DATA");
 			f_mkdir("1:/SEUV_DATA");
-			f_open(&file, "1:/partition0.bin", FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+			f_open(&file, "1:/partition1", FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 		}		
 		else
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		break;
+	/*---------------  ID:31 unlock SD (Test Stage) ----------------*/	
+	case SD_unlock:
+		if (para_length == 1)
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
+			break;
+		}
+		printf("Execute Type 8 Sybtype 31\r\n");
+		// FATFS fs;
+		// FIL file;
+		// BYTE label;
+		label = paras[0];
+		if (f_mount(label, NULL) == FR_OK)
+			printf("unmount %d\n", label);
+
+		if (f_mount(label, &fs) == FR_OK)
+			printf("mount %d\n", label);
 
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;

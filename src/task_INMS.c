@@ -37,8 +37,8 @@
 #include "fs.h"
 
 
-#define isSimulator 			0
-#define isFunctionTest			0
+#define isSimulator 			1
+#define isFunctionTest			1
 
 typedef struct __attribute__((packed)) {
 	int tt_hour, tt_min, tt_sec, tt_seq;
@@ -201,9 +201,9 @@ void vTaskInmsReceive(void * pvParameters) {
 		// if (numReceive != 0) {
 		// 	printf("numReceive = %d\n", numReceive);
 		// }
-		int ADCSexist = 1;
+		int ADCSexist = 0;
 		if (numReceive != 0) {
-			printf("Get %d response packet!\n", numReceive + 22);
+			printf("Get response packet!\n");
 
 			if (ADCSexist == 1) {
 				t.tv_sec = 0;
@@ -215,7 +215,7 @@ void vTaskInmsReceive(void * pvParameters) {
 					printf("Get Time, Attitude, Position from ADCS\n");
 				}
 				else {
-					printf("Get data from ADCS FAILED \r\n");
+					// printf("Get data from ADCS FAILED \r\n");
 				}
 				for (int i = 0; i < 22; i++) {
 					ucharTotal[i] = ucharAdcs[i];
@@ -252,8 +252,7 @@ void vTaskinms(void * pvParameters) {
 	int script_read_result[scriptNum] = {0};
 	uint16_t script_xsum_result[scriptNum] = {0};
 	int sequence_time_based;
-	int first_rollover =0;
-
+	int first_rollover = 0;
 	printf("Start INMS task......\n");
 	vTaskDelay(5 * delay_time_based);
 	while (1) {
@@ -313,8 +312,9 @@ void vTaskinms(void * pvParameters) {
 					epoch_sec[i] = (script[i][2]) + (script[i][3] << 8) + (script[i][4] << 16) + (script[i][5] << 24);
 				else
 					epoch_sec[i] = 0;
-				// if (isFunctionTest)
-				// 	epoch_sec[i] -= (3029529600);
+				#if isFunctionTest
+					epoch_sec[i] -= (3029529600);
+				#endif
 			}
 
 			/**
@@ -338,8 +338,9 @@ void vTaskinms(void * pvParameters) {
 			 * rec[0] = 1;
 			 * rec[1] = 0;
 			 */
-			if (isFunctionTest)
+			#if isFunctionTest
 				rec[0] = Test_Script;
+			#endif
 
 			printf("After Modification\n");
 			for (int i = 0; i < scriptNum; i++) {
@@ -349,7 +350,7 @@ void vTaskinms(void * pvParameters) {
 			printf("[-------------STEP #4 : Recording TimeTable with structure-------------]\n");
 			/* STEP #4 Record the TimeTable with structure */
 			for (int i = 0; i < scriptNum; i++) {
-				if (script_xsum_result[rec[i]] != 0){
+				if (script_xsum_result[rec[i]] != 0) {
 					parameters.inms_status = 0;
 					para_w_flash();
 					break;
@@ -364,7 +365,7 @@ void vTaskinms(void * pvParameters) {
 				/* Mark an IDLE-SLOT script buffer as the RUNNING-SCRIPT */
 				scriptRunning =  rec[i];	//for the need to jump to the next script
 				sequence_time_based = epoch_sec[rec[i]] % 86400;
-
+				int printtflag = -1;
 				/* EOT = 0x55 */
 				while (script[rec[i]][flag] != 0x55) {
 					if (script_read_result[i] != No_Error)
@@ -376,7 +377,7 @@ void vTaskinms(void * pvParameters) {
 						timetable_t[ttflag].tt_min	=	script[rec[i]][flag - 2];
 						timetable_t[ttflag].tt_sec	=	script[rec[i]][flag - 3];
 						timetable_t[ttflag].tt_seq	=	1;
-						printf("----------------Sequence 1----------------\n");
+						printf("Sequence 1: \n");
 					}
 					/* S2 = 0x42 */
 					else if (script[rec[i]][flag] == 0x42) {
@@ -384,7 +385,7 @@ void vTaskinms(void * pvParameters) {
 						timetable_t[ttflag].tt_min	=	script[rec[i]][flag - 2];
 						timetable_t[ttflag].tt_sec	=	script[rec[i]][flag - 3];
 						timetable_t[ttflag].tt_seq	=	2;
-						printf("----------------Sequence 2----------------\n");
+						printf("Sequence 2: \n");
 					}
 					/* S3 = 0x43 */
 					else if (script[rec[i]][flag] == 0x43) {
@@ -392,7 +393,7 @@ void vTaskinms(void * pvParameters) {
 						timetable_t[ttflag].tt_min	=	script[rec[i]][flag - 2];
 						timetable_t[ttflag].tt_sec	=	script[rec[i]][flag - 3];
 						timetable_t[ttflag].tt_seq	=	3;
-						printf("----------------Sequence 3----------------\n");
+						printf("Sequence 3: \n");
 					}
 					/* S4 = 0x44 */
 					else if (script[rec[i]][flag] == 0x44) {
@@ -400,7 +401,7 @@ void vTaskinms(void * pvParameters) {
 						timetable_t[ttflag].tt_min	=	script[rec[i]][flag - 2];
 						timetable_t[ttflag].tt_sec	=	script[rec[i]][flag - 3];
 						timetable_t[ttflag].tt_seq	=	4;
-						printf("----------------Sequence 4----------------\n");
+						printf("Sequence 4: \n");
 					}
 					/* S5 = 0x45 */
 					else if (script[rec[i]][flag] == 0x45) {
@@ -408,12 +409,16 @@ void vTaskinms(void * pvParameters) {
 						timetable_t[ttflag].tt_min	=	script[rec[i]][flag - 2];
 						timetable_t[ttflag].tt_sec	=	script[rec[i]][flag - 3];
 						timetable_t[ttflag].tt_seq	=	5;
-						printf("----------------Sequence 5----------------\n");
+						printf("Sequence 5: \n");
 					}
 					else {
 						ttflag--;
 					}
-					printf("hour:%d, min:%d, sec:%d, seq:%d\n", timetable_t[ttflag].tt_hour, timetable_t[ttflag].tt_min, timetable_t[ttflag].tt_sec, timetable_t[ttflag].tt_seq);
+
+					if (printtflag != ttflag) {
+						printf("hour:%d, min:%d, sec:%d, seq:%d\n", timetable_t[ttflag].tt_hour, timetable_t[ttflag].tt_min, timetable_t[ttflag].tt_sec, timetable_t[ttflag].tt_seq);
+						printtflag = ttflag;
+					}
 					flag ++;
 					ttflag++;
 					// printf("flag = %d, ttflag = %d\n", flag, ttflag);
@@ -489,6 +494,8 @@ void vTaskinms(void * pvParameters) {
 						if (first_time > epoch_sec[rec[i]] - 10)
 							break;
 						vTaskDelay(1 * delay_time_based);
+						if (parameters.inms_status == 0)
+							break;
 					}
 				}
 				while (1) {
@@ -500,28 +507,17 @@ void vTaskinms(void * pvParameters) {
 						ttflag = 0;
 						seqcount = 0;
 					}
-					// if (error_flag == 1){
-					// 	ttflag ++;
-					// 	error_flag=0;
-					// }
+
 					vTaskDelay(1 * delay_time_based);
 					refTime = timeGet(1);  //get the small clock time
 
 
 					first_time = timeGet(0) - 946684800;
-					// while (1) {
-						tTable_24  = timetable_t[ttflag].tt_hour * 3600 + timetable_t[ttflag].tt_min * 60 +  timetable_t[ttflag].tt_sec;
-						// printf("\t\t\t\t%d\n", ttflag);
-						
-						// else{
-							// break;
-						// }
-					// }
+					tTable_24  = timetable_t[ttflag].tt_hour * 3600 + timetable_t[ttflag].tt_min * 60 +  timetable_t[ttflag].tt_sec;
 
-					// printf("\t\t\tttflag = %d\n", ttflag);
 					if (printTime == 1) {
 						printf("\n%.5" PRIu32 " -- %.5" PRIu32 "\n", refTime, tTable_24);
-						printf("%.5" PRIu32 "\n", (tTable_24 < refTime) ? tTable_24-refTime + 86400 : tTable_24-refTime  );
+						printf("%.5" PRIu32 "\n", (tTable_24 < refTime) ? tTable_24 - refTime + 86400 : tTable_24 - refTime  );
 						printf("\E[3A\r");
 					}
 					if ((refTime  ==  tTable_24 ) || ((refTime - 1 ) ==  tTable_24 )) {
@@ -563,8 +559,8 @@ void vTaskinms(void * pvParameters) {
 									printTime = 1;
 									break;
 								}
-							}						
-							
+							}
+
 							inTheSequence = 1;
 							/* OBC_SU_ON  = 0xF1 = 0d241 */
 							if (script[rec[i]][flag + 2] == 241) {
@@ -580,11 +576,11 @@ void vTaskinms(void * pvParameters) {
 								// if (inms_task_receive == NULL)
 								xTaskCreate(vTaskInmsReceive, (const signed char*) "INMSR", 1024 * 4, NULL, 2, &inms_task_receive);
 								/* ---- For simulator ---- */
-								if (isSimulator) {
+								#if isSimulator
 									for (int j = 2; j <= leng + 3; j++) {
 										usart_putstr(2, (char *)&script[rec[i]][flag + j], 1);
 									}
-								}
+								#endif
 								/* ----------------------- */
 
 								printf("COMMAND: OBC_SU_ON...........\n");
@@ -592,21 +588,19 @@ void vTaskinms(void * pvParameters) {
 							/* OBC_SU_OFF = 0xF2 = 0d242 */
 							else if (script[rec[i]][flag + 2] == 242) {
 								printf("delete inms task receive\n");
-								// if (inms_task_receive != NULL){
-								// }
-								// if (error_flag != 1) {
+								
 								vTaskDelay(1 * delay_time_based);
 								vTaskDelete(inms_task_receive);
 								power_control(4, OFF);
-								
-								
+
+
 								// }
 								/* ---- For simulator ---- */
-								if (isSimulator) {
+								#if isSimulator
 									for (int j = 2; j <= leng + 3; j++) {
 										usart_putstr(2, (char *)&script[rec[i]][flag + j], 1);
 									}
-								}
+								#endif
 								/* --------------------- */
 
 								printf("COMMAND: OBC_SU_OFF...........\n");
@@ -641,7 +635,7 @@ void vTaskinms(void * pvParameters) {
 							delayTimeNow = refTime;
 							/* Remove before flight */
 							// if (script[rec[i]][flag + 1] * 60 + script[rec[i]][flag] == 1110) {
-								// delayTimeTarget = delayTimeNow + 66;
+							// delayTimeTarget = delayTimeNow + 66;
 							// }
 							// else {
 							delayTimeTarget = delayTimeNow + script[rec[i]][flag + 1] * 60 + script[rec[i]][flag];
@@ -655,7 +649,7 @@ void vTaskinms(void * pvParameters) {
 								printf("\n%d-----------%d\n", delayTimeNow - tempTime, delayTimeTarget - tempTime);
 								printf("\E[2A\r");
 								delayTimeNow = delayTimeNow + 1;
-								vTaskDelayUntil( &xLastWakeTime, xFrequency );								
+								vTaskDelayUntil( &xLastWakeTime, xFrequency );
 							}
 							flag = flag + leng + 4;
 							if (inmsJumpScriptCheck(i) && i != scriptNum - 1) {
@@ -664,29 +658,32 @@ void vTaskinms(void * pvParameters) {
 
 						}
 					}
-					else{
-						
+					else {
+
 						// printf("%" PRIu32 ", %" PRIu32 "\n", epoch_sec[rec[i]] + tTable_24 - sequence_time_based, first_time );
-						if (refTime == 0){
+						if (refTime == 0) {
 							first_rollover = 1;
 						}
-						if ((epoch_sec[rec[i]] + tTable_24 - sequence_time_based)  < first_time ){
+						if ((epoch_sec[rec[i]] + tTable_24 - sequence_time_based)  < first_time ) {
 							ttflag++;
 							seqcount++;
+							// jump_delay_time = 1;
 						}
+						// else
+							// jump_delay_time = 0;
 						// printf("\t\tdifftime: %" PRIu32 "\n",first_time - (epoch_sec[rec[i]] - sequence_time_based) );
-						if ((first_time - (epoch_sec[rec[i]] - sequence_time_based)) >= 86400 && first_time > (epoch_sec[rec[i]] - sequence_time_based) ){
-							if (first_rollover){
+						if ((first_time - (epoch_sec[rec[i]] - sequence_time_based)) >= 86400 && first_time > (epoch_sec[rec[i]] - sequence_time_based) ) {
+							if (first_rollover) {
 								first_rollover = 0;
 								ttflag = 0;
 								seqcount = 0;
 							}
-							else if (first_rollover == 0){
+							else if (first_rollover == 0) {
 								ttflag--;
 								seqcount--;
 							}
 						}
-					}					
+					}
 				}
 			}
 		}
@@ -769,15 +766,15 @@ void vTaskInmsErrorHandle(void * pvParameters) {
 	while (1) {
 		switch (obcSuErrFlag)  {
 		/* No error */
-		case 0:		
+		case 0:
 			rsp_err_code = 0x00;
 			break;
-		/* INMS packet time-out error */	
-		case 1:	
+		/* INMS packet time-out error */
+		case 1:
 			rsp_err_code = 0xf0;
 			break;
-		/* INMS packet length error detected */	
-		case 2:	
+		/* INMS packet length error detected */
+		case 2:
 			rsp_err_code = 0xf1;
 			break;
 		/* INMS emergency turn OFF executed */
@@ -785,15 +782,15 @@ void vTaskInmsErrorHandle(void * pvParameters) {
 			rsp_err_code = 0xf2;
 			break;
 		/* INMS over-current condition detected */
-		case 4:	
+		case 4:
 			rsp_err_code = 0xf3;
 			break;
 		/* INMS script command error detected */
-		case 5:	
+		case 5:
 			rsp_err_code = 0xf4;
 			break;
-		/* INMS checksum error detected */ /* self defined */
-		case 6:		
+			/* INMS checksum error detected */ /* self defined */
+		case 6:
 			rsp_err_code = 0xf5;
 			break;
 		/* others to be defined by PHOENIX team */
@@ -840,6 +837,17 @@ void vTaskInmsErrorHandle(void * pvParameters) {
 				vTaskDelete(inms_task_receive);
 			}
 			power_control(4, OFF);
+			#if isSimulator
+				unsigned int cmd1 = 0xf2;
+				unsigned int cmd2 = 0x01;
+				unsigned int cmd3 = 0x00;
+				char cmd_1 = (char) cmd1;
+				char cmd_2 = (char) cmd2;
+				char cmd_3 = (char) cmd3;
+				usart_putstr(2, &cmd_1, 1);
+				usart_putstr(2, &cmd_2, 1);
+				usart_putstr(2, &cmd_3, 1);
+			#endif
 
 
 

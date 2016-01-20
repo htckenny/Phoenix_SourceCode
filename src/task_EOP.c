@@ -29,16 +29,15 @@ void EOP_Task(void * pvParameters) {
 	}
 	// uint32_t seconds[] = {0};
 	
-	vTaskDelay(10 * delay_time_based);
+	vTaskDelay(20 * delay_time_based);
 	while (1) {
 		printf("collecting EOP packet\n");		
 		
 		/* Get Time, Attitude, Position, Velocity information from ADCS */
 		if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 48, adcs_delay) == E_NO_ERR) {
-			printf("Get Time, Attitude, Position from ADCS");
+			printf("Get Time, Attitude, Position from ADCS\n");
 			memcpy(&uchar_eop[4], &rxbuf[18], 24);
-			hex_dump(uchar_eop, 28);	/* TODO: Delete this when flight */
-			eop_write_dup(uchar_eop);
+			// eop_write_dup(uchar_eop);
 		}
 		else {
 			printf("Error, cannot communicate with ADCS\n");

@@ -420,7 +420,7 @@ int inms_data_write(uint8_t frameCont[], int SD_partition)
 	strcat(fileName, buf);
 	strcat(fileName, "_INMS_TW01");
 	strcat(fileName, ".dat");
-	// printf("%s\n", fileName);
+	printf("%s\n", fileName);
 
 
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
@@ -860,7 +860,7 @@ int seuv_write(int SD_partition)
 	printf("%s\n", fileName);
 
 	seuvFrame.packettime = t.tv_sec;
-	printf("sample = %d\n", seuvFrame.samples);
+	// printf("sample = %d\n", seuvFrame.samples);
 
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK)
@@ -1052,21 +1052,24 @@ int eop_write(uint8_t frameCont[], int SD_partition)		//SD_partition available :
 	strcat(fileName, ".dat");
 	printf("%s\n", fileName);
 
-	hex_dump(frameCont, 28);
+	
 
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	f_lseek(&file, file.fsize);
 	res = f_write(&file, frameCont, eop_length, &bw);
 	if (res != FR_OK) {
-		printf("\r\nEOP_write() %d fail .. \r\n", SD_partition);
+		printf("\rEOP_write() %d fail .. \r\n", SD_partition);
 		f_close(&file);
 		return Error;
 	}
 	else {
-		printf("\r\nEOP_write() %d success .. \r\n", SD_partition);
+		printf("\rEOP_write() %d success .. \r\n", SD_partition);
 		f_close(&file);
+		if (SD_partition == 1)
+			hex_dump(frameCont, eop_length);
 		return No_Error;
 	}
+
 }
 
 int eop_read(char fileName[], void * txbuf)
@@ -1623,7 +1626,7 @@ int scan_files_Delete (
 			//
 			// printf("%s/%s\n", path, fn);
 			sprintf(full_path, "%s/%s", path, fn);
-			printf("%s\n", full_path);
+			// printf("%s\n", full_path);
 
 			strncpy(timeref, fn, 15);						/* cut the time part of the file name */
 			timeref[15] = 0;

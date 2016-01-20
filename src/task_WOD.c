@@ -178,7 +178,7 @@ int getWodFrame(int fnum) {
 	printf("i5.0 = %u\n", (chkparam->curout[3] + chkparam->curout[4] + chkparam->curout[5]));
 	printf("EPS temp = %u\n", (chkparam->temp[0] + chkparam->temp[1] + chkparam->temp[2]) / 3);
 	printf("BAT temp = %u\n", chkparam->temp[3]);
-	printf("COM temp = %f\n", 189.5522-0.0546*val[5]);
+	printf("COM temp = %.2f\n", 189.5522-0.0546*val[5]);
 
 	batVoltage = __max(__min(floor(20 * ((float)chkparam->vbatt / 1000) - 60), 255), 0);
 	batCurrent = __max(__min(floor(127 * ((float)chkparam->cursys / 1000) + 127), 255), 0);
@@ -226,7 +226,7 @@ void beacon_Task(void * pvParameters) {
 		else if (parameters.beacon_period > 0){
 			period = parameters.beacon_period * delay_time_based;
 		}
-		printf("-- Send Beacon with %d--\n", parameters.beacon_period);
+		printf("-- Send Beacon with %d--\n", period  /100);
 		SendPacketWithCCSDS_AX25(&beacon_frame.mode, 8, obc_apid, 0, 0);
 		vTaskDelay(period);
 	}

@@ -180,7 +180,7 @@ void get_a_packet(int gain) {
             printf("1 A = %.3f , S = %.3f", seuvFrame.ch1AVG, seuvFrame.ch1STD);
             printf("2 A = %.3f , S = %.3f", seuvFrame.ch2AVG, seuvFrame.ch2STD);
             printf("3 A = %.3f , S = %.3f", seuvFrame.ch3AVG, seuvFrame.ch3STD);
-            printf("4 A = %.3f , S = %.3f", seuvFrame.ch4AVG, seuvFrame.ch4STD);
+            printf("4 A = %.3f , S = %.3f\n", seuvFrame.ch4AVG, seuvFrame.ch4STD);
 
             seuvFrame.samples += 0 ; 
             // printf("sample = %d\n", seuvFrame.samples);
@@ -210,7 +210,7 @@ void get_a_packet(int gain) {
             printf("1 A = %.3f , S = %.3f", seuvFrame.ch1AVG, seuvFrame.ch1STD);
             printf("2 A = %.3f , S = %.3f", seuvFrame.ch2AVG, seuvFrame.ch2STD);
             printf("3 A = %.3f , S = %.3f", seuvFrame.ch3AVG, seuvFrame.ch3STD);
-            printf("4 A = %.3f , S = %.3f", seuvFrame.ch4AVG, seuvFrame.ch4STD);
+            printf("4 A = %.3f , S = %.3f\n", seuvFrame.ch4AVG, seuvFrame.ch4STD);
 
             seuvFrame.samples += 1 ; 
             seuv_write_dup();

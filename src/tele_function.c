@@ -15,6 +15,7 @@
 #include "task_SEUV.h"
 
 
+
 int tx_mode(uint8_t mode) {
 
 	if (mode == 1)
@@ -570,6 +571,7 @@ void decodeCCSDS_Command(uint8_t * telecommand, uint8_t packet_length) {
 	uint8_t serviceSubType = telecommand[8];
 	uint16_t chk;
 	unsigned int LTbl[256];
+	timestamp_t t;
 
 	// Compute CRC (all packet data except FCS field)
 	chk = 0xFFFF;
@@ -578,10 +580,10 @@ void decodeCCSDS_Command(uint8_t * telecommand, uint8_t packet_length) {
 	for (int i = 0; i < packet_length - 2; i++)
 		chk = crc_opt(telecommand[i], chk, LTbl);
 
-	printf("crc check performing (testing) \n");
+	printf("CRC check performing\n");
 	// Check CRC field
 	if (telecommand[packet_length - 2] == (uint8_t)(chk >> 8) && telecommand[packet_length - 1] == (uint8_t)(chk) ) {
-		printf("Telecommand Pass CRC Check (Has CRC check now)\n");
+		printf("Telecommand Pass CRC Check\n");
 
 		switch (serviceType) {
 
@@ -611,8 +613,12 @@ void decodeCCSDS_Command(uint8_t * telecommand, uint8_t packet_length) {
 
 			break;
 		}
+		t.tv_sec = 0;
+		t.tv_nsec = 0;
+		obc_timesync(&t, 6000);
+		lastCommandTime = t.tv_sec;
 	}
 	else {
-		printf(" CRC Check not pass!!!\n");
+		printf("CRC Check not pass!!!\n");
 	}
 }  /* end of decodeCCSDS_Command */

@@ -328,7 +328,7 @@ int I2Csend_handler(struct command_context * ctx) {
 			}
 		}
 	}
-	else{
+	else {
 		if (ctx->argc > 3) {
 			if ( i2c_master_transaction(0, node, &tx, ctx->argc - 3, &val, rx, 10) != E_NO_ERR) {
 				printf("No reply from node %x \r\n", node);
@@ -509,9 +509,14 @@ int ct(struct command_context * ctx) {
 		break;
 	default:
 		sendTelecommandReport_Failure(para, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
-
 		break;
 	}
+	timestamp_t t;
+	t.tv_sec = 0;
+	t.tv_nsec = 0;
+	obc_timesync(&t, 6000);
+	lastCommandTime = t.tv_sec;
+	
 	return CMD_ERROR_NONE;
 }
 

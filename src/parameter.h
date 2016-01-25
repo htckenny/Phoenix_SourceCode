@@ -85,8 +85,9 @@ uint8_t schedule_new_command_flag;
 uint8_t schedule_series_number;
 uint8_t schedule_unlink_flag;
 uint8_t idleunlocks;
-
 uint8_t Test_Script;
+
+uint32_t lastCommandTime;
 
 typedef struct __attribute__((packed)) {
 

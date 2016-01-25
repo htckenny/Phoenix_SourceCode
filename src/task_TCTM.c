@@ -1,13 +1,18 @@
-
 #include <dev/i2c.h>
-#include "fs.h"
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/semphr.h>
 #include <util/hexdump.h>
+#include <util/timestamp.h>
+#include <inttypes.h>
+#include <nanomind.h>
+
 #include "parameter.h"
 #include "subsystem.h"
 #include "tele_function.h"
+#include "fs.h"
+
+#define Communication_timeout 1209600		/* Two week duration */
 
 void delete_buf() {
 
@@ -47,11 +52,15 @@ int CIC() {
 void Telecom_Task(void * pvParameters) {
 
 	uint8_t flag;
+	timestamp_t t;
+	uint8_t txBuffer;
 	// int tx_wdt_flag = 0;
 	// uint8_t txdata = com_tx_hk;
 
 	set_Call_Sign(0);
-	set_tx_rate(8);
+
+	set_tx_rate(parameters.first_flight==1 ? 1: 8);      /* TODO:  Think !!! */
+	lastCommandTime = 0;
 
 	if (parameters.shutdown_flag == 1) {
 		printf("Shutdown Command Detected!! \r\n");
@@ -62,6 +71,17 @@ void Telecom_Task(void * pvParameters) {
 
 	while (1) {
 
+		t.tv_sec = 0;
+		t.tv_nsec = 0;
+		obc_timesync(&t, 6000);
+		printf("difference = %" PRIu32 "\n", t.tv_sec - lastCommandTime);
+		printf("\E[1A\r");
+		if (t.tv_sec > lastCommandTime + Communication_timeout){
+			printf("Timeout !! reboot whole system\n");
+			txBuffer = 20;
+			i2c_master_transaction_2(0, eps_node, &txBuffer, 1, 0, 0, eps_delay);
+			lastCommandTime = t.tv_sec;
+		}
 		/*-------Avoid COM WDT(1 minute) reset itself ---------*/
 		// tx_wdt_flag++;
 		// if (tx_wdt_flag >= 25) {

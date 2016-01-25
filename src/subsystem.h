@@ -71,7 +71,7 @@
 #define eps_delay 			7
 #define seuv_delay 			10
 #define interface_delay 	7
-#define adcs_delay 			7
+#define adcs_delay 			10
 
 #define adcs_power 			0x09
 #define gps_power 			0x10

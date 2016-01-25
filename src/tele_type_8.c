@@ -66,7 +66,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		txBuffer[0] = 20;
-		i2c_master_transaction(0, eps_node, &txBuffer, 1, 0, 0, eps_delay);
+		i2c_master_transaction_2(0, eps_node, &txBuffer, 1, 0, 0, eps_delay);
 
 		break;
 	/*---------------ID:4 Sync_Time----------------*/

@@ -827,7 +827,7 @@ void decodeService131(uint8_t subType, uint8_t * telecommand) {
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 		txBuffer[0] = subType;
 		rxBufferLength = 48;                                // you should modify rxBufferLength
-		if (i2c_master_transaction(0, adcs_node, &txBuffer, 1, &rxBuffer, rxBufferLength, adcs_delay) == E_NO_ERR) {
+		if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 1, &rxBuffer, rxBufferLength, adcs_delay) == E_NO_ERR) {
 			err = SendPacketWithCCSDS_AX25(&rxBuffer, rxBufferLength , adcs_apid, types, subType);
 			if (err == ERR_SUCCESS)
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
@@ -847,7 +847,7 @@ void decodeService131(uint8_t subType, uint8_t * telecommand) {
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 		txBuffer[0] = subType;
 		rxBufferLength = 36;                                // you should modify rxBufferLength
-		if (i2c_master_transaction(0, adcs_node, &txBuffer, 1, &rxBuffer, rxBufferLength, adcs_delay) == E_NO_ERR) {
+		if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 1, &rxBuffer, rxBufferLength, adcs_delay) == E_NO_ERR) {
 			err = SendPacketWithCCSDS_AX25(&rxBuffer, rxBufferLength , adcs_apid, types, subType);
 			if (err == ERR_SUCCESS)
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);

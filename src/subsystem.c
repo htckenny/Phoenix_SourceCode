@@ -94,7 +94,7 @@ int parameter_init() {
 	parameters.hk_collect_period		= 60;
 	parameters.beacon_period			= 30;
 	parameters.reboot_count				= 0;
-	parameters.com_bit_rates			= 0x01; 	// change to 0x01 before flight
+	parameters.com_bit_rates			= 0x01;
 
 	/*  seuv related  */
 	parameters.seuv_period				= 8;
@@ -168,7 +168,7 @@ void power_control(int device, int stats) {
 	eps_switch.delay = 0;
 
 	uint8_t txdata[100];
-	txdata[0] = EPS_PORT_SET_SINGLE_OUTPUT; // Ping port
+	txdata[0] = EPS_PORT_SET_SINGLE_OUTPUT;
 	/* ADCS  */
 	if (device == 1) {
 		/* channel 0 = ADCS 5V */

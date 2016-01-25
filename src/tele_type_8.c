@@ -35,7 +35,7 @@
 #define INMS_timeout_change			19				/* Set INMS timeout value */
 #define INMS_restart				20				/* Restart INMS script handler, do this after upload new script*/
 #define SD_card_format				30				/* Format SD card, and create default folders */
-#define SD_unlock				31				/* Unlock SD card */
+#define SD_unlock					31				/* Unlock SD card */
 
 void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	uint8_t txBuffer[200];

@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <inttypes.h>
-#include <time.h> 
+#include <time.h>
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -43,25 +43,25 @@ int firstflight_switch(struct command_context * ctx) {
 	return CMD_ERROR_NONE;
 }
 int moveScriptFromSD (struct command_context *ctx) {
-	
+
 	int in, out, fdold, fdnew;
 	char old[21], new[21], buf[512];
 	char sd[] = "0";
-	char slot[]="0";
+	char slot[] = "0";
 	/* Get args */
 	if (ctx->argc != 1)
 		return CMD_ERROR_SYNTAX;
-	
+
 	sprintf(sd, "%d", parameters.SD_partition_flag);
-	for (int i = 0 ; i < scriptNum ; i++){
+	for (int i = 0 ; i < scriptNum ; i++) {
 
 		sprintf(slot, "%d", i);
 		strcpy(old, "/sd");
 		strcat(old, sd);
 		strcat(old, "/INMS/idle");
 		strcat(old, slot);
-		strcat(old, ".bin");	
-			
+		strcat(old, ".bin");
+
 		strcpy(new, "/boot/INMS/idle");
 		strcat(new, slot);
 		strcat(new, ".bin");
@@ -272,7 +272,7 @@ int INMSreceive_handler(struct command_context * ctx) {
 	nums = usart_messages_waiting(2);
 	//printf(" %d \n\r ",nums);
 	if (nums != 0) {
-		printf("seems get something!\n\r");
+		printf("seems get something! %d\n\r", nums);
 		for (int f = 0; f < nums; f++) {
 			uchar[f] = usart_getc(2);
 		}
@@ -314,17 +314,32 @@ int I2Csend_handler(struct command_context * ctx) {
 		}
 	}
 	printf("] \n");
-
-	if (ctx->argc > 3) {
-		if ( i2c_master_transaction_2(0, node, &tx, ctx->argc - 3, &val, rx, 10) != E_NO_ERR) {
-			printf("No reply from node %x \r\n", node);
-			return CMD_ERROR_NONE;
+	if (node != 2) {
+		if (ctx->argc > 3) {
+			if ( i2c_master_transaction_2(0, node, &tx, ctx->argc - 3, &val, rx, 10) != E_NO_ERR) {
+				printf("No reply from node %x \r\n", node);
+				return CMD_ERROR_NONE;
+			}
+		}
+		else {
+			if ( i2c_master_transaction_2(0, node, 0, 0, &val, rx, 10) != E_NO_ERR) {
+				printf("No reply from node %x \r\n", node);
+				return CMD_ERROR_NONE;
+			}
 		}
 	}
-	else {
-		if ( i2c_master_transaction_2(0, node, 0, 0, &val, rx, 10) != E_NO_ERR) {
-			printf("No reply from node %x \r\n", node);
-			return CMD_ERROR_NONE;
+	else{
+		if (ctx->argc > 3) {
+			if ( i2c_master_transaction(0, node, &tx, ctx->argc - 3, &val, rx, 10) != E_NO_ERR) {
+				printf("No reply from node %x \r\n", node);
+				return CMD_ERROR_NONE;
+			}
+		}
+		else {
+			if ( i2c_master_transaction(0, node, 0, 0, &val, rx, 10) != E_NO_ERR) {
+				printf("No reply from node %x \r\n", node);
+				return CMD_ERROR_NONE;
+			}
 		}
 	}
 	if (rx > 0)
@@ -349,7 +364,7 @@ int INMS_switch(struct command_context * ctx) {
 		// extern void vTaskInmsErrorHandle(void * pvParameters);
 		// xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "INMS_EH", 1024 * 4, NULL, 2, &inms_error_handle);
 		// extern void vTaskInmsCurrentMonitor(void * pvParameters);
- 		// xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "INMS_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
+		// xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "INMS_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
 	}
 	else if (buffer == 0) {
 		// xTaskCreate(vTaskfstes, (const signed char * ) "FS_T", 1024 * 4, NULL, 2, &fs_task);
@@ -431,7 +446,7 @@ int ir(struct command_context * ctx) {
 	len = inms_script_length_flash((int)buffer);
 	uint8_t script[len] ;
 	printf("length = %d\n", len);
-	if(inms_script_read_flash(buffer, len, &script) == No_Error)
+	if (inms_script_read_flash(buffer, len, &script) == No_Error)
 		hex_dump(&script, len);
 	else {
 		return CMD_ERROR_FAIL;
@@ -932,7 +947,7 @@ int seuvwrite(struct command_context * ctx) {
 		return CMD_ERROR_SYNTAX;
 	}
 	uint8_t txdata = node;
-	
+
 	if (i2c_master_transaction_2(0, seuv_node, &txdata, 1, 0, 0, seuv_delay) == E_NO_ERR) {
 		printf("configured SEUV: %x\r\n", node);
 	}

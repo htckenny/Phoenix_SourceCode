@@ -37,7 +37,7 @@
 #include "fs.h"
 
 
-#define isSimulator 			1
+#define isSimulator 			0
 #define isFunctionTest			1
 
 typedef struct __attribute__((packed)) {
@@ -173,7 +173,7 @@ void vTaskInmsReceive(void * pvParameters) {
 	int numReceive = 0;
 	char ucharAdcs[22];
 	char ucharTotal[174 + 22];		//response packet is FIXED 174 BYTES+ADCS 22 BYTES
-
+	// char ucharBuffer[174*10];	// buffer overflow
 	int receiveFlag = 0;
 	uint8_t rxbuf[48];
 	uint8_t txbuf = 0x88; 			// ID = 136 Current ADCS state
@@ -203,7 +203,7 @@ void vTaskInmsReceive(void * pvParameters) {
 		// }
 		int ADCSexist = 0;
 		if (numReceive != 0) {
-			printf("Get response packet!\n");
+			printf("Get response packet  %d!\n", numReceive);
 
 			if (ADCSexist == 1) {
 				t.tv_sec = 0;
@@ -215,7 +215,7 @@ void vTaskInmsReceive(void * pvParameters) {
 					printf("Get Time, Attitude, Position from ADCS\n");
 				}
 				else {
-					// printf("Get data from ADCS FAILED \r\n");
+					printf("Get data from ADCS FAILED \r\n");
 				}
 				for (int i = 0; i < 22; i++) {
 					ucharTotal[i] = ucharAdcs[i];
@@ -235,12 +235,17 @@ void vTaskInmsReceive(void * pvParameters) {
 			if (ucharTotal[22] == 0xBB) { 	// SU_ERR detected!
 				obcSuErrFlag = 5;
 			}
-			inms_data_write_dup((uint8_t *)ucharTotal);
 			hex_dump(ucharTotal, inms_data_length);
+			// inms_data_write_dup((uint8_t *)ucharTotal);
+			// vTaskDelay(2 * delay_time_based);
+			// hex_dump(ucharTotal, inms_data_length);
+			
 
 			numReceive = 0;
 			receiveFlag = 0;
 		}
+
+		// vTaskDelay()
 		vTaskDelayUntil( &xLastWakeTime, xFrequency );
 	}
 }
@@ -789,11 +794,14 @@ void vTaskInmsErrorHandle(void * pvParameters) {
 		case 5:
 			rsp_err_code = 0xf4;
 			break;
-			/* INMS checksum error detected */ /* self defined */
+		/* ------------------------------------ */	
+		/* others to be defined by PHOENIX team */				
+		/* ------------------------------------ */	
+		/* INMS checksum error detected */ 
 		case 6:
 			rsp_err_code = 0xf5;
 			break;
-		/* others to be defined by PHOENIX team */
+		
 		default:
 			break;
 		}

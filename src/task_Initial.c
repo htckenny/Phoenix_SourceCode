@@ -57,7 +57,7 @@ void Init_Task(void * pvParameters) {
 		printf("Left %d second to deploy devices \r\n", (1800 - count));
 		if (count >= 1800) {
 			parameters.ant_deploy_flag = 1;
-			para_w_flash();           //update to parameter system
+			para_w_flash();
 		}
 	}
 	/*   Deploy Device  */

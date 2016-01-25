@@ -141,7 +141,7 @@ void init_command_buf(uint8_t *sche_buf, int buf_length, uint8_t *final_buf) {
 	// 	printf("%x ", final_buf[i]);
 	// }
 }
-/* the function to find the maximum buffer*/
+/* the function to find the maximum buffer */
 /* this function still need to verify !!!*/
 int findMaxBuf(uint8_t sortbuf[])
 {

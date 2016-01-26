@@ -54,13 +54,14 @@ void Telecom_Task(void * pvParameters) {
 	uint8_t flag;
 	timestamp_t t;
 	uint8_t txBuffer;
-	// int tx_wdt_flag = 0;
-	// uint8_t txdata = com_tx_hk;
+	int tx_wdt_flag = 0;
+	uint8_t txdata = com_tx_hk;
+	uint8_t rxdata = 0;
 
 	set_Call_Sign(0);
 
 	set_tx_rate(parameters.first_flight==1 ? 1: 8);      /* TODO:  Think !!! */
-	lastCommandTime = 0;
+	lastCommandTime = 946684800;
 
 	if (parameters.shutdown_flag == 1) {
 		printf("Shutdown Command Detected!! \r\n");
@@ -74,30 +75,31 @@ void Telecom_Task(void * pvParameters) {
 		t.tv_sec = 0;
 		t.tv_nsec = 0;
 		obc_timesync(&t, 6000);
-		printf("difference = %" PRIu32 "\n", t.tv_sec - lastCommandTime);
-		printf("\E[1A\r");
+		// printf("difference = %" PRIu32 "\n", t.tv_sec - lastCommandTime);
+		// printf("\E[1A\r");
 		if (t.tv_sec > lastCommandTime + Communication_timeout){
-			printf("Timeout !! reboot whole system\n");
+			// printf("%d\n", t.tv_sec);
+			printf("\nTimeout !! reboot whole system\n");
 			txBuffer = 20;
 			i2c_master_transaction_2(0, eps_node, &txBuffer, 1, 0, 0, eps_delay);
 			lastCommandTime = t.tv_sec;
 		}
 		/*-------Avoid COM WDT(1 minute) reset itself ---------*/
-		// tx_wdt_flag++;
-		// if (tx_wdt_flag >= 25) {
-		// 	txdata = com_tx_hk;
-		// 	i2c_master_transaction(0, com_tx_node, &txdata, 1, &txdata, 1, com_delay);
+		tx_wdt_flag++;
+		if (tx_wdt_flag >= 25) {
+			txdata = com_tx_hk;
+			i2c_master_transaction_2(0, com_tx_node, &txdata, 1, &rxdata, 1, com_delay);
 
-		// 	if ((txdata < 12) && (parameters.com_bit_rates == 8)) {
-		// 		set_tx_rate(parameters.com_bit_rates);
-		// 		set_Call_Sign(0);
-		// 	}
-		// 	if ((txdata > 3) && (parameters.com_bit_rates == 1)) {
-		// 		set_tx_rate(parameters.com_bit_rates);
-		// 		set_Call_Sign(0);
-		// 	}
-		// 	tx_wdt_flag = 0;
-		// }		
+			if ((rxdata < 12) && (parameters.com_bit_rates == 8)) {
+				set_tx_rate(parameters.com_bit_rates);
+				// set_Call_Sign(0);
+			}
+			if ((rxdata > 3) && (parameters.com_bit_rates == 1)) {
+				set_tx_rate(parameters.com_bit_rates);
+				// set_Call_Sign(0);
+			}
+			tx_wdt_flag = 0;
+		}		
 
 		/*----------------------------------*/
 		flag = CIC();

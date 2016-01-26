@@ -229,8 +229,11 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		}
 		printf("Execute Type 8 Sybtype 12 ,set_tx_rate \r\n");
 
-		if (set_tx_rate(paras[0]) != Error)
+		if (set_tx_rate(paras[0]) != Error){
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
+			parameters.com_bit_rates = paras[0];
+			para_w_flash();
+		}
 		else
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); 
 		break;

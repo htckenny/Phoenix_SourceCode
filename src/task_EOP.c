@@ -42,7 +42,6 @@ void EOP_Task(void * pvParameters) {
 		else {
 			printf("Error, cannot communicate with ADCS\n");
 		}
-		// eop_write_dup(uchar_eop);
 		vTaskDelay(10 * delay_time_based);
 	}
 	/** End of init */

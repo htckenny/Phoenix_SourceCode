@@ -86,6 +86,7 @@ uint8_t schedule_series_number;
 uint8_t schedule_unlink_flag;
 uint8_t idleunlocks;
 uint8_t Test_Script;
+uint8_t magnetometer_deploy;
 
 uint32_t lastCommandTime;
 

@@ -37,7 +37,7 @@ void EOP_Task(void * pvParameters) {
 		if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 48, adcs_delay) == E_NO_ERR) {
 			printf("Get Time, Attitude, Position from ADCS\n");
 			memcpy(&uchar_eop[4], &rxbuf[18], 24);
-			// eop_write_dup(uchar_eop);
+			eop_write_dup(uchar_eop);
 		}
 		else {
 			printf("Error, cannot communicate with ADCS\n");

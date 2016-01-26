@@ -52,6 +52,58 @@ uint16_t battery_read() {
 	
 }
 
+void Enter_Safe_Mode(int last_mode) {
+
+	/* last mode = Init Mode */
+	if (last_mode == 1) {
+		vTaskDelete(init_task);
+	}
+	/* last mode = ADCS Mode */
+	if (last_mode == 2) {
+		vTaskDelete(adcs_task);
+		if (parameters.first_flight == 1) {
+			vTaskDelete(eop_task);
+		}
+	}
+
+	power_control(1, OFF);      // Power OFF    ADCS
+	power_control(2, OFF);      // Power OF     GPS
+
+	/* last mode = Payload Mode */
+	if (last_mode == 3) {
+
+		if (adcs_task != NULL) {
+			vTaskDelete(adcs_task);
+			printf("Shutting Down ADCS_Task\n");
+		}
+		if (hk_task != NULL) {
+			printf("Shutting Down HK_Task\n");
+			vTaskDelete(hk_task);
+		}
+		if (seuv_task != NULL) {
+			printf("Shutting Down SEUV_Task\n");
+			vTaskDelete(seuv_task);
+		}
+
+		if (inms_error_handle != NULL) {
+			printf("Shutting Down INMS Error task \n");
+			vTaskDelete(inms_error_handle);
+		}
+		if (inms_current_moniter != NULL) {
+			printf("Shutting Down INMS current task \n");
+			vTaskDelete(inms_current_moniter);
+		}
+		if (inms_task != NULL) {
+			printf("Shutting Down INMS task \n");
+			vTaskDelete(inms_task);
+		}
+		if (inms_task_receive != NULL) {
+			printf("Shutting Down INMS receive task \n");
+			vTaskDelete(inms_task_receive);
+		}
+		power_OFF_ALL();
+	}
+}
 void Leave_safe_mode()
 {
 	printf("Recover from Safe Mode \n");

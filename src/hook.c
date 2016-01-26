@@ -56,7 +56,7 @@ void hook_init(void) {
 	// xTaskCreate(BatteryCheck_Task, (const signed char *) "BatCk", 1024 * 4, NULL, 2, NULL);
 	
 	// extern void EOP_Task(void * pvParameters);
-	// xTaskCreate(EOP_Task, (const signed char * ) "EOP", 1024 * 4, NULL, 2, NULL);
+	// xTaskCreate(EOP_Task, (const signed char * ) "EOP", 1024 * 4, NULL, 2, &eop_task);
 
 	// extern void HK_Task(void * pvParameters) ;
 	// xTaskCreate(HK_Task, (const signed char * ) "HK", 1024 * 4, NULL, 2, NULL);
@@ -80,7 +80,7 @@ void hook_init(void) {
 	// xTaskCreate(thermal_test, (const signed char *) "T_Test", 1024*4, NULL, 2, NULL);
 	
 	// extern void ADCS_Task(void * pvParameters);
-	// xTaskCreate(ADCS_Task, (const signed char * ) "ADCS", 1024 * 4, NULL,2,NULL);
+	// xTaskCreate(ADCS_Task, (const signed char * ) "ADCS", 1024 * 4, NULL, 2, NULL);
 	
 	// extern void vTaskinms(void * pvParameters);
 	// xTaskCreate(vTaskinms, (const signed char *) "INMS", 1024*4, NULL, 2, &inms_task);

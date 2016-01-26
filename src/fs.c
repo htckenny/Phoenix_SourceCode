@@ -1015,14 +1015,15 @@ int hk_delete(char fileName[])
 /** End of HK data related FS function*/
 /*  ---------------------------------------------------  */
 /** Start of EOP data related FS function*/
-void eop_write_dup(uint8_t *frameCont) {
+void eop_write_dup(uint8_t frameCont []) 
+{
 	uint8_t frame[eop_length];
 	memcpy(frame, frameCont, eop_length);
 	eop_write(frame, 0);
 	eop_write(frame, 1);
 }
 
-int eop_write(uint8_t frameCont[], int SD_partition)		//SD_partition available : 0 & 1
+int eop_write(uint8_t *frameCont, int SD_partition)		//SD_partition available : 0 & 1
 {
 	struct tm  ts;
 	char buf[20];
@@ -1065,8 +1066,8 @@ int eop_write(uint8_t frameCont[], int SD_partition)		//SD_partition available :
 	else {
 		printf("\rEOP_write() %d success .. \r\n", SD_partition);
 		f_close(&file);
-		if (SD_partition == 1)
-			hex_dump(frameCont, eop_length);
+		// if (SD_partition == 1)
+		// 	hex_dump(frameCont, eop_length);
 		return No_Error;
 	}
 

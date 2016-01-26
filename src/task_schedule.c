@@ -137,9 +137,6 @@ void init_command_buf(uint8_t *sche_buf, int buf_length, uint8_t *final_buf) {
 	for (int i = 7 ; i < buf_length ; i++) {
 		final_buf[i] = sche_buf[i];
 	}
-	// for(int i = 0 ; i < buf_length;i++){
-	// 	printf("%x ", final_buf[i]);
-	// }
 }
 /* the function to find the maximum buffer */
 /* this function still need to verify !!!*/

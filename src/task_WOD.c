@@ -129,63 +129,64 @@ int getWodFrame(int fnum) {
 	uint8_t tempBat = 0 ;
 	uint8_t txdata[19] = {};
 
-
 	uint16_t val[7];
+	
+	uint16_t EPS_HK[12];
+	uint8_t txbuf[2];
+	uint8_t rxbuf[64+2];
+
+
 	txdata[0] = com_rx_hk;
 	if (i2c_master_transaction_2(0, com_rx_node, &txdata, 1, &val, com_rx_hk_len, com_delay) == E_NO_ERR) {
 		tempComm  = __max(__min(floor(4 * (float)(189.5522-0.0546*val[5] ) + 60), 255), 0);
 	} else
 		return Error;
-	// printf("temp com = %" PRIu16 "\n", val[5]);
-	eps_hk_t * chkparam;
-	i2c_frame_t * frame = csp_buffer_get(I2C_MTU);
-	if (frame == NULL)
-		return Error;
+	
+	txbuf[0] = 0x08;
 
-
-	frame->dest = NODE_EPS;
-	frame->data[0] = EPS_PORT_HK; // get hk
-	frame->data[1] = 0;
-	frame->len = 2;
-	frame->len_rx = 2 + (uint8_t) sizeof(eps_hk_t);
-	frame->retries = 0;
-
-	if ( i2c_send(0, frame, 0) != E_NO_ERR) {
-		csp_buffer_free(frame);
-		return Error;
+	if (i2c_master_transaction_2(0, eps_node, &txbuf, 1, &rxbuf, 43+2, eps_delay) == E_NO_ERR){
+		memcpy(&EPS_HK[0], &rxbuf[10], 2);	//Vbatt
+		memcpy(&EPS_HK[1], &rxbuf[12], 2);	//ibat
+		memcpy(&EPS_HK[8], &rxbuf[14], 2);	//EPS temp
+		memcpy(&EPS_HK[9], &rxbuf[16], 2);	//EPS temp
+		memcpy(&EPS_HK[10], &rxbuf[18], 2);	//EPS temp
+		memcpy(&EPS_HK[11], &rxbuf[20], 2);	//batt temp
 	}
-
-	if (i2c_receive(0, &frame, 200) != E_NO_ERR) {
-
-		return Error;
+	txbuf[0] = 0x08;
+	txbuf[1] = 0x02;
+	if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 64+2, eps_delay) == E_NO_ERR){
+		memcpy(&EPS_HK[2], &rxbuf[8], 2);	//i3.3
+		memcpy(&EPS_HK[3], &rxbuf[10], 2);	//i3.3
+		memcpy(&EPS_HK[4], &rxbuf[12], 2);	//i3.3
+		memcpy(&EPS_HK[5], &rxbuf[2], 2);	//i5
+		memcpy(&EPS_HK[6], &rxbuf[4], 2);	//i5
+		memcpy(&EPS_HK[7], &rxbuf[6], 2);	//i5
 	}
-
-	chkparam = (eps_hk_t *)&frame->data[2];
-	eps_hk_unpack(chkparam);
-	csp_buffer_free(frame);
-
+	for (int i = 0 ; i < 12 ; i++){
+		EPS_HK[i] = csp_hton16(EPS_HK[i]);
+	}
 
 	/*SEUV Sun Light Flag Check */
-	if ((chkparam->curin[0] + chkparam->curin[1] + chkparam->curin[2]) > 400)
-		HK_frame.sun_light_flag = 1;
-	else
-		HK_frame.sun_light_flag = 0;
+	// if ((chkparam->curin[0] + chkparam->curin[1] + chkparam->curin[2]) > 400)
+	// 	HK_frame.sun_light_flag = 1;
+	// else
+	// 	HK_frame.sun_light_flag = 0;
 
 	printf("WOD raw data\n");
-	printf("vbat = %u\n", chkparam->vbatt);
-	printf("ibat = %u\n", chkparam->cursys);
-	printf("i3.3 = %u\n", (chkparam->curout[0] + chkparam->curout[1] + chkparam->curout[2]));
-	printf("i5.0 = %u\n", (chkparam->curout[3] + chkparam->curout[4] + chkparam->curout[5]));
-	printf("EPS temp = %u\n", (chkparam->temp[0] + chkparam->temp[1] + chkparam->temp[2]) / 3);
-	printf("BAT temp = %u\n", chkparam->temp[3]);
+	printf("vbat = %u\n", EPS_HK[0]);
+	printf("ibat = %u\n", EPS_HK[1]);
+	printf("i3.3 = %u\n", (EPS_HK[2] + EPS_HK[3] + EPS_HK[4]));
+	printf("i5.0 = %u\n", (EPS_HK[5] + EPS_HK[6] + EPS_HK[7]));
+	printf("EPS temp = %u\n", (EPS_HK[8] + EPS_HK[9] + EPS_HK[10]) / 3);
+	printf("BAT temp = %u\n", EPS_HK[11]);
 	printf("COM temp = %.2f\n", 189.5522-0.0546*val[5]);
 
-	batVoltage = __max(__min(floor(20 * ((float)chkparam->vbatt / 1000) - 60), 255), 0);
-	batCurrent = __max(__min(floor(127 * ((float)chkparam->cursys / 1000) + 127), 255), 0);
-	bus3v3Current = __max(__min(floor((((float)chkparam->curout[0] + (float)chkparam->curout[1] + (float)chkparam->curout[2]) / 25)), 255), 0);
-	bus5v0Current = __max(__min(floor((((float)chkparam->curout[3] + (float)chkparam->curout[4] + (float)chkparam->curout[5]) / 25)), 255), 0);
-	tempEps = __max(__min(floor(4 * ((((float)chkparam->temp[0] + (float)chkparam->temp[1] + (float)chkparam->temp[2]) / 3)) + 60), 255), 0);
-	tempBat = __max(__min(floor(4 * (((float)chkparam->temp[3])) + 60), 255), 0);
+	batVoltage = __max(__min(floor(20 * ((float)EPS_HK[0] / 1000) - 60), 255), 0);
+	batCurrent = __max(__min(floor(127 * ((float)EPS_HK[1] / 1000) + 127), 255), 0);
+	bus3v3Current = __max(__min(floor((((float)EPS_HK[2] + (float)EPS_HK[3] + (float)EPS_HK[4]) / 25)), 255), 0);
+	bus5v0Current = __max(__min(floor((((float)EPS_HK[5] + (float)EPS_HK[6] + (float)EPS_HK[7]) / 25)), 255), 0);
+	tempEps = __max(__min(floor(4 * ((((float)EPS_HK[8] + (float)EPS_HK[9]+ (float)EPS_HK[10]) / 3)) + 60), 255), 0);
+	tempBat = __max(__min(floor(4 * (((float)EPS_HK[11])) + 60), 255), 0);
 
 	if (mode)	calbit(fnum);
 	calmulbit(fnum, 1, batVoltage);

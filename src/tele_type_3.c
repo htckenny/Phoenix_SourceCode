@@ -83,7 +83,7 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 
 		/* EOP mode */
 		if (HK_frame.mode_status_flag == 2 && parameters.first_flight == 1)
-			HK_frame.mode_status_flag = 5;
+			HK_frame.mode_status_flag = 4;
 
 		memcpy(&txBuffer[0], &HK_frame.mode_status_flag, 1);
 		memcpy(&txBuffer[1], &parameters.inms_store_count, 4);
@@ -92,20 +92,25 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 		memcpy(&txBuffer[13], &parameters.wod_store_count, 4);
 
 		buffs = Interface_3V3_current_get();
+		vTaskDelay(0.01 * delay_time_based);
 		memcpy(&txBuffer[17], &buffs, 2);
 
 		buffs = Interface_5V_current_get();
+		vTaskDelay(0.01 * delay_time_based);
 		memcpy(&txBuffer[19], &buffs, 2);
 
 		buffs = Interface_tmp_get();
+		vTaskDelay(0.01 * delay_time_based);
 		memcpy(&txBuffer[21], &buffs, 2);
 
 		buffs = Interface_inms_thermistor_get();
+		vTaskDelay(0.01 * delay_time_based);
 		memcpy(&txBuffer[23], &buffs, 2);
 
 		txlen = 25;
 		printf("[TM 3-1]current mode = %d\n", txBuffer[0]);
 		SendPacketWithCCSDS_AX25(&txBuffer, txlen, obc_apid, type, subType);
+		hex_dump(&txBuffer, txlen);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 
 		break;
@@ -129,68 +134,17 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 	/*---------------ID:3 Report_EPS_HK   ----------------*/
 	case Report_EPS_HK :
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
-		int success_33 = 1;
-		completionError = I2C_READ_ERROR;
-
-		printf("Requesting EPS HK data\r\n");
-		eps_hk_1_t * chkparam;
-
-		i2c_frame_t * frame;
-		frame = csp_buffer_get(I2C_MTU);
-		frame->dest = eps_node;
-		frame->data[0] = EPS_PORT_HK; // Ping port
-		frame->len = 1;
-		frame->len_rx = 2 + (uint8_t) sizeof(eps_hk_1_t);
-		frame->retries = 0;
-
-		if (i2c_send(0, frame, 0) != E_NO_ERR) {
-			csp_buffer_free(frame);
-			success_33 = 0;
+		i2c_tx[0] = eps_hk;
+		if (i2c_master_transaction_2(0, eps_node, &i2c_tx, 1, &txBuffer, eps_hk_len, eps_delay) == E_NO_ERR) {
+			txlen = eps_hk_len - 2;
+			SendPacketWithCCSDS_AX25(&txBuffer[2], txlen, obc_apid, type, subType);
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}
+		else {
 
-		if (i2c_receive(0, &frame, 200) != E_NO_ERR)
-			success_33 = 0;
-
-		chkparam = (eps_hk_1_t *)&frame->data[2];
-		for (int i = 0; i <3 ;i++){
-			chkparam->pv[i] = csp_ntoh16(chkparam->pv[i]);
-		}
-		chkparam->pc = csp_ntoh16(chkparam->pc);
-		chkparam->bv = csp_ntoh16(chkparam->bv);
-		chkparam->sc = csp_ntoh16(chkparam->sc);
-		for (int i = 0; i <6 ;i++){
-			chkparam->temp[i] = csp_ntoh16(chkparam->temp[i]);
-		}
-		for (int i = 0; i <6 ;i++){
-			chkparam->latchup[i] = csp_ntoh16(chkparam->latchup[i]);
-		}		
-		chkparam->sw_errors = csp_ntoh16(chkparam->sw_errors);
-		chkparam->bootcount = csp_ntoh16(chkparam->bootcount);
-
-		csp_buffer_free(frame);
-		
-		if (success_33 == 0 ) {
+			completionError = I2C_READ_ERROR;
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
-			goto err;
 		}
-		hex_dump(chkparam, frame->len_rx - 2);
-		SendPacketWithCCSDS_AX25(chkparam, frame->len_rx - 2, obc_apid, type, subType);
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
-
-err:
-		// i2c_tx[0] = eps_hk;
-		// if (i2c_master_transaction_2(0, eps_node, &i2c_tx, 1, &txBuffer, eps_hk_len, eps_delay) == E_NO_ERR) {
-		// 	txlen = eps_hk_len - 2;
-		// 	SendPacketWithCCSDS_AX25(&txBuffer[2], txlen, obc_apid, type, subType);
-		// 	sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
-		// }
-		// else {
-
-		// 	completionError = I2C_READ_ERROR;
-		// 	sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
-		// }
-
-
 		break;
 	/*---------------ID:4 Report_Parameter    ----------------*/
 	case Report_Parameter:

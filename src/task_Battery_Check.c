@@ -11,45 +11,45 @@
 #include <dev/cpu.h>
 
 uint16_t battery_read() {
-	// uint8_t txbuf[1];
-	// uint8_t rxbuf[43+2];
-	// uint16_t Vbat = 0;
-	// txbuf[0] = 0x08;   
-	
-	// if (i2c_master_transaction_2(0, eps_node, &txbuf, 1, &rxbuf, 43+2, eps_delay) == E_NO_ERR){
-	// 	memcpy(&Vbat, &rxbuf[10], 2);
+	uint8_t txbuf[1];
+	uint8_t rxbuf[43+2];
+	uint16_t Vbat = 0;
+	txbuf[0] = 0x08;
+
+	if (i2c_master_transaction_2(0, eps_node, &txbuf, 1, &rxbuf, 43+2, eps_delay) == E_NO_ERR){
+		memcpy(&Vbat, &rxbuf[10], 2);
+	}
+	return csp_ntoh16(Vbat);
+
+	//Test to see if i2c hang
+	// eps_hk_t * chkparam;
+	// i2c_frame_t * frame = csp_buffer_get(I2C_MTU);
+	// if (frame == NULL)
+	// 	return Error;
+
+
+	// frame->dest = NODE_EPS;
+	// frame->data[0] = EPS_PORT_HK; // get hk
+	// frame->data[1] = 0;
+	// frame->len = 2;
+	// frame->len_rx = 2 + (uint8_t) sizeof(eps_hk_t);
+	// frame->retries = 0;
+
+	// if (i2c_send(0, frame, 0) != E_NO_ERR) {
+	// 	csp_buffer_free(frame);
+	// 	return Error;
 	// }
-	// return csp_ntoh16(Vbat);
-	
-	 //Test to see if i2c hang
-	eps_hk_t * chkparam;
-	i2c_frame_t * frame = csp_buffer_get(I2C_MTU);
-	if (frame == NULL)
-		return Error;
 
+	// if (i2c_receive(0, &frame, 200) != E_NO_ERR) {
+	// 	return Error;
+	// }
 
-	frame->dest = NODE_EPS;
-	frame->data[0] = EPS_PORT_HK; // get hk
-	frame->data[1] = 0;
-	frame->len = 2;
-	frame->len_rx = 2 + (uint8_t) sizeof(eps_hk_t);
-	frame->retries = 0;
+	// chkparam = (eps_hk_t *)&frame->data[2];
+	// eps_hk_unpack(chkparam);
+	// csp_buffer_free(frame);
 
-	if ( i2c_send(0, frame, 0) != E_NO_ERR) {
-		csp_buffer_free(frame);
-		return Error;
-	}
+	// return chkparam->vbatt;
 
-	if (i2c_receive(0, &frame, 200) != E_NO_ERR) {
-		return Error;
-	}
-
-	chkparam = (eps_hk_t *)&frame->data[2];
-	eps_hk_unpack(chkparam);
-	csp_buffer_free(frame);
-
-	return chkparam->vbatt;
-	
 }
 
 void Enter_Safe_Mode(int last_mode) {

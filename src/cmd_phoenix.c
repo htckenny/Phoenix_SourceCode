@@ -270,7 +270,6 @@ int INMSreceive_handler(struct command_context * ctx) {
 	char uchar[174 * 10];
 
 	nums = usart_messages_waiting(2);
-	//printf(" %d \n\r ",nums);
 	if (nums != 0) {
 		printf("seems get something! %d\n\r", nums);
 		for (int f = 0; f < nums; f++) {
@@ -314,32 +313,16 @@ int I2Csend_handler(struct command_context * ctx) {
 		}
 	}
 	printf("] \n");
-	if (node != 2) {
-		if (ctx->argc > 3) {
-			if ( i2c_master_transaction_2(0, node, &tx, ctx->argc - 3, &val, rx, 10) != E_NO_ERR) {
-				printf("No reply from node %x \r\n", node);
-				return CMD_ERROR_NONE;
-			}
-		}
-		else {
-			if ( i2c_master_transaction_2(0, node, 0, 0, &val, rx, 10) != E_NO_ERR) {
-				printf("No reply from node %x \r\n", node);
-				return CMD_ERROR_NONE;
-			}
+	if (ctx->argc > 3) {
+		if ( i2c_master_transaction_2(0, node, &tx, ctx->argc - 3, &val, rx, 10) != E_NO_ERR) {
+			printf("No reply from node %x \r\n", node);
+			return CMD_ERROR_NONE;
 		}
 	}
 	else {
-		if (ctx->argc > 3) {
-			if ( i2c_master_transaction(0, node, &tx, ctx->argc - 3, &val, rx, 10) != E_NO_ERR) {
-				printf("No reply from node %x \r\n", node);
-				return CMD_ERROR_NONE;
-			}
-		}
-		else {
-			if ( i2c_master_transaction(0, node, 0, 0, &val, rx, 10) != E_NO_ERR) {
-				printf("No reply from node %x \r\n", node);
-				return CMD_ERROR_NONE;
-			}
+		if ( i2c_master_transaction_2(0, node, 0, 0, &val, rx, 10) != E_NO_ERR) {
+			printf("No reply from node %x \r\n", node);
+			return CMD_ERROR_NONE;
 		}
 	}
 	if (rx > 0)
@@ -382,6 +365,7 @@ int check_mode(struct command_context * ctx) {
 int adcs_switch(struct command_context * ctx) {
 	unsigned int buffer;
 	extern void ADCS_Task(void * pvParameters);
+	extern void EOP_Task(void * pvParameters);
 	if (ctx->argc < 2) {
 		return CMD_ERROR_SYNTAX;
 	}
@@ -389,9 +373,11 @@ int adcs_switch(struct command_context * ctx) {
 		return CMD_ERROR_SYNTAX;
 	}
 	if (buffer == 1) {
+		// xTaskCreate(EOP_Task, (const signed char * ) "EOP", 1024 * 4, NULL, 1, &eop_task);
 		xTaskCreate(ADCS_Task, (const signed char * ) "ADCS", 1024 * 4, NULL, 1, &adcs_task);
 	}
 	else if (buffer == 0) {
+		// vTaskDelete(eop_task);
 		vTaskDelete(adcs_task);
 	}
 	return CMD_ERROR_NONE;

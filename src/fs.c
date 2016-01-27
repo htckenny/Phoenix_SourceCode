@@ -1055,7 +1055,7 @@ int eop_write(uint8_t *frameCont, int SD_partition)		//SD_partition available : 
 
 	
 
-	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_WRITE );
 	f_lseek(&file, file.fsize);
 	res = f_write(&file, frameCont, eop_length, &bw);
 	if (res != FR_OK) {
@@ -1076,7 +1076,7 @@ int eop_write(uint8_t *frameCont, int SD_partition)		//SD_partition available : 
 int eop_read(char fileName[], void * txbuf)
 {
 
-	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ );
 	if (res != FR_OK) {
 		printf("\r\nf_open() fail .. \r\n");
 	}

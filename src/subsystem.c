@@ -258,7 +258,8 @@ uint16_t Interface_tmp_get() {
 	tx[0] = 0xF0;	//0d240
 	tx[1] = 0xF0;
 
-	// i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
+	i2c_master_transaction_2(0, interface_node, &tx, 1, 0, 0, interface_delay) ;
+	vTaskDelay(0.01 * delay_time_based);
 	if (i2c_master_transaction_2(0, interface_node, &tx , 2, &rx, 4, interface_delay) == E_NO_ERR) {
 		return (rx[0] << 8) + rx[1];
 	} 
@@ -269,10 +270,11 @@ uint16_t Interface_inms_thermistor_get() {
 	uint8_t rx[5];
 	uint8_t tx[2];
 	tx[0] = 0xD0;	//0d208
-	tx[1] = 0xD0;
+	// tx[1] = 0xD0;
 
-	// i2c_master_transaction(0, interface_node, &tx, 2, 0, 0, 0);
-	if (i2c_master_transaction_2(0, interface_node, &tx, 2, &rx, 4, interface_delay) == E_NO_ERR) {
+	i2c_master_transaction_2(0, interface_node, &tx, 1, 0, 0, interface_delay) ;
+	vTaskDelay(0.01 * delay_time_based);
+	if (i2c_master_transaction_2(0, interface_node, &tx, 1, &rx, 4, interface_delay) == E_NO_ERR) {
 		return (rx[0] << 8) + rx[1];
 	} 
 	else
@@ -283,7 +285,8 @@ uint16_t Interface_3V3_current_get() {
 	uint8_t tx[2];
 	tx[0] = 0x90;	//0d144
 	// tx[1] = 0x90;
-
+	i2c_master_transaction_2(0, interface_node, &tx, 1, 0, 0, interface_delay) ;
+	vTaskDelay(0.01 * delay_time_based);
 	if (i2c_master_transaction_2(0, interface_node, &tx, 1, &rx, 4, interface_delay) == E_NO_ERR) {
 		return (rx[0] << 8) + rx[1];
 	} 
@@ -295,7 +298,8 @@ uint16_t Interface_5V_current_get() {
 	uint8_t tx[2];
 	tx[0] = 0xB0;	//0x176
 	// tx[1] = 0xB0;
-
+	i2c_master_transaction_2(0, interface_node, &tx, 1, 0, 0, interface_delay) ;
+	vTaskDelay(0.01 * delay_time_based);
 	if (i2c_master_transaction_2(0, interface_node, &tx , 1, &rx, 4, interface_delay) == E_NO_ERR) {
 		return (rx[0] << 8) + rx[1];
 	} 

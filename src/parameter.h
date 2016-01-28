@@ -87,6 +87,7 @@ uint8_t schedule_unlink_flag;
 uint8_t idleunlocks;
 uint8_t Test_Script;
 uint8_t magnetometer_deploy;
+uint8_t abort_transfer_flag;
 
 uint32_t lastCommandTime;
 

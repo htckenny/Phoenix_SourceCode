@@ -74,6 +74,7 @@ uint32_t get_time() {
 }
 
 int parameter_init() {
+	abort_transfer_flag 				= 0;
 	magnetometer_deploy					= 0;
 	HK_frame.sun_light_flag				= 0;
 	/*--File System store count--*/

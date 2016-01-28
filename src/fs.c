@@ -1574,6 +1574,10 @@ int scan_files_Downlink (
 				printf("range error\n");
 				break;
 			}
+			if (abort_transfer_flag == 1) {
+				abort_transfer_flag = 0;
+				break;
+			}
 		}
 	}
 	return res;

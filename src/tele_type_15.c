@@ -15,8 +15,9 @@
 #include "fs.h"
 #include "task_SEUV.h"
 
-#define download_data 9
-#define delete_data 10
+#define download_data		9
+#define delete_data			10
+#define abort_transfer		128
 
 extern void beacon_Task(void * pvParameters);
 
@@ -39,19 +40,18 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 		printf("download_data  \n");
 
 		if (packet_length > 5) {
-			if (beacon_task != NULL)
-				vTaskDelete(beacon_task);
-
+			vTaskDelete(beacon_task);
 			memcpy(&T1, &paras[2], 4);
-			if (paras[1] == 1) {								/* mode is 1 => need T1 and T2 */
+			/* mode is 1 => need T1 and T2 */
+			if (paras[1] == 1) {								
 				memcpy(&T2, &paras[7], 4);
 			}
-			else if (paras[1] == 2 || paras[1] == 3) {		/* mode is 2 or 3 => only need T1 */
+			/* mode is 2 or 3 => only need T1 */
+			else if (paras[1] == 2 || paras[1] == 3) {		
 				T2 = 0;
 			}
 			T1 = csp_ntoh32(T1);
 			T2 = csp_ntoh32(T2);
-			// printf("before Time 1 = %"PRIu32" \n", T1);
 			printf("Date type = %d\n", paras[0]);
 
 			if (paras[0] >= 1 && paras[0] <= 5) {
@@ -111,9 +111,8 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 					if (wod_task != NULL)
 						vTaskResume(wod_task);
 				}
+				xTaskCreate(beacon_Task, (const signed char *) "beacon", 1024 * 4, NULL, 2, &beacon_task);
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
-				if (beacon_task != NULL)
-					xTaskCreate(beacon_Task, (const signed char *) "beacon", 1024 * 4, NULL, 2, &beacon_task);
 			}
 			else {
 				sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
@@ -127,10 +126,12 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 		if (packet_length > 5) {
 
 			memcpy(&T1, &paras[2], 4);
-			if (paras[1] == 1) {								/* mode is 1 => need T1 and T2 */
+			/* mode is 1 => need T1 and T2 */
+			if (paras[1] == 1) {								
 				memcpy(&T2, &paras[7], 4);
 			}
-			else if (paras[1] == 2 || paras[1] == 3) {		/* mode is 2 or 3 => only need T1 */
+			/* mode is 2 or 3 => only need T1 */
+			else if (paras[1] == 2 || paras[1] == 3) {		
 				T2 = 0;
 			}
 			T1 = csp_ntoh32(T1);
@@ -138,66 +139,76 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 
 			/* PHOENIX HK */
 			if (paras[0] == 1) {
-				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 				if (scan_files_Delete (fileName_HK[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
-					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
+					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 					break;
 				}
 			}
 			/* INMS */
 			else if (paras[0] == 2) {
-				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 				if (scan_files_Delete (fileName_INMS[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
-					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
+					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 					break;
 				}
 			}
 			/* SEUV */
 			else if (paras[0] == 3) {
-				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 				if (scan_files_Delete (fileName_SEUV[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
-					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
+					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 					break;
 				}
 			}
 			/* EOP */
 			else if (paras[0] == 4) {
-				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 				if (scan_files_Delete (fileName_EOP[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
-					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
+					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 					break;
 				}
 			}
 			/* WOD */
 			else if (paras[0] == 5) {
-				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 				if (scan_files_Delete (fileName_WOD[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
-					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
+					sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 					break;
 				}
 			}
 			/* INMS Script */
 			else if (paras[0] == 6) {
-				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 
 				for (int i = 0 ; i < 7 ; i++) {
 					inms_script_delete_flash(i);
 				}
-				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
+				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 				break;
 			}
 			else
-				sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); //accept fail
+				sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}
 		else
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); //accept fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 		break;
-
+	/*---------------ID:128 abort onging transfer----------------*/
+	case abort_transfer:
+		if (packet_length == 0)
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
+			break;
+		}
+		printf("Execute Type 15 Sybtype 128, Abort transmitting \r\n");
+		abort_transfer_flag = 1;
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		break;
 	default:
 		sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 		break;
-
 	}
 }

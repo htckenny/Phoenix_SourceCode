@@ -63,7 +63,6 @@ void Init_Task(void * pvParameters) {
 	/*   Deploy Device  */
 	if (idleunlocks != 1) {
 		deploy_antenna();
-		// printf("Antenna  deployed \n");
 	}
 
 	printf("-----------------------------------------\n");
@@ -76,14 +75,9 @@ void Init_Task(void * pvParameters) {
 	if (wod_task == NULL) {
 		xTaskCreate(WOD_Task, (const signed char * ) "WOD", 1024 * 4, NULL, 1, &wod_task);
 	}
-
 	/* change to the ADCS mode */
 	HK_frame.mode_status_flag = 2;
-
 
 	/** End of init */
 	vTaskDelete(NULL);
 }
-
-/*--------------------------------------------------------------------*/
-

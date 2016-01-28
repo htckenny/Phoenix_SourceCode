@@ -297,7 +297,6 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		}
 		printf("Execute Type 8 Sybtype 16 ,enter nominal mode  \r\n");
 
-		parameters.first_flight = 0;
 		HK_frame.mode_status_flag = 3;
 		parameters.com_bit_rates = 8;
 		para_w_flash();
@@ -315,11 +314,10 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		}
 		printf("Execute Type 8 Sybtype 17\r\n");
 
-		// parameters.first_flight = 0;
 		if (paras[0] == 1) {
 			parameters.inms_status = 1;
 			printf("enable inms script handler\n");
-		}	//enable
+		}
 		else if (paras[0] == 0) {
 			parameters.inms_status = 0;
 			printf("disable inms script handler\n");

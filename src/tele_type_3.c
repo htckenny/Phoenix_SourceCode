@@ -23,6 +23,7 @@
 #define Report_Task_Status	6		/* Report all the task status */
 #define Report_ADCS_HK		7		/* Report ADCS House Keeping Data */
 #define Report_Script_Stat	8		/* Report INMS script's status */
+#define Report_WOD_Test		9
 
 extern uint16_t fletcher(uint8_t *script, size_t length);
 
@@ -221,6 +222,17 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 		SendPacketWithCCSDS_AX25(&txBuffer, txlen, obc_apid, type, subType);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
+	/*--------------- ID:9 Test SCS WOD interface ----------------*/	
+	case Report_WOD_Test:
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+
+		uint8_t test[9];
+		test[0] = 30;
+		memcpy(&test[1], &beacon_frame.mode, 8);
+
+		SendPacketWithCCSDS_AX25(&test, 9, obc_apid, 3, 25);
+
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 
 	default:
 

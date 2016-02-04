@@ -20,7 +20,6 @@ void decodeService131(uint8_t subType, uint8_t * telecommand) {
 	uint8_t rxBufferLength;
 	uint8_t types = 3;
 	uint8_t parameterLength;
-	// note: parameter start from telecommand[9]
 	/*------------------------------------------Telecommand-----------------------------------*/
 
 	/*---------------ID:1 Reset----------------*/
@@ -1660,4 +1659,4 @@ void decodeService131(uint8_t subType, uint8_t * telecommand) {
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 		}
 	}
-}  /* end of decodeService129*/
+}

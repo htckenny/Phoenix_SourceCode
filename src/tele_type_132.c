@@ -17,8 +17,6 @@
 #define change_mode						2
 #define Execute_sampling_downlink		3
 
-
-
 void decodeService132(uint8_t subType, uint8_t*telecommand) {
 
 	uint8_t completionError = 0;
@@ -118,5 +116,3 @@ void decodeService132(uint8_t subType, uint8_t*telecommand) {
 
 	}
 }
-
-

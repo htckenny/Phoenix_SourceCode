@@ -32,7 +32,7 @@ void decodeService11(uint8_t subType, uint8_t *telecommand) {
 	paras[0] = packet_length;
 	printf("%d\n", paras[0]);
 	if ((packet_length - 4) > 0)
-		memcpy(&paras[1], telecommand + 9, packet_length - 4); // !!!!!!!!!!!!!!!!!!!!!!!!
+		memcpy(&paras[1], telecommand + 9, packet_length - 4);
 	switch (subType) {
 
 
@@ -55,11 +55,11 @@ void decodeService11(uint8_t subType, uint8_t *telecommand) {
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 		if (schedule_task != NULL) {
 			vTaskDelete(schedule_task);
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		}
 		else {
 			printf("The task has not been activated yet!\n");
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		}
 		break;
 
@@ -67,80 +67,76 @@ void decodeService11(uint8_t subType, uint8_t *telecommand) {
 	case Reset_Command_Schedule:
 		// It shall clear all entries in the command schedule. The command schedule shall be disabled.
 
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  // acceptance success
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 		if (schedule_reset_flash() == Error) {
 			printf("schedule reset failed\n");
 			completionError = FS_IO_ERR;
-			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); 
 			// It shall reset the scheduling event information
 		}
 		else {
 			printf("schedule reset success!!\n");
 			schedule_new_command_flag = 1;
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		}
 
 		break;
 
 	/*---------------ID:4 Insert_Telecommand----------------*/
 	case Insert_Telecommand:
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  // acceptance success
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 
-		// schedule_write need to check
 		if (schedule_write_flash(paras) == Error) {
 			completionError = FS_IO_ERR;
-			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); 
 		}
 		else {
 			schedule_new_command_flag = 1 ;
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		}
 		break;
 
 	/*---------------ID:6 Delete_Telecommand----------------*/
 	case Delete_Telecommand:
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  // acceptance success
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 		if (schedule_delete(telecommand[9], telecommand) == Error) {
 			completionError = FS_IO_ERR;
-			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); 
 		}
 		else {
 			schedule_new_command_flag = 1 ;
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		}
 		break;
 
 	/*---------------ID:15 Time_Shifting----------------*/
 	case Time_Shifting:
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  // acceptance success
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 		if (schedule_shift(telecommand + 9) == Error) {
 			completionError = FS_IO_ERR;
-			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); 
 		}
 		else {
 			schedule_new_command_flag = 1 ;
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		}
 
 		break;
 	/*---------------ID:17 Dump_Command----------------*/
 	case Dump_Command:
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  // acceptance success
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 		if (schedule_dump() == Error) {
 			completionError = FS_IO_ERR;
-			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); //send complete fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); 
 		}
 		else {
 			schedule_new_command_flag = 1 ;
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		}
 
 		break;
 	default:
 		break;
 	}
-	/*send COMPLETE_success report*/
 	sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
-
 }
-

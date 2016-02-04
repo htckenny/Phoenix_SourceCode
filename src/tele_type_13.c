@@ -35,24 +35,24 @@ void  decodeService13(uint8_t subType, uint8_t *telecommand) {
 
 	/*---------------ID:9 script_first_part	----------------*/
 	case script_first_part:
-		sendTelecommandReport_Success_INMS(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
+		sendTelecommandReport_Success_INMS(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 		printf("first\n");
 		if (paras[1] == 1) {
 			if(inms_script_write_flash(paras[0], &paras[2], 1, packet_length-2) == No_Error) {
 				script_length = (paras[2] + (paras[3] << 8));
-				sendTelecommandReport_Success_INMS(telecommand, CCSDS_S3_COMPLETE_SUCCESS); //send COMPLETE_success report
+				sendTelecommandReport_Success_INMS(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 			} 
 			else
 				sendTelecommandReport_Failure_INMS(telecommand, CCSDS_S3_COMPLETE_FAIL, ERR_F_READ);
 				
 		}		
 		else
-			sendTelecommandReport_Failure_INMS(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); //accept fail
+			sendTelecommandReport_Failure_INMS(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
 
 		break;
 	/*---------------ID:10  script_middle_part----------------*/
 	case script_middle_part:
-		sendTelecommandReport_Success_INMS(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  //send acceptance report
+		sendTelecommandReport_Success_INMS(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 		printf("second\n");
 		if (paras[1] != 1) {
 			if (inms_script_write_flash(paras[0], &paras[2], 0, packet_length -2) == No_Error )
@@ -61,7 +61,7 @@ void  decodeService13(uint8_t subType, uint8_t *telecommand) {
 				sendTelecommandReport_Failure_INMS(telecommand, CCSDS_S3_COMPLETE_FAIL, ERR_F_READ);
 		}		
 		else
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); //accept fail
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
 
 		break;
 	/* --------------ID: 11  script_last_part--------------*/
@@ -93,5 +93,3 @@ void  decodeService13(uint8_t subType, uint8_t *telecommand) {
 
 	}
 }
-
-

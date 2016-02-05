@@ -123,7 +123,7 @@ typedef struct __attribute__((packed)) {
 	uint32_t inms_store_count;			// Number of packets stored in satellite
 	uint32_t seuv_store_count;			// Number of packets stored in satellite
 	uint32_t hk_store_count;			// Number of packets stored in satellite
-	uint32_t eop_store_count;
+	uint32_t eop_store_count;			// Number of packets stored in satellite
 
 	/* Protocol sequence count */
 	uint16_t obc_packet_sequence_count;	//used in packing CCSDS header apid

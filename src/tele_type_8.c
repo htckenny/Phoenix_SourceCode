@@ -193,7 +193,6 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 
 		break;
 
-
 	/*---------------ID:11 para_to_default----------------*/
 	case  para_to_default:
 		if (para_length == 0)
@@ -205,7 +204,6 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		printf("Execute Type 8 Sybtype 11 , para_to_default \r\n");
 		para_d_flash();
 		parameter_init();
-		// para_w_flash();
 
 		printf("First Flight %d\n", (int) parameters.first_flight);
 		printf("shutdown_flag %d\n", (int) parameters.shutdown_flag);

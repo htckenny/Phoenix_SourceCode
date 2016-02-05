@@ -1734,11 +1734,9 @@ int scan_files_Delete (
 	}
 	return res;
 }
-/* ---------------------------------------------------  */
 /* ---------------- Self defined String ----------------*/
-char* fileName_HK[2]		= { "0:/HK_DATA",	"1:/HK_DATA"};
-char* fileName_INMS[2]		= { "0:/INMS_DATA",	"1:/INMS_DATA"};
+char* fileName_HK[2]		= { "0:/HK_DATA",	"1:/HK_DATA"	};
+char* fileName_INMS[2]		= { "0:/INMS_DATA",	"1:/INMS_DATA"	};
 char* fileName_SEUV[2]		= { "0:/SEUV_DATA",	"1:/SEUV_DATA"	};
-char* fileName_EOP[2]		= { "0:/EOP_DATA",	"1:/EOP_DATA"};
+char* fileName_EOP[2]		= { "0:/EOP_DATA",	"1:/EOP_DATA"	};
 char* fileName_WOD[2]		= { "0:/WOD_DATA", 	"1:/WOD_DATA"	};
-/* TODO: Test the function scan is okay or not with these predefined filename*/

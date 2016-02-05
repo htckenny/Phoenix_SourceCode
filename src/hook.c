@@ -49,8 +49,8 @@ void hook_init(void) {
 	/* Start Self-defined Tasks */
 	// parameter_init();
 
-	// extern void ModeControl_Task(void * pvParameters);
-	// xTaskCreate(ModeControl_Task, (const signed char *) "MC", 1024*4, NULL, 2, NULL);
+	extern void ModeControl_Task(void * pvParameters);
+	xTaskCreate(ModeControl_Task, (const signed char *) "MC", 1024*4, NULL, 2, NULL);
 	
 	// extern void BatteryCheck_Task(void * pvParameters);
 	// xTaskCreate(BatteryCheck_Task, (const signed char *) "BatCk", 1024 * 4, NULL, 2, NULL);

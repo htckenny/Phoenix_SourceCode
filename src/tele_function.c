@@ -99,10 +99,7 @@ uint8_t AX25_Sequence_Count() {
 	    parameters.ax25_sequence_count + 1;
 	return parameters.ax25_sequence_count;
 }
-
-
-
-// Generates sequenceCount , reset if overflow
+/* Generates sequenceCount , reset if overflow */
 uint16_t CCSDS_GetSequenceCount(uint16_t apid) {
 	/* OBC related command */
 	if (apid == obc_apid) {
@@ -113,44 +110,40 @@ uint16_t CCSDS_GetSequenceCount(uint16_t apid) {
 			parameters.obc_packet_sequence_count ++ ;
 		return parameters.obc_packet_sequence_count;
 	}
-	/* OBC related command */
+	// /* INMS related command */
 	// else if (apid == inms_apid) {
 	// 	if (parameters.inms_packet_sequence_count == 16383) {
 	// 		parameters.inms_packet_sequence_count = 0;
-	// 		return parameters.inms_packet_sequence_count;
 	// 	}
-	// 	parameters.inms_packet_sequence_count =
-	// 	    parameters.inms_packet_sequence_count + 1;
+	// 	else
+	// 		parameters.inms_packet_sequence_count++ ;
 	// 	return parameters.inms_packet_sequence_count;
 	// }
-
-	// else if (apid == seuv_apid) {   //obc related command
+	// /* SEUV related command */
+	// else if (apid == seuv_apid) {
 	// 	if (parameters.seuv_packet_sequence_count == 16383) {
 	// 		parameters.seuv_packet_sequence_count = 0;
-	// 		return parameters.seuv_packet_sequence_count;
 	// 	}
-	// 	parameters.seuv_packet_sequence_count =
-	// 	    parameters.seuv_packet_sequence_count + 1;
+	// 	else
+	// 		parameters.seuv_packet_sequence_count++;
 	// 	return parameters.seuv_packet_sequence_count;
 	// }
-
-	// else if (apid == wod_apid) {   //obc related command
+	//  WOD related command 
+	// else if (apid == wod_apid) {
 	// 	if (parameters.wod_packet_sequence_count == 16383) {
 	// 		parameters.wod_packet_sequence_count = 0;
-	// 		return parameters.wod_packet_sequence_count;
 	// 	}
-	// 	parameters.wod_packet_sequence_count =
-	// 	    parameters.wod_packet_sequence_count + 1;
+	// 	else
+	// 		parameters.wod_packet_sequence_count ++;
 	// 	return parameters.wod_packet_sequence_count;
 	// }
-
-	// else if (apid == phoenix_hk_apid) {   //obc related command
+	// /* HK related command */
+	// else if (apid == phoenix_hk_apid) {
 	// 	if (parameters.phoenix_hk_packet_sequence_count == 16383) {
 	// 		parameters.phoenix_hk_packet_sequence_count = 0;
-	// 		return parameters.phoenix_hk_packet_sequence_count;
 	// 	}
-	// 	parameters.phoenix_hk_packet_sequence_count =
-	// 	    parameters.phoenix_hk_packet_sequence_count + 1;
+	// 	else
+	// 		parameters.phoenix_hk_packet_sequence_count++;
 	// 	return parameters.phoenix_hk_packet_sequence_count;
 	// }
 	else

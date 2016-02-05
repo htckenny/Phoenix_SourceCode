@@ -2,8 +2,8 @@
  * task_INMS.c
  *
  *  Created on: 	2014/10/06
- *  Last updated: 	2016/01/03
- *      Author: Kenny Huang
+ *  Last updated: 	2016/02/04
+ *  Author: 		Kenny Huang
  */
 
 #include <stdlib.h>
@@ -38,7 +38,7 @@
 
 
 #define isSimulator 			0
-#define isFunctionTest			1
+#define isFunctionTest			0
 
 typedef struct __attribute__((packed)) {
 	int tt_hour, tt_min, tt_sec, tt_seq;
@@ -315,9 +315,9 @@ void vTaskinms(void * pvParameters) {
 					epoch_sec[i] = (script[i][2]) + (script[i][3] << 8) + (script[i][4] << 16) + (script[i][5] << 24);
 				else
 					epoch_sec[i] = 0;
-				#if isFunctionTest
+#if isFunctionTest
 				epoch_sec[i] -= (3029529600);
-				#endif
+#endif
 			}
 
 			/**
@@ -341,9 +341,9 @@ void vTaskinms(void * pvParameters) {
 			 * rec[0] = 1;
 			 * rec[1] = 0;
 			 */
-			#if isFunctionTest
+#if isFunctionTest
 			rec[0] = Test_Script;
-			#endif
+#endif
 
 			printf("After Modification\n");
 			for (int i = 0; i < scriptNum; i++) {
@@ -577,11 +577,11 @@ void vTaskinms(void * pvParameters) {
 								}
 								xTaskCreate(vTaskInmsReceive, (const signed char*) "INMSR", 1024 * 4, NULL, 2, &inms_task_receive);
 								/* ---- For simulator ---- */
-								#if isSimulator
+#if isSimulator
 								for (int j = 2; j <= leng + 3; j++) {
 									usart_putstr(2, (char *)&script[rec[i]][flag + j], 1);
 								}
-								#endif
+#endif
 								/* ----------------------- */
 
 								printf("COMMAND: OBC_SU_ON...........\n");
@@ -595,11 +595,11 @@ void vTaskinms(void * pvParameters) {
 								power_control(4, OFF);
 
 								/* ---- For simulator ---- */
-								#if isSimulator
+#if isSimulator
 								for (int j = 2; j <= leng + 3; j++) {
 									usart_putstr(2, (char *)&script[rec[i]][flag + j], 1);
 								}
-								#endif
+#endif
 								/* --------------------- */
 
 								printf("COMMAND: OBC_SU_OFF...........\n");
@@ -731,6 +731,14 @@ void vTaskInmsTemperatureMonitor(void * pvParameters) {
 		printf("\t\t\tTemperature %d degree\n", inms_temperature);
 		printf("\E[1A\r");
 
+		/* Operational Temperature Range -20 to +40 */
+		if (inms_temperature >= 40 || inms_temperature < -20) {
+			parameters.inms_status = 0;
+			printf("Temperature out of range %d degree\n", inms_temperature);
+		}
+		else {
+			parameters.inms_status = 1;
+		}
 		vTaskDelay(5 * delay_time_based);
 	}
 }

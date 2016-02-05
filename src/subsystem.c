@@ -77,11 +77,13 @@ int parameter_init() {
 	abort_transfer_flag 				= 0;
 	magnetometer_deploy					= 0;
 	HK_frame.sun_light_flag				= 0;
+
 	/*--File System store count--*/
 	parameters.wod_store_count			= 0;
 	parameters.inms_store_count			= 0;
 	parameters.seuv_store_count			= 0;
 	parameters.hk_store_count			= 0;
+	parameters.eop_store_count			= 0;
 
 	/* Protocol sequence count */
 	parameters.obc_packet_sequence_count = 0;

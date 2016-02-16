@@ -29,6 +29,20 @@
 #include "tele_function.h"
 #include "fs.h"
 
+int eps_switch(struct command_context * ctx) {
+	unsigned int buffer;
+	extern void EPS_Task(void * pvParameters);
+
+	if (ctx->argc < 2) {
+		return CMD_ERROR_SYNTAX;
+	}
+	if (sscanf(ctx->argv[1], "%u", &buffer) != 1) {
+		return CMD_ERROR_SYNTAX;
+	}
+	if (buffer == 1)
+		xTaskCreate(EPS_Task, (const signed char *) "EPSS", 1024*4, NULL, 2, NULL);
+	return CMD_ERROR_NONE;
+}
 int firstflight_switch(struct command_context * ctx) {
 	unsigned int buffer;
 	if (ctx->argc < 2) {
@@ -333,6 +347,10 @@ int INMS_switch(struct command_context * ctx) {
 	unsigned int buffer;
 	extern void vTaskinms(void * pvParameters);
 	extern void vTaskInmsReceive(void * pvParameters);
+	extern void vTaskInmsTemperatureMonitor(void * pvParameters);
+	extern void vTaskInmsErrorHandle(void * pvParameters);
+	extern void vTaskInmsCurrentMonitor(void * pvParameters);
+
 	if (ctx->argc < 2) {
 		return CMD_ERROR_SYNTAX;
 	}
@@ -340,21 +358,18 @@ int INMS_switch(struct command_context * ctx) {
 		return CMD_ERROR_SYNTAX;
 	}
 	if (buffer == 1) {
-		// extern void vTaskfstest(void * pvParameters);
-		// xTaskCreate(vTaskfstest, (const signed char * ) "FS_T", 1024 * 4, NULL, 2, NULL);
 		// xTaskCreate(vTaskInmsReceive, (const signed char*) "INMSR", 1024 * 4, NULL, 2, &inms_task_receive);
-		xTaskCreate(vTaskinms, (const signed char * ) "INMS", 1024 * 4, NULL, 2, &inms_task);
-		// extern void vTaskInmsErrorHandle(void * pvParameters);
+		// xTaskCreate(vTaskinms, (const signed char * ) "INMS", 1024 * 4, NULL, 2, &inms_task);
 		// xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "INMS_EH", 1024 * 4, NULL, 2, &inms_error_handle);
-		// extern void vTaskInmsCurrentMonitor(void * pvParameters);
 		// xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "INMS_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
+		xTaskCreate(vTaskInmsTemperatureMonitor, (const signed char * ) "InmsTM", 1024 * 4, NULL, 1, &inms_temp_moniter);
 	}
 	else if (buffer == 0) {
-		// xTaskCreate(vTaskfstes, (const signed char * ) "FS_T", 1024 * 4, NULL, 2, &fs_task);
-		vTaskDelete(&inms_task);
+		// vTaskDelete(&inms_task);
 		// vTaskDelete(inms_error_handle);
 		// vTaskDelete(inms_task_receive);
 		// vTaskDelete(inms_current_moniter);
+		vTaskDelete(inms_temp_moniter);
 	}
 	return CMD_ERROR_NONE;
 }
@@ -373,11 +388,9 @@ int adcs_switch(struct command_context * ctx) {
 		return CMD_ERROR_SYNTAX;
 	}
 	if (buffer == 1) {
-		// xTaskCreate(EOP_Task, (const signed char * ) "EOP", 1024 * 4, NULL, 1, &eop_task);
 		xTaskCreate(ADCS_Task, (const signed char * ) "ADCS", 1024 * 4, NULL, 1, &adcs_task);
 	}
 	else if (buffer == 0) {
-		// vTaskDelete(eop_task);
 		vTaskDelete(adcs_task);
 	}
 	return CMD_ERROR_NONE;
@@ -502,7 +515,6 @@ int ct(struct command_context * ctx) {
 	t.tv_nsec = 0;
 	obc_timesync(&t, 6000);
 	lastCommandTime = t.tv_sec;
-	
 	return CMD_ERROR_NONE;
 }
 
@@ -978,6 +990,7 @@ int comhk(struct command_context * ctx) {
 }
 
 command_t __root_command ph_commands[] = {
+	{ .name = "epss", .help = "PHOENIX: epss []", .handler = eps_switch, },
 	{ .name = "ff", .help = "PHOENIX: first flight switch", .handler = firstflight_switch, },
 	{ .name = "mSFD", .help = "PHOENIX: mSFD", .handler = moveScriptFromSD, },
 	{ .name = "ic", .help = "PHOENIX: ic", .handler = measure_INMS_current, },

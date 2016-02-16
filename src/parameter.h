@@ -23,6 +23,7 @@ xTaskHandle hk_task;
 
 xTaskHandle inms_error_handle;
 xTaskHandle inms_current_moniter;
+xTaskHandle inms_temp_moniter;
 xTaskHandle inms_task;
 xTaskHandle inms_task_receive;
 
@@ -88,7 +89,7 @@ uint8_t idleunlocks;
 uint8_t Test_Script;
 uint8_t magnetometer_deploy;
 uint8_t abort_transfer_flag;
-
+uint8_t SD_lock_flag;
 uint32_t lastCommandTime;
 
 typedef struct __attribute__((packed)) {

@@ -418,7 +418,7 @@ int inms_data_write(uint8_t frameCont[], int SD_partition)
 	strftime(buf, sizeof(buf), "%Y%m%d_%H%M%S", &ts);
 
 	strcat(fileName, buf);
-	strcat(fileName, "_INMS_TW01");
+	strcat(fileName, "_I");
 	strcat(fileName, ".dat");
 	printf("%s\n", fileName);
 
@@ -762,7 +762,7 @@ int wod_write(uint8_t * frameCont, int SD_partition )
 	strftime(buf, sizeof(buf), "%Y%m%d_%H%M%S", &ts);
 
 	strcat(fileName, buf);
-	strcat(fileName, "_WOD_TW01");
+	strcat(fileName, "_W");
 	strcat(fileName, ".dat");
 	printf("%s\n", fileName);
 
@@ -855,7 +855,7 @@ int seuv_write(int SD_partition)
 	ts = *localtime(&tt);
 	strftime(buf, sizeof(buf), "%Y%m%d_%H%M%S", &ts);
 	strcat(fileName, buf);
-	strcat(fileName, "_SEUV_TW01");
+	strcat(fileName, "_S");
 	strcat(fileName, ".dat");
 	printf("%s\n", fileName);
 
@@ -955,7 +955,7 @@ int hk_write(uint8_t * frameCont, int SD_partition)
 	strftime(buf, sizeof(buf), "%Y%m%d_%H%M%S", &ts);
 
 	strcat(fileName, buf);
-	strcat(fileName, "_HK_TW01");
+	strcat(fileName, "_H");
 	strcat(fileName, ".dat");
 	printf("%s\n", fileName);
 
@@ -1049,7 +1049,7 @@ int eop_write(uint8_t *frameCont, int SD_partition)		//SD_partition available : 
 	strftime(buf, sizeof(buf), "%Y%m%d_%H%M%S", &ts);
 
 	strcat(fileName, buf);
-	strcat(fileName, "_EOP_TW01");
+	strcat(fileName, "_E");
 	strcat(fileName, ".dat");
 	printf("%s\n", fileName);
 

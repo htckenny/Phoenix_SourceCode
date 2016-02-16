@@ -196,9 +196,6 @@ void vTaskInmsReceive(void * pvParameters) {
 			obcSuErrFlag = 1;
 		}
 		numReceive = usart_messages_waiting(2);
-		// if (numReceive != 0) {
-		// 	printf("numReceive = %d\n", numReceive);
-		// }
 		int ADCSexist = 0;
 		if (numReceive != 0) {
 			printf("Get response packet  %d!\n", numReceive);
@@ -234,16 +231,11 @@ void vTaskInmsReceive(void * pvParameters) {
 				obcSuErrFlag = 5;
 			}
 			hex_dump(ucharTotal, inms_data_length);
-			// inms_data_write_dup((uint8_t *)ucharTotal);
+			inms_data_write_dup((uint8_t *)ucharTotal);
 			// vTaskDelay(2 * delay_time_based);
-			// hex_dump(ucharTotal, inms_data_length);
-
-
 			numReceive = 0;
 			receiveFlag = 0;
 		}
-
-		// vTaskDelay()
 		vTaskDelayUntil( &xLastWakeTime, xFrequency );
 	}
 }
@@ -319,22 +311,12 @@ void vTaskinms(void * pvParameters) {
 				epoch_sec[i] -= (3029529600);
 #endif
 			}
-
 			/**
 			 * Sort these 7 epoch times by calling the function inmssort
 			 */
 			inmssort(epoch_sec);
-			// for (int i = 0; i < scriptNum; i++) {
-			// printf("[%d] => %d\n", i, rec[i]);
-			// }
-
 			vTaskDelay(1 * delay_time_based);
 
-			/* for temporary setting,  now only have idle0.bin, idle1.bin*/
-			// if (isSimulator) {
-			// rec[0] = 1;
-			// rec[1] = 0;
-			// }
 			/**
 			 * modify here if wanna change the sequence for debugging
 			 * For example:
@@ -373,7 +355,6 @@ void vTaskinms(void * pvParameters) {
 				while (script[rec[i]][flag] != 0x55) {
 					if (script_read_result[i] != No_Error)
 						break;
-
 					/* S1 = 0x41 */
 					if (script[rec[i]][flag] == 0x41)	{
 						timetable_t[ttflag].tt_hour	=	script[rec[i]][flag - 1];
@@ -417,7 +398,6 @@ void vTaskinms(void * pvParameters) {
 					else {
 						ttflag--;
 					}
-
 					if (printtflag != ttflag) {
 						printf("hour:%d, min:%d, sec:%d, seq:%d\n", timetable_t[ttflag].tt_hour, timetable_t[ttflag].tt_min, timetable_t[ttflag].tt_sec, timetable_t[ttflag].tt_seq);
 						printtflag = ttflag;
@@ -432,7 +412,6 @@ void vTaskinms(void * pvParameters) {
 				ttflag--;
 
 				int ttflagMax = ttflag;
-				// printf("ttflagMax = %d\n", ttflagMax );
 				printf("[-------------STEP #5 : Checking the correctness of the sequence-------------]\n");
 
 				/*Check if the first sequence is S1 [Req-INMS-I-228]*/
@@ -464,7 +443,7 @@ void vTaskinms(void * pvParameters) {
 				for (int i = 0; i < 10; i++) {
 					eotflag[i] = 0;
 				}
-				//find where is OBC_EOT 0xFE
+				/* find where is OBC_EOT 0xFE */
 				eotflag[eotnum++] = nnflag;
 				while (nnflag <= (script[rec[i]][0]  + (script[rec[i]][1] << 8))) {
 					if (script[rec[i]][nnflag] == 254) {	//0xFE = 0d254
@@ -511,7 +490,7 @@ void vTaskinms(void * pvParameters) {
 					}
 
 					vTaskDelay(1 * delay_time_based);
-					refTime = timeGet(1);  //get the small clock time
+					refTime = timeGet(1);  /* get the small clock time */
 
 
 					first_time = timeGet(0) - 946684800;
@@ -624,6 +603,43 @@ void vTaskinms(void * pvParameters) {
 								break;
 							}
 							else {
+								switch (script[rec[i]][flag + 2]) {
+								/* SU_STIM */		
+								case 4:	
+									if (script[rec[i]][flag + 3] != 2)
+										obcSuErrFlag = 5;
+									break;
+								/* SU_HC */		
+								case 6:
+									if (script[rec[i]][flag + 3] != 4)
+										obcSuErrFlag = 5;
+									break;
+								/* SU_CAL */		
+								case 7:
+									if (script[rec[i]][flag + 3] != 4)
+										obcSuErrFlag = 5;
+									break;
+								/* SU_SCI */		
+								case 8:
+									if (script[rec[i]][flag + 3] != 6)
+										obcSuErrFlag = 5;
+									break;
+								/* SU_DUMP */		
+								case 11:
+									if (script[rec[i]][flag + 3] != 1)
+										obcSuErrFlag = 5;
+									break;
+								/* SU_HVARM */		
+								case 83:
+									if (script[rec[i]][flag + 3] != 1)
+										obcSuErrFlag = 5;
+									break;
+								/* SU_HVON */		
+								case 201:
+									if (script[rec[i]][flag + 3] != 1)
+										obcSuErrFlag = 5;
+									break;
+								}
 								for (int j = 2; j <= leng + 3; j++) {
 									usart_putstr(2, (char *)&script[rec[i]][flag + j], 1); //(char *) check !!
 									printf("COMMAND : %02x \n", script[rec[i]][flag + j]);
@@ -648,7 +664,6 @@ void vTaskinms(void * pvParameters) {
 							if (inmsJumpScriptCheck(i) && i != scriptNum - 1) {
 								break;
 							}
-
 						}
 					}
 					else {

@@ -11,8 +11,10 @@ extern void HK_Task(void * pvParameters);
 extern void SolarEUV_Task(void * pvParameters);
 extern void vTaskInmsErrorHandle(void * pvParameters);
 extern void vTaskInmsCurrentMonitor(void * pvParameters);
-extern void Enter_Safe_Mode(int last_mode) ;
+extern void vTaskInmsTemperatureMonitor(void * pvParameters);
+extern void Anomaly_Handler_Task(void * pvParameters);
 
+extern void Enter_Safe_Mode(int last_mode) ;
 
 void ModeControl_Task(void * pvParameters) {
 	/* Mode 1 = INIT Mode
@@ -30,6 +32,7 @@ void ModeControl_Task(void * pvParameters) {
 	HK_frame.mode_status_flag = 1;
 	printf("-----------------------Enter INIT Mode----------------------------\n");
 	xTaskCreate(Init_Task, (const signed char *) "Init", 1024 * 4, NULL, 2, &init_task);
+	xTaskCreate(Anomaly_Handler_Task, (const signed char *) "Anom", 1024 * 4, NULL, 3, NULL);
 
 	/* Satellite  enter init mode done. */
 	lastmode = 1;
@@ -84,6 +87,8 @@ void ModeControl_Task(void * pvParameters) {
 					xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "InmsEH", 1024 * 4, NULL, 2, &inms_error_handle);
 				if (inms_current_moniter == NULL)
 					xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "InmsCM", 1024 * 4, NULL, 1, &inms_current_moniter);
+				if (inms_temp_moniter == NULL)
+					xTaskCreate(vTaskInmsTemperatureMonitor, (const signed char * ) "InmsTM", 1024 * 4, NULL, 1, &inms_temp_moniter);
 				lastmode = HK_frame.mode_status_flag;   // ENTER PAYLOAD MODE DONE!
 			}
 			/* desire to Enter the Safe Mode. */

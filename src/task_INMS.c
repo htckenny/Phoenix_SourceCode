@@ -2,7 +2,7 @@
  * task_INMS.c
  *
  *  Created on: 	2014/10/06
- *  Last updated: 	2016/02/04
+ *  Last updated: 	2016/02/17
  *  Author: 		Kenny Huang
  */
 
@@ -50,6 +50,7 @@ int scriptRunning = 0;		/* initializing for identifying which script is running 
 int obcSuErrFlag = 0;		/* for the detection of the OBC_SU_ERR */
 int error_flag = 0;
 int maxlength = 0;
+int inms_power_on = 0;
 uint32_t epoch_sec[scriptNum];/* the seconds from UTC epoch time 2000/01/01 00:00:00 Am */
 uint32_t refsec[scriptNum] ;
 
@@ -498,7 +499,7 @@ void vTaskinms(void * pvParameters) {
 
 					if (printTime == 1) {
 						printf("\n%.5" PRIu32 " -- %.5" PRIu32 "\n", refTime, tTable_24);
-						printf("%.5" PRIu32 "\n", (tTable_24 < refTime) ? tTable_24 - refTime + 86400 : tTable_24 - refTime  );
+						printf("%.5" PRIu32 "\n", (tTable_24 < refTime) ? tTable_24 - refTime + 86400 : tTable_24 - refTime);
 						printf("\E[3A\r");
 					}
 					if ((refTime  ==  tTable_24 ) || ((refTime - 1 ) ==  tTable_24 )) {
@@ -529,6 +530,9 @@ void vTaskinms(void * pvParameters) {
 						int tempTime = 0;
 						int inTheSequence = 0;
 						while (flag <= (script[rec[i]][0]  + (script[rec[i]][1] << 8))) {
+							if (parameters.inms_status == 0){
+								break;
+							}
 							printf("In the sequence loop : Sending command.\n");
 							leng = script[rec[i]][flag + 3]; //get Command's length
 
@@ -541,12 +545,12 @@ void vTaskinms(void * pvParameters) {
 									break;
 								}
 							}
-
 							inTheSequence = 1;
 							/* OBC_SU_ON  = 0xF1 = 0d241 */
 							if (script[rec[i]][flag + 2] == 241) {
 								int numGabage = 0;
 								power_control(4, ON);	//command EPS to POWER ON INMS
+								inms_power_on = 1;
 								vTaskDelay(0.5 * delay_time_based);
 
 								numGabage = usart_messages_waiting(2);
@@ -572,7 +576,7 @@ void vTaskinms(void * pvParameters) {
 								vTaskDelay(1 * delay_time_based);
 								vTaskDelete(inms_task_receive);
 								power_control(4, OFF);
-
+								inms_power_on = 0;
 								/* ---- For simulator ---- */
 #if isSimulator
 								for (int j = 2; j <= leng + 3; j++) {
@@ -604,37 +608,37 @@ void vTaskinms(void * pvParameters) {
 							}
 							else {
 								switch (script[rec[i]][flag + 2]) {
-								/* SU_STIM */		
-								case 4:	
+								/* SU_STIM */
+								case 4:
 									if (script[rec[i]][flag + 3] != 2)
 										obcSuErrFlag = 5;
 									break;
-								/* SU_HC */		
+								/* SU_HC */
 								case 6:
 									if (script[rec[i]][flag + 3] != 4)
 										obcSuErrFlag = 5;
 									break;
-								/* SU_CAL */		
+								/* SU_CAL */
 								case 7:
 									if (script[rec[i]][flag + 3] != 4)
 										obcSuErrFlag = 5;
 									break;
-								/* SU_SCI */		
+								/* SU_SCI */
 								case 8:
 									if (script[rec[i]][flag + 3] != 6)
 										obcSuErrFlag = 5;
 									break;
-								/* SU_DUMP */		
+								/* SU_DUMP */
 								case 11:
 									if (script[rec[i]][flag + 3] != 1)
 										obcSuErrFlag = 5;
 									break;
-								/* SU_HVARM */		
+								/* SU_HVARM */
 								case 83:
 									if (script[rec[i]][flag + 3] != 1)
 										obcSuErrFlag = 5;
 									break;
-								/* SU_HVON */		
+								/* SU_HVON */
 								case 201:
 									if (script[rec[i]][flag + 3] != 1)
 										obcSuErrFlag = 5;
@@ -659,6 +663,14 @@ void vTaskinms(void * pvParameters) {
 								printf("\E[2A\r");
 								delayTimeNow = delayTimeNow + 1;
 								vTaskDelayUntil( &xLastWakeTime, xFrequency );
+								if (parameters.inms_status == 0){
+									if (inms_power_on == 1){
+										vTaskDelete(inms_task_receive);
+										power_control(4, OFF);
+										inms_power_on = 0;
+									}
+									break;
+								}
 							}
 							flag = flag + leng + 4;
 							if (inmsJumpScriptCheck(i) && i != scriptNum - 1) {
@@ -726,11 +738,11 @@ void vTaskInmsCurrentMonitor(void * pvParameters) {
 		printf("\E[3A\r");
 		if ((double)currentValue_5 / 4.7 >= overCurrent_5) {
 			obcSuErrFlag = 4;
-			printf("Over-current Condition Detected, 5V: %d mA\n", currentValue_5);
+			printf("Over-current, 5V: %.3lf mA\n", (double)currentValue_5 / 4.7);
 		}
 		if ((double)currentValue_33 / 68 >= overCurrent_33) {
 			obcSuErrFlag = 4;
-			printf("Over-current Condition Detected, 3V: %d mA\n", currentValue_33);
+			printf("Over-current, 3V: %.3lf mA\n", (double)currentValue_33 / 68);
 		}
 		vTaskDelay(5 * delay_time_based);
 	}
@@ -738,23 +750,39 @@ void vTaskInmsCurrentMonitor(void * pvParameters) {
 void vTaskInmsTemperatureMonitor(void * pvParameters) {
 
 	int16_t inms_temperature = 0;
+	int outRangeCounter = 0;
+	int inRangeCounter = 0;
 	vTaskDelay(5 * delay_time_based);
 	while (1) {
-		/* Get current sensor data from ADC */
+		/* Get temperature data from ADC */
 		inms_temperature = (Interface_inms_thermistor_get() / 3) - 273;
 
-		printf("\t\t\tTemperature %d degree\n", inms_temperature);
+		printf("\t\t\tTemperature %03d degree\r\n", inms_temperature);
 		printf("\E[1A\r");
 
 		/* Operational Temperature Range -20 to +40 */
-		if (inms_temperature >= 40 || inms_temperature < -20) {
-			parameters.inms_status = 0;
-			printf("Temperature out of range %d degree\n", inms_temperature);
+		if (inms_temperature > 40 || inms_temperature < -20) {
+			printf("Out of range %d\n", inms_temperature);
+			outRangeCounter ++;
+			// printf("outCounter = %d\n", outRangeCounter);
+			if (outRangeCounter >= 6) {
+				parameters.inms_status = 0;
+				outRangeCounter = 0;
+			}
+		}
+		else if (inms_temperature <= 37 && inms_temperature >= -17) {
+			inRangeCounter ++;
+			// printf("inCounter = %d\n", inRangeCounter);
+			if (inRangeCounter >= 6) {
+				parameters.inms_status = 1;
+				inRangeCounter = 0;
+			}
 		}
 		else {
-			parameters.inms_status = 1;
+			outRangeCounter = 0;
+			inRangeCounter = 0;
 		}
-		vTaskDelay(5 * delay_time_based);
+		vTaskDelay(1 * delay_time_based);
 	}
 }
 void vTaskInmsErrorHandle(void * pvParameters) {
@@ -854,10 +882,11 @@ void vTaskInmsErrorHandle(void * pvParameters) {
 			hex_dump(errPacketTotal, inms_data_length);
 			inms_data_write_dup(errPacketTotal);
 
-			if (inms_task_receive != NULL) {
+			if (inms_power_on == 1) {
 				vTaskDelete(inms_task_receive);
+				power_control(4, OFF);
+				inms_power_on = 0;
 			}
-			power_control(4, OFF);
 #if isSimulator
 			unsigned int cmd1 = 0xf2;
 			unsigned int cmd2 = 0x01;

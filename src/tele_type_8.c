@@ -37,6 +37,8 @@
 #define SD_card_format				30				/* Format SD card, and create default folders */
 #define SD_unlock					31				/* Unlock SD card */
 
+extern void vTaskinms(void * pvParameters);
+
 void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	uint8_t txBuffer[200];
 	timestamp_t t;
@@ -382,7 +384,6 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 				vTaskDelete(inms_task);
 				printf("Restart INMS task\n");
 				vTaskDelay(2 * delay_time_based);
-				extern void vTaskinms(void * pvParameters);
 				xTaskCreate(vTaskinms, (const signed char*) "INMS", 1024 * 4, NULL, 2, &inms_task);
 			}
 		}
@@ -440,16 +441,12 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			break;
 		}
 		printf("Execute Type 8 Sybtype 31\r\n");
-		// FATFS fs;
-		// FIL file;
-		// BYTE label;
 		label = paras[0];
 		if (f_mount(label, NULL) == FR_OK)
 			printf("unmount %d\n", label);
-
+		vTaskDelay(3 * delay_time_based);
 		if (f_mount(label, &fs) == FR_OK)
 			printf("mount %d\n", label);
-
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
 	/*----------------------------Otherwise----------------*/

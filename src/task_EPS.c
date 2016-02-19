@@ -1,10 +1,10 @@
-  /*
- * Battery CCV.c
- *
- *  Created on: 	2016/02/02
- *  Last update:	2016/02/02
- *      Author: Kenny Huang, Eddie Yeh
- */
+/*
+* Battery CCV.c
+*
+*  Created on: 	2016/02/02
+*  Last update:	2016/02/02
+*      Author: Kenny Huang, Eddie Yeh
+*/
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
@@ -26,7 +26,7 @@
 #include "subsystem.h"
 #include "fs.h"
 
- 
+
 FATFS fs[2];
 FRESULT res;
 FIL file;
@@ -36,23 +36,23 @@ int cleanfile = 0;
 char fileName1[30];
 extern int eps_write(uint8_t *frameCont, int choose);
 
-void EPS_Task(void * pvParameters) 
+void EPS_Task(void * pvParameters)
 {
 	uint8_t uchar_eps[12]; // neccessary
 	uint8_t rxbuf[131]; //total housekeeping data
 	uint8_t txbuf[2];
 	txbuf[0] = 0x08; 			//ID = 8 EPS HK port
-	txbuf[1] = 0x00; 			
-	int i = 0, delay=1, period = 0,rate[180],j = 0;
+	txbuf[1] = 0x00;
+	int i = 0, delay = 1, period = 0, rate[180], j = 0;
 	char choose;
 	int ccv ;
-	uint16_t vboost3,vbatt=0,current_in=0,current_out,btemp,cursun=0;
+	uint16_t vboost3, vbatt = 0, current_in = 0, current_out, btemp, cursun = 0;
 	char time_unit[4];
 	// clear all memery space
 	for (i = 0 ; i < 12 ; i++)
 		uchar_eps[i] = 0;
 	// uint32_t seconds[] = {0};
-	
+
 	printf("a. Record the closed circuit voltage \n");
 	printf("b. Charge cycle \n");
 	printf("c. Discharge cycle \n");
@@ -69,26 +69,26 @@ void EPS_Task(void * pvParameters)
 		strcpy(time_unit, "sec");
 		break;
 	case 'b':
-		delay = 60* delay_time_based;
+		delay = 60 * delay_time_based;
 		strcpy(time_unit, "min");
 		break;
 
 	default:
-		delay = 1* delay_time_based;
+		delay = 1 * delay_time_based;
 		strcpy(time_unit, "sec");
 		if (choose == 99)
 		{
-			delay = 60* delay_time_based;
+			delay = 60 * delay_time_based;
 			strcpy(time_unit, "min");
 		}
 		for (i = 0; i < 180; i++)
 			rate[i] = 0;
 		i = 0;
 	}
-		
+
 	while (1)
 	{
-		printf(" %4d %s \n", i,time_unit);
+		printf(" %4d %s \n", i, time_unit);
 		i++;
 		if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 133, eps_delay) == E_NO_ERR)
 		{
@@ -101,7 +101,7 @@ void EPS_Task(void * pvParameters)
 
 			//hex_dump(uchar_eps, 12);		//printf data
 
-			// arrange the right format 
+			// arrange the right format
 			vboost3 = uchar_eps[0];
 			vboost3 = (vboost3 << 8) + uchar_eps[1];
 
@@ -127,10 +127,10 @@ void EPS_Task(void * pvParameters)
 			printf("Output current: %4" PRIu16 "\n", current_out);
 			printf("Battery temperature: %4" PRIu16 "\n", btemp);
 
-			eps_write(uchar_eps,choose);			//write into SD card
+			eps_write(uchar_eps, choose);			//write into SD card
 			vTaskDelay(delay);
 		}
-		else 
+		else
 			printf("Error, cannot communicate with EPS\n");
 		if (i == ccv && choose == 97) // judge the charge current
 			break;
@@ -143,8 +143,8 @@ void EPS_Task(void * pvParameters)
 
 		if (choose >= 99) //overcharge or discharge judge mechamism
 		{
-			if (abs((vbatt - rate[j])) >= 0.005*rate[j]) //wherether does the circumstance change
-				period = 0;				
+			if (abs((vbatt - rate[j])) >= 0.005 * rate[j]) //wherether does the circumstance change
+				period = 0;
 			else
 				period++;
 
@@ -155,7 +155,7 @@ void EPS_Task(void * pvParameters)
 				j = 0;
 		}
 
-		if (period > 3 && (choose == 98 || choose ==101)) // trigger the warning signal for charge
+		if (period > 3 && (choose == 98 || choose == 101)) // trigger the warning signal for charge
 		{
 			delay = 10 * delay_time_based;
 			break;
@@ -167,11 +167,11 @@ void EPS_Task(void * pvParameters)
 			break;
 		}
 	}
-	
+
 	if (period > 3 ) //warning signal
 		for (i = 0; i < 60; i++)
 		{
-			printf(" break time : %4d sec \n",i*10);
+			printf(" break time : %4d sec \n", i * 10);
 			vTaskDelay(delay);
 		}
 	/* End of init */
@@ -179,38 +179,38 @@ void EPS_Task(void * pvParameters)
 }
 
 int eps_write(uint8_t *frameCont, int choose)
-{		
+{
 	if (cleanfile == 0)
 	{
 		if (choose == 97)
 		{
-		f_unlink("Battery/battery_a.bin");
-		strcpy(fileName1, "Battery/battery_a.bin");
+			f_unlink("Battery/battery_a.bin");
+			strcpy(fileName1, "Battery/battery_a.bin");
 		}
 		if (choose == 98)
 		{
-		f_unlink("Battery/battery_b.bin");
-		strcpy(fileName1, "Battery/battery_b.bin");
+			f_unlink("Battery/battery_b.bin");
+			strcpy(fileName1, "Battery/battery_b.bin");
 		}
 		if (choose == 99)
 		{
-		f_unlink("Battery/battery_c.bin");
-		strcpy(fileName1, "Battery/battery_c.bin");
+			f_unlink("Battery/battery_c.bin");
+			strcpy(fileName1, "Battery/battery_c.bin");
 		}
 		if (choose == 100)
 		{
-		f_unlink("Battery/battery_d.bin");
-		strcpy(fileName1, "Battery/battery_d.bin");
+			f_unlink("Battery/battery_d.bin");
+			strcpy(fileName1, "Battery/battery_d.bin");
 		}
 		if (choose == 101)
 		{
-		f_unlink("Battery/battery_e.bin");
-		strcpy(fileName1, "Battery/battery_e.bin");
+			f_unlink("Battery/battery_e.bin");
+			strcpy(fileName1, "Battery/battery_e.bin");
 		}
 	}
 	cleanfile = 1;
 
-	//write into file	
+	//write into file
 	res = f_open(&file, fileName1, FA_OPEN_ALWAYS | FA_WRITE );
 	if (res != FR_OK)
 	{
@@ -234,5 +234,5 @@ int eps_write(uint8_t *frameCont, int choose)
 	res = f_write(&file, &frameCont[10], 2, &bw);
 	f_close(&file);
 
-	return No_Error;	
-}	
+	return No_Error;
+}

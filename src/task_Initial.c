@@ -23,8 +23,6 @@
 #include <math.h>
 #include "tele_function.h"
 
-#define E_NO_ERR -1
-
 extern void BatteryCheck_Task(void * pvParameters);
 extern void Telecom_Task(void * pvParameters);
 extern void WOD_Task(void * pvParameters);

@@ -1,7 +1,15 @@
+/*
+ * task_WOD.c
+ *
+ *  Created on: 	2014/05/05
+ *  Last updated: 	2016/01/28
+ *  Author: 		Kenny Huang
+ */
+
 #include <time.h>
 #include <math.h>
+
 #include <fat_sd/ff.h>
-#include "fs.h"
 #include <dev/i2c.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -13,6 +21,8 @@
 #include <nanomind.h>
 #include <csp/csp.h>
 #include <csp/csp_endian.h>
+
+#include "fs.h"
 #include "parameter.h"
 #include "subsystem.h"
 #include "tele_function.h"
@@ -25,7 +35,6 @@
    ({ __typeof__ (a) _a = (a); \
        __typeof__ (b) _b = (b); \
      _a < _b ? _a : _b; })
-#define E_NO_ERR -1
 
 static timestamp_t t;
 uint8_t wod[232];

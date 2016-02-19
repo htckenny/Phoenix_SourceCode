@@ -26,14 +26,24 @@ void Enter_Safe_Mode(int last_mode) {
 
 	/* last mode = Init Mode */
 	if (last_mode == 1) {
-		vTaskDelete(init_task);
+		if (init_task != NULL) {
+			vTaskDelete(init_task);
+			init_task = NULL;
+		}
 	}
 	/* last mode = ADCS Mode */
 	if (last_mode == 2) {
-		vTaskDelete(adcs_task);
 		if (parameters.first_flight == 1) {
-			vTaskDelete(eop_task);
+			if (eop_task != NULL) {
+				vTaskDelete(eop_task);
+				eop_task = NULL;
+			}
 		}
+		if (adcs_task != NULL) {
+			vTaskDelete(adcs_task);
+			adcs_task = NULL;
+		}
+		
 	}
 
 	power_control(1, OFF);      // Power OFF    ADCS
@@ -43,33 +53,44 @@ void Enter_Safe_Mode(int last_mode) {
 	if (last_mode == 3) {
 
 		if (adcs_task != NULL) {
+			printf("Shutting Down ADCS_Task\n");			
 			vTaskDelete(adcs_task);
-			printf("Shutting Down ADCS_Task\n");
+			adcs_task = NULL;
 		}
 		if (hk_task != NULL) {
 			printf("Shutting Down HK_Task\n");
 			vTaskDelete(hk_task);
+			hk_task = NULL;
 		}
 		if (seuv_task != NULL) {
 			printf("Shutting Down SEUV_Task\n");
 			vTaskDelete(seuv_task);
+			seuv_task = NULL;
 		}
-
 		if (inms_error_handle != NULL) {
 			printf("Shutting Down INMS Error task \n");
 			vTaskDelete(inms_error_handle);
+			inms_error_handle = NULL;
 		}
 		if (inms_current_moniter != NULL) {
 			printf("Shutting Down INMS current task \n");
 			vTaskDelete(inms_current_moniter);
+			inms_current_moniter = NULL;
 		}
 		if (inms_task != NULL) {
 			printf("Shutting Down INMS task \n");
 			vTaskDelete(inms_task);
+			inms_task = NULL;
 		}
 		if (inms_task_receive != NULL) {
 			printf("Shutting Down INMS receive task \n");
 			vTaskDelete(inms_task_receive);
+			inms_task_receive = NULL;
+		}
+		if (inms_temp_moniter != NULL) {
+			printf("Shutting Down INMS temperature monitor task \n");
+			vTaskDelete(inms_temp_moniter);
+			inms_temp_moniter = NULL;
 		}
 		power_OFF_ALL();
 	}

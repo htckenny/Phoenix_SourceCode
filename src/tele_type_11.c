@@ -55,6 +55,7 @@ void decodeService11(uint8_t subType, uint8_t *telecommand) {
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
 		if (schedule_task != NULL) {
 			vTaskDelete(schedule_task);
+			schedule_task = NULL;
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
 		}
 		else {

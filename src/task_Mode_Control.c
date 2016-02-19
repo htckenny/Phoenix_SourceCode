@@ -72,9 +72,11 @@ void ModeControl_Task(void * pvParameters) {
 
 				printf("-------------------Enter Payload Mode----------------------\n");
 				if (parameters.first_flight == 1) {
-					printf("delete eop\n");
-					if (eop_task != NULL)
+					if (eop_task != NULL) {
+						printf("delete eop task\n");
 						vTaskDelete(eop_task);
+						eop_task = NULL;
+					}
 					parameters.first_flight = 0;
 					para_w_flash();
 				}

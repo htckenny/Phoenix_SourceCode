@@ -50,7 +50,6 @@ int scriptRunning = 0;		/* initializing for identifying which script is running 
 int obcSuErrFlag = 0;		/* for the detection of the OBC_SU_ERR */
 int error_flag = 0;
 int maxlength = 0;
-int inms_power_on = 0;
 uint32_t epoch_sec[scriptNum];/* the seconds from UTC epoch time 2000/01/01 00:00:00 Am */
 uint32_t refsec[scriptNum] ;
 
@@ -233,7 +232,6 @@ void vTaskInmsReceive(void * pvParameters) {
 			}
 			hex_dump(ucharTotal, inms_data_length);
 			inms_data_write_dup((uint8_t *)ucharTotal);
-			// vTaskDelay(2 * delay_time_based);
 			numReceive = 0;
 			receiveFlag = 0;
 		}
@@ -550,7 +548,6 @@ void vTaskinms(void * pvParameters) {
 							if (script[rec[i]][flag + 2] == 241) {
 								int numGabage = 0;
 								power_control(4, ON);	//command EPS to POWER ON INMS
-								inms_power_on = 1;
 								vTaskDelay(0.5 * delay_time_based);
 
 								numGabage = usart_messages_waiting(2);
@@ -575,8 +572,8 @@ void vTaskinms(void * pvParameters) {
 
 								vTaskDelay(1 * delay_time_based);
 								vTaskDelete(inms_task_receive);
+								inms_task_receive = NULL;
 								power_control(4, OFF);
-								inms_power_on = 0;
 								/* ---- For simulator ---- */
 #if isSimulator
 								for (int j = 2; j <= leng + 3; j++) {
@@ -664,10 +661,10 @@ void vTaskinms(void * pvParameters) {
 								delayTimeNow = delayTimeNow + 1;
 								vTaskDelayUntil( &xLastWakeTime, xFrequency );
 								if (parameters.inms_status == 0){
-									if (inms_power_on == 1){
+									if (inms_task_receive != NULL){
 										vTaskDelete(inms_task_receive);
 										power_control(4, OFF);
-										inms_power_on = 0;
+										inms_task_receive = NULL;
 									}
 									break;
 								}
@@ -882,10 +879,10 @@ void vTaskInmsErrorHandle(void * pvParameters) {
 			hex_dump(errPacketTotal, inms_data_length);
 			inms_data_write_dup(errPacketTotal);
 
-			if (inms_power_on == 1) {
+			if (inms_task_receive != NULL) {
 				vTaskDelete(inms_task_receive);
 				power_control(4, OFF);
-				inms_power_on = 0;
+				inms_task_receive = NULL;
 			}
 #if isSimulator
 			unsigned int cmd1 = 0xf2;

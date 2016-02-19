@@ -40,7 +40,10 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 		printf("download_data  \n");
 
 		if (packet_length > 5) {
-			vTaskDelete(beacon_task);
+			if (beacon_task != NULL) {
+				vTaskDelete(beacon_task);
+				beacon_task = NULL;
+			}
 			memcpy(&T1, &paras[2], 4);
 			/* mode is 1 => need T1 and T2 */
 			if (paras[1] == 1) {								
@@ -111,7 +114,8 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 					if (wod_task != NULL)
 						vTaskResume(wod_task);
 				}
-				xTaskCreate(beacon_Task, (const signed char *) "beacon", 1024 * 4, NULL, 2, &beacon_task);
+				if (beacon_task == NULL)
+					xTaskCreate(beacon_Task, (const signed char *) "beacon", 1024 * 4, NULL, 2, &beacon_task);
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 			}
 			else {

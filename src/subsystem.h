@@ -9,7 +9,10 @@
 
 #include "parameter.h"
 
-
+#define ground_Test_Mode	1
+#define enable_stm_EPS		1
+#define enable_stm_ADCS		0 
+#define enable_stm_IFB		0
 
 /* !!!!!!!!!!!!!!!!!!!!!!!! UINT = LSB !!!!!!!!!!!!!! */
 /* Script Length */
@@ -42,17 +45,31 @@
 #define com_tx_hk 			0x41
 #define com_tx_rate 		0x28 //1=1200,8=9600
 /* EPS Board */
-#define eps_node 			2
+#if ground_Test_Mode && enable_stm_EPS
+#define eps_node 			0x72
+#else
+#define eps_node 			0x02
+#endif
+
 #define eps_hk 				8
 #define eps_output 			9   //output mask
 #define eps_hk_len 			43+2
 
 /* SEUV Board */
-#define seuv_node 			110
+#define seuv_node 			0x6E	//110
 /* Interface Board */
-#define interface_node 		109
+#if ground_Test_Mode && enable_stm_IFB 
+#define interface_node 		0x7D	//109
+#else
+#define interface_node 		0x6D
+#endif 
 /* ADCS Board*/
-#define adcs_node 			0x57
+#define adcs_node 			0x57 
+#if ground_Test_Mode && enable_stm_ADCS
+#define stm_node			0x7F
+#else
+#define stm_node			0x57
+#endif 
 /* Antenna Board*/
 #define ant_node 			49
 #define ant_arm 			173

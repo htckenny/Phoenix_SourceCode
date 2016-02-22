@@ -411,21 +411,21 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 
 		if (paras[0] == 0) {
 			f_mkfs(0, 0, 0);
-			f_mkdir("0:/INMS_DATA");
-			f_mkdir("0:/EOP_DATA");
-			f_mkdir("0:/WOD_DATA");
 			f_mkdir("0:/HK_DATA");
-			f_mkdir("0:/SEUV_DATA");
-			f_open(&file, "0:/partition0", FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+			f_mkdir("0:/INM_DATA");
+			f_mkdir("0:/SEU_DATA");
+			f_mkdir("0:/EOP_DATA");
+			f_mkdir("0:/WOD_DATA");			
+			f_open(&file, "0:/part0", FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 		}
 		else if (paras[0] == 1) {
 			f_mkfs(1, 0, 0);
-			f_mkdir("1:/INMS_DATA");
-			f_mkdir("1:/EOP_DATA");
-			f_mkdir("1:/WOD_DATA");
 			f_mkdir("1:/HK_DATA");
-			f_mkdir("1:/SEUV_DATA");
-			f_open(&file, "1:/partition1", FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+			f_mkdir("1:/INM_DATA");
+			f_mkdir("1:/SEU_DATA");
+			f_mkdir("1:/EOP_DATA");
+			f_mkdir("1:/WOD_DATA");			
+			f_open(&file, "1:/part1", FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 		}		
 		else
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);

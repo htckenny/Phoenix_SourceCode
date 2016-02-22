@@ -24,11 +24,84 @@
 #define maxNum		50
 FATFS fs[2];
 FRESULT res;
-FIL file;
+FIL file, fileHK, fileINMS, fileSEUV, fileEOP, fileWOD;
 UINT br, bw;
 uint8_t buffer[300];
 FILINFO *fno;
 extern int findMaxBuf(uint8_t sortbuf[]);
+
+void encode_time (char buf[], char * fileName )
+{
+	char Year [5];
+	char Month [5];
+	char Day [5];
+	char Hour [5];
+	char Min [5];
+	char Sec [5];
+	uint16_t nameDate;
+	uint16_t nameTime;
+	char nameDate_s[5];
+	char nameTime_s[5];
+
+	printf("buf = %s\n", buf);
+	memcpy(&Year[0], &buf[0], 4);
+	memcpy(&Month[0], &buf[4], 2);
+	memcpy(&Day[0], &buf[6], 2);
+	memcpy(&Hour[0], &buf[9], 2);
+	memcpy(&Min[0], &buf[11], 2);
+	memcpy(&Sec[0], &buf[13], 2);
+
+	nameDate = (atoi(Day) << 11) +  (atoi(Month) << 7) + (atoi(Year) - 1980);
+	nameTime = ((atoi(Sec) / 2) << 11) +  (atoi(Min) << 5) + (atoi(Hour));
+
+	sprintf(nameDate_s, "%04x", nameDate);
+	sprintf(nameTime_s, "%04x", nameTime);
+
+	strcpy(fileName, nameDate_s);
+	strcat(fileName, nameTime_s);
+}
+
+void decode_time (char fileName[], char * buf )
+{
+	char Year [5];
+	char Month [5];
+	char Day [5];
+	char Hour [5];
+	char Min [5];
+	char Sec [5];
+	char nameDate_s[5] ="0000";
+	char nameTime_s[5] ="0000";
+
+	memcpy(nameDate_s, &fileName[0], 4);
+	memcpy(nameTime_s, &fileName[4], 4);
+
+	int number = (int)strtol(nameDate_s, NULL, 16);
+
+	int day = number >> 11;
+	int month = (number >> 7) - (day << 4) ;
+	int year = number - (day << 11) - (month << 7);
+	
+	int number2 = (int)strtol(nameTime_s, NULL, 16);
+
+	int sec = number2 >> 11;
+	int min = (number2 >> 5) - (sec << 6) ;
+	int hour = number2 - (sec << 11) - (min << 5);
+
+	sprintf(Year, "%04d", year + 1980);
+	sprintf(Month, "%02d", month);
+	sprintf(Day, "%02d", day);
+	sprintf(Hour, "%02d", hour);
+	sprintf(Min, "%02d", min);
+	sprintf(Sec, "%02d", sec * 2);
+
+	strcpy(buf, Year);
+	strcat(buf, Month);
+	strcat(buf, Day);
+	strcat(buf, "_");
+	strcat(buf, Hour);
+	strcat(buf, Min);
+	strcat(buf, Sec);
+}
 
 /* Start of Schedule related FS function */
 
@@ -401,6 +474,7 @@ int inms_data_write(uint8_t frameCont[], int SD_partition)
 	char buf[20];
 
 	char fileName[45];
+	char fileName_decode[9];
 	if (SD_partition == 0)
 		strcpy(fileName, "0:INMS_DATA/");
 	else
@@ -417,38 +491,40 @@ int inms_data_write(uint8_t frameCont[], int SD_partition)
 	ts = *localtime(&tt);
 	strftime(buf, sizeof(buf), "%Y%m%d_%H%M%S", &ts);
 
-	strcat(fileName, buf);
-	strcat(fileName, "_I");
+	encode_time(buf, fileName_decode);
+	strcat(fileName, fileName_decode);
+	// strcat(fileName, buf);
+	// strcat(fileName, "_I");
 	strcat(fileName, ".dat");
 	printf("%s\n", fileName);
 
 
-	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+	res = f_open(&fileINMS, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK)
 	{
 		printf("\r\nf_open() fail .. \r\n");
 	}
 	//將pointer指向文件最後面
-	f_lseek(&file, file.fsize);
+	f_lseek(&fileINMS, fileINMS.fsize);
 
-	res = f_write(&file, frameCont, inms_data_length, &bw);
+	res = f_write(&fileINMS, frameCont, inms_data_length, &bw);
 
 	// hex_dump(frameCont, inms_data_length);
 	if (res != FR_OK) {
 		printf("\rinms_write() %d fail .. \r\n", SD_partition);
-		f_close(&file);
+		f_close(&fileINMS);
 		return Error;
 	}
 	else {
 		printf("\rinms_write() %d success .. \r\n", SD_partition);
-		f_close(&file);
+		f_close(&fileINMS);
 		return No_Error;
 	}
 }
 
 int inms_data_read(char fileName[], void * txbuf) {
 
-	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+	res = f_open(&fileINMS, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK)
 	{
 		printf("\r\nf_open() fail .. \r\n");
@@ -457,20 +533,20 @@ int inms_data_read(char fileName[], void * txbuf) {
 	}
 	int c = 0 ;
 	while (1) {
-		res = f_read(&file, &buffer, 1, &br);
+		res = f_read(&fileINMS, &buffer, 1, &br);
 		memcpy(txbuf + (c++), &buffer, 1);
 		// c++;
-		if (f_eof(&file)) {break;}
+		if (f_eof(&fileINMS)) {break;}
 	}
 	// printf("%d\n", c);
 	if (res != FR_OK) {
 		printf("\r\ninmsdata_read() fail .. \r\n");
-		f_close(&file);
+		f_close(&fileINMS);
 		return Error;
 	}
 	else {
 		printf("\r\ninmsdata_read() success .. \r\n");
-		f_close(&file);
+		f_close(&fileINMS);
 		return No_Error;
 	}
 }
@@ -745,6 +821,7 @@ int wod_write(uint8_t * frameCont, int SD_partition )
 	struct tm  ts;
 	char buf[20];
 	char fileName[45];
+	char fileName_decode[9];
 	if (SD_partition == 0)
 		strcpy(fileName, "0:/WOD_DATA/");
 	else
@@ -760,53 +837,54 @@ int wod_write(uint8_t * frameCont, int SD_partition )
 	// Format time, "ddd yyyy-mm-dd hh:mm:ss zzz"
 	ts = *localtime(&tt);
 	strftime(buf, sizeof(buf), "%Y%m%d_%H%M%S", &ts);
-
-	strcat(fileName, buf);
-	strcat(fileName, "_W");
+	encode_time(buf, fileName_decode);
+	strcat(fileName, fileName_decode);
+	// strcat(fileName, buf);
+	// strcat(fileName, "_W");
 	strcat(fileName, ".dat");
 	printf("%s\n", fileName);
 
-	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+	res = f_open(&fileWOD, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK) {
 		printf("\r\nf_open() fail .. \r\n");
 	}
 
-	f_lseek(&file, file.fsize);
-	res = f_write(&file, frameCont, wod_length, &bw);
+	f_lseek(&fileWOD, fileWOD.fsize);
+	res = f_write(&fileWOD, frameCont, wod_length, &bw);
 
 	if (res != FR_OK) {
 		printf("\r\nwod_write() %d fail .. \r\n", SD_partition);
-		f_close(&file);
+		f_close(&fileWOD);
 		return Error;
 	}
 	else {
 		printf("\r\nwod_write() %d success .. \r\n", SD_partition);
 
-		f_close(&file);
+		f_close(&fileWOD);
 		return No_Error;
 	}
 }
 
 int wod_read(char fileName[], void * txbuf) // serial =1~N
 {
-	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+	res = f_open(&fileWOD, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK) {
 		printf("\r\nf_open() fail .. \r\n");
 	}
 	else {
 		printf("\r\nf_open() success .. \r\n");
 	}
-	f_lseek(&file, file.fsize);
-	res = f_read(&file, &buffer, wod_length, &br);
+	f_lseek(&fileWOD, fileWOD.fsize);
+	res = f_read(&fileWOD, &buffer, wod_length, &br);
 
 	if (res != FR_OK) {
 		printf("\r\nwod_read() fail .. \r\n");
-		f_close(&file);
+		f_close(&fileWOD);
 		return Error;
 	}
 	else {
 		memcpy(txbuf, &buffer, wod_length);
-		f_close(&file);
+		f_close(&fileWOD);
 		return No_Error;
 	}
 }
@@ -839,10 +917,11 @@ int seuv_write(int SD_partition)
 	char buf[20];
 	
 	char fileName[45];
+	char fileName_decode[9];
 	if (SD_partition == 0)
-		strcpy(fileName, "0:/SEUV_DATA/");
+		strcpy(fileName, "0:/SEU_DATA/");
 	else
-		strcpy(fileName, "1:/SEUV_DATA/");
+		strcpy(fileName, "1:/SEU_DATA/");
 
 	timestamp_t t;
 	// Get current time
@@ -854,57 +933,59 @@ int seuv_write(int SD_partition)
 	// Format time, "ddd yyyy-mm-dd hh:mm:ss zzz"
 	ts = *localtime(&tt);
 	strftime(buf, sizeof(buf), "%Y%m%d_%H%M%S", &ts);
-	strcat(fileName, buf);
-	strcat(fileName, "_S");
+	encode_time(buf, fileName_decode);
+	strcat(fileName, fileName_decode);
+	// strcat(fileName, "_S");
 	strcat(fileName, ".dat");
 	printf("%s\n", fileName);
 
 	seuvFrame.packettime = t.tv_sec;
 	// printf("sample = %d\n", seuvFrame.samples);
 
-	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
-	if (res != FR_OK)
+	res = f_open(&fileSEUV, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+	if (res != FR_OK) {
 		printf("SEUV  f_open fail!!\n");
+	}
 	else
 		printf("SEUV f_open success \n");
 
 	// printf("%d\n", (int)sizeof(seuv_frame_t) );
 	hex_dump(&seuvFrame, seuv_length);
-	f_lseek(&file, file.fsize);
-	res = f_write(&file, &seuvFrame, (int)sizeof(seuv_frame_t), &bw);
+	f_lseek(&fileSEUV, fileSEUV.fsize);
+	res = f_write(&fileSEUV, &seuvFrame, (int)sizeof(seuv_frame_t), &bw);
 
 	if (res != FR_OK) {
 		printf("SEUV  f_write %d fail!!\n", SD_partition);
-		f_close(&file);
+		f_close(&fileSEUV);
 		return Error;
 	}
 	else {
 		printf("SEUV f_write %d success\n", SD_partition);
-		f_close(&file);
+		f_close(&fileSEUV);
 		return No_Error;
 	}
 }
 
 int seuv_read(char fileName[], void * txbuf)
 {
-	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+	res = f_open(&fileSEUV, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK) {
 		printf("\r\nf_open() fail .. \r\n");
 	}
 	else {
 		printf("\r\nf_open() success .. \r\n");
 	}
-	res = f_read(&file, &buffer, seuv_length, &br);
+	res = f_read(&fileSEUV, &buffer, seuv_length, &br);
 
 	if (res != FR_OK) {
 		printf("\r\nseuv_read() fail .. \r\n");
-		f_close(&file);
+		f_close(&fileSEUV);
 		return Error;
 	}
 	else {
 		printf("\r\nseuv_read() success .. \r\n");
 		memcpy(txbuf, &buffer, seuv_length);
-		f_close(&file);
+		f_close(&fileSEUV);
 		return No_Error;
 	}
 }
@@ -938,6 +1019,7 @@ int hk_write(uint8_t * frameCont, int SD_partition)
 	char buf[20];
 
 	char fileName[45];
+	char fileName_decode[9];
 	if (SD_partition == 0)
 		strcpy(fileName, "0:/HK_DATA/");
 	else
@@ -954,46 +1036,48 @@ int hk_write(uint8_t * frameCont, int SD_partition)
 	ts = *localtime(&tt);
 	strftime(buf, sizeof(buf), "%Y%m%d_%H%M%S", &ts);
 
-	strcat(fileName, buf);
-	strcat(fileName, "_H");
+	encode_time(buf, fileName_decode);
+	strcat(fileName, fileName_decode);
+	// strcat(fileName, buf);
+	// strcat(fileName, "_H");
 	strcat(fileName, ".dat");
 	printf("%s\n", fileName);
 
-	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
-	f_lseek(&file, file.fsize);
-	res = f_write(&file, frameCont, hk_length, &bw);
+	res = f_open(&fileHK, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+	f_lseek(&fileHK, fileHK.fsize);
+	res = f_write(&fileHK, frameCont, hk_length, &bw);
 
 	if (res != FR_OK) {
 		printf("\r\nhk_write() %d fail .. \r\n", SD_partition);
-		f_close(&file);
+		f_close(&fileHK);
 		return Error;
 	}
 	else {
 		printf("\r\nhk_write() %d success .. \r\n", SD_partition);
-		f_close(&file);
+		f_close(&fileHK);
 		return No_Error;
 	}
 }
 
 int hk_read(char fileName[], void * txbuf) // serial =1~N
 {
-	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+	res = f_open(&fileHK, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK) {
 		printf("\r\nf_open() fail .. \r\n");
 	}
 	else {
 		printf("\r\nf_open() success .. \r\n");
 	}
-	res = f_read(&file, &buffer, hk_length, &br);
+	res = f_read(&fileHK, &buffer, hk_length, &br);
 
 	if (res != FR_OK) {
 		printf("\r\nhk_read() fail .. \r\n");
-		f_close(&file);
+		f_close(&fileHK);
 		return Error;
 	}
 	else {
 		memcpy(txbuf, &buffer, hk_length);
-		f_close(&file);
+		f_close(&fileHK);
 		return No_Error;
 	}
 }
@@ -1028,6 +1112,7 @@ int eop_write(uint8_t *frameCont, int SD_partition)		//SD_partition available : 
 	struct tm  ts;
 	char buf[20];
 	char fileName[45];
+	char fileName_decode[9];
 	char s[] = "";
 
 	if (SD_partition == 0)
@@ -1048,24 +1133,26 @@ int eop_write(uint8_t *frameCont, int SD_partition)		//SD_partition available : 
 	ts = *localtime(&tt);
 	strftime(buf, sizeof(buf), "%Y%m%d_%H%M%S", &ts);
 
-	strcat(fileName, buf);
-	strcat(fileName, "_E");
+	encode_time(buf, fileName_decode);
+	strcat(fileName, fileName_decode);
+	// strcat(fileName, buf);
+	// strcat(fileName, "_E");
 	strcat(fileName, ".dat");
 	printf("%s\n", fileName);
 
 	
 
-	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_WRITE );
-	f_lseek(&file, file.fsize);
-	res = f_write(&file, frameCont, eop_length, &bw);
+	res = f_open(&fileEOP, fileName, FA_OPEN_ALWAYS | FA_WRITE );
+	f_lseek(&fileEOP, fileEOP.fsize);
+	res = f_write(&fileEOP, frameCont, eop_length, &bw);
 	if (res != FR_OK) {
 		printf("\rEOP_write() %d fail .. \r\n", SD_partition);
-		f_close(&file);
+		f_close(&fileEOP);
 		return Error;
 	}
 	else {
 		printf("\rEOP_write() %d success .. \r\n", SD_partition);
-		f_close(&file);
+		f_close(&fileEOP);
 		// if (SD_partition == 1)
 		// 	hex_dump(frameCont, eop_length);
 		return No_Error;
@@ -1076,23 +1163,23 @@ int eop_write(uint8_t *frameCont, int SD_partition)		//SD_partition available : 
 int eop_read(char fileName[], void * txbuf)
 {
 
-	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ );
+	res = f_open(&fileEOP, fileName, FA_OPEN_ALWAYS | FA_READ );
 	if (res != FR_OK) {
-		printf("\r\nf_open() fail .. \r\n");
+		printf("f_open() fail .. \r\n");
 	}
 	else {
-		printf("\r\nf_open() success .. \r\n");
+		printf("f_open() success .. \r\n");
 	}
-	res = f_read(&file, &buffer, eop_length, &br);
+	res = f_read(&fileEOP, &buffer, eop_length, &br);
 
 	if (res != FR_OK) {
-		printf("\r\neop_read() fail .. \r\n");
-		f_close(&file);
+		printf("eop_read() fail .. \r\n");
+		f_close(&fileEOP);
 		return Error;
 	}
 	else {
 		memcpy(txbuf, &buffer, eop_length);
-		f_close(&file);
+		f_close(&fileEOP);
 		return No_Error;
 	}
 }
@@ -1102,11 +1189,11 @@ int eop_delete(char fileName[])
 	res = f_unlink(fileName);
 
 	if (res != FR_OK) {
-		printf("\r\nf_unlink() fail .. \r\n");
+		printf("f_unlink() fail .. \r\n");
 		return Error;
 	}
 	else {
-		printf("\r\nf_unlink() success .. \r\n");
+		printf("f_unlink() success .. \r\n");
 		return No_Error;
 	}
 }
@@ -1383,6 +1470,8 @@ int scan_files_Downlink (
 	FILINFO fno;
 	FATDIR dir;
 	char *fn;   			/* This function assumes non-Unicode configuration */
+	char fn_reduce[9];
+	char fn_decode[16];
 	char timeref[16];
 	char full_path[45];
 	char t_year[5] = "0";
@@ -1425,11 +1514,15 @@ int scan_files_Downlink (
 			//
 			// printf("%s/%s\n", path, fn);
 			sprintf(full_path, "%s/%s", path, fn);
-			printf("%s\n", full_path);
-
-			strncpy(timeref, fn, 15);						/* cut the time part of the file name */
+			strncpy(fn_reduce, fn, 8);
+			fn_reduce[8] = '\0';
+			// printf("%s\n", fn_reduce);
+			
+			decode_time(fn_reduce, fn_decode);
+			printf("%s\n", fn_decode);
+			strncpy(timeref, fn_decode, 15);				/* cut the time part of the file name */
+			
 			timeref[15] = 0;
-			// printf("%s\n", timeref);
 
 			strncpy(t_year , &timeref[0], 4);
 			t_year[4] = 0;
@@ -1454,8 +1547,6 @@ int scan_files_Downlink (
 			t_of_day -= 946684800;
 
 			ctime(&t_of_day);
-			// printf("epoch: %"PRIu32"\n", t_of_day );
-			// printf("OBC time is: %s\r\n", ctime(&t_of_day));
 
 			switch (mode) {
 			case 1:
@@ -1593,6 +1684,8 @@ int scan_files_Delete (
 	FILINFO fno;
 	FATDIR dir;
 	char *fn;   			/* This function assumes non-Unicode configuration */
+	char fn_reduce[9];
+	char fn_decode[16];
 	char timeref[16];
 	char full_path[45];
 	char t_year[5] = "0";
@@ -1631,9 +1724,13 @@ int scan_files_Delete (
 			//
 			// printf("%s/%s\n", path, fn);
 			sprintf(full_path, "%s/%s", path, fn);
-			// printf("%s\n", full_path);
-
-			strncpy(timeref, fn, 15);						/* cut the time part of the file name */
+			strncpy(fn_reduce, fn, 8);
+			fn_reduce[8] = '\0';
+			// printf("%s\n", fn_reduce);
+			
+			decode_time(fn_reduce, fn_decode);
+			// printf("%s\n", fn_decode);
+			strncpy(timeref, fn_decode, 15);				/* cut the time part of the file name */
 			timeref[15] = 0;
 			// printf("%s\n", timeref);
 
@@ -1662,6 +1759,7 @@ int scan_files_Delete (
 			ctime(&t_of_day);
 			// printf("epoch: %"PRIu32"\n", t_of_day );
 			// printf("OBC time is: %s\r\n", ctime(&t_of_day));
+			printf("%s\n", full_path);
 
 			switch (mode) {
 			case 1:
@@ -1736,7 +1834,7 @@ int scan_files_Delete (
 }
 /* ---------------- Self defined String ----------------*/
 char* fileName_HK[2]		= { "0:/HK_DATA",	"1:/HK_DATA"	};
-char* fileName_INMS[2]		= { "0:/INMS_DATA",	"1:/INMS_DATA"	};
-char* fileName_SEUV[2]		= { "0:/SEUV_DATA",	"1:/SEUV_DATA"	};
+char* fileName_INMS[2]		= { "0:/INM_DATA",	"1:/INM_DATA"	};
+char* fileName_SEUV[2]		= { "0:/SEU_DATA",	"1:/SEU_DATA"	};
 char* fileName_EOP[2]		= { "0:/EOP_DATA",	"1:/EOP_DATA"	};
 char* fileName_WOD[2]		= { "0:/WOD_DATA", 	"1:/WOD_DATA"	};

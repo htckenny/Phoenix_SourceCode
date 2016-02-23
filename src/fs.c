@@ -43,7 +43,6 @@ void encode_time (char buf[], char * fileName )
 	char nameDate_s[5];
 	char nameTime_s[5];
 
-	printf("buf = %s\n", buf);
 	memcpy(&Year[0], &buf[0], 4);
 	memcpy(&Month[0], &buf[4], 2);
 	memcpy(&Day[0], &buf[6], 2);
@@ -168,7 +167,6 @@ int schedule_shift(uint8_t *frameCont)
 		printf("reset success !! \n");
 	}
 	for (int i = 0 ; i < lastNum ; i++) {
-		// printf("%d\n", sizeof(sche_buf[i]));
 		if (schedule_write_flash(&sche_buf[1 + 20 * i]) == Error)	//??
 			return Error;
 		else {
@@ -207,20 +205,20 @@ int schedule_delete(int range, uint8_t * frameCont)
 		printf("sch time = %" PRIu32 "\n", sche_time[i] );
 		switch (range) {
 		case 1 :
-			// delete command between T1 & T2
+			/* delete command between T1 & T2 */
 			if (sche_time[i] >= time_t1 && sche_time[i] <= time_t2) {
 				sche_delete_record[i] = -1;
 			}
 			break;
 
 		case 2 :
-			// delete command less than or equals to T1
+			/* delete command less than or equals to T1 */
 			if (sche_time[i] <= time_t1) {
 				sche_delete_record[i] = -1;
 			}
 			break;
 		case 3 :
-			// delete command greater than or equals to T1
+			/* delete command greater than or equals to T1 */
 			if (sche_time[i] >= time_t1) {
 				sche_delete_record[i] = -1;
 			}
@@ -228,7 +226,7 @@ int schedule_delete(int range, uint8_t * frameCont)
 			break;
 		}
 		if (sche_delete_record[i] != -1) {
-			// copy the content from the old schedule list to new one
+			/* copy the content from the old schedule list to new one */
 			memcpy(&sche_update[update_series * 19], &sche_buf[i * 20 + 1], 19);
 			update_series ++ ;
 		}

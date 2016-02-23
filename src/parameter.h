@@ -28,6 +28,7 @@ xTaskHandle inms_task;
 xTaskHandle inms_task_receive;
 
 xTaskHandle schedule_task;
+xTaskHandle seuv_cm_task;
 
 
 #define safe_mode 0

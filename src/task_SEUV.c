@@ -2,7 +2,7 @@
  * SEUV_Task.c
  *
  *  Created on:     2015/3/18
- *  Last Update:    2015/9/25
+ *  Last Update:    2016/2/23
  *      Author: rusei, Kenny
  */
 #include <freertos/FreeRTOS.h>
@@ -21,7 +21,8 @@
 
 #include "task_SEUV.h"
 
-
+#define overCurrentThreshold    400
+extern void SEUV_CurrentMonitor(void * pvParameters);
 /**
  * This function is used for calculate the average and the standard deviation of the SEUV data
  * @param ch      channel
@@ -177,13 +178,12 @@ void get_a_packet(int gain) {
             calculate_avg_std(3, frame_3, parameters.seuv_sample_rate);
             calculate_avg_std(4, frame_4, parameters.seuv_sample_rate);
 
-            printf("1 A = %.3f , S = %.3f", seuvFrame.ch1AVG, seuvFrame.ch1STD);
-            printf("2 A = %.3f , S = %.3f", seuvFrame.ch2AVG, seuvFrame.ch2STD);
-            printf("3 A = %.3f , S = %.3f", seuvFrame.ch3AVG, seuvFrame.ch3STD);
+            printf("1 A = %.3f , S = %.3f\n", seuvFrame.ch1AVG, seuvFrame.ch1STD);
+            printf("2 A = %.3f , S = %.3f\n", seuvFrame.ch2AVG, seuvFrame.ch2STD);
+            printf("3 A = %.3f , S = %.3f\n", seuvFrame.ch3AVG, seuvFrame.ch3STD);
             printf("4 A = %.3f , S = %.3f\n", seuvFrame.ch4AVG, seuvFrame.ch4STD);
 
             seuvFrame.samples += 0 ; 
-            // printf("sample = %d\n", seuvFrame.samples);
             seuv_write_dup();
             seuvFrame.samples -= 0 ; 
         }
@@ -207,9 +207,9 @@ void get_a_packet(int gain) {
             calculate_avg_std(3, frame_3, parameters.seuv_sample_rate);
             calculate_avg_std(4, frame_4, parameters.seuv_sample_rate);
 
-            printf("1 A = %.3f , S = %.3f", seuvFrame.ch1AVG, seuvFrame.ch1STD);
-            printf("2 A = %.3f , S = %.3f", seuvFrame.ch2AVG, seuvFrame.ch2STD);
-            printf("3 A = %.3f , S = %.3f", seuvFrame.ch3AVG, seuvFrame.ch3STD);
+            printf("1 A = %.3f , S = %.3f\n", seuvFrame.ch1AVG, seuvFrame.ch1STD);
+            printf("2 A = %.3f , S = %.3f\n", seuvFrame.ch2AVG, seuvFrame.ch2STD);
+            printf("3 A = %.3f , S = %.3f\n", seuvFrame.ch3AVG, seuvFrame.ch3STD);
             printf("4 A = %.3f , S = %.3f\n", seuvFrame.ch4AVG, seuvFrame.ch4STD);
 
             seuvFrame.samples += 1 ; 
@@ -228,34 +228,87 @@ void SolarEUV_Task(void * pvParameters) {
 
     portTickType xLastWakeTime;
     portTickType xFrequency = delay_time_based;
-    // parameter_init();
     while (1) {
 
         if (parameters.seuv_period != 0) {
             xFrequency = parameters.seuv_period * delay_time_based;
-            // xFrequency = 10 * 1000;
         }
         /* Set the delay time during one sampling operation*/
         xLastWakeTime = xTaskGetTickCount();
-        // printf("mode = %d\n", parameters.seuv_mode);
         if (parameters.seuv_mode == 0x01) {         /* Mode A: check if the CubeSat is in the sun light area */
             if (HK_frame.sun_light_flag == 1) {     /* If True, get a packet */
                 get_a_packet(1);
                 get_a_packet(8);
             }      
         }
-        else if (parameters.seuv_mode == 0x02) {    /* Mode B: Keep sampling every 8 seconds */          
+        else if (parameters.seuv_mode == 0x02) {    /* Mode B: Keep sampling every 8 seconds */       
+            if (seuv_cm_task == NULL) {
+                xTaskCreate(SEUV_CurrentMonitor, (const signed char *) "SEU_CM", 1024*4, NULL, 2, &seuv_cm_task);
+            }  
             get_a_packet(1);
             vTaskDelay(1 * delay_time_based);
             get_a_packet(8);
         }
         else if (parameters.seuv_mode == 0x03) {    /* Mode C: Standby Mode */   
+            if (seuv_cm_task != NULL) {
+                vTaskDelete(seuv_cm_task);
+                seuv_cm_task = NULL;
+            }
+                
             // printf("[SEUV] No measurement taken\n");
         }
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
+        // vTaskDelay(parameters.seuv_period * delay_time_based);
     }
 
     /* End of seuv */
     vTaskDelete(NULL);
 }
 
+void SEUV_CurrentMonitor(void * pvParameters) {
+
+    int outRangeCounter = 0;
+    uint16_t SEUV_current = 0;
+    uint8_t rxbuf[133]; 
+    uint8_t txbuf[2];
+    txbuf[0] = 0x08;            
+    txbuf[1] = 0x00;
+
+    vTaskDelay(5 * delay_time_based);
+    while (1) {
+        /* Get temperature data from ADC */
+        if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 133, eps_delay) == E_NO_ERR) {
+            memcpy(&SEUV_current, &rxbuf[26], 2); // curout[2] SEUV
+        }
+
+        printf("\t\t\tSEUV Current %03d mA\r\n", SEUV_current);
+        printf("\E[1A\r");
+
+        if (SEUV_current > overCurrentThreshold ) {  // Threshold to be determined.
+            printf("Out of range %d\n", SEUV_current);
+            // inRangeCounter = 0;
+            outRangeCounter ++;
+            printf("outCounter = %d\n", outRangeCounter);
+            if (outRangeCounter >= 6) {
+                // parameters.inms_status = 0;
+                parameters.seuv_mode = 3;
+                para_w_flash();
+                power_control(3, OFF);
+                outRangeCounter = 0;
+            }
+        }
+        // else if (SEUV_current > 0 && SEUV_current <= 580 ) {
+        //     outRangeCounter = 0;
+        //     inRangeCounter ++;
+        //     printf("inCounter = %d\n", inRangeCounter);
+        //     if (inRangeCounter >= 6) {
+        //         // parameters.inms_status = 1;
+        //         inRangeCounter = 0;
+        //     }
+        // }
+        else {
+            outRangeCounter = 0;
+        }
+        vTaskDelay(5 * delay_time_based);
+    }
+}

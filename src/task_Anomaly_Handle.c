@@ -26,9 +26,10 @@ void Anomaly_Handler_Task(void * pvParameters)
 				if (f_mount(i, &fs[i]) == FR_OK)
 					printf("mount %d\n", i);
 			}
+			SD_lock_flag = 0;
 		}
-		vTaskDelay(10 * delay_time_based);
-		printf("%d\n", SD_lock_flag);
+		vTaskDelay(5 * delay_time_based);
+		printf("\t\t\t\t\t\t\tlock = %d\n", SD_lock_flag);
 	}
 	/** End of Task, Should Never Reach This */
 	vTaskDelete(NULL);

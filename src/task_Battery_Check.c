@@ -12,11 +12,11 @@
 
 uint16_t battery_read() {
 	uint8_t txbuf[1];
-	uint8_t rxbuf[43+2];
+	uint8_t rxbuf[43 + 2];
 	uint16_t Vbat = 0;
 	txbuf[0] = 0x08;
 
-	if (i2c_master_transaction_2(0, eps_node, &txbuf, 1, &rxbuf, 43+2, eps_delay) == E_NO_ERR){
+	if (i2c_master_transaction_2(0, eps_node, &txbuf, 1, &rxbuf, 43 + 2, eps_delay) == E_NO_ERR) {
 		memcpy(&Vbat, &rxbuf[10], 2);
 	}
 	return csp_ntoh16(Vbat);
@@ -43,17 +43,17 @@ void Enter_Safe_Mode(int last_mode) {
 			vTaskDelete(adcs_task);
 			adcs_task = NULL;
 		}
-		
+
 	}
 
-	power_control(1, OFF);      // Power OFF    ADCS
-	power_control(2, OFF);      // Power OF     GPS
+	power_control(1, OFF);      // Power OFF ADCS
+	power_control(2, OFF);      // Power OFF GPS
 
 	/* last mode = Payload Mode */
 	if (last_mode == 3) {
 
 		if (adcs_task != NULL) {
-			printf("Shutting Down ADCS_Task\n");			
+			printf("Shutting Down ADCS_Task\n");
 			vTaskDelete(adcs_task);
 			adcs_task = NULL;
 		}
@@ -101,6 +101,8 @@ void Leave_safe_mode()
 	printf("Recover from Safe Mode \n");
 	printf("Recover from Safe Mode \n");
 
+	HK_frame.mode_status_flag = init_mode;
+
 	// i2c_frame_t * frame;
 	// frame = csp_buffer_get(I2C_MTU);
 	// frame->dest = 2;
@@ -111,12 +113,12 @@ void Leave_safe_mode()
 	// if (i2c_send(0, frame, 0) != E_NO_ERR) {
 	// 	csp_buffer_free(frame);
 	// }
-	HK_frame.mode_status_flag = init_mode;
 	// last_mode = HK_frame.mode_status_flag;
 }
 
 void BatteryCheck_Task(void * pvParameters) {
 	uint16_t vbat;
+
 	vTaskDelay(3 * delay_time_based);
 	printf("Battery Check Task activated \r\n");
 
@@ -129,6 +131,7 @@ void BatteryCheck_Task(void * pvParameters) {
 			if ( (int) vbat < (int) parameters.vbat_safe_threshold) {
 				if (vbat != 0) {
 					if (parameters.vbat_safe_threshold != 0) {
+						printf("safe mode detected\n");
 						HK_frame.mode_status_flag = safe_mode;
 					}
 				}
@@ -141,8 +144,10 @@ void BatteryCheck_Task(void * pvParameters) {
 				vbat = battery_read();
 				printf("(safe)vbat = %04u mV \r\n", vbat);
 				if ( (int)vbat > (int)parameters.vbat_recover_threshold) {
-					if (parameters.vbat_recover_threshold != 0) {
-						if (vbat != 0) {
+					vTaskDelay(5 * delay_time_based);
+					vbat = battery_read();
+					if ( (int)vbat > (int)parameters.vbat_recover_threshold) {
+						if (parameters.vbat_recover_threshold != 0 && vbat != 0) {
 							Leave_safe_mode();           /* Leave safemode  */
 							break;
 						}

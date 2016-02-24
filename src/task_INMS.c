@@ -528,7 +528,7 @@ void vTaskinms(void * pvParameters) {
 						int tempTime = 0;
 						int inTheSequence = 0;
 						while (flag <= (script[rec[i]][0]  + (script[rec[i]][1] << 8))) {
-							if (parameters.inms_status == 0){
+							if (parameters.inms_status == 0) {
 								break;
 							}
 							printf("In the sequence loop : Sending command.\n");
@@ -660,8 +660,8 @@ void vTaskinms(void * pvParameters) {
 								printf("\E[2A\r");
 								delayTimeNow = delayTimeNow + 1;
 								vTaskDelayUntil( &xLastWakeTime, xFrequency );
-								if (parameters.inms_status == 0){
-									if (inms_task_receive != NULL){
+								if (parameters.inms_status == 0) {
+									if (inms_task_receive != NULL) {
 										vTaskDelete(inms_task_receive);
 										power_control(4, OFF);
 										inms_task_receive = NULL;
@@ -789,8 +789,11 @@ void vTaskInmsErrorHandle(void * pvParameters) {
 	uint8_t obcerrpacket[174];
 	int len[scriptNum];
 	uint8_t ucharAdcs[22];
-	uint8_t txbuf = 0x22; 					//defined by ADCS interface doc
+	uint8_t txbuf ; 					//defined by ADCS interface doc
+	uint8_t rxbuf[60];
 	uint8_t errPacketTotal [174 + 22];		//response packet is FIXED 174 BYTES+ADCS 22 BYTES
+	timestamp_t t;
+
 	for (int i = 0; i < 22; i++) {
 		ucharAdcs[i] = 0xFF;
 	}
@@ -845,9 +848,32 @@ void vTaskInmsErrorHandle(void * pvParameters) {
 		}
 		if (rsp_err_code != 0) {
 			vTaskDelay(1 * delay_time_based);
-			if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &ucharAdcs, 22, adcs_delay) == E_NO_ERR) {
-				printf("Get Time, Attitude, Position from ADCS\n");
+			t.tv_sec = 0;
+			t.tv_nsec = 0;
+			obc_timesync(&t, 6000);
+			memcpy(&ucharAdcs[0], &t.tv_sec, 4);
+			if (use_GPS_header == 0) {
+				txbuf = 0x88;	// ID 136
+				if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 48, adcs_delay) == E_NO_ERR) {
+					printf("Get Attitude, Position from ADCS\n");
+					memcpy(&ucharAdcs[4], &rxbuf[18], 18);
+				}
 			}
+			else if (use_GPS_header == 1) {
+				txbuf = 0x88;
+				if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 48, adcs_delay) == E_NO_ERR) {
+					printf("Get Attitude from ADCS\n");
+					memcpy(&ucharAdcs[4], &rxbuf[18], 12);
+				}
+				txbuf = 0x8B;
+				if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 60, adcs_delay) == E_NO_ERR) {
+					printf("Get Position from GPS\n");
+					memcpy(&ucharAdcs[16], &rxbuf[36], 2);	//ECEF <-> ECI
+					memcpy(&ucharAdcs[18], &rxbuf[42], 2);
+					memcpy(&ucharAdcs[20], &rxbuf[48], 2);
+				}
+			}
+
 			obcerrpacket[0] = 0xfa;
 			obcerrpacket[1] = seq_cnt; //not sure what is it
 			obcerrpacket[2] = rsp_err_code;

@@ -24,6 +24,7 @@
 #define Report_ADCS_HK		7		/* Report ADCS House Keeping Data */
 #define Report_Script_Stat	8		/* Report INMS script's status */
 #define Report_WOD_Test		9
+#define Report_GPS_Status	10		/* Report GPS's status */
 
 extern uint16_t fletcher(uint8_t *script, size_t length);
 
@@ -185,7 +186,7 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 			printf("BatC_task\t\t%d\n", status_frame.bat_check_task);
 			printf("COM_task\t\t%d\n", status_frame.com_task);
 			printf("WOD_task\t\t%d\n", status_frame.wod_task);
-			printf("WOD_task\t\t%d\n", status_frame.beacon_task);
+			printf("beacon_task\t\t%d\n", status_frame.beacon_task);
 
 			printf("init_task\t\t%d\n", status_frame.init_task);
 			printf("adcs_task\t\t%d\n", status_frame.adcs_task);
@@ -233,9 +234,21 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 		SendPacketWithCCSDS_AX25(&test, 9, obc_apid, 3, 25);
 
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+	/*--------------- ID:10 Report GPS status ----------------*/	
+	case Report_GPS_Status:
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 
+		i2c_tx[0] = 139; /* check 168 ~ 172 */
+		if (i2c_master_transaction_2(0, adcs_node, &i2c_tx, 1, &txBuffer, 60, adcs_delay) == E_NO_ERR) {
+			txlen = 30;
+			SendPacketWithCCSDS_AX25(&txBuffer[24], txlen, obc_apid, type, subType);
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		}
+		else {
+			completionError = I2C_READ_ERROR;
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+		}
 	default:
-
 		sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 		break;
 	}

@@ -255,7 +255,7 @@ void WOD_Task(void * pvParameters) {
 				printf("--------WOD Frame %d get--------\n", i);
 			else {
 				printf("--------WOD Frame %d get FAIL!--------\n", i);
-				i = 0;
+				// i = 0;
 			}
 			vTaskDelay(60 * delay_time_based);
 		}

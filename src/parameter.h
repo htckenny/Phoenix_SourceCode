@@ -55,6 +55,7 @@ typedef struct __attribute__((packed)) {
 	uint8_t inms_task_receive;
 
 	uint8_t schedule_task;
+	uint8_t seuv_cm_task;
 } status_frame_t;
 status_frame_t status_frame;
 
@@ -92,6 +93,7 @@ uint8_t magnetometer_deploy;
 uint8_t abort_transfer_flag;
 uint8_t SD_lock_flag;
 uint32_t lastCommandTime;
+uint8_t use_GPS_header;
 
 typedef struct __attribute__((packed)) {
 

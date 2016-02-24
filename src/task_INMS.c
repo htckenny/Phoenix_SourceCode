@@ -251,7 +251,7 @@ void vTaskinms(void * pvParameters) {
 	vTaskDelay(5 * delay_time_based);
 	while (1) {
 		vTaskDelay(3 * delay_time_based);
-		if (parameters.inms_status == 1) {
+		if (parameters.inms_status == 1 && inms_tm_status == 1) {
 			int len[scriptNum];	// the length of each script
 			for (int i = 0; i < scriptNum; i++) {
 				epoch_sec[i] = 0;
@@ -339,7 +339,7 @@ void vTaskinms(void * pvParameters) {
 					para_w_flash();
 					break;
 				}
-				if (parameters.inms_status == 0)
+				if (parameters.inms_status == 0 || inms_tm_status == 0)
 					break;
 				/*Initialize*/
 				int flag = 0;		//record which byte is running now
@@ -474,14 +474,14 @@ void vTaskinms(void * pvParameters) {
 						if (first_time > epoch_sec[rec[i]] - 10)
 							break;
 						vTaskDelay(1 * delay_time_based);
-						if (parameters.inms_status == 0)
+						if (parameters.inms_status == 0 || inms_tm_status == 0)
 							break;
 					}
 				}
 				while (1) {
 					if (inmsJumpScriptCheck(i) && i != scriptNum - 1)
 						break;
-					if (parameters.inms_status == 0)
+					if (parameters.inms_status == 0 || inms_tm_status == 0)
 						break;
 					if (seqcount > ttflagMax) {
 						ttflag = 0;
@@ -528,7 +528,7 @@ void vTaskinms(void * pvParameters) {
 						int tempTime = 0;
 						int inTheSequence = 0;
 						while (flag <= (script[rec[i]][0]  + (script[rec[i]][1] << 8))) {
-							if (parameters.inms_status == 0) {
+							if (parameters.inms_status == 0 || inms_tm_status == 0) {
 								break;
 							}
 							printf("In the sequence loop : Sending command.\n");
@@ -660,7 +660,7 @@ void vTaskinms(void * pvParameters) {
 								printf("\E[2A\r");
 								delayTimeNow = delayTimeNow + 1;
 								vTaskDelayUntil( &xLastWakeTime, xFrequency );
-								if (parameters.inms_status == 0) {
+								if (parameters.inms_status == 0 || inms_tm_status == 0) {
 									if (inms_task_receive != NULL) {
 										vTaskDelete(inms_task_receive);
 										power_control(4, OFF);
@@ -763,7 +763,7 @@ void vTaskInmsTemperatureMonitor(void * pvParameters) {
 			outRangeCounter ++;
 			// printf("outCounter = %d\n", outRangeCounter);
 			if (outRangeCounter >= 6) {
-				parameters.inms_status = 0;
+				inms_tm_status = 0;
 				outRangeCounter = 0;
 			}
 		}
@@ -771,7 +771,7 @@ void vTaskInmsTemperatureMonitor(void * pvParameters) {
 			inRangeCounter ++;
 			// printf("inCounter = %d\n", inRangeCounter);
 			if (inRangeCounter >= 6) {
-				parameters.inms_status = 1;
+				inms_tm_status = 1;
 				inRangeCounter = 0;
 			}
 		}

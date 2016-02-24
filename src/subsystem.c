@@ -79,6 +79,8 @@ int parameter_init() {
 	HK_frame.sun_light_flag				= 0;
 	SD_lock_flag						= 0;
 	use_GPS_header						= 0;
+	inms_tm_status						= 1;
+
 	/*--File System store count--*/
 	parameters.wod_store_count			= 0;
 	parameters.inms_store_count			= 0;

@@ -50,8 +50,10 @@ void hook_init(void) {
 	// parameter_init();
 
 	extern void ModeControl_Task(void * pvParameters);
-	xTaskCreate(ModeControl_Task, (const signed char *) "MC", 1024*4, NULL, 2, NULL);
+	xTaskCreate(ModeControl_Task, (const signed char *) "MC", 1024*4, NULL, 2, &mode_task);
 	
+	// extern void Anomaly_Handler_Task(void * pvParameters);
+	// xTaskCreate(Anomaly_Handler_Task, (const signed char *) "AH", 1024*4, NULL, 2, NULL);
 	// extern void BatteryCheck_Task(void * pvParameters);
 	// xTaskCreate(BatteryCheck_Task, (const signed char *) "BatCk", 1024 * 4, NULL, 2, NULL);
 	
@@ -69,7 +71,10 @@ void hook_init(void) {
 	
 	// extern void SolarEUV_Task(void * pvParameters);
 	// xTaskCreate(SolarEUV_Task, (const signed char *) "SEUV", 1024*4, NULL, 2, NULL);
-	
+
+	// extern void SEUV_CurrentMonitor(void * pvParameters);
+	// xTaskCreate(SEUV_CurrentMonitor, (const signed char *) "SEU_CM", 1024*4, NULL, 2, NULL);
+
 	// extern void vTaskfstest(void * pvParameters);
 	// xTaskCreate(vTaskfstest, (const signed char *) "FS_T", 1024*4, NULL, 2, NULL);
 	

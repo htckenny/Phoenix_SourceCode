@@ -359,13 +359,13 @@ int INMS_switch(struct command_context * ctx) {
 	}
 	if (buffer == 1) {
 		// xTaskCreate(vTaskInmsReceive, (const signed char*) "INMSR", 1024 * 4, NULL, 2, &inms_task_receive);
-		// xTaskCreate(vTaskinms, (const signed char * ) "INMS", 1024 * 4, NULL, 2, &inms_task);
+		xTaskCreate(vTaskinms, (const signed char * ) "INMS", 1024 * 4, NULL, 2, &inms_task);
 		// xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "INMS_EH", 1024 * 4, NULL, 2, &inms_error_handle);
 		// xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "INMS_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
 		xTaskCreate(vTaskInmsTemperatureMonitor, (const signed char * ) "InmsTM", 1024 * 4, NULL, 1, &inms_temp_moniter);
 	}
 	else if (buffer == 0) {
-		// vTaskDelete(&inms_task);
+		vTaskDelete(inms_task);
 		// vTaskDelete(inms_error_handle);
 		// vTaskDelete(inms_task_receive);
 		// vTaskDelete(inms_current_moniter);
@@ -381,6 +381,7 @@ int adcs_switch(struct command_context * ctx) {
 	unsigned int buffer;
 	extern void ADCS_Task(void * pvParameters);
 	extern void EOP_Task(void * pvParameters);
+	extern void vTaskfstest(void * pvParameters);
 	if (ctx->argc < 2) {
 		return CMD_ERROR_SYNTAX;
 	}
@@ -388,7 +389,9 @@ int adcs_switch(struct command_context * ctx) {
 		return CMD_ERROR_SYNTAX;
 	}
 	if (buffer == 1) {
-		xTaskCreate(ADCS_Task, (const signed char * ) "ADCS", 1024 * 4, NULL, 1, &adcs_task);
+		xTaskCreate(vTaskfstest, (const signed char *) "FS_T", 1024*4, NULL, 2, NULL);
+
+		// xTaskCreate(ADCS_Task, (const signed char * ) "ADCS", 1024 * 4, NULL, 1, &adcs_task);
 	}
 	else if (buffer == 0) {
 		vTaskDelete(adcs_task);
@@ -407,6 +410,7 @@ int seuv_switch(struct command_context * ctx) {
 	}
 	if (buffer == 1) {
 		xTaskCreate(SolarEUV_Task, (const signed char * ) "SEUV", 1024 * 4, NULL, 3, &seuv_task);
+		// xTaskCreate(SEUV_CurrentMonitor, (const signed char * ) "SEUV_CM", 1024 * 4, NULL, 3, NULL);
 	}
 	else if (buffer == 0) {
 		vTaskDelete(seuv_task);
@@ -873,6 +877,8 @@ int pararead(struct command_context * ctx) {
 	printf("reboot_count \t\t\t%d\n", (int) parameters.reboot_count);
 	printf("SD_partition_flag \t\t%d\n", (int) parameters.SD_partition_flag);
 	printf("inms_status\t\t\t%d\n", (int) parameters.inms_status);
+	printf("INMS_timeout\t\t\t%d\n", (int) parameters.INMS_timeout);
+	
 
 	return CMD_ERROR_NONE;
 }
@@ -924,7 +930,12 @@ int idleunlock(struct command_context * ctx) {
 
 
 int testmode(struct command_context * ctx) {
-	vTaskDelete(init_task);
+	if (init_task != NULL)
+		vTaskDelete(init_task);
+	if (mode_task != NULL)
+		vTaskDelete(mode_task);
+	if (bat_check_task != NULL)
+		vTaskDelete(bat_check_task);
 	printf("Enter ground test mode, plz reboot the satellite if wants leave this mode \r\n");
 	return CMD_ERROR_NONE;
 }

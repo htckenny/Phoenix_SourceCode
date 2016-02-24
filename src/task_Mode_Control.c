@@ -32,7 +32,7 @@ void ModeControl_Task(void * pvParameters) {
 	HK_frame.mode_status_flag = 1;
 	printf("-----------------------Enter INIT Mode----------------------------\n");
 	xTaskCreate(Init_Task, (const signed char *) "Init", 1024 * 4, NULL, 2, &init_task);
-	xTaskCreate(Anomaly_Handler_Task, (const signed char *) "Anom", 1024 * 4, NULL, 3, NULL);
+	// xTaskCreate(Anomaly_Handler_Task, (const signed char *) "Anom", 1024 * 4, NULL, 3, NULL);
 
 	/* Satellite  enter init mode done. */
 	lastmode = 1;
@@ -47,7 +47,7 @@ void ModeControl_Task(void * pvParameters) {
 				if (init_task == NULL)
 					xTaskCreate(Init_Task, (const signed char *) "Init", 1024 * 4, NULL, 2, &init_task);
 
-				lastmode = HK_frame.mode_status_flag; // ENTER INIT MODE DONE!
+				lastmode = HK_frame.mode_status_flag; /* ENTER INIT MODE */
 			}
 			/* desire to Enter the ADCS mode */
 			else if (HK_frame.mode_status_flag == 2) {
@@ -64,7 +64,7 @@ void ModeControl_Task(void * pvParameters) {
 				if (adcs_task == NULL)
 					xTaskCreate(ADCS_Task, (const signed char * ) "ADCS", 1024 * 4, NULL, 2, &adcs_task);
 
-				lastmode = HK_frame.mode_status_flag; // ENTER ADCS MODE DONE!
+				lastmode = HK_frame.mode_status_flag; /* ENTER ADCS MODE */
 			}
 			/* desire to Enter the Payload Mode. */
 			else if (HK_frame.mode_status_flag == 3) {
@@ -91,13 +91,13 @@ void ModeControl_Task(void * pvParameters) {
 					xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "InmsCM", 1024 * 4, NULL, 1, &inms_current_moniter);
 				if (inms_temp_moniter == NULL)
 					xTaskCreate(vTaskInmsTemperatureMonitor, (const signed char * ) "InmsTM", 1024 * 4, NULL, 1, &inms_temp_moniter);
-				lastmode = HK_frame.mode_status_flag;   // ENTER PAYLOAD MODE DONE!
+				lastmode = HK_frame.mode_status_flag;   /* ENTER PAYLOAD MODE */
 			}
 			/* desire to Enter the Safe Mode. */
 			else if (HK_frame.mode_status_flag == 0) {
 				printf("-------------------Enter Safe Mode----------------------\n");
 				Enter_Safe_Mode(lastmode);
-				lastmode = HK_frame.mode_status_flag; // ENTER SAFE Mode DONE!
+				lastmode = HK_frame.mode_status_flag;	/* ENTER SAFE Mode */
 			}
 		}
 		/* Check if the mode is changed or not every second */

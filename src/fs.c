@@ -1703,7 +1703,6 @@ int scan_files_Delete (
 	if (res == FR_OK) {
 		// i = strlen(path);
 		for (;;) {
-			// printf("hi\n");
 			res = f_readdir(&dir, &fno);                   /* Read a directory item */
 			if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
 			if (fno.fname[0] == '.') continue;             /* Ignore dot entry */
@@ -1724,13 +1723,10 @@ int scan_files_Delete (
 			sprintf(full_path, "%s/%s", path, fn);
 			strncpy(fn_reduce, fn, 8);
 			fn_reduce[8] = '\0';
-			// printf("%s\n", fn_reduce);
 			
 			decode_time(fn_reduce, fn_decode);
-			// printf("%s\n", fn_decode);
 			strncpy(timeref, fn_decode, 15);				/* cut the time part of the file name */
 			timeref[15] = 0;
-			// printf("%s\n", timeref);
 
 			strncpy(t_year , &timeref[0], 4);
 			t_year[4] = 0;
@@ -1755,14 +1751,11 @@ int scan_files_Delete (
 			t_of_day -= 946684800;
 
 			ctime(&t_of_day);
-			// printf("epoch: %"PRIu32"\n", t_of_day );
-			// printf("OBC time is: %s\r\n", ctime(&t_of_day));
 			printf("%s\n", full_path);
 
 			switch (mode) {
 			case 1:
 				if (timeRec_T1 < (unsigned)t_of_day && timeRec_T2 > (unsigned)t_of_day) {
-					// printf("mode = 1 delete \n");
 					if (strcmp(path, fileName_HK[parameters.SD_partition_flag]) == 0) {
 						hk_delete(full_path);
 					}
@@ -1783,7 +1776,6 @@ int scan_files_Delete (
 				break;
 			case 2:
 				if (timeRec_T1 > (unsigned)t_of_day) {
-					// printf("mode = 2 delete \n");
 					if (strcmp(path, fileName_HK[parameters.SD_partition_flag]) == 0) {
 						hk_delete(full_path);
 					}
@@ -1804,7 +1796,6 @@ int scan_files_Delete (
 				break;
 			case 3:
 				if (timeRec_T1 < (unsigned)t_of_day) {
-					// printf("mode = 3 delete \n");
 					if (strcmp(path, fileName_HK[parameters.SD_partition_flag]) == 0) {
 						hk_delete(full_path);
 					}

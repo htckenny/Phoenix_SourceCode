@@ -9,13 +9,9 @@
 #include <freertos/task.h>
 #include "subsystem.h"
 #include <dev/i2c.h>
-// #include <util/hexdump.h>
-// #include <string.h> // memcpy
-// #include <stdlib.h> //realloc
 #include <inttypes.h>
 
-// #define adcs_node 0x57
-
+#define STM_node	3
 //The ADCS_Tasks should be launched after powering on the ADCS bundle
 void ADCS_Task(void * pvParameters) {
 
@@ -262,11 +258,6 @@ void ADCS_Task(void * pvParameters) {
 			vTaskDelay(300 * delay_time_based); //Delay 300 s
 		}
 	}
-
-
 	/** End of ADCS TASK, Should never reach this line  */
 	vTaskDelete(NULL);
 }
-
-
- 

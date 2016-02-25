@@ -253,6 +253,3 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 		break;
 	}
 }
-
-
-

@@ -10,7 +10,7 @@
 #include "parameter.h"
 
 #define ground_Test_Mode	1
-#define enable_stm_EPS		1
+#define enable_stm_EPS		0
 #define enable_stm_ADCS		0 
 #define enable_stm_IFB		0
 

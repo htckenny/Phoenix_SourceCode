@@ -24,7 +24,7 @@
 #define maxNum		50
 FATFS fs[2];
 FRESULT res;
-FIL file, fileHK, fileINMS, fileSEUV, fileEOP, fileWOD;
+FIL file, fileHK, fileINMS, fileSEUV, fileEOP, fileWOD, fileErr;
 UINT br, bw;
 uint8_t buffer[300];
 FILINFO *fno;
@@ -68,8 +68,8 @@ void decode_time (char fileName[], char * buf )
 	char Hour [5];
 	char Min [5];
 	char Sec [5];
-	char nameDate_s[5] ="0000";
-	char nameTime_s[5] ="0000";
+	char nameDate_s[5] = "0000";
+	char nameTime_s[5] = "0000";
 
 	memcpy(nameDate_s, &fileName[0], 4);
 	memcpy(nameTime_s, &fileName[4], 4);
@@ -79,7 +79,7 @@ void decode_time (char fileName[], char * buf )
 	int day = number >> 11;
 	int month = (number >> 7) - (day << 4) ;
 	int year = number - (day << 11) - (month << 7);
-	
+
 	int number2 = (int)strtol(nameTime_s, NULL, 16);
 
 	int sec = number2 >> 11;
@@ -601,7 +601,7 @@ int inms_script_write_flash(int buffNum, uint8_t scriptCont[], int delete_flag, 
 
 		if (ret != 0) {
 			printf("rm: cannot remove %s\r\n", path);
-		}		
+		}
 	}
 
 	/* Open file */
@@ -719,7 +719,7 @@ int inms_script_read_flash(int buffNum, int packlength, void * txbuf) {
 		strcpy(path, "/boot/INMS/idle7.bin");
 	else if (buffNum == 8)
 		strcpy(path, "/boot/INMS/idle8.bin");
-	
+
 	/* Open file */
 	FILE * fp = fopen(path, "r");
 	if (!fp) {
@@ -889,7 +889,7 @@ int wod_read(char fileName[], void * txbuf) // serial =1~N
 
 int wod_delete(char filename[])
 {
-	res = f_unlink(filename);	  
+	res = f_unlink(filename);
 
 	if (res != FR_OK) {
 		printf("\r\nf_unlink() fail .. \r\n");
@@ -905,7 +905,7 @@ int wod_delete(char filename[])
 /*  ---------------------------------------------------  */
 /** Start of SEUV data related FS function*/
 void seuv_write_dup()
-{	
+{
 	seuv_write(0);
 	seuv_write(1);
 }
@@ -913,7 +913,7 @@ int seuv_write(int SD_partition)
 {
 	struct tm  ts;
 	char buf[20];
-	
+
 	char fileName[45];
 	char fileName_decode[9];
 	if (SD_partition == 0)
@@ -1082,7 +1082,7 @@ int hk_read(char fileName[], void * txbuf) // serial =1~N
 
 int hk_delete(char fileName[])
 {
-	res = f_unlink(fileName);	  
+	res = f_unlink(fileName);
 
 	if (res != FR_OK) {
 		printf("\r\nf_unlink() fail .. \r\n");
@@ -1097,7 +1097,7 @@ int hk_delete(char fileName[])
 /** End of HK data related FS function*/
 /*  ---------------------------------------------------  */
 /** Start of EOP data related FS function*/
-void eop_write_dup(uint8_t frameCont []) 
+void eop_write_dup(uint8_t frameCont [])
 {
 	uint8_t frame[eop_length];
 	memcpy(frame, frameCont, eop_length);
@@ -1138,7 +1138,7 @@ int eop_write(uint8_t *frameCont, int SD_partition)		//SD_partition available : 
 	strcat(fileName, ".dat");
 	printf("%s\n", fileName);
 
-	
+
 
 	res = f_open(&fileEOP, fileName, FA_OPEN_ALWAYS | FA_WRITE );
 	f_lseek(&fileEOP, fileEOP.fsize);
@@ -1291,7 +1291,7 @@ err_stat:
 /*  ---------------------------------------------------  */
 /** Start of ADCS parameter related FS function*/
 
-int adcs_para_r() {	
+int adcs_para_r() {
 
 	char fileName[] = "0:/adcs_para.bin";
 	res = f_open(&file, fileName, FA_READ | FA_WRITE );
@@ -1318,7 +1318,7 @@ int adcs_para_r() {
 }
 
 int adcs_para_w()
-{	
+{
 	char fileName[] = "0:/adcs_para.bin";
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK) {
@@ -1342,9 +1342,9 @@ int adcs_para_w()
 }
 
 int adcs_para_d()
-{	
+{
 	char fileName[] = "0:/adcs_para.bin";
-	res = f_unlink(fileName);	 
+	res = f_unlink(fileName);
 
 	if (res != FR_OK) {
 		printf("\r\nf_unlink() fail .. \r\n");
@@ -1453,7 +1453,30 @@ int T_data_d()
 	return No_Error;
 }
 
-/** End of thermal related FS function*/
+/** End of thermal related FS function */
+/*  ---------------------------------------------------  */
+/** Start of Error Packet function */
+int errPacket_write(uint8_t *frameCont)
+{
+	char fileName[45];
+	strcpy(fileName, "0:/ErrPkt.dat");
+	printf("%s\n", fileName);
+
+	res = f_open(&fileErr, fileName, FA_OPEN_ALWAYS | FA_WRITE );
+	f_lseek(&fileErr, fileErr.fsize);
+	res = f_write(&fileErr, frameCont, 10, &bw);
+	if (res != FR_OK) {
+		printf("\rErrPacket_write() fail .. \r\n");
+		f_close(&fileErr);
+		return Error;
+	}
+	else {
+		printf("\rErracket_write() success .. \r\n");
+		f_close(&fileErr);
+		return No_Error;
+	}
+}
+/** End of Error Packet function */
 /*  ---------------------------------------------------  */
 /** Start of scan file related FS function*/
 
@@ -1515,11 +1538,11 @@ int scan_files_Downlink (
 			strncpy(fn_reduce, fn, 8);
 			fn_reduce[8] = '\0';
 			// printf("%s\n", fn_reduce);
-			
+
 			decode_time(fn_reduce, fn_decode);
 			printf("%s\n", fn_decode);
 			strncpy(timeref, fn_decode, 15);				/* cut the time part of the file name */
-			
+
 			timeref[15] = 0;
 
 			strncpy(t_year , &timeref[0], 4);
@@ -1562,7 +1585,7 @@ int scan_files_Downlink (
 						if (inms_2nd > 0) {
 							SendDataWithCCSDS_AX25(2, &inms_data[196]);
 							for (int i = 0; i < 196; ++i) {
-								inms_data[i+196] = 0;
+								inms_data[i + 196] = 0;
 							}
 						}
 					}
@@ -1600,7 +1623,7 @@ int scan_files_Downlink (
 						if (inms_2nd > 0) {
 							SendDataWithCCSDS_AX25(2, &inms_data[196]);
 							for (int i = 0; i < 196; ++i) {
-								inms_data[i+196] = 0;
+								inms_data[i + 196] = 0;
 							}
 						}
 					}
@@ -1637,7 +1660,7 @@ int scan_files_Downlink (
 						if (inms_2nd > 0) {
 							SendDataWithCCSDS_AX25(2, &inms_data[196]);
 							for (int i = 0; i < 196; ++i) {
-								inms_data[i+196] = 0;
+								inms_data[i + 196] = 0;
 							}
 						}
 					}
@@ -1723,7 +1746,7 @@ int scan_files_Delete (
 			sprintf(full_path, "%s/%s", path, fn);
 			strncpy(fn_reduce, fn, 8);
 			fn_reduce[8] = '\0';
-			
+
 			decode_time(fn_reduce, fn_decode);
 			strncpy(timeref, fn_decode, 15);				/* cut the time part of the file name */
 			timeref[15] = 0;

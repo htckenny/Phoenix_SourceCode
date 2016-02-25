@@ -14,19 +14,25 @@
 #include <csp/csp_endian.h>
 #include <csp/csp.h>
 #include <dev/arm/ds1302.h>
+#include <util/timestamp.h>
+#include <nanomind.h>
 
 #include "subsystem.h"
 #include "parameter.h"
 #include "fs.h"
 #include "../lib/liba712/src/drivers/mpio.h"
 
-int status_update(){
+extern int TS5();
+extern int TS6();
+extern int TS7();
+extern int TS9();
+int status_update() {
 	if (mode_task != NULL)
 		status_frame.mode_task = 1;
 	if (bat_check_task != NULL)
 		status_frame.bat_check_task = 1;
 	if (com_task != NULL)
-		status_frame.com_task = 1;			
+		status_frame.com_task = 1;
 	if (wod_task != NULL)
 		status_frame.wod_task = 1;
 
@@ -51,7 +57,7 @@ int status_update(){
 		status_frame.inms_task_receive = 1;
 
 	if (schedule_task != NULL)
-		status_frame.schedule_task = 1;		
+		status_frame.schedule_task = 1;
 
 	return E_NO_ERR;
 }
@@ -124,7 +130,7 @@ int parameter_init() {
 	parameters.INMS_timeout 			= 400;
 	parameters.inms_status				= 1;
 	parameters.SD_partition_flag		= 0;
-	
+
 	seuvFrame.samples = parameters.seuv_sample_rate << 1 ;		/* samples */
 	/* 0 1 2 3 4 5 6 |  7    */
 	/*  sample rate  | Gain  */
@@ -262,13 +268,12 @@ uint16_t Interface_tmp_get() {
 	uint8_t rx[5];
 	uint8_t tx[2];
 	tx[0] = 0xF0;	//0d240
-	tx[1] = 0xF0;
 
 	i2c_master_transaction_2(0, interface_node, &tx, 1, 0, 0, interface_delay) ;
 	vTaskDelay(0.01 * delay_time_based);
-	if (i2c_master_transaction_2(0, interface_node, &tx , 2, &rx, 4, interface_delay) == E_NO_ERR) {
+	if (i2c_master_transaction_2(0, interface_node, &tx , 1, &rx, 4, interface_delay) == E_NO_ERR) {
 		return (rx[0] << 8) + rx[1];
-	} 
+	}
 	else
 		return 0;
 }
@@ -276,13 +281,12 @@ uint16_t Interface_inms_thermistor_get() {
 	uint8_t rx[5];
 	uint8_t tx[2];
 	tx[0] = 0xD0;	//0d208
-	// tx[1] = 0xD0;
 
 	i2c_master_transaction_2(0, interface_node, &tx, 1, 0, 0, interface_delay) ;
 	vTaskDelay(0.01 * delay_time_based);
 	if (i2c_master_transaction_2(0, interface_node, &tx, 1, &rx, 4, interface_delay) == E_NO_ERR) {
 		return (rx[0] << 8) + rx[1];
-	} 
+	}
 	else
 		return 0;
 }
@@ -290,12 +294,11 @@ uint16_t Interface_3V3_current_get() {
 	uint8_t rx[5];
 	uint8_t tx[2];
 	tx[0] = 0x90;	//0d144
-	// tx[1] = 0x90;
 	i2c_master_transaction_2(0, interface_node, &tx, 1, 0, 0, interface_delay) ;
 	vTaskDelay(0.01 * delay_time_based);
 	if (i2c_master_transaction_2(0, interface_node, &tx, 1, &rx, 4, interface_delay) == E_NO_ERR) {
 		return (rx[0] << 8) + rx[1];
-	} 
+	}
 	else
 		return 0;
 }
@@ -303,14 +306,128 @@ uint16_t Interface_5V_current_get() {
 	uint8_t rx[5];
 	uint8_t tx[2];
 	tx[0] = 0xB0;	//0x176
-	// tx[1] = 0xB0;
 	i2c_master_transaction_2(0, interface_node, &tx, 1, 0, 0, interface_delay) ;
 	vTaskDelay(0.01 * delay_time_based);
 	if (i2c_master_transaction_2(0, interface_node, &tx , 1, &rx, 4, interface_delay) == E_NO_ERR) {
 		return (rx[0] << 8) + rx[1];
-	} 
+	}
 	else
 		return 0;
 }
 
+void generate_Error_Report(int type) {
+	uint8_t errPacket [10];
+	uint16_t serialNumber = 0;
+	uint8_t txbuf[2];
+	uint8_t rxbuf[133];
+	uint16_t sub_current, sub_temperature;
+	timestamp_t t;
 
+	t.tv_sec = 0;
+	t.tv_nsec = 0;
+	obc_timesync(&t, 6000);
+
+	if (HK_frame.mode_status_flag == 2 && parameters.first_flight == 1)
+		HK_frame.mode_status_flag = 4;
+
+	memcpy(&errPacket[0], &t.tv_sec, 4);
+	memcpy(&errPacket[4], &serialNumber, 2);
+	memcpy(&errPacket[6], &type, 1);
+	memcpy(&errPacket[7], &HK_frame.mode_status_flag, 1);
+
+	switch (type) {
+	/* Low Battery Condition */
+	case 1 :
+		txbuf[0] = 0x08;
+		if (i2c_master_transaction_2(0, eps_node, &txbuf, 1, &rxbuf, 43 + 2, eps_delay) == E_NO_ERR) {
+			memcpy(&errPacket[8], &rxbuf[10], 2);
+		}
+		break;
+	/* ADCS 3.3V current too high */
+	case 2 :
+		txbuf[0] = 0x08;
+		txbuf[1] = 0x00;
+		if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 133, eps_delay) == E_NO_ERR) {
+			memcpy(&errPacket[8], &rxbuf[28], 2); // curout[3] ADCS 3.3V
+		}
+		break;
+	/* ADCS 5V current too high */
+	case 3 :
+		txbuf[0] = 0x08;
+		txbuf[1] = 0x00;
+		if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 133, eps_delay) == E_NO_ERR) {
+			memcpy(&errPacket[8], &rxbuf[22], 2); // curout[0] ADCS 5V
+		}
+		break;
+	/* GPS current too high */
+	case 4 :
+		txbuf[0] = 0x08;
+		txbuf[1] = 0x00;
+		if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 133, eps_delay) == E_NO_ERR) {
+			memcpy(&errPacket[8], &rxbuf[30], 2); // curout[4] GPS
+		}
+		break;
+	/* SEUV 3.3V current too high */
+	case 5 :
+		txbuf[0] = 0x08;
+		txbuf[1] = 0x00;
+		if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 133, eps_delay) == E_NO_ERR) {
+			memcpy(&errPacket[8], &rxbuf[32], 2); // curout[5] SEUV 3.3V
+		}
+		break;
+	/* SEUV 5V current too high */
+	case 6 :
+		txbuf[0] = 0x08;
+		txbuf[1] = 0x00;
+		if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 133, eps_delay) == E_NO_ERR) {
+			memcpy(&errPacket[8], &rxbuf[26], 2); // curout[2] SEUV 5V
+		}
+		break;
+	/* INMS 3.3V current too high */
+	case 7 :
+		sub_current = Interface_3V3_current_get();
+		memcpy(&errPacket[8], &sub_current, 2);
+		break;
+	/* INMS 5V current too high */
+	case 8 :
+		sub_current = Interface_5V_current_get();
+		memcpy(&errPacket[8], &sub_current, 2);
+		break;
+	/* OBC temperature out of range */
+	case 9 :
+		TS9();
+		memcpy(&errPacket[8], &ThermalFrame.T9, 2);
+		break;
+	/* COM temperature out of range */
+	case 10 :
+		TS5();
+		memcpy(&errPacket[8], &ThermalFrame.T5, 2);
+		break;
+	/* Antenna temperature out of range */
+	case 11 :
+		TS6();
+		memcpy(&errPacket[8], &ThermalFrame.T6, 2);
+		break;
+	/* IFB temperature out of range */
+	case 12 :
+		sub_temperature = Interface_tmp_get();
+		memcpy(&errPacket[8], &sub_temperature, 2);
+		break;
+	/* ADCS temperature out of range */
+	case 13 :
+		TS7();
+		memcpy(&errPacket[8], &ThermalFrame.T7, 2);
+		break;
+	/* INMS temperature out of range */
+	case 14 :
+		sub_temperature = Interface_inms_thermistor_get();
+		memcpy(&errPacket[8], &sub_temperature, 2);
+		break;
+	}
+	if (errPacket_write(errPacket) == E_NO_ERR) {
+		serialNumber ++;
+	}
+	else {
+		printf("error write into errpacket\n");
+	}
+}

@@ -86,6 +86,7 @@ int parameter_init() {
 	SD_lock_flag						= 0;
 	use_GPS_header						= 0;
 	inms_tm_status						= 1;
+	
 
 	/*--File System store count--*/
 	parameters.wod_store_count			= 0;
@@ -130,6 +131,8 @@ int parameter_init() {
 	parameters.INMS_timeout 			= 400;
 	parameters.inms_status				= 1;
 	parameters.SD_partition_flag		= 0;
+
+	parameters.ErrSerialNumber			= 0;
 
 	seuvFrame.samples = parameters.seuv_sample_rate << 1 ;		/* samples */
 	/* 0 1 2 3 4 5 6 |  7    */
@@ -317,7 +320,6 @@ uint16_t Interface_5V_current_get() {
 
 void generate_Error_Report(int type) {
 	uint8_t errPacket [10];
-	uint16_t serialNumber = 0;
 	uint8_t txbuf[2];
 	uint8_t rxbuf[133];
 	uint16_t sub_current, sub_temperature;
@@ -331,7 +333,7 @@ void generate_Error_Report(int type) {
 		HK_frame.mode_status_flag = 4;
 
 	memcpy(&errPacket[0], &t.tv_sec, 4);
-	memcpy(&errPacket[4], &serialNumber, 2);
+	memcpy(&errPacket[4], &parameters.ErrSerialNumber, 2);
 	memcpy(&errPacket[6], &type, 1);
 	memcpy(&errPacket[7], &HK_frame.mode_status_flag, 1);
 
@@ -424,8 +426,9 @@ void generate_Error_Report(int type) {
 		memcpy(&errPacket[8], &sub_temperature, 2);
 		break;
 	}
-	if (errPacket_write(errPacket) == E_NO_ERR) {
-		serialNumber ++;
+	if (errPacket_write(errPacket) == No_Error) {
+		parameters.ErrSerialNumber ++;
+		para_w_flash();
 	}
 	else {
 		printf("error write into errpacket\n");

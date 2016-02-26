@@ -474,9 +474,9 @@ int inms_data_write(uint8_t frameCont[], int SD_partition)
 	char fileName[45];
 	char fileName_decode[9];
 	if (SD_partition == 0)
-		strcpy(fileName, "0:INMS_DATA/");
+		strcpy(fileName, "0:INM_DATA/");
 	else
-		strcpy(fileName, "1:INMS_DATA/");
+		strcpy(fileName, "1:INM_DATA/");
 
 	/* Get current time */
 	timestamp_t t;
@@ -1421,35 +1421,26 @@ int thurmal_2_w()
 }
 
 int T_data_d()
-{	// serial =1~N
-
+{
 	char fileName[] = "0:/t_obc.bin";
 	res = f_unlink(fileName);
 
 	if (res != FR_OK)
 	{
 		printf("\r\nt_obc.bin f_unlink() fail .. \r\n");
-
 	}
 	else {
 		printf("\r\nt_obc.bin f_unlink() success .. \r\n");
-
 	}
-
-
 	char fileName2[] = "0:/t_inms.bin";
 	res = f_unlink(fileName2);
 
-	if (res != FR_OK)
-	{
+	if (res != FR_OK) {
 		printf("\r\nt_inms.bin f_unlink() fail .. \r\n");
-
 	}
 	else {
 		printf("\r\nt_inms.bin f_unlink() success .. \r\n");
-
 	}
-
 	return No_Error;
 }
 
@@ -1458,21 +1449,116 @@ int T_data_d()
 /** Start of Error Packet function */
 int errPacket_write(uint8_t *frameCont)
 {
-	char fileName[45];
-	strcpy(fileName, "0:/ErrPkt.dat");
-	printf("%s\n", fileName);
+	int fd, bytes;
+	int size = 10;
+	char path[] = "/boot/ErrPkt.bin";
 
-	res = f_open(&fileErr, fileName, FA_OPEN_ALWAYS | FA_WRITE );
-	f_lseek(&fileErr, fileErr.fsize);
-	res = f_write(&fileErr, frameCont, 10, &bw);
-	if (res != FR_OK) {
-		printf("\rErrPacket_write() fail .. \r\n");
-		f_close(&fileErr);
+	/* Open file */
+	fd = open(path, O_CREAT | O_RDWR | O_APPEND);
+	if (fd < 0) {
+		printf("Failed to open %s\r\n", path);
+		goto err;
+	}
+	/* write Data into flash */
+	bytes = write(fd, frameCont, size);
+
+	if (bytes != size) {
+		printf("Failed to write test data to %s (wrote %d bytes)\r\n", path, bytes);
+		goto err;
+	}
+	else {
+		printf("Success write into ErrPkt.bin\n");
+	}
+	close(fd);
+	return No_Error;
+err:
+	return Error;
+}
+int errPacket_read(uint8_t * txbuf)
+{
+
+	char * buf;
+	struct stat stat_buf;
+	size_t size;
+
+	char path[] = "/boot/ErrPkt.bin";
+
+	/* Open file */
+	FILE * fp = fopen(path, "r");
+	if (!fp) {
+		printf("read: cannot open %s\r\n", path);
+	}
+	/* Read file size */
+	if (stat(path, &stat_buf) != 0) {
+		printf("read: cannot stat %s\r\n", path);
+		goto err_stat;
+	}
+
+	size = stat_buf.st_size;
+
+	/* Allocate buffer */
+	buf = pvPortMalloc(size);
+	if (!buf) {
+		printf("read: cannot allocate memory for %s\r\n", path);
+		goto err_stat;
+	}
+	/* Read file */
+	if (fread(buf, 1, size, fp) != size) {
+		printf("read: failed to read %zu bytes from %s\r\n", size, path);
+		goto err;
+	}
+	/* Finally, hexdump */
+	printf("Success read from ErrPkt.bin\n");
+	memcpy(txbuf, buf, size);
+	fclose(fp);
+	return No_Error;
+err:
+	vPortFree(buf);
+	return Error;
+err_stat:
+	fclose(fp);
+	return Error;
+}
+int errPacket_dump()
+{
+	uint8_t txlen;
+	uint8_t err_buf[maxNum * 10] = {0};
+
+	if (errPacket_read(err_buf) == Error)
+		return Error;
+
+	int lastNum = parameters.ErrSerialNumber;
+	printf("last num = %d\n", parameters.ErrSerialNumber);
+	txlen = 10;
+	for (int i = 0 ; i < lastNum ; i++) {
+		// SendPacketWithCCSDS_AX25(&err_buf[0 + 10 * i], txlen, obc_apid, 3, 11);
+		hex_dump(&err_buf[0 + 10 * i], 10);
+	}
+	return No_Error;
+}
+int errPacket_reset()
+{
+	struct stat st;
+	int ret;
+
+	/* Get args */
+	char path[] = "/boot/ErrPkt.bin";
+
+	if (stat(path, &st) < 0) {
+		printf("rm: cannot stat %s\r\n", path);
+	}
+	if (st.st_mode & S_IFDIR)
+		ret = rmdir(path);
+	else
+		ret = remove(path);
+
+	if (ret != 0) {
+		printf("rm: cannot remove %s\r\n", path);
 		return Error;
 	}
 	else {
-		printf("\rErracket_write() success .. \r\n");
-		f_close(&fileErr);
+		parameters.ErrSerialNumber = 0 ;
+		para_w_flash();
 		return No_Error;
 	}
 }

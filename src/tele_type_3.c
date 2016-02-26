@@ -1,11 +1,12 @@
+#include <string.h>
+#include <nanomind.h>
+#include <time.h>
+
 #include <dev/i2c.h>
 #include <util/timestamp.h>
 #include <util/hexdump.h>
 #include <freertos/FreeRTOS.h>
-#include <string.h>
-#include <nanomind.h>
 #include <csp/csp_endian.h>
-#include <time.h>
 #include <io/nanopower2.h>
 #include <csp/csp.h>
 /* Self defined header file*/
@@ -25,6 +26,7 @@
 #define Report_Script_Stat	8		/* Report INMS script's status */
 #define Report_WOD_Test		9
 #define Report_GPS_Status	10		/* Report GPS's status */
+#define Report_Error_Record	11		/* Report Error Record */
 
 extern uint16_t fletcher(uint8_t *script, size_t length);
 
@@ -248,6 +250,18 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 			completionError = I2C_READ_ERROR;
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 		}
+	/*--------------- ID:11 Report Error Record ----------------*/
+	case Report_Error_Record:
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
+		if (errPacket_dump() == Error) {
+			completionError = FS_IO_ERR;
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); 
+		}
+		else {
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
+		}
+
+		break;	
 	default:
 		sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 		break;

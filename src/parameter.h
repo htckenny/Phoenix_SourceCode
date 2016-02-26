@@ -85,7 +85,6 @@ typedef struct __attribute__((packed)) {
 beacon_frame_t beacon_frame;
 
 uint8_t schedule_new_command_flag;
-uint8_t schedule_series_number;
 uint8_t schedule_unlink_flag;
 uint8_t idleunlocks;
 uint8_t Test_Script;
@@ -95,6 +94,7 @@ uint8_t SD_lock_flag;
 uint32_t lastCommandTime;
 uint8_t use_GPS_header;
 uint8_t inms_tm_status;
+
 
 typedef struct __attribute__((packed)) {
 
@@ -142,9 +142,13 @@ typedef struct __attribute__((packed)) {
 	/* Schedule related */
 	uint8_t schedule_series_number;
 
+	/* Error Packet related */
+	uint16_t ErrSerialNumber;
+
 	/* INMS related */
 	uint16_t INMS_timeout;
 	uint8_t inms_status;
+	
 	/* FS related */
 	uint8_t SD_partition_flag;
 } parameter_t;

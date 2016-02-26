@@ -80,6 +80,11 @@ int schedule_dump();
 int scan_files_Downlink (char* path, int mode, uint32_t timeRec_T1, uint32_t timeRec_T2) ;   	
 int scan_files_Delete (char* path, int mode, uint32_t timeRec_T1, uint32_t timeRec_T2) ;   	
 
+int errPacket_write(uint8_t *frameCont);
+int errPacket_read(uint8_t * txbuf);
+int errPacket_dump();
+int errPacket_reset();
+
 extern char* fileName_HK[2];
 extern char* fileName_INMS[2];
 extern char* fileName_SEUV[2];

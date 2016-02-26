@@ -186,5 +186,6 @@ uint16_t Interface_5V_current_get();
 uint16_t Interface_tmp_get();
 uint16_t Interface_inms_thermistor_get();
 int status_update();
+void generate_Error_Report(int type);
 
 #endif /* SUBSYSTEM_H_ */

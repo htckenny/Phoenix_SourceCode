@@ -871,6 +871,7 @@ int pararead(struct command_context * ctx) {
 	printf("vbat_recover_threshold \t\t%d\n", (int) parameters.vbat_recover_threshold);
 	printf("vbat_safe_threshold \t\t%d\n", (int) parameters.vbat_safe_threshold);
 	printf("schedule_series_number \t\t%d\n", (int) parameters.schedule_series_number);
+	printf("Error_series_number \t\t%d\n", (int) parameters.ErrSerialNumber);
 	printf("SEUV mode \t\t\t%d\n", (int) parameters.seuv_mode);
 	printf("SEUV period \t\t\t%d\n", (int) parameters.seuv_period);
 	printf("SEUV sample rate \t\t%d\n", (int) parameters.seuv_sample_rate);
@@ -878,7 +879,7 @@ int pararead(struct command_context * ctx) {
 	printf("SD_partition_flag \t\t%d\n", (int) parameters.SD_partition_flag);
 	printf("inms_status\t\t\t%d\n", (int) parameters.inms_status);
 	printf("INMS_timeout\t\t\t%d\n", (int) parameters.INMS_timeout);
-	
+	printf("combitrate\t\t\t%d\n", (int) parameters.com_bit_rates);
 
 	return CMD_ERROR_NONE;
 }

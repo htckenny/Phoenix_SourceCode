@@ -1531,8 +1531,9 @@ int errPacket_dump()
 	printf("last num = %d\n", parameters.ErrSerialNumber);
 	txlen = 10;
 	for (int i = 0 ; i < lastNum ; i++) {
-		// SendPacketWithCCSDS_AX25(&err_buf[0 + 10 * i], txlen, obc_apid, 3, 11);
-		hex_dump(&err_buf[0 + 10 * i], 10);
+		SendPacketWithCCSDS_AX25(&err_buf[0 + 10 * i], txlen, obc_apid, 3, 11);
+		vTaskDelay(0.3 * delay_time_based);
+		// hex_dump(&err_buf[0 + 10 * i], 10);
 	}
 	return No_Error;
 }

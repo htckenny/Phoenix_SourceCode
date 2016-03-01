@@ -21,12 +21,13 @@
 #define Report_EPS_HK		3		/* Report EPS House Keeping Data */
 #define Report_Parameter	4		/* Report All System Parameters */
 #define Report_COM_HK_2		5		/* Report COM Board Baud Rate */
-#define Report_Task_Status	6		/* Report all the task status */
+#define Report_Task_Status	6		/* Report All the task status */
 #define Report_ADCS_HK		7		/* Report ADCS House Keeping Data */
 #define Report_Script_Stat	8		/* Report INMS script's status */
 #define Report_WOD_Test		9
 #define Report_GPS_Status	10		/* Report GPS's status */
 #define Report_Error_Record	11		/* Report Error Record */
+#define Report_Data_Number	12		/* Report Collected Data Number */
 
 extern uint16_t fletcher(uint8_t *script, size_t length);
 
@@ -67,7 +68,8 @@ void perform_fletcher(uint8_t * check_sum_final) {
 }
 
 /* telecommand Service 3  */
-void decodeService3(uint8_t subType, uint8_t*telecommand) {
+void decodeService3(uint8_t subType, uint8_t* telecommand) {
+	uint8_t txBufferWithSID[254];
 	uint8_t txBuffer[254];
 	uint8_t txlen;
 	uint16_t buffs;
@@ -113,7 +115,9 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 
 		txlen = 25;
 		printf("[TM 3-1]current mode = %d\n", txBuffer[0]);
-		SendPacketWithCCSDS_AX25(&txBuffer, txlen, obc_apid, type, subType);
+		txBufferWithSID[0] = 31;
+		memcpy(&txBufferWithSID[1], &txBuffer[0], txlen);
+		SendPacketWithCCSDS_AX25(&txBufferWithSID[0], txlen + 1, obc_apid, type, 25);
 		hex_dump(&txBuffer, txlen);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 
@@ -126,7 +130,9 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 		i2c_tx[0] = com_rx_hk;
 		if (i2c_master_transaction_2(0, com_rx_node, &i2c_tx, 1, &txBuffer, com_rx_hk_len, com_delay) == E_NO_ERR) {
 			txlen = com_rx_hk_len;
-			SendPacketWithCCSDS_AX25(&txBuffer, txlen, obc_apid, type, subType);
+			txBufferWithSID[0] = 32;
+			memcpy(&txBufferWithSID[1], &txBuffer[0], txlen);
+			SendPacketWithCCSDS_AX25(&txBufferWithSID[0], txlen + 1, obc_apid, type, 25);
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}
 		else {
@@ -141,7 +147,9 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 		i2c_tx[0] = eps_hk;
 		if (i2c_master_transaction_2(0, eps_node, &i2c_tx, 1, &txBuffer, eps_hk_len, eps_delay) == E_NO_ERR) {
 			txlen = eps_hk_len - 2;
-			SendPacketWithCCSDS_AX25(&txBuffer[2], txlen, obc_apid, type, subType);
+			txBufferWithSID[0] = 33;
+			memcpy(&txBufferWithSID[1], &txBuffer[2], txlen);
+			SendPacketWithCCSDS_AX25(&txBufferWithSID[0], txlen + 1, obc_apid, type, 25);
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}
 		else {
@@ -156,7 +164,9 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 
 		memcpy(txBuffer, &parameters.first_flight, sizeof(parameter_t));
 		txlen = sizeof(parameter_t);
-		SendPacketWithCCSDS_AX25(&txBuffer, txlen, obc_apid, type, subType);
+		txBufferWithSID[0] = 34;
+		memcpy(&txBufferWithSID[1], &txBuffer[0], txlen);
+		SendPacketWithCCSDS_AX25(&txBufferWithSID[0], txlen + 1, obc_apid, type, 25);
 
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
@@ -167,7 +177,9 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 		i2c_tx[0] = com_tx_hk;
 		if (i2c_master_transaction_2(0, com_tx_node, &i2c_tx, 1, &txBuffer, 1, com_delay) == E_NO_ERR) {
 			txlen = 1;
-			SendPacketWithCCSDS_AX25(&txBuffer, txlen, obc_apid, type, subType);
+			txBufferWithSID[0] = 35;
+			memcpy(&txBufferWithSID[1], &txBuffer[0], txlen);
+			SendPacketWithCCSDS_AX25(&txBufferWithSID[0], txlen + 1, obc_apid, type, 25);
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}
 		else {
@@ -206,7 +218,9 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 			memcpy(&txBuffer[0], &status_frame.mode_task, 15);
 
 			txlen = 15;
-			SendPacketWithCCSDS_AX25(&txBuffer, txlen, obc_apid, type, subType);
+			txBufferWithSID[0] = 36;
+			memcpy(&txBufferWithSID[1], &txBuffer[0], txlen);
+			SendPacketWithCCSDS_AX25(&txBufferWithSID[0], txlen + 1, obc_apid, type, 25);
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}
 		else {
@@ -225,7 +239,7 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 		SendPacketWithCCSDS_AX25(&txBuffer, txlen, obc_apid, type, subType);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
-	/*--------------- ID:9 Test SCS WOD interface ----------------*/	
+	/*--------------- ID:9 Test SCS WOD interface ----------------*/
 	case Report_WOD_Test:
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 
@@ -236,7 +250,7 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 		SendPacketWithCCSDS_AX25(&test, 9, obc_apid, 3, 25);
 
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
-	/*--------------- ID:10 Report GPS status ----------------*/	
+	/*--------------- ID:10 Report GPS status ----------------*/
 	case Report_GPS_Status:
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 
@@ -252,16 +266,28 @@ void decodeService3(uint8_t subType, uint8_t*telecommand) {
 		}
 	/*--------------- ID:11 Report Error Record ----------------*/
 	case Report_Error_Record:
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 		if (errPacket_dump() == Error) {
 			completionError = FS_IO_ERR;
-			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError); 
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 		}
 		else {
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS); 
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}
+		break;
+	/*--------------- ID:12 Report Data Collected Number ----------------*/
+	case Report_Data_Number:
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+		/* check ls function for implementation */
+		// if (errPacket_dump() == Error) {
+		// 	completionError = FS_IO_ERR;
+		// 	sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+		// }
+		// else {
+		// 	sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		// }
+		break;
 
-		break;	
 	default:
 		sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 		break;

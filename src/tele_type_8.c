@@ -35,6 +35,7 @@
 #define INMS_timeout_change			19				/* Set INMS timeout value */
 #define INMS_restart				20				/* Restart INMS script handler, do this after upload new script*/
 #define Enable_GPS_header			21				/* use GPS to get position data instead of ADCS */
+#define Reset_Error_Report			22				/* Reset Error Report, should be conducted after successful downlink of Error Report */
 #define SD_card_format				30				/* Format SD card, and create default folders */
 #define SD_unlock					31				/* Unlock SD card */
 
@@ -411,9 +412,22 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			use_GPS_header = 0;
 			printf("disable GPS header\n");
 		}
-		para_w_flash();
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
+	/*---------------  ID:22 Reset Error Report ----------------*/
+	case Reset_Error_Report:
+		if (para_length == 0)
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
+			break;
+		}
+		printf("Execute Type 8 Sybtype 22, reset Error Report\r\n");
+		if (errPacket_reset() == No_Error) {
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		}
+		break;
+
 	/*---------------  ID:30 Format SD and Initialize ----------------*/
 	case SD_card_format:
 		if (para_length == 1)

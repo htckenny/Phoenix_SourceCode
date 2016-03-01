@@ -10,7 +10,7 @@
 #include <freertos/task.h>
 #include <dev/cpu.h>
 #include <util/delay.h>
- #include <nanomind.h>
+#include <nanomind.h>
 #include <csp/csp_endian.h>
 #include <dev/i2c.h>
 #include <string.h>
@@ -18,9 +18,9 @@
 #include <time.h>
 #include <dev/adc.h>
 #include <dev/usart.h>
- #include <io/nanopower2.h>
+#include <io/nanopower2.h>
 #include <csp/csp.h>
- 
+
 #include "parameter.h"
 #include "tele_function.h"
 #include "subsystem.h"
@@ -78,7 +78,7 @@ int TS10() {
 	tx[1] = 0xF0;
 
 
-	i2c_master_transaction_2(0, interface_node, &tx ,2, &rx, 4, seuv_delay);
+	i2c_master_transaction_2(0, interface_node, &tx , 2, &rx, 4, seuv_delay);
 
 
 	if (i2c_master_transaction_2(0, interface_node, 0 , 0, &rx, 4, seuv_delay) != E_NO_ERR)
@@ -107,29 +107,38 @@ int TS8() {
 	ThermalFrame.T8 = 0;
 	return No_Error;
 }
-/* ADCS temp */
-int TS7() {
-	uint8_t txbuffer = 175;
+/* ADCS ARM CPU temp */
+int TS7()
+{
+	uint8_t txbuffer = 173;		// check 135
 	uint8_t rxbuffer[6];
 
 	if (i2c_master_transaction_2(0, adcs_node, &txbuffer, 1, &rxbuffer, 6, adcs_delay) != E_NO_ERR)
 		return Error;
 
-	// ThermalFrame.T7 = (uint16_t)rxbuffer[5];
-    memcpy(&ThermalFrame.T7, &rxbuffer[4], 2);
+	memcpy(&ThermalFrame.T7, &rxbuffer[4], 2);
 	return No_Error;
 }
+/* ADCS Rate Sensor & Magnetometer temp */
+int TS7_2()
+{
+	uint8_t txbuffer = 175;		// check 135
+	uint8_t rxbuffer[6];
 
-/* Antenna Board temp */ 
+	if (i2c_master_transaction_2(0, adcs_node, &txbuffer, 1, &rxbuffer, 6, adcs_delay) != E_NO_ERR)
+		return Error;
+
+	memcpy(&ThermalFrame.T7_2, &rxbuffer[4], 2);
+	return No_Error;
+}
+/* Antenna Board temp */
 int TS6() {
 	uint8_t txbuffer = 0xC0;
-	uint16_t rxbuffer[2];
+	uint8_t rxbuffer[2];
 
 	if (i2c_master_transaction_2(0, ant_node, &txbuffer, 1, &rxbuffer, 2, com_delay) != E_NO_ERR)
 		return Error;
 	memcpy(&ThermalFrame.T6, &rxbuffer, 2);
-	// ThermalFrame.T6 = rxbuffer;
-
 	return No_Error;
 }
 /* COM board temp */
@@ -140,10 +149,7 @@ int TS5() {
 	if (i2c_master_transaction_2(0, com_rx_node, &txbuffer, 1, &rxbuffer, 14, com_delay) != E_NO_ERR)
 		return Error;
 
-	//rxbuffer=csp_ntoh16(rxbuffer);
 	ThermalFrame.T5 = rxbuffer[5];
-	//ThermalFrame.T5=0x05;
-
 	return No_Error;
 }
 
@@ -252,7 +258,7 @@ uint8_t hk_get() {
 
 
 	/* get adcs hk1			ID = 136, Current ADCS state */
-	txbuf = 0x88;  
+	txbuf = 0x88;
 	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &hk_buffer[4], 48, adcs_delay) != E_NO_ERR)
 		return Error;
 	/* get adcs hk2:		ID = 137, Calibrated sensor measurements */
@@ -289,10 +295,10 @@ uint8_t hk_get() {
 	 * Total HK length :
 	 * 4		48			36			12			14		8
 	 * Time		ADCS_HK1	ADCS_HK2	ADCS_HK3	HK 		Thermal
-	 * 
+	 *
 	 * => 122 Bytes
 	 */
-	
+
 	// Finish collecting, dump the complete frame.
 	// hex_dump(&hk_buffer[0], hk_length);
 

@@ -181,15 +181,16 @@ adcs_para_t adcs_para;
 
 typedef struct __attribute__((packed)) {
 	uint32_t packet_number;
-	uint16_t T1; 		// eps temp
-	uint16_t T2; 		// eps temp
-	uint16_t T3; 		// eps temp
-	uint16_t T4; 		// eps temp
-	uint16_t T5;  		// com temp
-	uint16_t T6; 		// antenna temp
-	uint16_t T7; 		// adcs temp
-	uint16_t T8; 		// gps temp
-	uint16_t T9;  		// obc temp
+	uint16_t T1; 		// EPS temp
+	uint16_t T2; 		// EPS temp
+	uint16_t T3; 		// EPS temp
+	uint16_t T4; 		// EPS temp
+	uint16_t T5;  		// COM temp
+	uint16_t T6; 		// Antenna temp
+	uint16_t T7; 		// ADCS temp
+	uint16_t T7_2; 		// ADCS Rate Sensor & Magnetometer temp
+	uint16_t T8; 		// GPS temp
+	uint16_t T9;  		// OBC temp
 	uint16_t T10; 		// interface temp
 	uint16_t T11; 		// interface INMS temp
 

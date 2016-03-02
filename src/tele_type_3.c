@@ -214,10 +214,11 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 			printf("I_RH_task\t\t%d\n", status_frame.inms_task_receive);
 
 			printf("Sche_task\t\t%d\n", status_frame.schedule_task);
+			printf("SEUVCM_task\t\t%d\n", status_frame.seuv_cm_task);
 
-			memcpy(&txBuffer[0], &status_frame.mode_task, 15);
+			memcpy(&txBuffer[0], &status_frame.mode_task, sizeof(status_frame_t));
 
-			txlen = 15;
+			txlen = sizeof(status_frame_t);
 			txBufferWithSID[0] = 36;
 			memcpy(&txBufferWithSID[1], &txBuffer[0], txlen);
 			SendPacketWithCCSDS_AX25(&txBufferWithSID[0], txlen + 1, obc_apid, type, 25);

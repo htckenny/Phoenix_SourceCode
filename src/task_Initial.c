@@ -77,5 +77,6 @@ void Init_Task(void * pvParameters) {
 	HK_frame.mode_status_flag = 2;
 
 	/** End of init */
+	init_task = NULL;
 	vTaskDelete(NULL);
 }

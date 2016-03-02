@@ -128,7 +128,7 @@ uint16_t CCSDS_GetSequenceCount(uint16_t apid) {
 	// 		parameters.seuv_packet_sequence_count++;
 	// 	return parameters.seuv_packet_sequence_count;
 	// }
-	//  WOD related command 
+	//  /* WOD related command */
 	// else if (apid == wod_apid) {
 	// 	if (parameters.wod_packet_sequence_count == 16383) {
 	// 		parameters.wod_packet_sequence_count = 0;
@@ -264,7 +264,7 @@ uint8_t CCSDS_GenerateTelemetryPacket(uint8_t* telemetryBuffer,
 }
 
 
-//packet with AX.25 Secondary header and Send to COM
+// packet with AX.25 Secondary header and Send to COM
 uint8_t AX25_GenerateTelemetryPacket_Send(uint8_t* data , uint8_t data_len) {
 
 	uint8_t txBuffer[255];
@@ -536,8 +536,6 @@ uint8_t SendDataWithCCSDS_AX25(uint8_t datatype, uint8_t* data) { //add sid then
 			AX25_GenerateTelemetryPacket_Send(&txframe[0], tx_length);
 		else
 			return Error;
-
-
 		return No_Error;
 
 	}

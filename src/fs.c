@@ -1136,9 +1136,7 @@ int eop_write(uint8_t *frameCont, int SD_partition)		//SD_partition available : 
 	// strcat(fileName, buf);
 	// strcat(fileName, "_E");
 	strcat(fileName, ".dat");
-	printf("%s\n", fileName);
-
-
+	printf("%s\n", buf);
 
 	res = f_open(&fileEOP, fileName, FA_OPEN_ALWAYS | FA_WRITE );
 	f_lseek(&fileEOP, fileEOP.fsize);
@@ -1151,11 +1149,8 @@ int eop_write(uint8_t *frameCont, int SD_partition)		//SD_partition available : 
 	else {
 		printf("\rEOP_write() %d success .. \r\n", SD_partition);
 		f_close(&fileEOP);
-		// if (SD_partition == 1)
-		// 	hex_dump(frameCont, eop_length);
 		return No_Error;
 	}
-
 }
 
 int eop_read(char fileName[], void * txbuf)

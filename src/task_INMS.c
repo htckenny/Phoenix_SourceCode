@@ -174,7 +174,7 @@ void vTaskInmsReceive(void * pvParameters) {
 	// char ucharBuffer[174*10];	// buffer overflow
 	int receiveFlag = 0;
 	uint8_t rxbuf[48];
-	uint8_t txbuf; 			
+	uint8_t txbuf;
 	timestamp_t t;
 
 	for (int k = 0; k < 22; k++) {
@@ -207,33 +207,37 @@ void vTaskInmsReceive(void * pvParameters) {
 				memcpy(&ucharAdcs[0], &t.tv_sec, 4);
 
 				if (use_GPS_header == 0) {
-					txbuf = 0x88;	// ID 136 Current ADCS state
+					txbuf = 0x88;	// ID 136
 					if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 48, adcs_delay) == E_NO_ERR) {
 						printf("Get Attitude, Position from ADCS\n");
 						memcpy(&ucharAdcs[4], &rxbuf[18], 18);
 					}
 				}
 				else if (use_GPS_header == 1) {
-					txbuf = 0x88;
-					if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 48, adcs_delay) == E_NO_ERR) {
-						printf("Get Attitude from ADCS\n");
-						memcpy(&ucharAdcs[4], &rxbuf[18], 12);
-					}
 					txbuf = 0x8B;
 					if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 60, adcs_delay) == E_NO_ERR) {
-						printf("Get Position from GPS\n");
-						memcpy(&ucharAdcs[16], &rxbuf[36], 2);	//ECEF <-> ECI
-						memcpy(&ucharAdcs[18], &rxbuf[42], 2);
-						memcpy(&ucharAdcs[20], &rxbuf[48], 2);
+						if (rxbuf[24] == 0) {
+							printf("Get Position from GPS\n");
+							memcpy(&ucharAdcs[16], &rxbuf[36], 2);	//ECEF <-> ECI
+							memcpy(&ucharAdcs[18], &rxbuf[42], 2);
+							memcpy(&ucharAdcs[20], &rxbuf[48], 2);
+
+							txbuf = 0x88;
+							if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 48, adcs_delay) == E_NO_ERR) {
+								printf("Get Attitude from ADCS\n");
+								memcpy(&ucharAdcs[4], &rxbuf[18], 12);
+							}
+						}
+						else {
+							use_GPS_header = 0;
+							txbuf = 0x88;	// ID 136
+							if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 48, adcs_delay) == E_NO_ERR) {
+								printf("Get Attitude, Position from ADCS\n");
+								memcpy(&ucharAdcs[4], &rxbuf[18], 18);
+							}
+						}
 					}
 				}
-				// if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 48, adcs_delay) == E_NO_ERR) {
-				// 	memcpy(&ucharAdcs[4], &rxbuf[18], 18);
-				// 	printf("Get Time, Attitude, Position from ADCS\n");
-				// }
-				// else {
-				// 	printf("Get data from ADCS FAILED \r\n");
-				// }
 				for (int i = 0; i < 22; i++) {
 					ucharTotal[i] = ucharAdcs[i];
 				}
@@ -882,17 +886,28 @@ void vTaskInmsErrorHandle(void * pvParameters) {
 				}
 			}
 			else if (use_GPS_header == 1) {
-				txbuf = 0x88;
-				if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 48, adcs_delay) == E_NO_ERR) {
-					printf("Get Attitude from ADCS\n");
-					memcpy(&ucharAdcs[4], &rxbuf[18], 12);
-				}
 				txbuf = 0x8B;
 				if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 60, adcs_delay) == E_NO_ERR) {
-					printf("Get Position from GPS\n");
-					memcpy(&ucharAdcs[16], &rxbuf[36], 2);	//ECEF <-> ECI
-					memcpy(&ucharAdcs[18], &rxbuf[42], 2);
-					memcpy(&ucharAdcs[20], &rxbuf[48], 2);
+					if (rxbuf[24] == 0) {
+						printf("Get Position from GPS\n");
+						memcpy(&ucharAdcs[16], &rxbuf[36], 2);	//ECEF <-> ECI
+						memcpy(&ucharAdcs[18], &rxbuf[42], 2);
+						memcpy(&ucharAdcs[20], &rxbuf[48], 2);
+
+						txbuf = 0x88;
+						if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 48, adcs_delay) == E_NO_ERR) {
+							printf("Get Attitude from ADCS\n");
+							memcpy(&ucharAdcs[4], &rxbuf[18], 12);
+						}
+					}
+					else {
+						use_GPS_header = 0;
+						txbuf = 0x88;	// ID 136
+						if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 48, adcs_delay) == E_NO_ERR) {
+							printf("Get Attitude, Position from ADCS\n");
+							memcpy(&ucharAdcs[4], &rxbuf[18], 18);
+						}
+					}
 				}
 			}
 

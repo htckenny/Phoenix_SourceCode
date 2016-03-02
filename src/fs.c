@@ -588,6 +588,10 @@ int inms_script_write_flash(int buffNum, uint8_t scriptCont[], int delete_flag, 
 		strcpy(path, "/boot/INMS/idle7.bin");
 	else if (buffNum == 8)
 		strcpy(path, "/boot/INMS/idle8.bin");
+	else if (buffNum == 10)
+		strcpy(path, "/boot/nanomind.bin");
+	else if (buffNum == 11)
+		strcpy(path, "/boot/boot.conf");	
 
 	if (delete_flag == 1) {
 		if (stat(path, &st) < 0) {

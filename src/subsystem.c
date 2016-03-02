@@ -35,6 +35,8 @@ int status_update() {
 		status_frame.com_task = 1;
 	if (wod_task != NULL)
 		status_frame.wod_task = 1;
+	if (beacon_task != NULL)
+		status_frame.beacon_task = 1;
 
 	if (init_task != NULL)
 		status_frame.init_task = 1;
@@ -58,6 +60,8 @@ int status_update() {
 
 	if (schedule_task != NULL)
 		status_frame.schedule_task = 1;
+	if (seuv_cm_task != NULL)
+		status_frame.seuv_cm_task = 1;
 
 	return E_NO_ERR;
 }

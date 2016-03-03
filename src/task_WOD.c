@@ -41,7 +41,7 @@ uint8_t wod[232];
 uint8_t beaconWod [8];
 
 /* calculate the position of the memory and then store in. */
-void sa(int byte_no, int bit_no) { 
+void sa(int byte_no, int bit_no) {
 	int num = 0;
 	switch (bit_no)
 	{
@@ -49,7 +49,7 @@ void sa(int byte_no, int bit_no) {
 		num = 128;		break;
 	case 1:
 		num = 64;		break;
-	case 2:	
+	case 2:
 		num = 32;		break;
 	case 3:
 		num = 16;		break;
@@ -70,7 +70,7 @@ void sa(int byte_no, int bit_no) {
 }
 
 /* normally for mode(first bit of 57bits) */
-void calbit(int dataSet) { 
+void calbit(int dataSet) {
 	int curbit;
 	//32 data set
 	if (dataSet > 32)
@@ -81,7 +81,7 @@ void calbit(int dataSet) {
 
 }
 /* for the wod choose which dataset and data and the value */
-void calmulbit(int dataSet, int data, int value) { 
+void calmulbit(int dataSet, int data, int value) {
 	//data=1:batvol ,data=2:batcurr.............data=7:tempbat
 	int curbit;
 	int i , j;
@@ -139,21 +139,21 @@ int getWodFrame(int fnum) {
 	uint8_t txdata[19] = {};
 
 	uint16_t val[7];
-	
+
 	uint16_t EPS_HK[12];
 	uint8_t txbuf[2];
-	uint8_t rxbuf[64+2];
+	uint8_t rxbuf[64 + 2];
 
 
 	txdata[0] = com_rx_hk;
 	if (i2c_master_transaction_2(0, com_rx_node, &txdata, 1, &val, com_rx_hk_len, com_delay) == E_NO_ERR) {
-		tempComm  = __max(__min(floor(4 * (float)(189.5522-0.0546*val[5] ) + 60), 255), 0);
+		tempComm  = __max(__min(floor(4 * (float)(189.5522 - 0.0546 * val[5] ) + 60), 255), 0);
 	} else
 		return Error;
-	
+
 	txbuf[0] = 0x08;
 
-	if (i2c_master_transaction_2(0, eps_node, &txbuf, 1, &rxbuf, 43+2, eps_delay) == E_NO_ERR){
+	if (i2c_master_transaction_2(0, eps_node, &txbuf, 1, &rxbuf, 43 + 2, eps_delay) == E_NO_ERR) {
 		memcpy(&EPS_HK[0], &rxbuf[10], 2);	//Vbatt
 		memcpy(&EPS_HK[1], &rxbuf[12], 2);	//ibat
 		memcpy(&EPS_HK[8], &rxbuf[14], 2);	//EPS temp
@@ -163,7 +163,7 @@ int getWodFrame(int fnum) {
 	}
 	txbuf[0] = 0x08;
 	txbuf[1] = 0x02;
-	if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 64+2, eps_delay) == E_NO_ERR){
+	if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 64 + 2, eps_delay) == E_NO_ERR) {
 		memcpy(&EPS_HK[2], &rxbuf[8], 2);	//i3.3
 		memcpy(&EPS_HK[3], &rxbuf[10], 2);	//i3.3
 		memcpy(&EPS_HK[4], &rxbuf[12], 2);	//i3.3
@@ -171,7 +171,7 @@ int getWodFrame(int fnum) {
 		memcpy(&EPS_HK[6], &rxbuf[4], 2);	//i5
 		memcpy(&EPS_HK[7], &rxbuf[6], 2);	//i5
 	}
-	for (int i = 0 ; i < 12 ; i++){
+	for (int i = 0 ; i < 12 ; i++) {
 		EPS_HK[i] = csp_hton16(EPS_HK[i]);
 	}
 
@@ -188,13 +188,13 @@ int getWodFrame(int fnum) {
 	printf("i5.0 = %u\n", (EPS_HK[5] + EPS_HK[6] + EPS_HK[7]));
 	printf("EPS temp = %u\n", (EPS_HK[8] + EPS_HK[9] + EPS_HK[10]) / 3);
 	printf("BAT temp = %u\n", EPS_HK[11]);
-	printf("COM temp = %.2f\n", 189.5522-0.0546*val[5]);
+	printf("COM temp = %.2f\n", 189.5522 - 0.0546 * val[5]);
 
 	batVoltage = __max(__min(floor(20 * ((float)EPS_HK[0] / 1000) - 60), 255), 0);
 	batCurrent = __max(__min(floor(127 * ((float)EPS_HK[1] / 1000) + 127), 255), 0);
 	bus3v3Current = __max(__min(floor((((float)EPS_HK[2] + (float)EPS_HK[3] + (float)EPS_HK[4]) / 25)), 255), 0);
 	bus5v0Current = __max(__min(floor((((float)EPS_HK[5] + (float)EPS_HK[6] + (float)EPS_HK[7]) / 25)), 255), 0);
-	tempEps = __max(__min(floor(4 * ((((float)EPS_HK[8] + (float)EPS_HK[9]+ (float)EPS_HK[10]) / 3)) + 60), 255), 0);
+	tempEps = __max(__min(floor(4 * ((((float)EPS_HK[8] + (float)EPS_HK[9] + (float)EPS_HK[10]) / 3)) + 60), 255), 0);
 	tempBat = __max(__min(floor(4 * (((float)EPS_HK[11])) + 60), 255), 0);
 
 	if (mode)	calbit(fnum);
@@ -205,9 +205,11 @@ int getWodFrame(int fnum) {
 	calmulbit(fnum, 5, tempComm);
 	calmulbit(fnum, 6, tempEps);
 	calmulbit(fnum, 7, tempBat);
-	
-	/*beacon message UPDATE */
-	beacon_frame.mode = mode;
+
+	/* Beacon Message UPDATE */
+	if (HK_frame.mode_status_flag == 2 && parameters.first_flight == 1)
+		HK_frame.mode_status_flag = 4;
+	beacon_frame.mode = HK_frame.mode_status_flag;
 	beacon_frame.batVoltage = batVoltage;
 	beacon_frame.batCurrent = batCurrent;
 	beacon_frame.bus3v3Current = bus3v3Current;
@@ -230,13 +232,13 @@ void beacon_Task(void * pvParameters) {
 
 	while (1) {
 
-		if (parameters.first_flight == 1){
+		if (parameters.first_flight == 1) {
 			period = 10 * delay_time_based;		// when early orbit, beacon period = 10 sec
 		}
-		else if (parameters.beacon_period > 0){
+		else if (parameters.beacon_period > 0) {
 			period = parameters.beacon_period * delay_time_based;
 		}
-		printf("-- Send Beacon with %d--\n", period  /100);
+		printf("-- Send Beacon with %d--\n", period  / 100);
 		SendPacketWithCCSDS_AX25(&beacon_frame.mode, 8, obc_apid, 0, 0);
 		vTaskDelay(period);
 	}

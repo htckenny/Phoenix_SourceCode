@@ -1582,11 +1582,11 @@ int scan_files_Downlink (
 	char timeref[16];
 	char full_path[45];
 	char t_year[5] = "0";
-	char t_mon[2] = {0};
-	char t_mday[2] = {0};
-	char t_hour[2] = {0};
-	char t_min[2] = {0};
-	char t_sec[2] = {0};
+	char t_mon[3] = {0};
+	char t_mday[3] = {0};
+	char t_hour[3] = {0};
+	char t_min[3] = {0};
+	char t_sec[3] = {0};
 	uint8_t hk_data[hk_length] = {0};
 	uint8_t inms_data[inms_data_length * 2] = {0};
 	uint8_t seuv_data[seuv_length] = {0};
@@ -1634,11 +1634,15 @@ int scan_files_Downlink (
 			strncpy(t_year , &timeref[0], 4);
 			t_year[4] = 0;
 			strncpy(t_mon  , &timeref[4], 2);
+			t_mon[2] = 0;
 			strncpy(t_mday , &timeref[6], 2);
+			t_mday[2] = 0;
 			strncpy(t_hour , &timeref[9], 2);
+			t_hour[2] = 0;
 			strncpy(t_min , &timeref[11], 2);
+			t_min[2] = 0;
 			strncpy(t_sec , &timeref[13], 2);
-
+			t_sec[2] = 0;
 			struct tm t;
 			time_t t_of_day;
 

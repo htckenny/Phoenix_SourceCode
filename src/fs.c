@@ -591,7 +591,7 @@ int inms_script_write_flash(int buffNum, uint8_t scriptCont[], int delete_flag, 
 	else if (buffNum == 10)
 		strcpy(path, "/boot/nanomind.bin");
 	else if (buffNum == 11)
-		strcpy(path, "/boot/boot.conf");	
+		strcpy(path, "/boot/boot.conf");
 
 	if (delete_flag == 1) {
 		if (stat(path, &st) < 0) {
@@ -1927,6 +1927,97 @@ int scan_files_Delete (
 				break;
 			}
 		}
+	}
+	return res;
+}
+int scan_files_Count (
+    char* path,        		/* Start node to be scanned (also used as work area) */
+    int mode,
+    uint32_t timeRec_T1,
+    uint32_t timeRec_T2
+)
+{
+	FRESULT res;
+	FILINFO fno;
+	FATDIR dir;
+	char *fn;   			/* This function assumes non-Unicode configuration */
+	char fn_reduce[9];
+	char fn_decode[16];
+	char timeref[16];
+	char full_path[45];
+	char t_year[5] = "0";
+	char t_mon[2] = {0};
+	char t_mday[2] = {0};
+	char t_hour[2] = {0};
+	char t_min[2] = {0};
+	char t_sec[2] = {0};
+	uint16_t NumberCount = 0;
+
+	res = f_opendir(&dir, path);                       /* Open the directory */
+	if (res == FR_OK) {
+		for (;;) {
+			res = f_readdir(&dir, &fno);                   /* Read a directory item */
+			if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
+			if (fno.fname[0] == '.') continue;             /* Ignore dot entry */
+			fn = fno.fname;
+
+			sprintf(full_path, "%s/%s", path, fn);
+			strncpy(fn_reduce, fn, 8);
+			fn_reduce[8] = '\0';
+
+			decode_time(fn_reduce, fn_decode);
+			strncpy(timeref, fn_decode, 15);				/* cut the time part of the file name */
+			timeref[15] = 0;
+
+			strncpy(t_year , &timeref[0], 4);
+			t_year[4] = 0;
+			strncpy(t_mon  , &timeref[4], 2);
+			strncpy(t_mday , &timeref[6], 2);
+			strncpy(t_hour , &timeref[9], 2);
+			strncpy(t_min , &timeref[11], 2);
+			strncpy(t_sec , &timeref[13], 2);
+
+			struct tm t;
+			time_t t_of_day;
+
+			t.tm_year = atoi(t_year) - 1900;
+			t.tm_mon = atoi(t_mon) - 1;   			    // Month, 0 - jan
+			t.tm_mday = atoi(t_mday);          			// Day of the month
+			t.tm_hour = atoi(t_hour);
+			t.tm_min = atoi(t_min);
+			t.tm_sec = atoi(t_sec);
+			t.tm_isdst = -1;       						// Is DST on? 1 = yes, 0 = no, -1 = unknown
+
+			t_of_day = mktime(&t);						/* Construct struct time to epoch seconds */
+			t_of_day -= 946684800;
+
+			ctime(&t_of_day);
+			printf("%s\n", full_path);
+
+			switch (mode) {
+			case 1:
+				if (timeRec_T1 < (unsigned)t_of_day && timeRec_T2 > (unsigned)t_of_day) {
+					NumberCount++;
+				}
+				break;
+			case 2:
+				if (timeRec_T1 > (unsigned)t_of_day) {
+					NumberCount++;
+				}
+
+				break;
+			case 3:
+				if (timeRec_T1 < (unsigned)t_of_day) {
+					NumberCount++;
+				}
+				break;
+			default:
+				printf("Range error Type 1 ~ 3\n");
+				break;
+			}
+		}
+		SendPacketWithCCSDS_AX25(&NumberCount, 2, obc_apid, 3, 25);
+		hex_dump(&NumberCount, 2);
 	}
 	return res;
 }

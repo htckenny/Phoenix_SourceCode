@@ -27,7 +27,6 @@
 #define Report_WOD_Test		9
 #define Report_GPS_Status	10		/* Report GPS's status */
 #define Report_Error_Record	11		/* Report Error Record */
-#define Report_Data_Number	12		/* Report Collected Data Number */
 
 extern uint16_t fletcher(uint8_t *script, size_t length);
 
@@ -277,20 +276,7 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 		else {
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}
-		break;
-	/*--------------- ID:12 Report Data Collected Number ----------------*/
-	case Report_Data_Number:
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
-		/* check ls function for implementation */
-		// if (errPacket_dump() == Error) {
-		// 	completionError = FS_IO_ERR;
-		// 	sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
-		// }
-		// else {
-		// 	sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
-		// }
-		break;
-
+		break;	
 	default:
 		sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 		break;

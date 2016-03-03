@@ -46,11 +46,11 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 			}
 			memcpy(&T1, &paras[2], 4);
 			/* mode is 1 => need T1 and T2 */
-			if (paras[1] == 1) {								
+			if (paras[1] == 1) {
 				memcpy(&T2, &paras[7], 4);
 			}
 			/* mode is 2 or 3 => only need T1 */
-			else if (paras[1] == 2 || paras[1] == 3) {		
+			else if (paras[1] == 2 || paras[1] == 3) {
 				T2 = 0;
 			}
 			T1 = csp_ntoh32(T1);
@@ -63,7 +63,9 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 				if (paras[0] == 1) {
 					if (hk_task != NULL)
 						vTaskSuspend(hk_task);
-					if (scan_files_Downlink (fileName_HK[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
+					if (scan_files_Count(fileName_HK[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
+					};
+					if (scan_files_Downlink(fileName_HK[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
 						sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 						break;
 					}
@@ -74,7 +76,9 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 				else if (paras[0] == 2) {
 					if (inms_task != NULL)
 						vTaskSuspend(inms_task);
-					if (scan_files_Downlink (fileName_INMS[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
+					if (scan_files_Count(fileName_INMS[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
+					};
+					if (scan_files_Downlink(fileName_INMS[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
 						sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 						break;
 					}
@@ -85,7 +89,9 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 				else if (paras[0] == 3) {
 					if (seuv_task != NULL)
 						vTaskSuspend(seuv_task);
-					if (scan_files_Downlink (fileName_SEUV[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
+					if (scan_files_Count(fileName_SEUV[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
+					};
+					if (scan_files_Downlink(fileName_SEUV[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
 						sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 						break;
 					}
@@ -96,7 +102,9 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 				else if (paras[0] == 4) {
 					if (eop_task != NULL)
 						vTaskSuspend(eop_task);
-					if (scan_files_Downlink (fileName_EOP[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
+					if (scan_files_Count(fileName_EOP[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
+					};
+					if (scan_files_Downlink(fileName_EOP[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
 						sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 						break;
 					}
@@ -107,7 +115,9 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 				else if (paras[0] == 5) {
 					if (wod_task != NULL)
 						vTaskSuspend(wod_task);
-					if (scan_files_Downlink (fileName_WOD[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
+					if (scan_files_Count(fileName_WOD[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
+					};
+					if (scan_files_Downlink(fileName_WOD[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
 						sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 						break;
 					}
@@ -131,11 +141,11 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 
 			memcpy(&T1, &paras[2], 4);
 			/* mode is 1 => need T1 and T2 */
-			if (paras[1] == 1) {								
+			if (paras[1] == 1) {
 				memcpy(&T2, &paras[7], 4);
 			}
 			/* mode is 2 or 3 => only need T1 */
-			else if (paras[1] == 2 || paras[1] == 3) {		
+			else if (paras[1] == 2 || paras[1] == 3) {
 				T2 = 0;
 			}
 			T1 = csp_ntoh32(T1);
@@ -202,9 +212,9 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 	/*---------------ID:128 abort onging transfer----------------*/
 	case abort_transfer:
 		if (packet_length == 0)
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);  
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 		else {
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE); 
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 			break;
 		}
 		printf("Execute Type 15 Sybtype 128, Abort transmitting \r\n");

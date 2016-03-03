@@ -12,8 +12,8 @@
 #include <freertos/task.h>
 /*---------------------------------------------------*/
 /*             		  INMS Script                    */
-int inms_script_write_flash(int buffNum,uint8_t scriptCont[], int delete_flag, int length);
-int inms_script_read_flash(int buffNum,int packlength,void * txbuf);
+int inms_script_write_flash(int buffNum, uint8_t scriptCont[], int delete_flag, int length);
+int inms_script_read_flash(int buffNum, int packlength, void * txbuf);
 int inms_script_length_flash(int buffNum);
 int inms_script_delete_flash(int buffNum);
 /*---------------------------------------------------*/
@@ -32,32 +32,32 @@ int wod_delete();
 /*                 Solar EUV Data                    */
 void seuv_write_dup();
 int seuv_write(int SD_partition);
-int seuv_read(char fileName[],void * txbuf);
+int seuv_read(char fileName[], void * txbuf);
 int seuv_delete();
 /*---------------------------------------------------*/
 /*              House Keeping Data                   */
 void hk_write_dup(uint8_t frameCont[]);
 int hk_write(uint8_t frameCont[], int SD_partition);
-int hk_read(char fileName[],void * txbuf);
+int hk_read(char fileName[], void * txbuf);
 int hk_delete();
 /*---------------------------------------------------*/
 /*            Early Orbit Phase Data                 */
 void eop_write_dup(uint8_t frameCont[]);
 int eop_write(uint8_t frameCont[], int SD_partition);
-int eop_read(char fileName[],void * txbuf);
+int eop_read(char fileName[], void * txbuf);
 int eop_delete();
 /*---------------------------------------------------*/
 void para_d_flash();
 void para_w_flash();
 int para_r_flash();
 /*---------------------------------------------------*/
-int downlink_data_before_t(uint8_t datatype,uint32_t time1);
-int downlink_data_after_t(uint8_t datatype,uint16_t time1);
-int downlink_data_between_t(uint8_t datatype,uint16_t time1,uint16_t time2);
+int downlink_data_before_t(uint8_t datatype, uint32_t time1);
+int downlink_data_after_t(uint8_t datatype, uint16_t time1);
+int downlink_data_between_t(uint8_t datatype, uint16_t time1, uint16_t time2);
 
-int delete_data_before_t(uint8_t datatype,uint32_t time1);
-int delete_data_after_t(uint8_t datatype,uint16_t time1);
-int delete_data_between_t(uint8_t datatype,uint16_t time1,uint16_t time2);
+int delete_data_before_t(uint8_t datatype, uint32_t time1);
+int delete_data_after_t(uint8_t datatype, uint16_t time1);
+int delete_data_between_t(uint8_t datatype, uint16_t time1, uint16_t time2);
 /*---------------------------------------------------*/
 
 /*---------------------------------------------------*/
@@ -77,8 +77,9 @@ int schedule_shift(uint8_t *frameCont);
 int schedule_dump();
 /*---------------------------------------------------*/
 
-int scan_files_Downlink (char* path, int mode, uint32_t timeRec_T1, uint32_t timeRec_T2) ;   	
-int scan_files_Delete (char* path, int mode, uint32_t timeRec_T1, uint32_t timeRec_T2) ;   	
+int scan_files_Downlink (char* path, int mode, uint32_t timeRec_T1, uint32_t timeRec_T2);
+int scan_files_Delete (char* path, int mode, uint32_t timeRec_T1, uint32_t timeRec_T2);
+int scan_files_Count (char* path, int mode, uint32_t timeRec_T1, uint32_t timeRec_T2);
 
 int errPacket_write(uint8_t *frameCont);
 int errPacket_read(uint8_t * txbuf);

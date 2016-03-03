@@ -885,8 +885,11 @@ void decodeService131(uint8_t subType, uint8_t * telecommand) {
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 		txBuffer[0] = subType;
 		rxBufferLength = 6;
+		uint8_t txBufferWithSID[7];
 		if (i2c_master_transaction(0, adcs_node, &txBuffer, 1, &rxBuffer, rxBufferLength, adcs_delay) == E_NO_ERR) {
-			err = SendPacketWithCCSDS_AX25(&rxBuffer, rxBufferLength , adcs_apid, types, subType);
+			txBufferWithSID[0] = 144;
+			memcpy(&txBufferWithSID[1], &rxBuffer[0], rxBufferLength);
+			err = SendPacketWithCCSDS_AX25(&txBufferWithSID[0], rxBufferLength + 1, adcs_apid, 3, 25);
 			if (err == ERR_SUCCESS)
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 			else {

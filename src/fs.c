@@ -1992,7 +1992,6 @@ int scan_files_Count (
 			t_of_day -= 946684800;
 
 			ctime(&t_of_day);
-			printf("%s\n", full_path);
 
 			switch (mode) {
 			case 1:

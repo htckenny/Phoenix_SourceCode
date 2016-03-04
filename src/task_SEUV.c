@@ -77,9 +77,9 @@ void calculate_avg_std(uint8_t ch, uint8_t data[], uint8_t numbers) {
 }
 
 uint8_t seuv_take_data(uint8_t ch, int gain, uint8_t *frame) {
-    
+
     uint8_t tx[2];
-    uint8_t rx[10];        
+    uint8_t rx[10];
 
     if (gain == 1) {
         if (ch == 1) {
@@ -97,9 +97,9 @@ uint8_t seuv_take_data(uint8_t ch, int gain, uint8_t *frame) {
         else if (ch == 4) {
             tx[0] = parameters.seuv_ch4_G1_conf;
             tx[1] = parameters.seuv_ch4_G1_conf;
-        }        
+        }
     }
-    else if (gain == 8){
+    else if (gain == 8) {
         if (ch == 1) {
             tx[0] = parameters.seuv_ch1_G8_conf;
             tx[1] = parameters.seuv_ch1_G8_conf;
@@ -115,16 +115,18 @@ uint8_t seuv_take_data(uint8_t ch, int gain, uint8_t *frame) {
         else if (ch == 4) {
             tx[0] = parameters.seuv_ch4_G8_conf;
             tx[1] = parameters.seuv_ch4_G8_conf;
-        }        
+        }
     }
-    
+
+    if (i2c_master_transaction_2(0, seuv_node, &tx, 1, 0, 0, seuv_delay) == E_NO_ERR){};
+    vTaskDelay(0.01 * delay_time_based);
     if (i2c_master_transaction_2(0, seuv_node, &tx, 1, &rx, seuv_data_length, seuv_delay) == E_NO_ERR){
-        // hex_dump(&rx, 5); 
+        hex_dump(&rx, 4);
         memcpy(frame, rx, 3);
     }
     else
         return  ERR_I2C_FAIL;
-    
+
     return ERR_SUCCESS;
 }
 
@@ -151,7 +153,7 @@ void get_a_packet(int gain) {
     uint8_t frame_3 [3 * parameters.seuv_sample_rate];
     uint8_t frame_4 [3 * parameters.seuv_sample_rate];
 
-    for (int i = 0 ; i < parameters.seuv_sample_rate ;i++){
+    for (int i = 0 ; i < parameters.seuv_sample_rate ; i++) {
         frame_1[i] = 0;
         frame_2[i] = 0;
         frame_3[i] = 0;
@@ -165,15 +167,15 @@ void get_a_packet(int gain) {
         // power_control(3, ON);
         vTaskDelay(2 * delay_time_based);
         count = 0;
-        for (int i = 0 ; i < parameters.seuv_sample_rate ; i++){
-            count += seuv_take_data(1, 1, &frame_1[3 * i]);  
-            count += seuv_take_data(2, 1, &frame_2[3 * i]);  
-            count += seuv_take_data(3, 1, &frame_3[3 * i]);  
-            count += seuv_take_data(4, 1, &frame_4[3 * i]);  
+        for (int i = 0 ; i < parameters.seuv_sample_rate ; i++) {
+            count += seuv_take_data(1, 1, &frame_1[3 * i]);
+            count += seuv_take_data(2, 1, &frame_2[3 * i]);
+            count += seuv_take_data(3, 1, &frame_3[3 * i]);
+            count += seuv_take_data(4, 1, &frame_4[3 * i]);
         }
         printf("Gain 1 : take data\n");
         if (count == 0) {
-            calculate_avg_std(1, frame_1, parameters.seuv_sample_rate);      
+            calculate_avg_std(1, frame_1, parameters.seuv_sample_rate);
             calculate_avg_std(2, frame_2, parameters.seuv_sample_rate);
             calculate_avg_std(3, frame_3, parameters.seuv_sample_rate);
             calculate_avg_std(4, frame_4, parameters.seuv_sample_rate);
@@ -183,9 +185,9 @@ void get_a_packet(int gain) {
             printf("3 A = %.3f , S = %.3f\n", seuvFrame.ch3AVG, seuvFrame.ch3STD);
             printf("4 A = %.3f , S = %.3f\n", seuvFrame.ch4AVG, seuvFrame.ch4STD);
 
-            seuvFrame.samples += 0 ; 
+            seuvFrame.samples += 0 ;
             seuv_write_dup();
-            seuvFrame.samples -= 0 ; 
+            seuvFrame.samples -= 0 ;
         }
         else {
             printf("Fail to get SEUV data\n");
@@ -195,14 +197,14 @@ void get_a_packet(int gain) {
         printf("Gain 8 : take data\n");
         //channel 1~4 sample 50 times
         count = 0;
-        for (int i = 0 ; i < parameters.seuv_sample_rate ; i++){     
-            count +=seuv_take_data(1, 8, &frame_1[3 * i]);  
-            count +=seuv_take_data(2, 8, &frame_2[3 * i]);  
-            count +=seuv_take_data(3, 8, &frame_3[3 * i]);  
-            count +=seuv_take_data(4, 8, &frame_4[3 * i]);  
+        for (int i = 0 ; i < parameters.seuv_sample_rate ; i++) {
+            count += seuv_take_data(1, 8, &frame_1[3 * i]);
+            count += seuv_take_data(2, 8, &frame_2[3 * i]);
+            count += seuv_take_data(3, 8, &frame_3[3 * i]);
+            count += seuv_take_data(4, 8, &frame_4[3 * i]);
         }
-        if (count == 0) {       
-            calculate_avg_std(1, frame_1, parameters.seuv_sample_rate);      
+        if (count == 0) {
+            calculate_avg_std(1, frame_1, parameters.seuv_sample_rate);
             calculate_avg_std(2, frame_2, parameters.seuv_sample_rate);
             calculate_avg_std(3, frame_3, parameters.seuv_sample_rate);
             calculate_avg_std(4, frame_4, parameters.seuv_sample_rate);
@@ -212,13 +214,13 @@ void get_a_packet(int gain) {
             printf("3 A = %.3f , S = %.3f\n", seuvFrame.ch3AVG, seuvFrame.ch3STD);
             printf("4 A = %.3f , S = %.3f\n", seuvFrame.ch4AVG, seuvFrame.ch4STD);
 
-            seuvFrame.samples += 1 ; 
+            seuvFrame.samples += 1 ;
             seuv_write_dup();
-            seuvFrame.samples -= 1 ; 
+            seuvFrame.samples -= 1 ;
         }
         else {
             printf("Fail to get SEUV data\n");
-        }   
+        }
         /* Power off SEUV */
         // power_control(3, OFF);
     }
@@ -239,22 +241,22 @@ void SolarEUV_Task(void * pvParameters) {
             if (HK_frame.sun_light_flag == 1) {     /* If True, get a packet */
                 get_a_packet(1);
                 get_a_packet(8);
-            }      
+            }
         }
-        else if (parameters.seuv_mode == 0x02) {    /* Mode B: Keep sampling every 8 seconds */       
+        else if (parameters.seuv_mode == 0x02) {    /* Mode B: Keep sampling every 8 seconds */
             if (seuv_cm_task == NULL) {
-                xTaskCreate(SEUV_CurrentMonitor, (const signed char *) "SEU_CM", 1024*4, NULL, 2, &seuv_cm_task);
-            }  
+                xTaskCreate(SEUV_CurrentMonitor, (const signed char *) "SEU_CM", 1024 * 4, NULL, 2, &seuv_cm_task);
+            }
             get_a_packet(1);
             vTaskDelay(1 * delay_time_based);
             get_a_packet(8);
         }
-        else if (parameters.seuv_mode == 0x03) {    /* Mode C: Standby Mode */   
+        else if (parameters.seuv_mode == 0x03) {    /* Mode C: Standby Mode */
             if (seuv_cm_task != NULL) {
                 vTaskDelete(seuv_cm_task);
                 seuv_cm_task = NULL;
             }
-                
+
             // printf("[SEUV] No measurement taken\n");
         }
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
@@ -269,9 +271,9 @@ void SEUV_CurrentMonitor(void * pvParameters) {
 
     int outRangeCounter = 0;
     uint16_t SEUV_current = 0;
-    uint8_t rxbuf[133]; 
+    uint8_t rxbuf[133];
     uint8_t txbuf[2];
-    txbuf[0] = 0x08;            
+    txbuf[0] = 0x08;
     txbuf[1] = 0x00;
 
     vTaskDelay(5 * delay_time_based);

@@ -1579,9 +1579,9 @@ int scan_files_Downlink (
 	char *fn;   			/* This function assumes non-Unicode configuration */
 	char fn_reduce[9];
 	char fn_decode[16];
-	char timeref[16];
+	char timeref[16] = {0};
 	char full_path[45];
-	char t_year[5] = "0";
+	char t_year[5] = {0};
 	char t_mon[3] = {0};
 	char t_mday[3] = {0};
 	char t_hour[3] = {0};
@@ -1593,6 +1593,8 @@ int scan_files_Downlink (
 	uint8_t eop_data[eop_length] = {0};
 	uint8_t wod_data[wod_length] = {0};
 	uint32_t inms_2nd = 0;
+	struct tm t;
+	time_t t_of_day;
 #if _USE_LFN
 	static char lfn[_MAX_LFN + 1];  	 /* Buffer to store the LFN */
 	fno.lfname = lfn;
@@ -1601,7 +1603,6 @@ int scan_files_Downlink (
 
 	res = f_opendir(&dir, path);                       /* Open the directory */
 	if (res == FR_OK) {
-		// i = strlen(path);
 		for (;;) {
 			res = f_readdir(&dir, &fno);                   /* Read a directory item */
 			if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
@@ -1611,40 +1612,21 @@ int scan_files_Downlink (
 #else
 			fn = fno.fname;
 #endif
-			// if (fno.fattrib & AM_DIR) {                    /* It is a directory */
-			//     sprintf(&path[i], "/%s", fn);
-			//     res = scan_files(path, testTime);
-			//     path[i] = 0;
-			//     if (res != FR_OK) break;
-			// }
-			// else {
-			//
-			// printf("%s/%s\n", path, fn);
 			sprintf(full_path, "%s/%s", path, fn);
 			strncpy(fn_reduce, fn, 8);
 			fn_reduce[8] = '\0';
-			// printf("%s\n", fn_reduce);
 
 			decode_time(fn_reduce, fn_decode);
 			printf("%s\n", fn_decode);
 			strncpy(timeref, fn_decode, 15);				/* cut the time part of the file name */
 
-			timeref[15] = 0;
-
 			strncpy(t_year , &timeref[0], 4);
-			t_year[4] = 0;
 			strncpy(t_mon  , &timeref[4], 2);
-			t_mon[2] = 0;
 			strncpy(t_mday , &timeref[6], 2);
-			t_mday[2] = 0;
 			strncpy(t_hour , &timeref[9], 2);
-			t_hour[2] = 0;
 			strncpy(t_min , &timeref[11], 2);
-			t_min[2] = 0;
 			strncpy(t_sec , &timeref[13], 2);
-			t_sec[2] = 0;
-			struct tm t;
-			time_t t_of_day;
+
 
 			t.tm_year = atoi(t_year) - 1900;
 			t.tm_mon = atoi(t_mon) - 1;   			    // Month, 0 - jan
@@ -1658,14 +1640,13 @@ int scan_files_Downlink (
 			t_of_day -= 946684800;
 
 			ctime(&t_of_day);
-
 			switch (mode) {
 			case 1:
 				if (timeRec_T1 < (unsigned)t_of_day && timeRec_T2 > (unsigned)t_of_day) {
 					printf("mode = 1 down link \n");
 					if (strcmp(path, fileName_HK[parameters.SD_partition_flag]) == 0) {
 						hk_read(full_path, hk_data);
-						hex_dump(&hk_data, hk_length);
+						// hex_dump(&hk_data, hk_length);
 						SendDataWithCCSDS_AX25(1, &hk_data[0]);
 					}
 					else if (strcmp(path, fileName_INMS[parameters.SD_partition_flag]) == 0) {
@@ -1681,17 +1662,17 @@ int scan_files_Downlink (
 					}
 					else if (strcmp(path, fileName_SEUV[parameters.SD_partition_flag]) == 0) {
 						seuv_read(full_path, seuv_data);
-						hex_dump(&seuv_data, seuv_length);
+						// hex_dump(&seuv_data, seuv_length);
 						SendDataWithCCSDS_AX25(3, &seuv_data[0]);
 					}
 					else if (strcmp(path, fileName_EOP[parameters.SD_partition_flag]) == 0) {
 						eop_read(full_path, eop_data);
-						hex_dump(&eop_data, eop_length);
+						// hex_dump(&eop_data, eop_length);
 						SendDataWithCCSDS_AX25(4, &eop_data[0]);
 					}
 					else if (strcmp(path, fileName_WOD[parameters.SD_partition_flag]) == 0) {
 						wod_read(full_path, wod_data);
-						hex_dump(&wod_data, wod_length);
+						// hex_dump(&wod_data, wod_length);
 						SendDataWithCCSDS_AX25(5, &wod_data[0]);
 					}
 					// SendPacketWithCCSDS_AX25(&beacon_frame.mode, 8, obc_apid, 0, 0);
@@ -1703,7 +1684,7 @@ int scan_files_Downlink (
 					printf("mode = 2 down link \n");
 					if (strcmp(path, fileName_HK[parameters.SD_partition_flag]) == 0) {
 						hk_read(full_path, hk_data);
-						hex_dump(&hk_data, hk_length);
+						// hex_dump(&hk_data, hk_length);
 						SendDataWithCCSDS_AX25(1, &hk_data[0]);
 					}
 					else if (strcmp(path, fileName_INMS[parameters.SD_partition_flag]) == 0) {
@@ -1719,17 +1700,17 @@ int scan_files_Downlink (
 					}
 					else if (strcmp(path, fileName_SEUV[parameters.SD_partition_flag]) == 0) {
 						seuv_read(full_path, seuv_data);
-						hex_dump(&seuv_data, seuv_length);
+						// hex_dump(&seuv_data, seuv_length);
 						SendDataWithCCSDS_AX25(3, &seuv_data[0]);
 					}
 					else if (strcmp(path, fileName_EOP[parameters.SD_partition_flag]) == 0) {
 						eop_read(full_path, eop_data);
-						hex_dump(&eop_data, eop_length);
+						// hex_dump(&eop_data, eop_length);
 						SendDataWithCCSDS_AX25(4, &eop_data[0]);
 					}
 					else if (strcmp(path, fileName_WOD[parameters.SD_partition_flag]) == 0) {
 						inms_data_read(full_path, wod_data);
-						hex_dump(&wod_data, wod_length);
+						// hex_dump(&wod_data, wod_length);
 						SendDataWithCCSDS_AX25(5, &wod_data[0]);
 					}
 					vTaskDelay(0.5 * delay_time_based);
@@ -1740,7 +1721,7 @@ int scan_files_Downlink (
 					printf("mode = 3 down link \n");
 					if (strcmp(path, fileName_HK[parameters.SD_partition_flag]) == 0) {
 						hk_read(full_path, hk_data);
-						hex_dump(&hk_data, hk_length);
+						// hex_dump(&hk_data, hk_length);
 						SendDataWithCCSDS_AX25(1, &hk_data[0]);
 					}
 					else if (strcmp(path, fileName_INMS[parameters.SD_partition_flag]) == 0) {
@@ -1756,17 +1737,17 @@ int scan_files_Downlink (
 					}
 					else if (strcmp(path, fileName_SEUV[parameters.SD_partition_flag]) == 0) {
 						seuv_read(full_path, seuv_data);
-						hex_dump(&seuv_data, seuv_length);
+						// hex_dump(&seuv_data, seuv_length);
 						SendDataWithCCSDS_AX25(3, &seuv_data[0]);
 					}
 					else if (strcmp(path, fileName_EOP[parameters.SD_partition_flag]) == 0) {
 						eop_read(full_path, eop_data);
-						hex_dump(&eop_data, eop_length);
+						// hex_dump(&eop_data, eop_length);
 						SendDataWithCCSDS_AX25(4, &eop_data[0]);
 					}
 					else if (strcmp(path, fileName_WOD[parameters.SD_partition_flag]) == 0) {
 						inms_data_read(full_path, wod_data);
-						hex_dump(&wod_data, wod_length);
+						// hex_dump(&wod_data, wod_length);
 						SendDataWithCCSDS_AX25(5, &wod_data[0]);
 					}
 					vTaskDelay(0.5 * delay_time_based);
@@ -1797,15 +1778,16 @@ int scan_files_Delete (
 	char *fn;   			/* This function assumes non-Unicode configuration */
 	char fn_reduce[9];
 	char fn_decode[16];
-	char timeref[16];
+	char timeref[16] = {0};
 	char full_path[45];
-	char t_year[5] = "0";
-	char t_mon[2] = {0};
-	char t_mday[2] = {0};
-	char t_hour[2] = {0};
-	char t_min[2] = {0};
-	char t_sec[2] = {0};
-	// uint8_t ErrCode;
+	char t_year[5] = {0};
+	char t_mon[3] = {0};
+	char t_mday[3] = {0};
+	char t_hour[3] = {0};
+	char t_min[3] = {0};
+	char t_sec[3] = {0};
+	struct tm t;
+	time_t t_of_day;
 #if _USE_LFN
 	static char lfn[_MAX_LFN + 1];  	 /* Buffer to store the LFN */
 	fno.lfname = lfn;
@@ -1814,7 +1796,6 @@ int scan_files_Delete (
 
 	res = f_opendir(&dir, path);                       /* Open the directory */
 	if (res == FR_OK) {
-		// i = strlen(path);
 		for (;;) {
 			res = f_readdir(&dir, &fno);                   /* Read a directory item */
 			if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
@@ -1824,33 +1805,19 @@ int scan_files_Delete (
 #else
 			fn = fno.fname;
 #endif
-			// if (fno.fattrib & AM_DIR) {                    /* It is a directory */
-			//     sprintf(&path[i], "/%s", fn);
-			//     res = scan_files(path, testTime);
-			//     path[i] = 0;
-			//     if (res != FR_OK) break;
-			// }
-			// else {
-			//
-			// printf("%s/%s\n", path, fn);
 			sprintf(full_path, "%s/%s", path, fn);
 			strncpy(fn_reduce, fn, 8);
 			fn_reduce[8] = '\0';
 
 			decode_time(fn_reduce, fn_decode);
 			strncpy(timeref, fn_decode, 15);				/* cut the time part of the file name */
-			timeref[15] = 0;
 
 			strncpy(t_year , &timeref[0], 4);
-			t_year[4] = 0;
 			strncpy(t_mon  , &timeref[4], 2);
 			strncpy(t_mday , &timeref[6], 2);
 			strncpy(t_hour , &timeref[9], 2);
 			strncpy(t_min , &timeref[11], 2);
 			strncpy(t_sec , &timeref[13], 2);
-
-			struct tm t;
-			time_t t_of_day;
 
 			t.tm_year = atoi(t_year) - 1900;
 			t.tm_mon = atoi(t_mon) - 1;   			    // Month, 0 - jan
@@ -1864,7 +1831,7 @@ int scan_files_Delete (
 			t_of_day -= 946684800;
 
 			ctime(&t_of_day);
-			printf("%s\n", full_path);
+			printf("%s\n", fn_decode);
 
 			switch (mode) {
 			case 1:
@@ -1947,16 +1914,17 @@ int scan_files_Count (
 	char *fn;   			/* This function assumes non-Unicode configuration */
 	char fn_reduce[9];
 	char fn_decode[16];
-	char timeref[16];
+	char timeref[16] = {0};
 	char full_path[45];
-	char t_year[5] = "0";
-	char t_mon[2] = {0};
-	char t_mday[2] = {0};
-	char t_hour[2] = {0};
-	char t_min[2] = {0};
-	char t_sec[2] = {0};
+	char t_year[5] = {0};
+	char t_mon[3] = {0};
+	char t_mday[3] = {0};
+	char t_hour[3] = {0};
+	char t_min[3] = {0};
+	char t_sec[3] = {0};
 	uint16_t NumberCount = 0;
-
+	struct tm t;
+	time_t t_of_day;
 	res = f_opendir(&dir, path);                       /* Open the directory */
 	if (res == FR_OK) {
 		for (;;) {
@@ -1971,18 +1939,13 @@ int scan_files_Count (
 
 			decode_time(fn_reduce, fn_decode);
 			strncpy(timeref, fn_decode, 15);				/* cut the time part of the file name */
-			timeref[15] = 0;
 
 			strncpy(t_year , &timeref[0], 4);
-			t_year[4] = 0;
 			strncpy(t_mon  , &timeref[4], 2);
 			strncpy(t_mday , &timeref[6], 2);
 			strncpy(t_hour , &timeref[9], 2);
 			strncpy(t_min , &timeref[11], 2);
 			strncpy(t_sec , &timeref[13], 2);
-
-			struct tm t;
-			time_t t_of_day;
 
 			t.tm_year = atoi(t_year) - 1900;
 			t.tm_mon = atoi(t_mon) - 1;   			    // Month, 0 - jan
@@ -2020,7 +1983,8 @@ int scan_files_Count (
 			}
 		}
 		SendPacketWithCCSDS_AX25(&NumberCount, 2, obc_apid, 3, 25);
-		hex_dump(&NumberCount, 2);
+		printf("Total packet: %" PRIu16 "\n", NumberCount);
+		// hex_dump(&NumberCount, 2);
 	}
 	return res;
 }

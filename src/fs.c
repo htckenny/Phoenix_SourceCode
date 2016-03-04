@@ -1982,7 +1982,7 @@ int scan_files_Count (
 				break;
 			}
 		}
-		SendPacketWithCCSDS_AX25(&NumberCount, 2, obc_apid, 3, 25);
+		SendPacketWithCCSDS_AX25(&NumberCount, 2, obc_apid, 15, 9);
 		printf("Total packet: %" PRIu16 "\n", NumberCount);
 		// hex_dump(&NumberCount, 2);
 	}

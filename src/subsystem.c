@@ -1,8 +1,9 @@
 /*
  * subsystem.c
  *
- *  Created on: 2015/3/18
- *      Author: rusei
+ *  Created on: 	2015/03/18
+ *  Last update: 	2016/03/04
+ *      Author: rusei, Kenny
  */
 
 #include <io/nanopower2.h>
@@ -16,6 +17,8 @@
 #include <dev/arm/ds1302.h>
 #include <util/timestamp.h>
 #include <nanomind.h>
+#include <util/bytesize.h>
+#include <vfs/vfs.h>
 
 #include "subsystem.h"
 #include "parameter.h"
@@ -90,7 +93,7 @@ int parameter_init() {
 	SD_lock_flag						= 0;
 	use_GPS_header						= 0;
 	inms_tm_status						= 1;
-	
+
 
 	/*--File System store count--*/
 	parameters.wod_store_count			= 0;
@@ -437,4 +440,84 @@ void generate_Error_Report(int type) {
 	else {
 		printf("error write into errpacket\n");
 	}
+}
+int objects_under(const char *dir) {
+	int count = 0;
+	DIR *dirp;
+	struct dirent *ent;
+
+	dirp = opendir(dir);
+
+	if (dirp) {
+		while ((ent = readdir(dirp)) != NULL) {
+			if (ent->d_name[0] != '.')
+				count++;
+		}
+		closedir(dirp);
+	}
+
+	return count;
+}
+int report_Collected_Data(char *args, uint16_t *buffer_length) {
+
+	DIR * dirp;
+	struct dirent *ent;
+	struct stat stat_buf;
+	char buf[128 + 2];
+	char * sub;
+	char bytebuf[25];
+	uint16_t data_number[5];
+	/* Get args */
+	char path[100];
+	if (args == NULL || sscanf(args, "%s", path) < 1)
+		return Error;
+
+	dirp = opendir(path);
+	if (dirp == NULL) {
+		printf("ls: cannot open '%s' for list\r\n", path);
+		return Error;
+	}
+
+	/* Loop through directories */
+	while ((ent = readdir(dirp))) {
+		if (ent->d_name[0] == '.')
+			continue;
+		strncpy(buf, path, 128);
+		sub = buf;
+		if (path[strlen(path) - 1] != '/')
+			sub = strcat(buf, "/");
+		sub = strcat(sub, ent->d_name);
+		if (ent->d_type & DT_DIR) {
+			sprintf(bytebuf, "%d", objects_under(sub));
+			strcat(ent->d_name, "/");
+		} else {
+			stat(sub, &stat_buf);
+			bytesize(bytebuf, 25, stat_buf.st_size);
+		}
+
+		/* Name */
+		// printf("%-15s %6s\r\n", ent->d_name, bytebuf);
+		if (strcmp(ent->d_name, "HK_DATA/") == 0) {
+			data_number[0] = atoi(bytebuf);
+			memcpy(&buffer_length[0], &data_number[0], 2);
+		}
+		else if (strcmp(ent->d_name, "INM_DATA/") == 0) {
+			data_number[1] = atoi(bytebuf);
+			memcpy(&buffer_length[1], &data_number[1], 2);
+		}
+		else if (strcmp(ent->d_name, "SEU_DATA/") == 0) {
+			data_number[2] = atoi(bytebuf);
+			memcpy(&buffer_length[2], &data_number[2], 2);
+		}
+		else if (strcmp(ent->d_name, "EOP_DATA/") == 0) {
+			data_number[3] = atoi(bytebuf);
+			memcpy(&buffer_length[3], &data_number[3], 2);
+		}
+		else if (strcmp(ent->d_name, "WOD_DATA/") == 0) {
+			data_number[4] = atoi(bytebuf);
+			memcpy(&buffer_length[4], &data_number[4], 2);
+		}
+	}
+	closedir(dirp);
+	return No_Error;
 }

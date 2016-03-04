@@ -27,6 +27,7 @@
 #define Report_WOD_Test		9
 #define Report_GPS_Status	10		/* Report GPS's status */
 #define Report_Error_Record	11		/* Report Error Record */
+#define Report_Data_Number	12		/* Report Collected Data Number */
 
 extern uint16_t fletcher(uint8_t *script, size_t length);
 
@@ -250,6 +251,7 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 		SendPacketWithCCSDS_AX25(&test, 9, obc_apid, 3, 25);
 
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		break;
 	/*--------------- ID:10 Report GPS status ----------------*/
 	case Report_GPS_Status:
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
@@ -266,6 +268,7 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 			completionError = I2C_READ_ERROR;
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 		}
+		break;
 	/*--------------- ID:11 Report Error Record ----------------*/
 	case Report_Error_Record:
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
@@ -276,7 +279,29 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 		else {
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}
-		break;	
+		break;
+	/*--------------- ID:12 Report Collected Data Number ----------------*/
+	case Report_Data_Number:
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+		uint16_t data_number[5];
+		char path[5] = {0};
+		if (parameters.SD_partition_flag == 0) {
+			strcpy(path, "/sd0");
+		}
+		else if (parameters.SD_partition_flag == 1) {
+			strcpy(path, "/sd1");
+		}
+		if (report_Collected_Data(path, data_number) == No_Error) {
+			txlen = 10 ;
+			hex_dump(&data_number[0], txlen);
+			SendPacketWithCCSDS_AX25(&data_number[0], txlen, obc_apid, type, subType);
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		}
+		else {
+			completionError = FS_IO_ERR;
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+		}
+		break;
 	default:
 		sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 		break;

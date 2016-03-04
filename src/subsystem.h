@@ -11,7 +11,7 @@
 
 #define ground_Test_Mode	1
 #define enable_stm_EPS		0
-#define enable_stm_ADCS		0 
+#define enable_stm_ADCS		0
 #define enable_stm_IFB		0
 
 /* !!!!!!!!!!!!!!!!!!!!!!!! UINT = LSB !!!!!!!!!!!!!! */
@@ -58,18 +58,18 @@
 /* SEUV Board */
 #define seuv_node 			0x6E	//110
 /* Interface Board */
-#if ground_Test_Mode && enable_stm_IFB 
-#define interface_node 		0x7D	//109
+#if ground_Test_Mode && enable_stm_IFB
+#define interface_node 		0x7D	
 #else
-#define interface_node 		0x6D
-#endif 
+#define interface_node 		0x6D	//109
+#endif
 /* ADCS Board*/
-#define adcs_node 			0x57 
+#define adcs_node 			0x57
 #if ground_Test_Mode && enable_stm_ADCS
-#define stm_node			0x7F
+#define stm_node			0x77
 #else
 #define stm_node			0x57
-#endif 
+#endif
 /* Antenna Board*/
 #define ant_node 			49
 #define ant_arm 			173
@@ -101,7 +101,7 @@
 #define eop_length 			28				/* TBD */
 #define seuv_length 		37
 #define hk_length 			100 + sizeof(hk_frame_t) + 8
-#define schedule_length		20 
+#define schedule_length		20
 /*----------------AX.25 2ed header------------------*/
 #define AX25_2ed_size 		5
 /*----------------CCSDS parameters------------------*/
@@ -142,7 +142,7 @@
 #define adcs_apid 		11
 
 /*---------------SID---------------*/
-#define phoenix_hk_sid	1 
+#define phoenix_hk_sid	1
 #define inms_sid 		2
 #define seuv_sid 		3
 #define eop_sid 		4
@@ -157,26 +157,26 @@
 /*---------------Service Type---------------*/
 #define T3_SYS_CONF 				3
 #define T8_function_management 		8
-#define T11_OnBoard_Schedule		11 
+#define T11_OnBoard_Schedule		11
 #define T13_LargeData_Transfer		13
-#define T15_dowlink_management 		15 
-#define T131_ADCS 					131 
+#define T15_dowlink_management 		15
+#define T131_ADCS 					131
 #define T132_SEUV 					132
 
 
 /*------Subsystem Control Functions-----*/
 
-	/* device code:
-		* ADCS            = 1
-		* GPS             = 2
-		* SEUV            = 3
-		* INMS            = 4
-		* Interface Board = 5
-	*/
+/* device code:
+	* ADCS            = 1
+	* GPS             = 2
+	* SEUV            = 3
+	* INMS            = 4
+	* Interface Board = 5
+*/
 #define ON 1
 #define OFF 0
 
-void power_control(int device,int stats);
+void power_control(int device, int stats);
 void deploy_antenna();
 void power_OFF_ALL();
 int parameter_init();
@@ -187,5 +187,6 @@ uint16_t Interface_tmp_get();
 uint16_t Interface_inms_thermistor_get();
 int status_update();
 void generate_Error_Report(int type);
+int report_Collected_Data(char *args, uint16_t *buffer_length);
 
 #endif /* SUBSYSTEM_H_ */

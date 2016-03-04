@@ -16,7 +16,7 @@ uint16_t battery_read() {
 	uint16_t Vbat = 0;
 	txbuf[0] = 0x08;
 
-	if (i2c_master_transaction_2(0, eps_node, &txbuf, 1, &rxbuf, 43 + 2, eps_delay) == E_NO_ERR) {
+	if (i2c_master_transaction_2(0, stm_eps_node, &txbuf, 1, &rxbuf, 43 + 2, eps_delay) == E_NO_ERR) {
 		memcpy(&Vbat, &rxbuf[10], 2);
 	}
 	return csp_ntoh16(Vbat);
@@ -131,8 +131,8 @@ void BatteryCheck_Task(void * pvParameters) {
 			if ( (int) vbat < (int) parameters.vbat_safe_threshold && vbat != 0) {
 				if (parameters.vbat_safe_threshold != 0) {
 					printf("safe mode detected\n");
-					generate_Error_Report(1);
 					HK_frame.mode_status_flag = safe_mode;
+					generate_Error_Report(1);
 				}
 			}
 		}

@@ -45,10 +45,12 @@
 #define com_tx_hk 			0x41
 #define com_tx_rate 		0x28 //1=1200,8=9600
 /* EPS Board */
-#if ground_Test_Mode && enable_stm_EPS
-#define eps_node 			0x72
-#else
+
 #define eps_node 			0x02
+#if ground_Test_Mode && enable_stm_EPS
+#define stm_eps_node 		0x72
+#else
+#define stm_eps_node 		0x02
 #endif
 
 #define eps_hk 				8

@@ -30,41 +30,26 @@ extern int TS6();
 extern int TS7();
 extern int TS9();
 int status_update() {
-	if (mode_task != NULL)
-		status_frame.mode_task = 1;
-	if (bat_check_task != NULL)
-		status_frame.bat_check_task = 1;
-	if (com_task != NULL)
-		status_frame.com_task = 1;
-	if (wod_task != NULL)
-		status_frame.wod_task = 1;
-	if (beacon_task != NULL)
-		status_frame.beacon_task = 1;
 
-	if (init_task != NULL)
-		status_frame.init_task = 1;
-	if (adcs_task != NULL)
-		status_frame.adcs_task = 1;
-	if (seuv_task != NULL)
-		status_frame.seuv_task = 1;
-	if (eop_task != NULL)
-		status_frame.eop_task = 1;
-	if (hk_task != NULL)
-		status_frame.hk_task = 1;
+	status_frame.mode_task = (mode_task != NULL) ? 1 : 0;
+	status_frame.bat_check_task = (bat_check_task != NULL) ? 1 : 0;
+	status_frame.com_task = (com_task != NULL) ? 1 : 0;
+	status_frame.wod_task = (wod_task != NULL) ? 1 : 0;
+	status_frame.beacon_task = (beacon_task != NULL) ? 1 : 0;
 
-	if (inms_error_handle != NULL)
-		status_frame.inms_error_handle = 1;
-	if (inms_current_moniter != NULL)
-		status_frame.inms_current_moniter = 1;
-	if (inms_task != NULL)
-		status_frame.inms_task = 1;
-	if (inms_task_receive != NULL)
-		status_frame.inms_task_receive = 1;
+	status_frame.init_task = (init_task != NULL) ? 1 : 0;
+	status_frame.adcs_task = (adcs_task != NULL) ? 1 : 0;
+	status_frame.seuv_task = (seuv_task != NULL) ? 1 : 0;
+	status_frame.eop_task = (eop_task != NULL) ? 1 : 0;
+	status_frame.hk_task = (hk_task != NULL) ? 1 : 0;
 
-	if (schedule_task != NULL)
-		status_frame.schedule_task = 1;
-	if (seuv_cm_task != NULL)
-		status_frame.seuv_cm_task = 1;
+	status_frame.inms_error_handle = (inms_error_handle != NULL) ? 1 : 0;
+	status_frame.inms_current_moniter = (inms_current_moniter != NULL) ? 1 : 0;
+	status_frame.inms_task = (inms_task != NULL) ? 1 : 0;
+	status_frame.inms_task_receive = (inms_task_receive != NULL) ? 1 : 0;
+
+	status_frame.schedule_task = (schedule_task != NULL) ? 1 : 0;
+	status_frame.seuv_cm_task = (seuv_cm_task != NULL) ? 1 : 0;
 
 	return E_NO_ERR;
 }
@@ -263,6 +248,7 @@ void power_control(int device, int stats) {
 		else if (stats == OFF)
 			io_clear(2);
 	}
+	printf("finish power off\n");
 }
 /** Power off all the subsystems */
 
@@ -348,7 +334,7 @@ void generate_Error_Report(int type) {
 	/* Low Battery Condition */
 	case 1 :
 		txbuf[0] = 0x08;
-		if (i2c_master_transaction_2(0, eps_node, &txbuf, 1, &rxbuf, 43 + 2, eps_delay) == E_NO_ERR) {
+		if (i2c_master_transaction_2(0, stm_eps_node, &txbuf, 1, &rxbuf, 43 + 2, eps_delay) == E_NO_ERR) {
 			memcpy(&errPacket[8], &rxbuf[10], 2);
 		}
 		break;

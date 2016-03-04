@@ -125,15 +125,14 @@ void BatteryCheck_Task(void * pvParameters) {
 	while (1) {
 		vbat = battery_read();
 		printf("vbat = %" PRIu16 " mV\n", vbat);
-		if ( (int) vbat < (int) parameters.vbat_safe_threshold) {
+		if ( (int) vbat < (int) parameters.vbat_safe_threshold && vbat != 0) {
 			vTaskDelay(5 * delay_time_based);
 			vbat = battery_read();
-			if ( (int) vbat < (int) parameters.vbat_safe_threshold) {
-				if (vbat != 0) {
-					if (parameters.vbat_safe_threshold != 0) {
-						printf("safe mode detected\n");
-						HK_frame.mode_status_flag = safe_mode;
-					}
+			if ( (int) vbat < (int) parameters.vbat_safe_threshold && vbat != 0) {
+				if (parameters.vbat_safe_threshold != 0) {
+					printf("safe mode detected\n");
+					generate_Error_Report(1);
+					HK_frame.mode_status_flag = safe_mode;
 				}
 			}
 		}

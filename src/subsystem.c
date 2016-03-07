@@ -28,7 +28,13 @@
 extern int TS5();
 extern int TS6();
 extern int TS7();
+extern int TS7_2();
 extern int TS9();
+
+#define PI 3.14159265
+#define omega 7.29211585275553e-005
+#define JD_2000 2451545
+
 int status_update() {
 
 	status_frame.mode_task = (mode_task != NULL) ? 1 : 0;
@@ -63,9 +69,6 @@ uint32_t get_time() {
 
 	if (ds1302_clock_to_time((time_t *) &time, &clock) < 0)
 		return 0;
-
-//	printf("Time is: %s", ctime((time_t *) &time));
-//	printf("Time is: %lu",time);
 
 	return (uint32_t)time;
 
@@ -413,18 +416,56 @@ void generate_Error_Report(int type) {
 		TS7();
 		memcpy(&errPacket[8], &ThermalFrame.T7, 2);
 		break;
-	/* INMS temperature out of range */
+	/* ADCS Rate Sensor & Magnetometer temp out of range */
 	case 14 :
+		TS7_2();
+		memcpy(&errPacket[8], &ThermalFrame.T7_2, 2);
+		break;
+	/* INMS temperature out of range */
+	case 15 :
 		sub_temperature = Interface_inms_thermistor_get();
 		memcpy(&errPacket[8], &sub_temperature, 2);
 		break;
-	}
-	if (errPacket_write(errPacket) == No_Error) {
-		parameters.ErrSerialNumber ++;
-		para_w_flash();
-	}
-	else {
-		printf("error write into errpacket\n");
+	/* EPS1 temperature out of range */
+	case 16 :
+		txbuf[0] = 0x08;
+		txbuf[1] = 0x04;
+		if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 23, eps_delay) == E_NO_ERR) {
+			memcpy(&errPacket[8], &rxbuf[6], 2); // temp[0]
+		}
+		break;
+	/* EPS2 temperature out of range */
+	case 17 :
+		txbuf[0] = 0x08;
+		txbuf[1] = 0x04;
+		if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 23, eps_delay) == E_NO_ERR) {
+			memcpy(&errPacket[8], &rxbuf[8], 2); // temp[1]
+		}
+		break;
+	/* EPS3 temperature out of range */
+	case 18 :
+		txbuf[0] = 0x08;
+		txbuf[1] = 0x04;
+		if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 23, eps_delay) == E_NO_ERR) {
+			memcpy(&errPacket[8], &rxbuf[10], 2); // temp[2]
+		}
+		break;
+	/* Battery temperature out of range */
+	case 19 :
+		txbuf[0] = 0x08;
+		txbuf[1] = 0x04;
+		if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 23, eps_delay) == E_NO_ERR) {
+			memcpy(&errPacket[8], &rxbuf[12], 2); // temp[3]
+			break;
+		}
+
+		if (errPacket_write(errPacket) == No_Error) {
+			parameters.ErrSerialNumber ++;
+			para_w_flash();
+		}
+		else {
+			printf("error write into errpacket\n");
+		}
 	}
 }
 int objects_under(const char *dir) {
@@ -506,4 +547,63 @@ int report_Collected_Data(char *args, uint16_t *buffer_length) {
 	}
 	closedir(dirp);
 	return No_Error;
+}
+void ECEFtoECI(uint32_t * Time, int32_t * r_ECEF, int16_t* r_ECI)
+{
+	double T[3][3] = {{0}, {0}, {0}};
+	double THETA = 0;
+	double r_mutiply_mat[3][3] = {{0}, {0}, {0}};
+	double JD, JD_0;
+	double GMST, GAST;
+	double D, D0, T1, H;
+	double T2, EPSILONm, L, dL, OMEGA, dPSI, dEPSILON;
+	int i, j;
+
+	Time[2] = Time[2] + (Time[3] / 24) + (Time[4] / 1440) + (Time[5] / 86400);
+	JD = 367 * Time[0] - (int)(7 * (Time[0] + (int)((Time[1] + 9) / 12)) / 4) - (int)(3 * ((int)((Time[0] + (Time[1] - 9) / 7) / 100) + 1) / 4) + (int)(275 * Time[1] / 9) + Time[2] + 1721028.5;
+
+	JD_0 = (double)((int)(JD)) - 0.5;
+	D = JD - JD_2000;
+	D0 = JD_0 - JD_2000;
+	H = (JD - JD_0) * 24;
+	T1 = D / 36525;
+	GMST = 6.697374558 + 0.06570982441908 * D0 + 1.00273790935 * H + 0.000026 * T1 * T1;
+	GMST = (fmod(GMST, 24));
+
+	if (GMST < 0)
+	{
+		GMST = 24 + GMST;
+	}
+
+	GMST = GMST * 15;
+
+	T2 = (JD - JD_2000) / 36525;
+	EPSILONm = 84381448 - 46.8150 * T2 - 0.00059 * T2 * T2 + 0.001813 * T2 * T2 * T2;
+	L = 280.4665 + 36000.7698 * T2;
+	dL = 218.3165 + 481267.8813 * T2;
+	OMEGA = 125.04452 - 1934.136261 * T2;
+	dPSI = -17.20 * sin(OMEGA * PI / 180) - 1.32 * sin(2 * L * PI / 180) - 0.23 * sin(2 * dL * PI / 180) + 0.21 * sin(2 * OMEGA * PI / 180);
+	dEPSILON = 9.20 * cos(OMEGA * PI / 180) + 0.57 * cos(2 * L * PI / 180) + 0.1 * cos(2 * dL * PI / 180) - 0.09 * cos(2 * OMEGA * PI / 180);
+
+	dPSI = dPSI * (1 / 3600);
+	dEPSILON = dEPSILON * (1 / 3600);
+	GAST = fmod(GMST + dPSI * cos((EPSILONm + dEPSILON) * PI / 180), 360);
+
+	THETA = GAST;
+
+	T[0][0] = cos(THETA * PI / 180);
+	T[1][0] = sin(THETA * PI / 180);
+	T[0][1] = -(T[1][0]);
+	T[1][1] = T[0][0];
+	T[2][2] = 1;
+
+	for (i = 0; i < 3; i++)
+	{
+		for (j = 0; j < 3; j++)
+		{
+			r_mutiply_mat[i][j] = T[i][j] * r_ECEF[j];
+		}
+		r_ECI[i] = r_mutiply_mat[i][0] + r_mutiply_mat[i][1] + r_mutiply_mat[i][2]; // Position of ECI
+		printf("%f\n", r_ECI[i]);
+	}
 }

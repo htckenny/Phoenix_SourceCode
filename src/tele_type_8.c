@@ -36,7 +36,7 @@
 #define INMS_restart				20				/* Restart INMS script handler, do this after upload new script*/
 #define Enable_GPS_header			21				/* use GPS to get position data instead of ADCS */
 #define Reset_Error_Report			22				/* Reset Error Report, should be conducted after successful downlink of Error Report */
-#define Manual_Heater_Switch		23				/* Swicth ON/OFF EPS heater in case of auto switch has problem */
+#define Manual_Heater_Switch		23				/* Switch ON/OFF EPS heater in case of auto switch has problem */
 #define SD_card_format				30				/* Format SD card, and create default folders */
 #define SD_unlock					31				/* Unlock SD card */
 

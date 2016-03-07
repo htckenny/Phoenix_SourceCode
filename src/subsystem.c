@@ -604,6 +604,6 @@ void ECEFtoECI(uint32_t * Time, int32_t * r_ECEF, int16_t* r_ECI)
 			r_mutiply_mat[i][j] = T[i][j] * r_ECEF[j];
 		}
 		r_ECI[i] = r_mutiply_mat[i][0] + r_mutiply_mat[i][1] + r_mutiply_mat[i][2]; // Position of ECI
-		printf("%f\n", r_ECI[i]);
+		printf("%d\n", r_ECI[i]);
 	}
 }

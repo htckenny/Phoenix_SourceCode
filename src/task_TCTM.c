@@ -92,11 +92,9 @@ void Telecom_Task(void * pvParameters) {
 
 			if ((rxdata < 12) && (parameters.com_bit_rates == 8)) {
 				set_tx_rate(parameters.com_bit_rates);
-				// set_Call_Sign(0);
 			}
 			if ((rxdata > 3) && (parameters.com_bit_rates == 1)) {
 				set_tx_rate(parameters.com_bit_rates);
-				// set_Call_Sign(0);
 			}
 			tx_wdt_flag = 0;
 		}		

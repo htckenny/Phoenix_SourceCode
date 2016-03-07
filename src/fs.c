@@ -1750,7 +1750,7 @@ int scan_files_Downlink (
 						// hex_dump(&wod_data, wod_length);
 						SendDataWithCCSDS_AX25(5, &wod_data[0]);
 					}
-					vTaskDelay(0.5 * delay_time_based);
+					vTaskDelay(0.75 * delay_time_based);
 				}
 				break;
 			default:

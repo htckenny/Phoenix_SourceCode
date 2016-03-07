@@ -155,35 +155,19 @@ int TS5() {
 
 /* EPS temp */
 int TS1_4() {
-	eps_hk_t * chkparam;
-
-	i2c_frame_t * frame = csp_buffer_get(I2C_MTU);
-	frame->dest = eps_node;
-	frame->data[0] = EPS_PORT_HK;
-	frame->data[1] = 0;
-	frame->len = 2;
-	frame->len_rx = 2 + (uint8_t) sizeof(eps_hk_t);
-	frame->retries = 0;
-
-	if (i2c_send(0, frame, 0) != E_NO_ERR) {
-		csp_buffer_free(frame);
-		return Error;
+	uint8_t txbuf[2];
+	uint8_t rxbuf[23];
+	txbuf[0] = 0x08;
+	txbuf[1] = 0x04;
+	if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 23, eps_delay) == E_NO_ERR) {
+		memcpy(&ThermalFrame.T1, &rxbuf[6], 2);		// temp[0]
+		memcpy(&ThermalFrame.T2, &rxbuf[8], 2);		// temp[1]
+		memcpy(&ThermalFrame.T3, &rxbuf[10], 2);	// temp[2]
+		memcpy(&ThermalFrame.T4, &rxbuf[12], 2);	// temp[3]
+		return No_Error;
 	}
-	if (i2c_receive(0, &frame, 20) != E_NO_ERR)
+	else
 		return Error;
-
-	chkparam = (eps_hk_t *)&frame->data[2];
-	eps_hk_unpack(chkparam);
-	csp_buffer_free(frame);
-
-	ThermalFrame.T1 = chkparam->temp[0];
-	ThermalFrame.T2 = chkparam->temp[1];
-	ThermalFrame.T3 = chkparam->temp[2];
-	ThermalFrame.T4 = chkparam->temp[3];
-
-
-	return No_Error;
-
 }
 void clean_all() {
 	ThermalFrame.T1 = 0;

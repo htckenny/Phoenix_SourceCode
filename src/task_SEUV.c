@@ -118,9 +118,9 @@ uint8_t seuv_take_data(uint8_t ch, int gain, uint8_t *frame) {
         }
     }
 
-    if (i2c_master_transaction_2(0, seuv_node, &tx, 1, 0, 0, seuv_delay) == E_NO_ERR){};
+    if (i2c_master_transaction_2(0, seuv_node, &tx, 1, 0, 0, seuv_delay) == E_NO_ERR) {};
     vTaskDelay(0.01 * delay_time_based);
-    if (i2c_master_transaction_2(0, seuv_node, &tx, 1, &rx, seuv_data_length, seuv_delay) == E_NO_ERR){
+    if (i2c_master_transaction_2(0, seuv_node, &tx, 1, &rx, seuv_data_length, seuv_delay) == E_NO_ERR) {
         hex_dump(&rx, 4);
         memcpy(frame, rx, 3);
     }

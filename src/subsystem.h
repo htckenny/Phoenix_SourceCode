@@ -100,7 +100,7 @@
 #define Error          		1
 #define inms_data_length 	196
 #define wod_length 			232
-#define eop_length 			28				/* TBD */
+#define eop_length 			32				/* TBD */
 #define seuv_length 		37
 #define hk_length 			100 + sizeof(hk_frame_t) + 8
 #define schedule_length		20
@@ -148,7 +148,7 @@
 #define inms_sid 		2
 #define seuv_sid 		3
 #define eop_sid 		4
-#define wod_sid 		5
+#define wod_sid 		255
 
 #define eps_hk_sid 		6
 #define com_hk_sid 		7
@@ -190,5 +190,6 @@ uint16_t Interface_inms_thermistor_get();
 int status_update();
 void generate_Error_Report(int type);
 int report_Collected_Data(char *args, uint16_t *buffer_length);
+void ECEFtoECI(uint32_t * Time, int32_t * r_ECEF, int16_t* r_ECI);
 
 #endif /* SUBSYSTEM_H_ */

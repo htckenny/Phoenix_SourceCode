@@ -520,36 +520,47 @@ uint8_t SendDataWithCCSDS_AX25(uint8_t datatype, uint8_t* data) { //add sid then
 	else if (datatype == 5) {
 
 		databuffer[0] = wod_sid;
+		datalength = wod_length + 1;
+		memcpy(&databuffer[1], data, datalength - 1);	//copy data to databuffer
 
-		databuffer[1] = 1; //the head part of the WOD packet,
-		memcpy(&databuffer[2], data, 150); //the first 150 byte of WOD data
-		err = CCSDS_GenerateTelemetryPacket(&txframe[0], &tx_length, obc_apid, 15, 9, &databuffer[0], 152);
-		if (err == ERR_SUCCESS)
-			AX25_GenerateTelemetryPacket_Send(&txframe[0], tx_length);
+		err = CCSDS_GenerateTelemetryPacket(&txframe[0], &tx_length, obc_apid, 3, 25, &databuffer[0], datalength);
+
+		if (err == ERR_SUCCESS) {
+			return AX25_GenerateTelemetryPacket_Send(&txframe[0], tx_length);
+		}
 		else
-			return Error;
+			printf("have error on generate CCSDS packet, maybe overflow  , tx_length = %d \n", tx_length);
 
-		databuffer[1] = 2; //the last part of the WOD packet,
-		memcpy(&databuffer[2], data + 150, 82); //the rest 82 byte of WOD data
-		err = CCSDS_GenerateTelemetryPacket(&txframe[0], &tx_length, obc_apid, 15, 9, &databuffer[0], 152);
-		if (err == ERR_SUCCESS)
-			AX25_GenerateTelemetryPacket_Send(&txframe[0], tx_length);
-		else
-			return Error;
-		return No_Error;
+		return Error;
 
+		// databuffer[1] = 1; //the head part of the WOD packet,
+		// memcpy(&databuffer[2], data, 150); //the first 150 byte of WOD data
+		// err = CCSDS_GenerateTelemetryPacket(&txframe[0], &tx_length, obc_apid, 15, 9, &databuffer[0], 152);
+		// if (err == ERR_SUCCESS)
+		// 	AX25_GenerateTelemetryPacket_Send(&txframe[0], tx_length);
+		// else
+		// 	return Error;
+
+		// databuffer[1] = 2; //the last part of the WOD packet,
+		// memcpy(&databuffer[2], data + 150, 82); //the rest 82 byte of WOD data
+		// err = CCSDS_GenerateTelemetryPacket(&txframe[0], &tx_length, obc_apid, 3, 25, &databuffer[0], 152);
+		// if (err == ERR_SUCCESS)
+		// 	AX25_GenerateTelemetryPacket_Send(&txframe[0], tx_length);
+		// else
+		// 	return Error;
+		// return No_Error;
 	}
 	else
 		return Error;
 
-	memcpy(&databuffer[1], data, datalength - 1); //copy data to databuffer
+	memcpy(&databuffer[1], data, datalength - 1);	//copy data to databuffer
 
 	err = CCSDS_GenerateTelemetryPacket(&txframe[0], &tx_length, obc_apid, 15, 9, &databuffer[0], datalength);
 
 	if (err == ERR_SUCCESS) {
 		return AX25_GenerateTelemetryPacket_Send(&txframe[0], tx_length);
-//  return AX25_Send(&txframe[0],tx_length);
-	} else
+	}
+	else
 		printf("have error on generate CCSDS packet, maybe overflow  , tx_length = %d \n", tx_length);
 
 	return Error;

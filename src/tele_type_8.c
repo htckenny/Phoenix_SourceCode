@@ -36,6 +36,7 @@
 #define INMS_restart				20				/* Restart INMS script handler, do this after upload new script*/
 #define Enable_GPS_header			21				/* use GPS to get position data instead of ADCS */
 #define Reset_Error_Report			22				/* Reset Error Report, should be conducted after successful downlink of Error Report */
+#define Manual_Heater_Switch		23				/* Swicth ON/OFF EPS heater in case of auto switch has problem */
 #define SD_card_format				30				/* Format SD card, and create default folders */
 #define SD_unlock					31				/* Unlock SD card */
 
@@ -46,7 +47,6 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	timestamp_t t;
 	time_t tt;
 	uint8_t completionError = I2C_SEND_ERROR;
-
 	uint16_t para_length = (telecommand[4] << 8) + telecommand[5] - 4;
 	uint8_t type = 8;
 	uint8_t paras[180];
@@ -187,10 +187,10 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			break;
 		}
 		printf("Execute Type 8 Sybtype 10 , I2C_COMMAND node[%d] rx[%d] parameter \r\n", paras[0], para_length - 2);
-		if (i2c_master_transaction(0, paras[0], &paras[2], para_length - 2, &txBuffer, paras[1], com_delay) == E_NO_ERR) {
-
-			if (paras[1] != 0)
+		if (i2c_master_transaction_2(0, paras[0], &paras[2], para_length - 2, &txBuffer, paras[1], com_delay) == E_NO_ERR) {
+			if (paras[1] != 0) {
 				i2c_master_transaction(0, com_tx_node, &txBuffer, paras[1], 0, 0, com_delay);
+			}
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		} else
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
@@ -427,6 +427,36 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}
 		break;
+	/*---------------  ID:23 Manual Control Heater's switch ----------------*/
+	case Manual_Heater_Switch:
+		if (para_length == 1)
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
+			break;
+		}
+		printf("Execute Type 8 Sybtype 23, manual control heater's switch\r\n");
+		txBuffer[0] = 13;
+		txBuffer[1] = 0;
+		txBuffer[2] = 1;
+		if (paras[0] == 1) {
+			printf("Switch ON Heater\n");
+			txBuffer[3] = 1;
+			if (i2c_master_transaction_2(0, eps_node, &txBuffer, 4, 0, 0, eps_delay) == E_NO_ERR) {
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+			}
+		}
+		else if (paras[0] == 0) {
+			printf("Switch OFF Heater\n");
+			txBuffer[3] = 0;
+			if (i2c_master_transaction_2(0, eps_node, &txBuffer, 4, 0, 0, eps_delay) == E_NO_ERR) {
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+			}
+		}
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+		}
+		break;
 
 	/*---------------  ID:30 Format SD and Initialize ----------------*/
 	case SD_card_format:
@@ -453,6 +483,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			f_mkdir("0:/EOP_DATA");
 			f_mkdir("0:/WOD_DATA");
 			f_open(&file, "0:/part0", FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+			f_close(&file);
 		}
 		else if (paras[0] == 1) {
 			f_mkfs(1, 0, 0);
@@ -462,6 +493,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			f_mkdir("1:/EOP_DATA");
 			f_mkdir("1:/WOD_DATA");
 			f_open(&file, "1:/part1", FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+			f_close(&file);
 		}
 		else
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);

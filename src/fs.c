@@ -29,6 +29,8 @@ UINT br, bw;
 uint8_t buffer[300];
 FILINFO *fno;
 extern int findMaxBuf(uint8_t sortbuf[]);
+extern int CIC();
+extern void Read_Execute();
 
 void encode_time (char buf[], char * fileName )
 {
@@ -1595,23 +1597,21 @@ int scan_files_Downlink (
 	uint32_t inms_2nd = 0;
 	struct tm t;
 	time_t t_of_day;
-#if _USE_LFN
-	static char lfn[_MAX_LFN + 1];  	 /* Buffer to store the LFN */
-	fno.lfname = lfn;
-	fno.lfsize = sizeof lfn;
-#endif
+	uint8_t flag;
+
 
 	res = f_opendir(&dir, path);                       /* Open the directory */
 	if (res == FR_OK) {
 		for (;;) {
+			if (abort_transfer_flag == 1) {
+				abort_transfer_flag = 0;
+				break;
+			}
 			res = f_readdir(&dir, &fno);                   /* Read a directory item */
 			if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
 			if (fno.fname[0] == '.') continue;             /* Ignore dot entry */
-#if _USE_LFN
-			fn = *fno.lfname ? fno.lfname : fno.fname;
-#else
 			fn = fno.fname;
-#endif
+
 			sprintf(full_path, "%s/%s", path, fn);
 			strncpy(fn_reduce, fn, 8);
 			fn_reduce[8] = '\0';
@@ -1643,10 +1643,9 @@ int scan_files_Downlink (
 			switch (mode) {
 			case 1:
 				if (timeRec_T1 < (unsigned)t_of_day && timeRec_T2 > (unsigned)t_of_day) {
-					printf("mode = 1 down link \n");
+					printf("Mode = 1 (Between) Down link \n");
 					if (strcmp(path, fileName_HK[parameters.SD_partition_flag]) == 0) {
 						hk_read(full_path, hk_data);
-						// hex_dump(&hk_data, hk_length);
 						SendDataWithCCSDS_AX25(1, &hk_data[0]);
 					}
 					else if (strcmp(path, fileName_INMS[parameters.SD_partition_flag]) == 0) {
@@ -1662,29 +1661,23 @@ int scan_files_Downlink (
 					}
 					else if (strcmp(path, fileName_SEUV[parameters.SD_partition_flag]) == 0) {
 						seuv_read(full_path, seuv_data);
-						// hex_dump(&seuv_data, seuv_length);
 						SendDataWithCCSDS_AX25(3, &seuv_data[0]);
 					}
 					else if (strcmp(path, fileName_EOP[parameters.SD_partition_flag]) == 0) {
 						eop_read(full_path, eop_data);
-						// hex_dump(&eop_data, eop_length);
 						SendDataWithCCSDS_AX25(4, &eop_data[0]);
 					}
 					else if (strcmp(path, fileName_WOD[parameters.SD_partition_flag]) == 0) {
 						wod_read(full_path, wod_data);
-						// hex_dump(&wod_data, wod_length);
 						SendDataWithCCSDS_AX25(5, &wod_data[0]);
 					}
-					// SendPacketWithCCSDS_AX25(&beacon_frame.mode, 8, obc_apid, 0, 0);
-					vTaskDelay(0.5 * delay_time_based);
 				}
 				break;
 			case 2:
 				if (timeRec_T1 > (unsigned)t_of_day) {
-					printf("mode = 2 down link \n");
+					printf("Mode = 2 (Before) Down link \n");
 					if (strcmp(path, fileName_HK[parameters.SD_partition_flag]) == 0) {
 						hk_read(full_path, hk_data);
-						// hex_dump(&hk_data, hk_length);
 						SendDataWithCCSDS_AX25(1, &hk_data[0]);
 					}
 					else if (strcmp(path, fileName_INMS[parameters.SD_partition_flag]) == 0) {
@@ -1700,28 +1693,23 @@ int scan_files_Downlink (
 					}
 					else if (strcmp(path, fileName_SEUV[parameters.SD_partition_flag]) == 0) {
 						seuv_read(full_path, seuv_data);
-						// hex_dump(&seuv_data, seuv_length);
 						SendDataWithCCSDS_AX25(3, &seuv_data[0]);
 					}
 					else if (strcmp(path, fileName_EOP[parameters.SD_partition_flag]) == 0) {
 						eop_read(full_path, eop_data);
-						// hex_dump(&eop_data, eop_length);
 						SendDataWithCCSDS_AX25(4, &eop_data[0]);
 					}
 					else if (strcmp(path, fileName_WOD[parameters.SD_partition_flag]) == 0) {
 						inms_data_read(full_path, wod_data);
-						// hex_dump(&wod_data, wod_length);
 						SendDataWithCCSDS_AX25(5, &wod_data[0]);
 					}
-					vTaskDelay(0.5 * delay_time_based);
 				}
 				break;
 			case 3:
 				if (timeRec_T1 < (unsigned)t_of_day) {
-					printf("mode = 3 down link \n");
+					printf("Mode = 3 (After) Down link \n");
 					if (strcmp(path, fileName_HK[parameters.SD_partition_flag]) == 0) {
 						hk_read(full_path, hk_data);
-						// hex_dump(&hk_data, hk_length);
 						SendDataWithCCSDS_AX25(1, &hk_data[0]);
 					}
 					else if (strcmp(path, fileName_INMS[parameters.SD_partition_flag]) == 0) {
@@ -1737,30 +1725,30 @@ int scan_files_Downlink (
 					}
 					else if (strcmp(path, fileName_SEUV[parameters.SD_partition_flag]) == 0) {
 						seuv_read(full_path, seuv_data);
-						// hex_dump(&seuv_data, seuv_length);
 						SendDataWithCCSDS_AX25(3, &seuv_data[0]);
 					}
 					else if (strcmp(path, fileName_EOP[parameters.SD_partition_flag]) == 0) {
 						eop_read(full_path, eop_data);
-						// hex_dump(&eop_data, eop_length);
 						SendDataWithCCSDS_AX25(4, &eop_data[0]);
 					}
 					else if (strcmp(path, fileName_WOD[parameters.SD_partition_flag]) == 0) {
 						inms_data_read(full_path, wod_data);
-						// hex_dump(&wod_data, wod_length);
 						SendDataWithCCSDS_AX25(5, &wod_data[0]);
 					}
-					vTaskDelay(0.75 * delay_time_based);
 				}
 				break;
 			default:
 				printf("range error\n");
 				break;
 			}
-			if (abort_transfer_flag == 1) {
-				abort_transfer_flag = 0;
-				break;
+			flag = CIC();
+			if ((flag > 0) && (flag < 41)) {
+				printf("--------------------------------------------- \r\n");
+				printf("Find %d frame in receive buffer \r\n", flag);
+				Read_Execute();
+				printf("--------------------------------------------- \r\n");
 			}
+			vTaskDelay(0.5 * delay_time_based);
 		}
 	}
 	return res;

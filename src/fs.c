@@ -1130,7 +1130,7 @@ int eop_write(uint8_t *frameCont, int SD_partition)		//SD_partition available : 
 	t.tv_sec = 0;
 	t.tv_nsec = 0;
 	obc_timesync(&t, 6000);
-	memcpy(&frameCont[0], &t.tv_sec, 4);
+	// memcpy(&frameCont[0], &t.tv_sec, 4);
 	time_t tt = t.tv_sec;
 	time(&tt);
 	/* Format time, "ddd yyyy-mm-dd hh:mm:ss zzz" */

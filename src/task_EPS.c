@@ -99,12 +99,13 @@ void EPS_Task(void * pvParameters)
 
 	for (i = 0; i < 180; i++)
 		rate[i] = 0;
+
 	i = 0;
 
 	while (1)
 	{
 		ms = (stop_time - start_time) * (1000 / configTICK_RATE_HZ);
-		printf("\n %5.3f %s \n", time , time_unit);
+		printf("\n %5.3f %s \n", (double)ms , time_unit);
 		start_time = xTaskGetTickCount();
 		if (choose == 104 && time > 10) // change the external battery short sample time
 			delay = 10;

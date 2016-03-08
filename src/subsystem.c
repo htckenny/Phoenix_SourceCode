@@ -251,7 +251,6 @@ void power_control(int device, int stats) {
 		else if (stats == OFF)
 			io_clear(2);
 	}
-	printf("finish power off\n");
 }
 /** Power off all the subsystems */
 

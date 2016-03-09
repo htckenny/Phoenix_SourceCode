@@ -878,7 +878,6 @@ int wod_read(char fileName[], void * txbuf) // serial =1~N
 	else {
 		printf("\r\nf_open() success .. \r\n");
 	}
-	f_lseek(&fileWOD, fileWOD.fsize);
 	res = f_read(&fileWOD, &buffer, wod_length, &br);
 
 	if (res != FR_OK) {
@@ -1304,7 +1303,7 @@ int adcs_para_r() {
 	}
 
 	if (res != FR_OK) {
-		printf("\r\nwod_read() fail .. \r\n");
+		printf("\r\nADCS para read fail .. \r\n");
 		f_close(&file);
 		return Error;
 	}

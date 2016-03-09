@@ -40,7 +40,7 @@ int eps_switch(struct command_context * ctx) {
 		return CMD_ERROR_SYNTAX;
 	}
 	if (buffer == 1)
-		xTaskCreate(EPS_Task, (const signed char *) "EPSS", 1024*4, NULL, 2, NULL);
+		xTaskCreate(EPS_Task, (const signed char *) "EPSS", 1024 * 4, NULL, 2, NULL);
 	return CMD_ERROR_NONE;
 }
 int firstflight_switch(struct command_context * ctx) {
@@ -389,12 +389,16 @@ int adcs_switch(struct command_context * ctx) {
 		return CMD_ERROR_SYNTAX;
 	}
 	if (buffer == 1) {
-		xTaskCreate(vTaskfstest, (const signed char *) "FS_T", 1024*4, NULL, 2, NULL);
-
-		// xTaskCreate(ADCS_Task, (const signed char * ) "ADCS", 1024 * 4, NULL, 1, &adcs_task);
+		xTaskCreate(ADCS_Task, (const signed char * ) "ADCS", 1024 * 4, NULL, 1, &adcs_task);
 	}
 	else if (buffer == 0) {
 		vTaskDelete(adcs_task);
+	}
+	else if (buffer == 2) {
+		xTaskCreate(vTaskfstest, (const signed char *) "FS_T", 1024 * 4, NULL, 2, NULL);
+	}
+	else if (buffer == 3) {
+		xTaskCreate(EOP_Task, (const signed char * ) "EOP", 1024 * 4, NULL, 2, &eop_task);
 	}
 	return CMD_ERROR_NONE;
 }

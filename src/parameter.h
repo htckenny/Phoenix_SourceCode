@@ -197,6 +197,12 @@ typedef struct __attribute__((packed)) {
 } thermal_frame_t;
 thermal_frame_t ThermalFrame;
 
+/* Structure for GPS time */
+typedef struct {
+	int		week;		/* Week number */
+	double	sec;		/* Elapsed time [s] */
+}	wtime;
+
 uint8_t Tdata[178];
 
 #endif /* PARAMETER_H_ */

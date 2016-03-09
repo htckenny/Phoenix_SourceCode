@@ -17,8 +17,8 @@
 #define Enable_Subsystem			1				/* (?)This function is not used */
 #define Disable_Subsystem			2				/* (?)This function is not used */
 #define reboot						3				/* Reboot the whole system */
-#define Sync_Time					4				/* Sync the OBC time*/
-#define DTTest						5				/* Test Downlink 200 Bytes*/
+#define Sync_Time					4				/* Sync the OBC time */
+#define Sync_Time_With_GPS			5				/* Sync the OBC time with GPS */
 #define ShutdownTransmitter			6				/* Shut Down Trasmitter */
 #define ResumeTransmitter			7				/* Resume Transmitter */
 #define Enter_Safe_Threshold		8				/* Set Safe mode enter threshold (default = 7000) */
@@ -41,6 +41,7 @@
 #define SD_unlock					31				/* Unlock SD card */
 
 extern void vTaskinms(void * pvParameters);
+extern struct tm wtime_to_date(wtime wt);
 
 void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	uint8_t txBuffer[200];
@@ -48,7 +49,6 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	time_t tt;
 	uint8_t completionError = I2C_SEND_ERROR;
 	uint16_t para_length = (telecommand[4] << 8) + telecommand[5] - 4;
-	uint8_t type = 8;
 	uint8_t paras[180];
 	uint16_t threshold;
 	FATFS fs;
@@ -74,7 +74,6 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 
 		break;
 	/*---------------ID:4 Sync_Time----------------*/
-
 	case Sync_Time:
 		if (para_length == 5)
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
@@ -94,21 +93,42 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		printf("OBC time Sync by telecommand to : %s\r\n", ctime(&tt));
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
-
-
-	/*---------------ID:5 DT 0~200----------------*/
-	case DTTest:
+	/*---------------ID:5 Sync the OBC time with GPS ----------------*/
+	case Sync_Time_With_GPS:
 		if (para_length == 0)
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 		else {
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 			break;
 		}
-		printf("Execute Type 8 Sybtype 5 , Downlink 1~200!! \r\n");
-		for (int a = 1; a < 201; a++)
-			txBuffer[a - 1] = a;
+		uint8_t rxbuf[6];
+		printf("Execute Type 8 Sybtype 5 ,Sync Time with GPS \r\n");
+		txBuffer[0] = 169; /* Raw GPS Time */
+		if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 1, &rxbuf[0], 6, adcs_delay) == E_NO_ERR) {
+			wtime wt;
+			struct tm tmbuf;
+			time_t t_of_day;
+			/* Get week number and elapsed time */
+			memcpy(&wt.week, &rxbuf[0], 2);
+			memcpy(&wt.sec, &rxbuf[2], 4);
+			/* Display week number and elapsed time */
+			printf("wn=%d, sec=%.3f\n", wt.week, wt.sec);
 
-		SendPacketWithCCSDS_AX25(&txBuffer, 200, obc_apid, type, subType);
+			/* Display time in the form of "YYYY/MM/DD HH:MM:SS" */
+			tmbuf = wtime_to_date(wt);
+			printf("%4.4d%2.2d%2.2d_%2.2d%2.2d%2.2d\n",
+			       tmbuf.tm_year + 1900, tmbuf.tm_mon + 1, tmbuf.tm_mday,
+			       tmbuf.tm_hour, tmbuf.tm_min, tmbuf.tm_sec);
+
+			t_of_day = mktime(&tmbuf);						/* Construct struct time to epoch seconds */
+			t_of_day -= 946684800;
+			ctime(&t_of_day);
+
+			t.tv_nsec = 0;
+			t.tv_sec = t_of_day ;
+			obc_timesync(&t, 1000);
+		}
+
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
 	/*---------------ID:6 ShutdownTransmitter----------------*/

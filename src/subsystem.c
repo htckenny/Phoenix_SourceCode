@@ -31,9 +31,25 @@ extern int TS7();
 extern int TS7_2();
 extern int TS9();
 
+/* Parameter for ECEG to ECI function */ 
 #define PI 3.14159265
 #define omega 7.29211585275553e-005
 #define JD_2000 2451545
+
+/* Time period */
+#define	SECONDS_DAY			(3600L*24L)
+#define	SECONDS_WEEK		(3600L*24L*7L)
+
+
+
+/*------------------------------------------------------------
+ * Conversion of Time
+ *------------------------------------------------------------*/
+/* Beginning year of calendar value */
+#define	TIME_T_BASE_YEAR	1970
+
+/* Calendar value of 1980/1/6 00:00:00 */
+#define	TIME_T_ORIGIN		315964800L
 
 int status_update() {
 
@@ -547,7 +563,7 @@ int report_Collected_Data(char *args, uint16_t *buffer_length) {
 	closedir(dirp);
 	return No_Error;
 }
-void ECEFtoECI(uint32_t * Time, int32_t * r_ECEF, int16_t* r_ECI)
+void ECEFtoECI(uint16_t * Time, int32_t * r_ECEF, int16_t* r_ECI)
 {
 	double T[3][3] = {{0}, {0}, {0}};
 	double THETA = 0;
@@ -605,4 +621,66 @@ void ECEFtoECI(uint32_t * Time, int32_t * r_ECEF, int16_t* r_ECI)
 		r_ECI[i] = r_mutiply_mat[i][0] + r_mutiply_mat[i][1] + r_mutiply_mat[i][2]; // Position of ECI
 		printf("%d\n", r_ECI[i]);
 	}
+}
+
+/* GMT version of function mktime(), i.e, inverse of gmtime() */
+static time_t mktime2(struct tm *tm)
+{
+	int		i;
+	long	days = 0L;
+	static int	days_month[] = {
+		31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
+	};
+
+	/* Compute elapsed days */
+	for (i = TIME_T_BASE_YEAR; i < tm->tm_year + 1900; i++) {
+		days += (i % 4 == 0) ? 366 : 365;
+	}
+	for (i = 1; i < tm->tm_mon + 1; i++) {
+		days += days_month[i - 1];
+		if (i == 2 && tm->tm_year % 4 == 0) days++;
+	}
+	days += tm->tm_mday - 1;
+
+	/* Calendar value */
+	return ((days * 24 + tm->tm_hour) * 60 + tm->tm_min) * 60 + tm->tm_sec;
+}
+
+/*------------------------------------------------------------
+ * wtime_to_date() - Convert wtime into date and hour
+ *------------------------------------------------------------
+ *  struct tm wtime_to_date(wt); Date and hour representation
+ *    wtime wt; Week number and elapsed time
+ *------------------------------------------------------------*/
+struct tm wtime_to_date(wtime wt)
+{
+	time_t	t;
+
+	/* Compute calendar value at given instance */
+	t	= (long)wt.week * SECONDS_WEEK + TIME_T_ORIGIN
+	      + (long)((wt.sec > 0.0) ? wt.sec + 0.5 : wt.sec - 0.5);
+
+	/* convert calendar value to date and hour representation */
+	return *gmtime(&t);
+}
+
+/*------------------------------------------------------------
+ * date_to_wtime() - Convert date and hour into wtime
+ *------------------------------------------------------------
+ *  wtime date_to_wtime(tmbuf); Week number and elapsed time
+ *    struct tm tmbuf; Date and hour representation
+ *------------------------------------------------------------*/
+wtime date_to_wtime(struct tm tmbuf)
+{
+	time_t	t;
+	wtime	wt;
+
+	/* Calendar value at given instance */
+	t	= mktime2(&tmbuf);
+
+	/* Compute the number of weeks and the remainder */
+	wt.week	= (t - TIME_T_ORIGIN) / SECONDS_WEEK;
+	wt.sec	= (t - TIME_T_ORIGIN) % SECONDS_WEEK;
+
+	return wt;
 }

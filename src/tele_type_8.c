@@ -108,9 +108,14 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			wtime wt;
 			struct tm tmbuf;
 			time_t t_of_day;
+			uint16_t gps_week;
+			uint32_t gps_second;
 			/* Get week number and elapsed time */
-			memcpy(&wt.week, &rxbuf[0], 2);
-			memcpy(&wt.sec, &rxbuf[2], 4);
+			memcpy(&gps_week, &rxbuf[0], 2);
+			memcpy(&gps_second, &rxbuf[2], 4);
+
+			wt.week = gps_week;
+			wt.sec = gps_second/1000;
 			/* Display week number and elapsed time */
 			printf("wn=%d, sec=%.3f\n", wt.week, wt.sec);
 
@@ -122,7 +127,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 
 			/* Construct struct time to epoch seconds */
 			t_of_day = mktime(&tmbuf);
-			t_of_day -= 946684800;
+			// t_of_day -= 946684800;
 			ctime(&t_of_day);
 			t.tv_nsec = 0;
 			t.tv_sec = t_of_day ;
@@ -277,14 +282,11 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 
 	/*---------------ID:14 power_on_target     ----------------*/
 	case power_on_target:
-		printf("para_length = %d\n", para_length);
-		printf("target = %d\n", paras[0]);
 		if (para_length >= 1) {
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 		}
 		else {
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
-			printf("Wrong!!\n");
 			break;
 		}
 		printf("Execute Type 8 Sybtype 14 ,power_on_target [%d]\r\n", paras[0]);

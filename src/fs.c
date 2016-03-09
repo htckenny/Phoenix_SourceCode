@@ -1117,14 +1117,12 @@ int eop_write(uint8_t *frameCont, int SD_partition)		//SD_partition available : 
 	char buf[20];
 	char fileName[45];
 	char fileName_decode[9];
-	char s[] = "";
 
 	if (SD_partition == 0)
-		strcpy(s, "0:/EOP_DATA/");
+		strcpy(fileName, "0:/EOP_DATA/");
 	else
-		strcpy(s, "1:/EOP_DATA/");
+		strcpy(fileName, "1:/EOP_DATA/");
 
-	strcpy(fileName, s);
 	/* Get current time */
 	timestamp_t t;
 	t.tv_sec = 0;
@@ -1700,7 +1698,7 @@ int scan_files_Downlink (
 						SendDataWithCCSDS_AX25(4, &eop_data[0]);
 					}
 					else if (strcmp(path, fileName_WOD[parameters.SD_partition_flag]) == 0) {
-						inms_data_read(full_path, wod_data);
+						wod_read(full_path, wod_data);
 						SendDataWithCCSDS_AX25(5, &wod_data[0]);
 					}
 				}
@@ -1732,7 +1730,7 @@ int scan_files_Downlink (
 						SendDataWithCCSDS_AX25(4, &eop_data[0]);
 					}
 					else if (strcmp(path, fileName_WOD[parameters.SD_partition_flag]) == 0) {
-						inms_data_read(full_path, wod_data);
+						wod_read(full_path, wod_data);
 						SendDataWithCCSDS_AX25(5, &wod_data[0]);
 					}
 				}

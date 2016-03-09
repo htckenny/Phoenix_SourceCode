@@ -63,10 +63,20 @@ void perform_fletcher(uint8_t * check_sum_final) {
 		else if (xsum[i] != 0) {
 			check_sum_final[i] = 2;
 		}
-
 	}
 }
-
+void little2big_32(uint8_t * input_data) {
+	uint32_t buffs_32;
+	memcpy(&buffs_32, input_data, 4);
+	buffs_32 = csp_ntoh32(buffs_32);
+	memcpy(input_data, &buffs_32, 4);
+}
+void little2big_16(uint8_t * input_data) {
+	uint16_t buffs_16;
+	memcpy(&buffs_16, input_data, 2);
+	buffs_16 = csp_ntoh16(buffs_16);
+	memcpy(input_data, &buffs_16, 2);
+}
 /* telecommand Service 3  */
 void decodeService3(uint8_t subType, uint8_t* telecommand) {
 	uint8_t txBufferWithSID[254];
@@ -99,18 +109,22 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 
 		buffs = Interface_3V3_current_get();
 		vTaskDelay(0.01 * delay_time_based);
+		buffs = csp_ntoh16(buffs);
 		memcpy(&txBuffer[17], &buffs, 2);
 
 		buffs = Interface_5V_current_get();
 		vTaskDelay(0.01 * delay_time_based);
+		buffs = csp_ntoh16(buffs);
 		memcpy(&txBuffer[19], &buffs, 2);
-
-		buffs = Interface_tmp_get();
-		vTaskDelay(0.01 * delay_time_based);
-		memcpy(&txBuffer[21], &buffs, 2);
 
 		buffs = Interface_inms_thermistor_get();
 		vTaskDelay(0.01 * delay_time_based);
+		buffs = csp_ntoh16(buffs);
+		memcpy(&txBuffer[21], &buffs, 2);
+
+		buffs = Interface_tmp_get();
+		vTaskDelay(0.01 * delay_time_based);
+		buffs = csp_ntoh16(buffs);
 		memcpy(&txBuffer[23], &buffs, 2);
 
 		txlen = 25;
@@ -129,6 +143,9 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 
 		i2c_tx[0] = com_rx_hk;
 		if (i2c_master_transaction_2(0, com_rx_node, &i2c_tx, 1, &txBuffer, com_rx_hk_len, com_delay) == E_NO_ERR) {
+			for (int i = 0; i < 7; i++) {
+				little2big_16(&txBuffer[i * 2]);
+			}
 			txlen = com_rx_hk_len;
 			txBufferWithSID[0] = 32;
 			memcpy(&txBufferWithSID[1], &txBuffer[0], txlen);
@@ -153,7 +170,6 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}
 		else {
-
 			completionError = I2C_READ_ERROR;
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 		}
@@ -163,9 +179,24 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 
 		memcpy(txBuffer, &parameters.first_flight, sizeof(parameter_t));
+
+		little2big_32(&txBuffer[6]);
+		little2big_32(&txBuffer[21]);
+		little2big_32(&txBuffer[25]);
+		little2big_32(&txBuffer[29]);
+		little2big_32(&txBuffer[33]);
+		little2big_32(&txBuffer[37]);
+
+		little2big_16(&txBuffer[41]);
+		little2big_16(&txBuffer[45]);
+		little2big_16(&txBuffer[47]);
+		little2big_16(&txBuffer[50]);
+		little2big_16(&txBuffer[52]);
+
 		txlen = sizeof(parameter_t);
 		txBufferWithSID[0] = 34;
 		memcpy(&txBufferWithSID[1], &txBuffer[0], txlen);
+		hex_dump(&txBufferWithSID[1], txlen);
 		SendPacketWithCCSDS_AX25(&txBufferWithSID[0], txlen + 1, obc_apid, type, 25);
 
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
@@ -237,7 +268,9 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 		hex_dump(&txBuffer, scriptNum);
 
 		txlen = scriptNum;
-		SendPacketWithCCSDS_AX25(&txBuffer, txlen, obc_apid, type, subType);
+		txBufferWithSID[0] = 38;
+		memcpy(&txBufferWithSID[1], &txBuffer[0], txlen);
+		SendPacketWithCCSDS_AX25(&txBufferWithSID[0], txlen + 1, obc_apid, type, 25);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
 	/*--------------- ID:9 Test SCS WOD interface ----------------*/
@@ -292,9 +325,15 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 			strcpy(path, "/sd1");
 		}
 		if (report_Collected_Data(path, data_number) == No_Error) {
+			memcpy(&txBuffer[0], &data_number[0], 10);
+			for (int i = 0; i < 5 ; i++) {
+				little2big_16(&txBuffer[i * 2]);
+			}
 			txlen = 10 ;
-			hex_dump(&data_number[0], txlen);
-			SendPacketWithCCSDS_AX25(&data_number[0], txlen, obc_apid, type, subType);
+			txBufferWithSID[0] = 42;
+			memcpy(&txBufferWithSID[1], &txBuffer[0], txlen);
+			hex_dump(&txBuffer[0], txlen);
+			SendPacketWithCCSDS_AX25(&txBufferWithSID[0], txlen + 1, obc_apid, type, 25);
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}
 		else {

@@ -120,10 +120,10 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			       tmbuf.tm_year + 1900, tmbuf.tm_mon + 1, tmbuf.tm_mday,
 			       tmbuf.tm_hour, tmbuf.tm_min, tmbuf.tm_sec);
 
-			t_of_day = mktime(&tmbuf);						/* Construct struct time to epoch seconds */
+			/* Construct struct time to epoch seconds */
+			t_of_day = mktime(&tmbuf);
 			t_of_day -= 946684800;
 			ctime(&t_of_day);
-
 			t.tv_nsec = 0;
 			t.tv_sec = t_of_day ;
 			obc_timesync(&t, 1000);

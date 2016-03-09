@@ -18,7 +18,7 @@ void decodeService131(uint8_t subType, uint8_t * telecommand) {
 	uint8_t completionError = ERR_SUCCESS;
 	uint8_t err;
 	uint8_t rxBufferLength;
-	uint8_t types = 3;
+	uint8_t types = 131;
 	uint8_t parameterLength;
 	/*------------------------------------------Telecommand-----------------------------------*/
 

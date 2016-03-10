@@ -39,6 +39,8 @@
 #define isSimulator 			0
 #define isFunctionTest			0
 
+extern void seuv_work_with_inms(int switch_status);
+
 typedef struct __attribute__((packed)) {
 	int tt_hour, tt_min, tt_sec, tt_seq;
 } timetable;
@@ -614,6 +616,7 @@ void vTaskinms(void * pvParameters) {
 										usart_putstr(2, (char *)&script[rec[i]][flag + j], 1);
 									}
 #endif
+									seuv_work_with_inms(1);
 								}
 								else {
 									ttflag++;
@@ -631,6 +634,7 @@ void vTaskinms(void * pvParameters) {
 								vTaskDelete(inms_task_receive);
 								inms_task_receive = NULL;
 								power_control(4, OFF);
+								seuv_work_with_inms(0);
 								/* ---- For simulator ---- */
 #if isSimulator
 								for (int j = 2; j <= leng + 3; j++) {
@@ -722,6 +726,7 @@ void vTaskinms(void * pvParameters) {
 										vTaskDelete(inms_task_receive);
 										power_control(4, OFF);
 										inms_task_receive = NULL;
+										seuv_work_with_inms(0);
 									}
 									break;
 								}
@@ -940,6 +945,7 @@ void vTaskInmsErrorHandle(void * pvParameters) {
 				vTaskDelete(inms_task_receive);
 				power_control(4, OFF);
 				inms_task_receive = NULL;
+				seuv_work_with_inms(0);
 			}
 #if isSimulator
 			unsigned int cmd1 = 0xf2;

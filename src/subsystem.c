@@ -97,7 +97,7 @@ int parameter_init() {
 	SD_lock_flag						= 0;
 	use_GPS_header						= 0;
 	inms_tm_status						= 1;
-
+	seuv_with_INMS 						= 0;
 
 	/*--File System store count--*/
 	parameters.wod_store_count			= 0;

@@ -130,21 +130,16 @@ uint8_t seuv_take_data(uint8_t ch, int gain, uint8_t *frame) {
     return ERR_SUCCESS;
 }
 
-// void seuv_work_with_inms() {
-//     power_control(3, ON);
-//     uint8_t count = 0;
-
-//     for (int ch = 1; ch < 5; ch++){
-//         count += seuv_take_data(ch);
-//     }
-
-//     if (count == 0){
-//         seuv_write();
-//     }
-
-//     printf("SEUV Work With INMS Done\n");
-//     power_control(3, OFF);
-// }
+void seuv_work_with_inms(int switch_status) {
+    if (switch_status == 1) {
+        power_control(3, ON);
+        seuv_with_INMS = 1;
+    }
+    else if (switch_status == 0) {
+        power_control(3, OFF);
+        seuv_with_INMS = 0;
+    }
+}
 void get_a_packet(int gain) {
 
     uint8_t count = 0;           // error count , 0 = no error
@@ -163,8 +158,6 @@ void get_a_packet(int gain) {
 
     /* Take data from SEUV in numbers of samples [Gain = 1]*/
     if (gain == 1) {
-        /* Power on SEUV */
-        // power_control(3, ON);
         vTaskDelay(2 * delay_time_based);
         count = 0;
         for (int i = 0 ; i < parameters.seuv_sample_rate ; i++) {
@@ -221,8 +214,6 @@ void get_a_packet(int gain) {
         else {
             printf("Fail to get SEUV data\n");
         }
-        /* Power off SEUV */
-        // power_control(3, OFF);
     }
 }
 
@@ -256,13 +247,26 @@ void SolarEUV_Task(void * pvParameters) {
                 vTaskDelete(seuv_cm_task);
                 seuv_cm_task = NULL;
             }
+        }
+        else if (parameters.seuv_mode == 0x04) {
 
-            // printf("[SEUV] No measurement taken\n");
+            if (seuv_with_INMS == 1) {
+                if (seuv_cm_task == NULL) {
+                    xTaskCreate(SEUV_CurrentMonitor, (const signed char *) "SEU_CM", 1024 * 4, NULL, 2, &seuv_cm_task);
+                }
+                get_a_packet(1);
+                vTaskDelay(1 * delay_time_based);
+                get_a_packet(8);
+            }
+            else {
+                if (seuv_cm_task != NULL) {
+                    vTaskDelete(seuv_cm_task);
+                    seuv_cm_task = NULL;
+                }
+            }
         }
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
-        // vTaskDelay(parameters.seuv_period * delay_time_based);
     }
-
     /* End of seuv */
     vTaskDelete(NULL);
 }

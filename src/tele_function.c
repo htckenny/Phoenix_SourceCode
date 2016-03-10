@@ -1,10 +1,10 @@
 #include <util/timestamp.h>
+#include <util/hexdump.h>
 #include <freertos/FreeRTOS.h>
 #include <dev/i2c.h>
-#include <util/hexdump.h>
+#include <csp/csp_endian.h>
 #include <string.h>
 #include <nanomind.h>
-#include <csp/csp_endian.h>
 #include <time.h>
 
 #include "subsystem.h"
@@ -12,9 +12,6 @@
 #include "crc16.h"
 #include "tele_function.h"
 #include "fs.h"
-#include "task_SEUV.h"
-
-
 
 int tx_mode(uint8_t mode) {
 
@@ -36,11 +33,10 @@ int tx_mode(uint8_t mode) {
 }
 
 int set_tx_rate(uint8_t mode) {
-	/*
-	mode =1, rate=1200
-	mode =8, rate=9600
-
-	*/
+	/**
+	 * mode = 1, Baud rate = 1200 bps
+	 * mode = 8, Baud rate = 9600 bps
+	 */
 	uint8_t txbuf[2];
 	txbuf[0] = com_tx_rate;
 	txbuf[1] = mode;
@@ -534,20 +530,20 @@ uint8_t SendDataWithCCSDS_AX25(uint8_t datatype, uint8_t* data) { //add sid then
 		// return Error;
 
 		// databuffer[1] = 1; //the head part of the WOD packet,
-		memcpy(&databuffer[1], data, 118); //the first 150 byte of WOD data
-		err = CCSDS_GenerateTelemetryPacket(&txframe[0], &tx_length, obc_apid, 3, 25, &databuffer[0], 120);
+		memcpy(&databuffer[1], &data[4], 57); //the first 150 byte of WOD data
+		err = CCSDS_GenerateTelemetryPacket(&txframe[0], &tx_length, obc_apid, 3, 25, &databuffer[0], 58);
 		if (err == ERR_SUCCESS)
 			AX25_GenerateTelemetryPacket_Send(&txframe[0], tx_length);
 		else
 			return Error;
 
 		// databuffer[1] = 2; //the last part of the WOD packet,
-		memcpy(&databuffer[1], data + 118, 114); //the rest 82 byte of WOD data
-		err = CCSDS_GenerateTelemetryPacket(&txframe[0], &tx_length, obc_apid, 3, 25, &databuffer[0], 116);
-		if (err == ERR_SUCCESS)
-			AX25_GenerateTelemetryPacket_Send(&txframe[0], tx_length);
-		else
-			return Error;
+		// memcpy(&databuffer[1], data + 118, 114); //the rest 82 byte of WOD data
+		// err = CCSDS_GenerateTelemetryPacket(&txframe[0], &tx_length, obc_apid, 3, 25, &databuffer[0], 115);
+		// if (err == ERR_SUCCESS)
+		// 	AX25_GenerateTelemetryPacket_Send(&txframe[0], tx_length);
+		// else
+			// return Error;
 		return No_Error;
 	}
 	else

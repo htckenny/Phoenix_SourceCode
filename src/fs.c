@@ -527,9 +527,9 @@ int inms_data_read(char fileName[], void * txbuf) {
 	res = f_open(&fileINMS, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK)
 	{
-		printf("\r\nf_open() fail .. \r\n");
+		printf("\r\nINMS_open() fail .. \r\n");
 	} else {
-		printf("\r\nf_open() success .. \r\n");
+		printf("\r\nINMS_open() success .. \r\n");
 	}
 	int c = 0 ;
 	while (1) {
@@ -873,10 +873,10 @@ int wod_read(char fileName[], void * txbuf) // serial =1~N
 {
 	res = f_open(&fileWOD, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK) {
-		printf("\r\nf_open() fail .. \r\n");
+		printf("\r\nWOD_open() fail .. \r\n");
 	}
 	else {
-		printf("\r\nf_open() success .. \r\n");
+		printf("\r\nWOD_open() success .. \r\n");
 	}
 	res = f_read(&fileWOD, &buffer, wod_length, &br);
 
@@ -973,10 +973,10 @@ int seuv_read(char fileName[], void * txbuf)
 {
 	res = f_open(&fileSEUV, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK) {
-		printf("\r\nf_open() fail .. \r\n");
+		printf("\r\nSEUV_open() fail .. \r\n");
 	}
 	else {
-		printf("\r\nf_open() success .. \r\n");
+		printf("\r\nSEUV_open() success .. \r\n");
 	}
 	res = f_read(&fileSEUV, &buffer, seuv_length, &br);
 
@@ -1066,10 +1066,10 @@ int hk_read(char fileName[], void * txbuf) // serial =1~N
 {
 	res = f_open(&fileHK, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK) {
-		printf("\r\nf_open() fail .. \r\n");
+		printf("\r\nHK_open() fail .. \r\n");
 	}
 	else {
-		printf("\r\nf_open() success .. \r\n");
+		printf("\r\nHK_open() success .. \r\n");
 	}
 	res = f_read(&fileHK, &buffer, hk_length, &br);
 
@@ -1161,10 +1161,10 @@ int eop_read(char fileName[], void * txbuf)
 
 	res = f_open(&fileEOP, fileName, FA_OPEN_ALWAYS | FA_READ );
 	if (res != FR_OK) {
-		printf("f_open() fail .. \r\n");
+		printf("EOP_open() fail .. \r\n");
 	}
 	else {
-		printf("f_open() success .. \r\n");
+		printf("EOP_open() success .. \r\n");
 	}
 	res = f_read(&fileEOP, &buffer, eop_length, &br);
 

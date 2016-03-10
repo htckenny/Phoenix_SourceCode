@@ -31,7 +31,7 @@ extern int TS7();
 extern int TS7_2();
 extern int TS9();
 
-/* Parameter for ECEG to ECI function */ 
+/* Parameter for ECEG to ECI function */
 #define PI 3.14159265
 #define omega 7.29211585275553e-005
 #define JD_2000 2451545
@@ -563,8 +563,9 @@ int report_Collected_Data(char *args, uint16_t *buffer_length) {
 	closedir(dirp);
 	return No_Error;
 }
-void ECEFtoECI(uint16_t * Time, int32_t * r_ECEF, int16_t* r_ECI)
+void ECEFtoECI(float * Time, int32_t * r_ECEF, int16_t * r_ECI)
 {
+	float r_ECEF_f[3];
 	double T[3][3] = {{0}, {0}, {0}};
 	double THETA = 0;
 	double r_mutiply_mat[3][3] = {{0}, {0}, {0}};
@@ -575,9 +576,8 @@ void ECEFtoECI(uint16_t * Time, int32_t * r_ECEF, int16_t* r_ECI)
 	int i, j;
 
 	Time[2] = Time[2] + (Time[3] / 24) + (Time[4] / 1440) + (Time[5] / 86400);
-	JD = 367 * Time[0] - (int)(7 * (Time[0] + (int)((Time[1] + 9) / 12)) / 4) - (int)(3 * ((int)((Time[0] + (Time[1] - 9) / 7) / 100) + 1) / 4) + (int)(275 * Time[1] / 9) + Time[2] + 1721028.5;
-
-	JD_0 = (double)((int)(JD)) - 0.5;
+	JD = (double)(367 * Time[0]) - (int)(7 * (Time[0] + (int)((Time[1] + 9) / 12)) / 4) - (int)(3 * ((int)((int)(Time[0] + (Time[1] - 9) / 7) / 100) + 1) / 4) + (int)(275 * Time[1] / 9) + Time[2] + 1721028.5;
+	JD_0 = (double)((int64_t)(JD)) - 0.5;
 	D = JD - JD_2000;
 	D0 = JD_0 - JD_2000;
 	H = (JD - JD_0) * 24;
@@ -585,13 +585,11 @@ void ECEFtoECI(uint16_t * Time, int32_t * r_ECEF, int16_t* r_ECI)
 	GMST = 6.697374558 + 0.06570982441908 * D0 + 1.00273790935 * H + 0.000026 * T1 * T1;
 	GMST = (fmod(GMST, 24));
 
-	if (GMST < 0)
-	{
+	if (GMST < 0) {
 		GMST = 24 + GMST;
 	}
 
 	GMST = GMST * 15;
-
 	T2 = (JD - JD_2000) / 36525;
 	EPSILONm = 84381448 - 46.8150 * T2 - 0.00059 * T2 * T2 + 0.001813 * T2 * T2 * T2;
 	L = 280.4665 + 36000.7698 * T2;
@@ -599,11 +597,9 @@ void ECEFtoECI(uint16_t * Time, int32_t * r_ECEF, int16_t* r_ECI)
 	OMEGA = 125.04452 - 1934.136261 * T2;
 	dPSI = -17.20 * sin(OMEGA * PI / 180) - 1.32 * sin(2 * L * PI / 180) - 0.23 * sin(2 * dL * PI / 180) + 0.21 * sin(2 * OMEGA * PI / 180);
 	dEPSILON = 9.20 * cos(OMEGA * PI / 180) + 0.57 * cos(2 * L * PI / 180) + 0.1 * cos(2 * dL * PI / 180) - 0.09 * cos(2 * OMEGA * PI / 180);
-
 	dPSI = dPSI * (1 / 3600);
 	dEPSILON = dEPSILON * (1 / 3600);
 	GAST = fmod(GMST + dPSI * cos((EPSILONm + dEPSILON) * PI / 180), 360);
-
 	THETA = GAST;
 
 	T[0][0] = cos(THETA * PI / 180);
@@ -612,14 +608,14 @@ void ECEFtoECI(uint16_t * Time, int32_t * r_ECEF, int16_t* r_ECI)
 	T[1][1] = T[0][0];
 	T[2][2] = 1;
 
-	for (i = 0; i < 3; i++)
-	{
-		for (j = 0; j < 3; j++)
-		{
-			r_mutiply_mat[i][j] = T[i][j] * r_ECEF[j];
+	for (i = 0; i < 3; i++) {
+		for (j = 0; j < 3; j++) {
+			r_ECEF_f[j] = r_ECEF[j] * 0.001;
+			r_mutiply_mat[i][j] = T[i][j] * r_ECEF_f[j];
 		}
 		r_ECI[i] = r_mutiply_mat[i][0] + r_mutiply_mat[i][1] + r_mutiply_mat[i][2]; // Position of ECI
-		printf("%d\n", r_ECI[i]);
+		r_ECI[i] = r_ECI[i] * 4;
+		printf("%d\t", r_ECI[i] / 4);
 	}
 }
 

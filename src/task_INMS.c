@@ -144,7 +144,7 @@ void package_with_header(uint8_t *ucharAdcs)
 	uint8_t txbuf;
 	int16_t	r_ECI[3];
 	int32_t	r_ECEF[3];
-	uint16_t ECEF_time[6];
+	float ECEF_time[6];
 	char ECEF_buf[6][5] = {{0}};
 	timestamp_t t;
 	struct tm  ts;

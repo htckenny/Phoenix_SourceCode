@@ -190,6 +190,6 @@ uint16_t Interface_inms_thermistor_get();
 int status_update();
 void generate_Error_Report(int type);
 int report_Collected_Data(char *args, uint16_t *buffer_length);
-void ECEFtoECI(uint16_t * Time, int32_t * r_ECEF, int16_t* r_ECI);
+void ECEFtoECI(float * Time, int32_t * r_ECEF, int16_t * r_ECI);
 
 #endif /* SUBSYSTEM_H_ */

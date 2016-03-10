@@ -84,7 +84,7 @@
 #define com_rx_hk_length 	14
 #define com_tx_hk_length 	1
 #define adcs_hk_length 		48
-#define seuv_data_length 	5
+#define seuv_data_length 	4
 
 #define com_delay 			10	//1000
 #define eps_delay 			7

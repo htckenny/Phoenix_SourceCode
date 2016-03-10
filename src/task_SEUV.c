@@ -35,7 +35,7 @@ void calculate_avg_std(uint8_t ch, uint8_t data[], uint8_t numbers) {
     int flag;
     /* Calculate the raw data from the received three bytes */
     for (flag = 0; flag < numbers; flag++)
-        tmp[flag] = (data[flag * 3] << 16) + (data[flag * 3 + 1] << 8) + data[flag * 3 + 2];
+        tmp[flag] = (data[flag * 2] << 8) + data[flag * 2 + 1];
 
     /* Add all of the numbers of samples */
     for (flag = 0; flag < numbers; flag++)
@@ -121,8 +121,8 @@ uint8_t seuv_take_data(uint8_t ch, int gain, uint8_t *frame) {
     if (i2c_master_transaction_2(0, seuv_node, &tx, 1, 0, 0, seuv_delay) == E_NO_ERR) {};
     vTaskDelay(0.01 * delay_time_based);
     if (i2c_master_transaction_2(0, seuv_node, &tx, 1, &rx, seuv_data_length, seuv_delay) == E_NO_ERR) {
-        hex_dump(&rx, 4);
-        memcpy(frame, rx, 3);
+        hex_dump(&rx, seuv_data_length);
+        memcpy(frame, &rx, 2);
     }
     else
         return  ERR_I2C_FAIL;
@@ -143,10 +143,10 @@ void seuv_work_with_inms(int switch_status) {
 void get_a_packet(int gain) {
 
     uint8_t count = 0;           // error count , 0 = no error
-    uint8_t frame_1 [3 * parameters.seuv_sample_rate];
-    uint8_t frame_2 [3 * parameters.seuv_sample_rate];
-    uint8_t frame_3 [3 * parameters.seuv_sample_rate];
-    uint8_t frame_4 [3 * parameters.seuv_sample_rate];
+    uint8_t frame_1 [2 * parameters.seuv_sample_rate];
+    uint8_t frame_2 [2 * parameters.seuv_sample_rate];
+    uint8_t frame_3 [2 * parameters.seuv_sample_rate];
+    uint8_t frame_4 [2 * parameters.seuv_sample_rate];
 
     for (int i = 0 ; i < parameters.seuv_sample_rate ; i++) {
         frame_1[i] = 0;
@@ -161,10 +161,10 @@ void get_a_packet(int gain) {
         vTaskDelay(2 * delay_time_based);
         count = 0;
         for (int i = 0 ; i < parameters.seuv_sample_rate ; i++) {
-            count += seuv_take_data(1, 1, &frame_1[3 * i]);
-            count += seuv_take_data(2, 1, &frame_2[3 * i]);
-            count += seuv_take_data(3, 1, &frame_3[3 * i]);
-            count += seuv_take_data(4, 1, &frame_4[3 * i]);
+            count += seuv_take_data(1, 1, &frame_1[2 * i]);
+            count += seuv_take_data(2, 1, &frame_2[2 * i]);
+            count += seuv_take_data(3, 1, &frame_3[2 * i]);
+            count += seuv_take_data(4, 1, &frame_4[2 * i]);
         }
         printf("Gain 1 : take data\n");
         if (count == 0) {
@@ -191,10 +191,10 @@ void get_a_packet(int gain) {
         //channel 1~4 sample 50 times
         count = 0;
         for (int i = 0 ; i < parameters.seuv_sample_rate ; i++) {
-            count += seuv_take_data(1, 8, &frame_1[3 * i]);
-            count += seuv_take_data(2, 8, &frame_2[3 * i]);
-            count += seuv_take_data(3, 8, &frame_3[3 * i]);
-            count += seuv_take_data(4, 8, &frame_4[3 * i]);
+            count += seuv_take_data(1, 8, &frame_1[2 * i]);
+            count += seuv_take_data(2, 8, &frame_2[2 * i]);
+            count += seuv_take_data(3, 8, &frame_3[2 * i]);
+            count += seuv_take_data(4, 8, &frame_4[2 * i]);
         }
         if (count == 0) {
             calculate_avg_std(1, frame_1, parameters.seuv_sample_rate);

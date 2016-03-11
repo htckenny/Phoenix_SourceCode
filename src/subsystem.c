@@ -51,8 +51,8 @@ extern int TS9();
 /* Calendar value of 1980/1/6 00:00:00 */
 #define	TIME_T_ORIGIN		315964800L
 
-int status_update() {
-
+int status_update()
+{
 	status_frame.mode_task = (mode_task != NULL) ? 1 : 0;
 	status_frame.bat_check_task = (bat_check_task != NULL) ? 1 : 0;
 	status_frame.com_task = (com_task != NULL) ? 1 : 0;
@@ -76,7 +76,8 @@ int status_update() {
 	return E_NO_ERR;
 }
 
-uint32_t get_time() {
+uint32_t get_time()
+{
 
 	unsigned long time;
 	struct ds1302_clock clock;
@@ -90,7 +91,8 @@ uint32_t get_time() {
 
 }
 
-int parameter_init() {
+int parameter_init()
+{
 	abort_transfer_flag 				= 0;
 	magnetometer_deploy					= 0;
 	HK_frame.sun_light_flag				= 0;
@@ -160,20 +162,35 @@ int parameter_init() {
 	return Error;
 }
 
-void deploy_antenna() {
+void deploy_antenna()
+{
 	uint8_t txdata[2];
 
-	txdata[0] = ant_arm;    // arm ant board
-	i2c_master_transaction_2(0, ant_node, &txdata, 1, 0, 0, 0);
+	/* arm ant board */
+	txdata[0] = ant_arm;
+	i2c_master_transaction_2(0, ant_node, &txdata, 1, 0, 0, com_delay);
 	vTaskDelay(0.1 * delay_time_based);
-	txdata[0] = ant_deploy;    // deploy ant board one by one
+
+	/* deploy ant board one by one */
+	txdata[0] = ant_deploy;
 	txdata[1] = ant_deploy_timeout;
-	i2c_master_transaction_2(0, ant_node, &txdata, 2, 0, 0, 0);
+	i2c_master_transaction_2(0, ant_node, &txdata, 2, 0, 0, com_delay);
 	printf("Antenna Deployed!!\n");
 }
+int antenna_status_check()
+{
+	uint8_t txdata;
+	uint8_t rxdata[2];
+	txdata = 0xC3;
+	if (i2c_master_transaction_2(0, ant_node, &txdata, 1, &rxdata, 2, com_delay) == E_NO_ERR) {
+		if (rxdata[0] != 0 && rxdata[1] != 0)
+			return No_Error;
+	}
+	return Error;
+}
 
-
-void power_control(int device, int stats) {
+void power_control(int device, int stats)
+{
 	/**
 	 * Device code:
 	 * 1: ADCS
@@ -270,7 +287,8 @@ void power_control(int device, int stats) {
 }
 /** Power off all the subsystems */
 
-void power_OFF_ALL() {
+void power_OFF_ALL()
+{
 	power_control(1, OFF);
 	power_control(2, OFF);
 	power_control(3, OFF);
@@ -278,7 +296,8 @@ void power_OFF_ALL() {
 }
 
 /* Helper function */
-uint16_t Interface_tmp_get() {
+uint16_t Interface_tmp_get()
+{
 	uint8_t rx[5];
 	uint8_t tx[2];
 	tx[0] = 0xF0;	//0d240
@@ -291,7 +310,8 @@ uint16_t Interface_tmp_get() {
 	else
 		return 0;
 }
-uint16_t Interface_inms_thermistor_get() {
+uint16_t Interface_inms_thermistor_get()
+{
 	uint8_t rx[5];
 	uint8_t tx[2];
 	tx[0] = 0xD0;	//0d208
@@ -304,7 +324,8 @@ uint16_t Interface_inms_thermistor_get() {
 	else
 		return 0;
 }
-uint16_t Interface_3V3_current_get() {
+uint16_t Interface_3V3_current_get()
+{
 	uint8_t rx[5];
 	uint8_t tx[2];
 	tx[0] = 0x90;	//0d144
@@ -316,7 +337,8 @@ uint16_t Interface_3V3_current_get() {
 	else
 		return 0;
 }
-uint16_t Interface_5V_current_get() {
+uint16_t Interface_5V_current_get()
+{
 	uint8_t rx[5];
 	uint8_t tx[2];
 	tx[0] = 0xB0;	//0x176
@@ -329,7 +351,8 @@ uint16_t Interface_5V_current_get() {
 		return 0;
 }
 
-void generate_Error_Report(int type) {
+void generate_Error_Report(int type)
+{
 	uint8_t errPacket [10];
 	uint8_t txbuf[2];
 	uint8_t rxbuf[133];
@@ -483,7 +506,8 @@ void generate_Error_Report(int type) {
 		}
 	}
 }
-int objects_under(const char *dir) {
+int objects_under(const char *dir)
+{
 	int count = 0;
 	DIR *dirp;
 	struct dirent *ent;
@@ -500,7 +524,8 @@ int objects_under(const char *dir) {
 
 	return count;
 }
-int report_Collected_Data(char *args, uint16_t *buffer_length) {
+int report_Collected_Data(char *args, uint16_t *buffer_length)
+{
 
 	DIR * dirp;
 	struct dirent *ent;

@@ -121,8 +121,8 @@ int parameter_init() {
 	parameters.com_bit_rates			= 0x01;
 
 	/*  seuv related  */
-	parameters.seuv_period				= 8;
-	parameters.seuv_sample_rate			= 50;
+	parameters.seuv_period				= 15;
+	parameters.seuv_sample_rate			= 20;
 
 	parameters.seuv_ch1_G1_conf			= 0x98;		/* Gain 1 configuration */
 	parameters.seuv_ch2_G1_conf			= 0xB8;

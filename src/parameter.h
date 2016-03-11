@@ -61,7 +61,7 @@ status_frame_t status_frame;
 
 typedef struct __attribute__((packed)) {
 	uint8_t mode_status_flag;						/* Flag indicates that which mode is the Cubesat in */
-	uint8_t sun_light_flag;							/* Flag indicates that the Cubesat is under sun light */	
+	uint8_t sun_light_flag;							/* Flag indicates that the Cubesat is under sun light */
 	uint32_t reboot_count;							/* Counts of the time C&DH reboot */
 	uint16_t interface_3V3_current;					/* Interface Board 3.3 V bus current for INMS */
 	uint16_t interface_5V_current;					/* Interface Board 5.0 V bus current for INMS */
@@ -105,7 +105,7 @@ typedef struct __attribute__((packed)) {
 	uint8_t shutdown_flag;				// if this flag = 1, COM board will not send any packet to GS
 	uint8_t hk_collect_period;      	// period to collect a house keeping data, default = 60 (second)
 	uint8_t beacon_period;         	 	// beacon period while not in early orbit mode, default = 30(s)
-										// ps. while during early orbit mode, beacon_period is 15s and can not be changed unless leave early orbit.
+	// ps. while during early orbit mode, beacon_period is 15s and can not be changed unless leave early orbit.
 	uint8_t com_bit_rates; 				// (0x01)= 1200bps, (0x08)= 9600bps
 	uint32_t reboot_count;        	  	// how many times C&DH has reboot
 
@@ -148,7 +148,7 @@ typedef struct __attribute__((packed)) {
 	/* INMS related */
 	uint16_t INMS_timeout;
 	uint8_t inms_status;
-	
+
 	/* FS related */
 	uint8_t SD_partition_flag;
 } parameter_t;

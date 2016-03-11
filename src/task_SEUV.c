@@ -121,7 +121,7 @@ uint8_t seuv_take_data(uint8_t ch, int gain, uint8_t *frame) {
     if (i2c_master_transaction_2(0, seuv_node, &tx, 1, 0, 0, seuv_delay) == E_NO_ERR) {};
     vTaskDelay(0.01 * delay_time_based);
     if (i2c_master_transaction_2(0, seuv_node, &tx, 1, &rx, seuv_data_length, seuv_delay) == E_NO_ERR) {
-        hex_dump(&rx, seuv_data_length);
+        // hex_dump(&rx, seuv_data_length);
         memcpy(frame, &rx, 2);
     }
     else
@@ -248,7 +248,7 @@ void SolarEUV_Task(void * pvParameters) {
                 seuv_cm_task = NULL;
             }
         }
-        else if (parameters.seuv_mode == 0x04) {
+        else if (parameters.seuv_mode == 0x04) {    /* Mode D: Sample with INMS mode */
 
             if (seuv_with_INMS == 1) {
                 if (seuv_cm_task == NULL) {

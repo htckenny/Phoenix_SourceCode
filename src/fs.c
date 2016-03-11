@@ -940,7 +940,7 @@ int seuv_write(int SD_partition)
 	strcat(fileName, fileName_decode);
 	// strcat(fileName, "_S");
 	strcat(fileName, ".dat");
-	printf("%s\n", fileName);
+	printf("%s\n", buf);
 
 	seuvFrame.packettime = t.tv_sec;
 	// printf("sample = %d\n", seuvFrame.samples);
@@ -949,8 +949,8 @@ int seuv_write(int SD_partition)
 	if (res != FR_OK) {
 		printf("SEUV  f_open fail!!\n");
 	}
-	else
-		printf("SEUV f_open success \n");
+	// else
+		// printf("SEUV f_open success \n");
 
 	// printf("%d\n", (int)sizeof(seuv_frame_t) );
 	hex_dump(&seuvFrame, seuv_length);

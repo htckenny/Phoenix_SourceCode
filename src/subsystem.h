@@ -89,7 +89,7 @@
 #define com_delay 			10	//1000
 #define eps_delay 			7
 #define seuv_delay 			10
-#define interface_delay			7
+#define interface_delay		7
 #define adcs_delay 			10
 
 #define adcs_power 			0x09

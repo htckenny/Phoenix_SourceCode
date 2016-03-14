@@ -188,7 +188,7 @@ uint16_t Interface_5V_current_get();
 uint16_t Interface_tmp_get();
 uint16_t Interface_inms_thermistor_get();
 int status_update();
-void generate_Error_Report(int type);
+void generate_Error_Report(int type, uint16_t * cause_value);
 int report_Collected_Data(char *args, uint16_t *buffer_length);
 void ECEFtoECI(float * Time, int32_t * r_ECEF, int16_t * r_ECI);
 

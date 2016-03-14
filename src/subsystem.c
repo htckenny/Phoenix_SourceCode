@@ -351,8 +351,28 @@ uint16_t Interface_5V_current_get()
 		return 0;
 }
 
-void generate_Error_Report(int type)
+void generate_Error_Report(int type, uint16_t * cause_value)
 {
+	/* 1. Low Battery Condition */
+	/* 2. ADCS 3.3V current too high */
+	/* 3. ADCS 5V current too high */
+	/* 4. GPS current too high */
+	/* 5. SEUV 3.3V current too high */
+	/* 6. SEUV 5V current too high */
+	/* 7. INMS 3.3V current too high */
+	/* 8. INMS 5V current too high */
+	/* 9. OBC temperature out of range */
+	/* 10. COM temperature out of range */
+	/* 11. Antenna temperature out of range */
+	/* 12. IFB temperature out of range */
+	/* 13. ADCS temperature out of range */
+	/* 14. ADCS Rate Sensor & Magnetometer temp out of range */
+	/* 15. INMS temperature out of range */
+	/* 16. EPS1 temperature out of range */
+	/* 17. EPS2 temperature out of range */
+	/* 18. EPS3 temperature out of range */
+	/* 19. Battery temperature out of range */
+	
 	uint8_t errPacket [10];
 	uint8_t txbuf[2];
 	uint8_t rxbuf[133];
@@ -370,140 +390,14 @@ void generate_Error_Report(int type)
 	memcpy(&errPacket[4], &parameters.ErrSerialNumber, 2);
 	memcpy(&errPacket[6], &type, 1);
 	memcpy(&errPacket[7], &HK_frame.mode_status_flag, 1);
+	memcpy(&errPacket[8], cause_value, 2);
 
-	switch (type) {
-	/* Low Battery Condition */
-	case 1 :
-		txbuf[0] = 0x08;
-		if (i2c_master_transaction_2(0, stm_eps_node, &txbuf, 1, &rxbuf, 43 + 2, eps_delay) == E_NO_ERR) {
-			memcpy(&errPacket[8], &rxbuf[10], 2);
-		}
-		break;
-	/* ADCS 3.3V current too high */
-	case 2 :
-		txbuf[0] = 0x08;
-		txbuf[1] = 0x00;
-		if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 133, eps_delay) == E_NO_ERR) {
-			memcpy(&errPacket[8], &rxbuf[28], 2); // curout[3] ADCS 3.3V
-		}
-		break;
-	/* ADCS 5V current too high */
-	case 3 :
-		txbuf[0] = 0x08;
-		txbuf[1] = 0x00;
-		if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 133, eps_delay) == E_NO_ERR) {
-			memcpy(&errPacket[8], &rxbuf[22], 2); // curout[0] ADCS 5V
-		}
-		break;
-	/* GPS current too high */
-	case 4 :
-		txbuf[0] = 0x08;
-		txbuf[1] = 0x00;
-		if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 133, eps_delay) == E_NO_ERR) {
-			memcpy(&errPacket[8], &rxbuf[30], 2); // curout[4] GPS
-		}
-		break;
-	/* SEUV 3.3V current too high */
-	case 5 :
-		txbuf[0] = 0x08;
-		txbuf[1] = 0x00;
-		if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 133, eps_delay) == E_NO_ERR) {
-			memcpy(&errPacket[8], &rxbuf[32], 2); // curout[5] SEUV 3.3V
-		}
-		break;
-	/* SEUV 5V current too high */
-	case 6 :
-		txbuf[0] = 0x08;
-		txbuf[1] = 0x00;
-		if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 133, eps_delay) == E_NO_ERR) {
-			memcpy(&errPacket[8], &rxbuf[26], 2); // curout[2] SEUV 5V
-		}
-		break;
-	/* INMS 3.3V current too high */
-	case 7 :
-		sub_current = Interface_3V3_current_get();
-		memcpy(&errPacket[8], &sub_current, 2);
-		break;
-	/* INMS 5V current too high */
-	case 8 :
-		sub_current = Interface_5V_current_get();
-		memcpy(&errPacket[8], &sub_current, 2);
-		break;
-	/* OBC temperature out of range */
-	case 9 :
-		TS9();
-		memcpy(&errPacket[8], &ThermalFrame.T9, 2);
-		break;
-	/* COM temperature out of range */
-	case 10 :
-		TS5();
-		memcpy(&errPacket[8], &ThermalFrame.T5, 2);
-		break;
-	/* Antenna temperature out of range */
-	case 11 :
-		TS6();
-		memcpy(&errPacket[8], &ThermalFrame.T6, 2);
-		break;
-	/* IFB temperature out of range */
-	case 12 :
-		sub_temperature = Interface_tmp_get();
-		memcpy(&errPacket[8], &sub_temperature, 2);
-		break;
-	/* ADCS temperature out of range */
-	case 13 :
-		TS7();
-		memcpy(&errPacket[8], &ThermalFrame.T7, 2);
-		break;
-	/* ADCS Rate Sensor & Magnetometer temp out of range */
-	case 14 :
-		TS7_2();
-		memcpy(&errPacket[8], &ThermalFrame.T7_2, 2);
-		break;
-	/* INMS temperature out of range */
-	case 15 :
-		sub_temperature = Interface_inms_thermistor_get();
-		memcpy(&errPacket[8], &sub_temperature, 2);
-		break;
-	/* EPS1 temperature out of range */
-	case 16 :
-		txbuf[0] = 0x08;
-		txbuf[1] = 0x04;
-		if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 23, eps_delay) == E_NO_ERR) {
-			memcpy(&errPacket[8], &rxbuf[6], 2); // temp[0]
-		}
-		break;
-	/* EPS2 temperature out of range */
-	case 17 :
-		txbuf[0] = 0x08;
-		txbuf[1] = 0x04;
-		if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 23, eps_delay) == E_NO_ERR) {
-			memcpy(&errPacket[8], &rxbuf[8], 2); // temp[1]
-		}
-		break;
-	/* EPS3 temperature out of range */
-	case 18 :
-		txbuf[0] = 0x08;
-		txbuf[1] = 0x04;
-		if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 23, eps_delay) == E_NO_ERR) {
-			memcpy(&errPacket[8], &rxbuf[10], 2); // temp[2]
-		}
-		break;
-	/* Battery temperature out of range */
-	case 19 :
-		txbuf[0] = 0x08;
-		txbuf[1] = 0x04;
-		if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 23, eps_delay) == E_NO_ERR) {
-			memcpy(&errPacket[8], &rxbuf[12], 2); // temp[3]
-			break;
-		}
-
-		if (errPacket_write(errPacket) == No_Error) {
-			parameters.ErrSerialNumber ++;
-			para_w_flash();
-		}
-		else {
-			printf("error write into errpacket\n");
-		}
+	if (errPacket_write(errPacket) == No_Error) {
+		parameters.ErrSerialNumber ++;
+		para_w_flash();
+	}
+	else {
+		printf("error write into errpacket\n");
 	}
 }
 int objects_under(const char *dir)

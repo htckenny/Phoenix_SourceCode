@@ -12,7 +12,7 @@ extern void SolarEUV_Task(void * pvParameters);
 extern void vTaskInmsErrorHandle(void * pvParameters);
 extern void vTaskInmsCurrentMonitor(void * pvParameters);
 extern void vTaskInmsTemperatureMonitor(void * pvParameters);
-extern void Anomaly_Handler_Task(void * pvParameters);
+extern void Anomaly_Monitor_Task(void * pvParameters);
 
 extern void Enter_Safe_Mode(int last_mode) ;
 

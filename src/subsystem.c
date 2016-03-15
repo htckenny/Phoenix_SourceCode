@@ -351,7 +351,7 @@ uint16_t Interface_5V_current_get()
 		return 0;
 }
 
-void generate_Error_Report(int type, uint16_t * cause_value)
+void generate_Error_Report(int type, uint16_t cause_value)
 {
 	/* 1. Low Battery Condition */
 	/* 2. ADCS 3.3V current too high */
@@ -390,7 +390,7 @@ void generate_Error_Report(int type, uint16_t * cause_value)
 	memcpy(&errPacket[4], &parameters.ErrSerialNumber, 2);
 	memcpy(&errPacket[6], &type, 1);
 	memcpy(&errPacket[7], &HK_frame.mode_status_flag, 1);
-	memcpy(&errPacket[8], cause_value, 2);
+	memcpy(&errPacket[8], &cause_value, 2);
 
 	if (errPacket_write(errPacket) == No_Error) {
 		parameters.ErrSerialNumber ++;

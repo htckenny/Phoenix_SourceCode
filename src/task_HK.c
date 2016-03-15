@@ -98,7 +98,9 @@ int TS9() {
 
 	adc_buffer = adc_start_blocking(1);
 
-	ThermalFrame.T9 = (uint16_t)((((adc_buffer[0] * 2493.0) / 1023) - 424) / 6.25);
+	ThermalFrame.T9 = adc_buffer[0];
+
+	printf("%f\n", ((((adc_buffer[0] * 2493.0) / 1023) - 424) / 6.25));
 
 	return No_Error;
 }

@@ -104,9 +104,15 @@ int TS9() {
 
 	return No_Error;
 }
-/* GPS temp */
+/* ADCS Rate Sensor & Magnetometer temp */
 int TS8() {
-	ThermalFrame.T8 = 0;
+	uint8_t txbuffer = 175;		// check 135
+	uint8_t rxbuffer[6];
+
+	if (i2c_master_transaction_2(0, adcs_node, &txbuffer, 1, &rxbuffer, 6, adcs_delay) != E_NO_ERR)
+		return Error;
+
+	memcpy(&ThermalFrame.T8, &rxbuffer[4], 2);
 	return No_Error;
 }
 /* ADCS ARM CPU temp */
@@ -121,18 +127,7 @@ int TS7()
 	memcpy(&ThermalFrame.T7, &rxbuffer[4], 2);
 	return No_Error;
 }
-/* ADCS Rate Sensor & Magnetometer temp */
-int TS7_2()
-{
-	uint8_t txbuffer = 175;		// check 135
-	uint8_t rxbuffer[6];
 
-	if (i2c_master_transaction_2(0, adcs_node, &txbuffer, 1, &rxbuffer, 6, adcs_delay) != E_NO_ERR)
-		return Error;
-
-	memcpy(&ThermalFrame.T7_2, &rxbuffer[4], 2);
-	return No_Error;
-}
 /* Antenna Board temp */
 int TS6() {
 	uint8_t txbuffer = 0xC0;

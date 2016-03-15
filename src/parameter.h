@@ -188,8 +188,7 @@ typedef struct __attribute__((packed)) {
 	uint16_t T5;  		// COM temp
 	uint16_t T6; 		// Antenna temp
 	int16_t T7; 		// ADCS temp
-	int16_t T7_2; 		// ADCS Rate Sensor & Magnetometer temp
-	uint16_t T8; 		// GPS temp
+	int16_t T8; 		// ADCS Rate Sensor & Magnetometer temp
 	uint16_t T9;  		// OBC temp
 	uint16_t T10; 		// interface temp
 	uint16_t T11; 		// interface INMS temp

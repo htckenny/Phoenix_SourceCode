@@ -25,12 +25,6 @@
 #include "fs.h"
 #include "../lib/liba712/src/drivers/mpio.h"
 
-extern int TS5();
-extern int TS6();
-extern int TS7();
-extern int TS7_2();
-extern int TS9();
-
 /* Parameter for ECEG to ECI function */
 #define PI 3.14159265
 #define omega 7.29211585275553e-005
@@ -374,11 +368,7 @@ void generate_Error_Report(int type, uint16_t cause_value)
 	/* 19. Battery temperature out of range */
 	
 	uint8_t errPacket [10];
-	uint8_t txbuf[2];
-	uint8_t rxbuf[133];
-	uint16_t sub_current, sub_temperature;
 	timestamp_t t;
-
 	t.tv_sec = 0;
 	t.tv_nsec = 0;
 	obc_timesync(&t, 6000);

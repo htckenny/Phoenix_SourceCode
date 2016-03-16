@@ -21,7 +21,7 @@ void delete_buf() {
 }
 
 /* Read incoming commnad */
-void Read_Execute() {  
+void Read_Execute() {
 
 	uint8_t txdata = com_rx_get;
 	uint8_t val[201];  // expect  1+200 byte response , first byte is length1~200
@@ -37,10 +37,10 @@ void Read_Execute() {
 }
 
 /* Check incoming command */
-int CIC() { 
+int CIC() {
 
 	uint8_t txdata = com_rx_check;
-	uint8_t val; 
+	uint8_t val;
 
 	if (i2c_master_transaction_2(0, com_rx_node, &txdata, 1, &val, 1, com_delay) == E_NO_ERR) {
 		return (uint8_t)val;
@@ -60,7 +60,7 @@ void Telecom_Task(void * pvParameters) {
 
 	set_Call_Sign(0);
 
-	set_tx_rate(parameters.first_flight==1 ? 1: 8);      /* TODO:  Think !!! */
+	set_tx_rate(8);
 	lastCommandTime = 946684800;
 
 	if (parameters.shutdown_flag == 1) {
@@ -77,8 +77,7 @@ void Telecom_Task(void * pvParameters) {
 		obc_timesync(&t, 6000);
 		// printf("difference = %" PRIu32 "\n", t.tv_sec - lastCommandTime);
 		// printf("\E[1A\r");
-		if (t.tv_sec > lastCommandTime + Communication_timeout){
-			// printf("%d\n", t.tv_sec);
+		if (t.tv_sec > lastCommandTime + Communication_timeout) {
 			printf("\nTimeout !! reboot whole system\n");
 			txBuffer = 20;
 			i2c_master_transaction_2(0, eps_node, &txBuffer, 1, 0, 0, eps_delay);
@@ -89,15 +88,9 @@ void Telecom_Task(void * pvParameters) {
 		if (tx_wdt_flag >= 25) {
 			txdata = com_tx_hk;
 			i2c_master_transaction_2(0, com_tx_node, &txdata, 1, &rxdata, 1, com_delay);
-
-			if ((rxdata < 12) && (parameters.com_bit_rates == 8)) {
-				set_tx_rate(parameters.com_bit_rates);
-			}
-			if ((rxdata > 3) && (parameters.com_bit_rates == 1)) {
-				set_tx_rate(parameters.com_bit_rates);
-			}
+			set_tx_rate(8);
 			tx_wdt_flag = 0;
-		}		
+		}
 
 		/*----------------------------------*/
 		flag = CIC();

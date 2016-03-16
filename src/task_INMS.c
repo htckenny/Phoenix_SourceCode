@@ -139,11 +139,21 @@ uint32_t timeGet (int clockType) {
 	onBoardTime = (clockType == 0) ? ( t.tv_sec) : ( t.tv_sec % 86400);
 	return onBoardTime;
 }
-
+void adcs2body(uint16_t *adcs, uint16_t *body)
+{
+	body[0] = adcs[2];		/* phoenix x = adcs z */
+	body[1] = adcs[1];		/* phoenix y = adcs y */
+	body[2] = -adcs[0];		/* phoenix z =-adcs x */
+	body[3] = adcs[5];		/* phoenix x = adcs z */
+	body[4] = adcs[4];		/* phoenix y = adcs y */
+	body[5] = -adcs[3];		/* phoenix z =-adcs x */
+}
 void package_with_header(uint8_t *ucharAdcs)
 {
 	uint8_t rxbuf[48];
 	uint8_t txbuf;
+	uint16_t rxbuf_ADCS[6];
+	uint16_t rxbuf_Body[6];
 	int16_t	r_ECI[3];
 	int32_t	r_ECEF[3];
 	float ECEF_time[6];
@@ -161,7 +171,10 @@ void package_with_header(uint8_t *ucharAdcs)
 		txbuf = 0x88;	// ID 136
 		if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 48, adcs_delay) == E_NO_ERR) {
 			printf("Get Attitude, Position from ADCS\n");
-			memcpy(&ucharAdcs[4], &rxbuf[18], 18);
+			memcpy(&rxbuf_ADCS[0], &rxbuf[18], 12);
+			adcs2body(&rxbuf_ADCS[0], &rxbuf_Body[0]);
+			memcpy(&ucharAdcs[4], &rxbuf_Body[0], 12);
+			memcpy(&ucharAdcs[16], &rxbuf_ADCS[0], 6);
 		}
 	}
 	else if (use_GPS_header == 1) {
@@ -199,7 +212,10 @@ void package_with_header(uint8_t *ucharAdcs)
 				txbuf = 0x88;
 				if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 48, adcs_delay) == E_NO_ERR) {
 					printf("Get Attitude from ADCS\n");
-					memcpy(&ucharAdcs[4], &rxbuf[18], 12);
+					memcpy(&rxbuf_ADCS[0], &rxbuf[18], 12);
+					adcs2body(&rxbuf_ADCS[0], &rxbuf_Body[0]);
+					memcpy(&ucharAdcs[4], &rxbuf_Body[0], 12);
+					memcpy(&ucharAdcs[16], &rxbuf_ADCS[0], 6);
 				}
 			}
 			else {
@@ -207,12 +223,14 @@ void package_with_header(uint8_t *ucharAdcs)
 				txbuf = 0x88;	// ID 136
 				if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 48, adcs_delay) == E_NO_ERR) {
 					printf("Get Attitude, Position from ADCS\n");
-					memcpy(&ucharAdcs[4], &rxbuf[18], 18);
+					memcpy(&rxbuf_ADCS[0], &rxbuf[18], 12);
+					adcs2body(&rxbuf_ADCS[0], &rxbuf_Body[0]);
+					memcpy(&ucharAdcs[4], &rxbuf_Body[0], 12);
+					memcpy(&ucharAdcs[16], &rxbuf_ADCS[0], 6);
 				}
 			}
 		}
 	}
-
 }
 /**
  * This function is used to determine if the next script is coming or not

@@ -572,28 +572,7 @@ int inms_script_write_flash(int buffNum, uint8_t scriptCont[], int delete_flag, 
 	struct stat st;
 	char path[22];
 
-	if (buffNum == 0)
-		strcpy(path, "/boot/INMS/idle0.bin");
-	else if (buffNum == 1)
-		strcpy(path, "/boot/INMS/idle1.bin");
-	else if (buffNum == 2)
-		strcpy(path, "/boot/INMS/idle2.bin");
-	else if (buffNum == 3)
-		strcpy(path, "/boot/INMS/idle3.bin");
-	else if (buffNum == 4)
-		strcpy(path, "/boot/INMS/idle4.bin");
-	else if (buffNum == 5)
-		strcpy(path, "/boot/INMS/idle5.bin");
-	else if (buffNum == 6)
-		strcpy(path, "/boot/INMS/idle6.bin");
-	else if (buffNum == 7)
-		strcpy(path, "/boot/INMS/idle7.bin");
-	else if (buffNum == 8)
-		strcpy(path, "/boot/INMS/idle8.bin");
-	else if (buffNum == 10)
-		strcpy(path, "/boot/nanomind.bin");
-	else if (buffNum == 11)
-		strcpy(path, "/boot/boot.conf");
+	sprintf(path, "/boot/INMS/idle%d.bin", buffNum);
 
 	if (delete_flag == 1) {
 		if (stat(path, &st) < 0) {
@@ -640,24 +619,7 @@ int inms_script_length_flash(int buffNum) {
 	char path[22];
 	int packlength = 0;
 
-	if (buffNum == 0)
-		strcpy(path, "/boot/INMS/idle0.bin");
-	else if (buffNum == 1)
-		strcpy(path, "/boot/INMS/idle1.bin");
-	else if (buffNum == 2)
-		strcpy(path, "/boot/INMS/idle2.bin");
-	else if (buffNum == 3)
-		strcpy(path, "/boot/INMS/idle3.bin");
-	else if (buffNum == 4)
-		strcpy(path, "/boot/INMS/idle4.bin");
-	else if (buffNum == 5)
-		strcpy(path, "/boot/INMS/idle5.bin");
-	else if (buffNum == 6)
-		strcpy(path, "/boot/INMS/idle6.bin");
-	else if (buffNum == 7)
-		strcpy(path, "/boot/INMS/idle7.bin");
-	else if (buffNum == 8)
-		strcpy(path, "/boot/INMS/idle8.bin");
+	sprintf(path, "/boot/INMS/idle%d.bin", buffNum);
 
 	/* Open file */
 	FILE * fp = fopen(path, "r");
@@ -707,24 +669,7 @@ int inms_script_read_flash(int buffNum, int packlength, void * txbuf) {
 	size_t size;
 	char path[22];
 
-	if (buffNum == 0)
-		strcpy(path, "/boot/INMS/idle0.bin");
-	else if (buffNum == 1)
-		strcpy(path, "/boot/INMS/idle1.bin");
-	else if (buffNum == 2)
-		strcpy(path, "/boot/INMS/idle2.bin");
-	else if (buffNum == 3)
-		strcpy(path, "/boot/INMS/idle3.bin");
-	else if (buffNum == 4)
-		strcpy(path, "/boot/INMS/idle4.bin");
-	else if (buffNum == 5)
-		strcpy(path, "/boot/INMS/idle5.bin");
-	else if (buffNum == 6)
-		strcpy(path, "/boot/INMS/idle6.bin");
-	else if (buffNum == 7)
-		strcpy(path, "/boot/INMS/idle7.bin");
-	else if (buffNum == 8)
-		strcpy(path, "/boot/INMS/idle8.bin");
+	sprintf(path, "/boot/INMS/idle%d.bin", buffNum);
 
 	/* Open file */
 	FILE * fp = fopen(path, "r");
@@ -773,25 +718,8 @@ int inms_script_delete_flash(int buffNum) {
 	struct stat st;
 	int ret;
 	char path[22];
-	/* Get args */
-	if (buffNum == 0)
-		strcpy(path, "/boot/INMS/idle0.bin");
-	else if (buffNum == 1)
-		strcpy(path, "/boot/INMS/idle1.bin");
-	else if (buffNum == 2)
-		strcpy(path, "/boot/INMS/idle2.bin");
-	else if (buffNum == 3)
-		strcpy(path, "/boot/INMS/idle3.bin");
-	else if (buffNum == 4)
-		strcpy(path, "/boot/INMS/idle4.bin");
-	else if (buffNum == 5)
-		strcpy(path, "/boot/INMS/idle5.bin");
-	else if (buffNum == 6)
-		strcpy(path, "/boot/INMS/idle6.bin");
-	else if (buffNum == 7)
-		strcpy(path, "/boot/INMS/idle7.bin");
-	else if (buffNum == 8)
-		strcpy(path, "/boot/INMS/idle8.bin");
+
+	sprintf(path, "/boot/INMS/idle%d.bin", buffNum);
 
 	if (stat(path, &st) < 0) {
 		printf("rm: cannot stat %s\r\n", path);
@@ -950,7 +878,7 @@ int seuv_write(int SD_partition)
 		printf("SEUV  f_open fail!!\n");
 	}
 	// else
-		// printf("SEUV f_open success \n");
+	// printf("SEUV f_open success \n");
 
 	// printf("%d\n", (int)sizeof(seuv_frame_t) );
 	hex_dump(&seuvFrame, seuv_length);

@@ -30,6 +30,8 @@
 #define Report_Data_Number	12		/* Report Collected Data Number */
 
 extern uint16_t fletcher(uint8_t *script, size_t length);
+extern void little2big_32(uint8_t * input_data);
+extern void little2big_16(uint8_t * input_data);
 
 void perform_fletcher(uint8_t * check_sum_final) {
 	int maxlength = 0;
@@ -65,18 +67,7 @@ void perform_fletcher(uint8_t * check_sum_final) {
 		}
 	}
 }
-void little2big_32(uint8_t * input_data) {
-	uint32_t buffs_32;
-	memcpy(&buffs_32, input_data, 4);
-	buffs_32 = csp_ntoh32(buffs_32);
-	memcpy(input_data, &buffs_32, 4);
-}
-void little2big_16(uint8_t * input_data) {
-	uint16_t buffs_16;
-	memcpy(&buffs_16, input_data, 2);
-	buffs_16 = csp_ntoh16(buffs_16);
-	memcpy(input_data, &buffs_16, 2);
-}
+
 /* telecommand Service 3  */
 void decodeService3(uint8_t subType, uint8_t* telecommand) {
 	uint8_t txBufferWithSID[254];

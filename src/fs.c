@@ -1449,9 +1449,9 @@ int errPacket_dump()
 {
 	uint8_t txBufferWithSID[11];
 	uint8_t txlen;
-	int lastNum;
-	lastNum = parameters.ErrSerialNumber;
-	uint8_t err_buf[lastNum * 10] = {0};
+	uint8_t err_buf[maxNum * 10] = {0};
+
+	int lastNum = parameters.ErrSerialNumber;
 
 	if (errPacket_read(err_buf) == Error)
 		return Error;
@@ -1459,7 +1459,7 @@ int errPacket_dump()
 	printf("last num = %d\n", parameters.ErrSerialNumber);
 	txlen = 10;
 	txBufferWithSID[0] = 41;
-	
+
 	for (int i = 0 ; i < lastNum ; i++) {
 		memcpy(&txBufferWithSID[1], &err_buf[10 * i], txlen);
 		SendPacketWithCCSDS_AX25(&txBufferWithSID[0], txlen + 1, obc_apid, 3, 25);

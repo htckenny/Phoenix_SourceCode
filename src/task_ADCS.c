@@ -1,33 +1,41 @@
 /**
 	*******************************************************************
- 	* @file		task_ADCS_test_1.0.c
+ 	* @file		task_ADCS_test_3.0.c
  	* @Author 	Jerry Wu, Kai Wu
  	* @Version	V1.0
  	* @Date     2016/1/25
  	* @Update   2016/3/2
- 	* @Brief	This program is the test version for the ADCS flight
+ 	* @Brief	This program is the flight version for the ADCS flight
  	*			software. Pseudo data would be given from the stm MCU
  	*			as sensor values. The goal is to test the algorthm witg
  	*			various of conditional logics and statements. As a note,
- 	*			the I2C stm node will be set as 127 (0X7F)
+ 	*			the I2C stm node will be set as 127 (0X7F). Once Phoenix
+ 	*			is going to be delivered to VKI, the stm i2c node will
+ 	*           changed to adcs_node (0x57) from the OBDH side(supreme
+ 	*			command authority), in order to be the real flight verson.
  **********************************************************************
  **/
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include "subsystem.h"
 #include <dev/i2c.h>
+#include <util/hexdump.h>
+#include <string.h> // memcpy
+#include <stdlib.h> //realloc
 #include <inttypes.h>
 #include <stdbool.h>
 
-#include "subsystem.h"
-
 #define DATALENGTH 1;
+
+// #define adcs_node 0x57
+// #define stm_node 0x7F
+//#define adcs_delay 7
 
 uint8_t txbuf[255];  //Define Tx buffer length
 uint8_t rxbuf[255];  //Define Rx buffer length
-
 int16_t Angular_Y_rate_difference[2];
 int16_t Angular_Y_reference_rate = -220;
-//int magnetometer_deploy = 0; //Jerry test Mag_Deploy
+float adcs_state_delay = 0.9;
 
 //Declare the structure of the estimated value of angular rate
 typedef struct __attribute__((packed))
@@ -138,12 +146,6 @@ void Initial_Mode()
 				printf("\tEstimate Z angular rate = %d\n", adcs_est_ang_rates.angular_Z_rate[1]);
 
 			}
-			// vTaskDelay(0.1 * delay_time_based);
-			// txbuf[0] = 0x91;   //0d146 Estimated RPY angle
-			// if (i2c_master_transaction_2(0, stm_node, &txbuf, 1, &rxbuf, 6, adcs_delay) == E_NO_ERR)
-			// {
-			// 	adcs_est_rpy_angle.pitch_angle[1] = rxbuf[2] + (rxbuf[3] << 8); //   *256 = <<8, /256= >>8
-			// }
 
 			if ((adcs_est_ang_rates.angular_X_rate[1] >= -500) && (adcs_est_ang_rates.angular_X_rate[1] <= 500)
 			        && (adcs_est_ang_rates.angular_Z_rate[1] >= -500) && (adcs_est_ang_rates.angular_Z_rate[1] <= 500))
@@ -156,7 +158,7 @@ void Initial_Mode()
 				Initial_mode_1st_count_total += 1;
 			}
 
-			vTaskDelay(1 * delay_time_based);
+			vTaskDelay(adcs_state_delay * delay_time_based);
 		}
 
 
@@ -172,11 +174,6 @@ void Initial_Mode()
 					adcs_est_ang_rates.angular_Y_rate[1] = rxbuf[2] + (rxbuf[3] << 8); //   *256 = <<8, /256= >>8
 					adcs_est_ang_rates.angular_Z_rate[1] = rxbuf[4] + (rxbuf[5] << 8); //   *256 = <<8, /256= >>8
 				}
-				// txbuf[0] = 0x91;   //0d146 Estimated RPY angle
-				// if (i2c_master_transaction_2(0, stm_node, &txbuf, 1, &rxbuf, 6, adcs_delay) == E_NO_ERR)
-				// {
-				// 	adcs_est_rpy_angle.pitch_angle[1] = rxbuf[2] + (rxbuf[3] << 8); //   *256 = <<8, /256= >>8
-				// }
 
 				printf("\tWe are in the Second logic condition (In yes result)");
 				printf("\tEstimate Y angular rate = %d\n", adcs_est_ang_rates.angular_Y_rate[1]);
@@ -191,7 +188,7 @@ void Initial_Mode()
 					Initial_mode_2nd_count_total += 1;
 				}
 
-				vTaskDelay(1 * delay_time_based);
+				vTaskDelay(adcs_state_delay * delay_time_based);
 			}
 
 			if ((Initial_mode_2nd_count / Initial_mode_2nd_count_total) >= Initial_mode_2nd_conditional_ratio)
@@ -227,12 +224,6 @@ void Initial_Mode()
 					adcs_est_ang_rates.angular_Y_rate[1] = rxbuf[2] + (rxbuf[3] << 8); //   *256 = <<8, /256= >>8
 					adcs_est_ang_rates.angular_Z_rate[1] = rxbuf[4] + (rxbuf[5] << 8); //   *256 = <<8, /256= >>8
 				}
-				//vTaskDelay(0.1 * delay_time_based);
-				// txbuf[0] = 0x91;   //0d146 Estimated RPY angle
-				// if (i2c_master_transaction_2(0, stm_node, &txbuf, 1, &rxbuf, 6, adcs_delay) == E_NO_ERR)
-				// {
-				// 	adcs_est_rpy_angle.pitch_angle[1] = rxbuf[2] + (rxbuf[3] << 8); //   *256 = <<8, /256= >>8
-				// }
 
 				printf("\tWe are in the Second logic condition(In no result)\n");
 
@@ -254,7 +245,7 @@ void Initial_Mode()
 					Initial_mode_2nd_count_total += 1;
 				}
 
-				vTaskDelay(1 * delay_time_based);
+				vTaskDelay(adcs_state_delay * delay_time_based);
 			}
 
 			if ((Initial_mode_2nd_count / Initial_mode_2nd_count_total) >= Initial_mode_2nd_conditional_ratio)
@@ -278,7 +269,7 @@ void Initial_Mode()
 				break;
 			}
 		}
-		vTaskDelay(1 * delay_time_based);
+		vTaskDelay(adcs_state_delay * delay_time_based);
 		break;
 	}
 }
@@ -331,12 +322,7 @@ void High_Initial_Rate_Detumbling(int high_initial_identifier)
 			adcs_est_ang_rates.angular_Y_rate[1] = rxbuf[2] + (rxbuf[3] << 8); //   *256 = <<8, /256= >>8
 			adcs_est_ang_rates.angular_Z_rate[1] = rxbuf[4] + (rxbuf[5] << 8); //   *256 = <<8, /256= >>8
 		}
-		//vTaskDelay(0.1 * delay_time_based);
-		// txbuf[0] = 0x91;   //0d146 Estimated RPY angle
-		// if (i2c_master_transaction_2(0, stm_node, &txbuf, 1, &rxbuf, 6, adcs_delay) == E_NO_ERR)
-		// {
-		// 	adcs_est_rpy_angle.pitch_angle[1] = rxbuf[2] + (rxbuf[3] << 8); //   *256 = <<8, /256= >>8
-		// }
+
 		/*---------------------------Continously condition triggering (Previously in Yes result)-----------------------------*/
 		if (high_initial_identifier == 1)
 		{
@@ -399,7 +385,7 @@ void High_Initial_Rate_Detumbling(int high_initial_identifier)
 				//break;
 			}
 
-			vTaskDelay(1 * delay_time_based);
+			vTaskDelay(adcs_state_delay * delay_time_based);
 			adcs_est_ang_rates.angular_Y_rate[0] = adcs_est_ang_rates.angular_Y_rate[1];
 		}
 
@@ -486,12 +472,12 @@ void High_Initial_Rate_Detumbling(int high_initial_identifier)
 				//break;
 			}
 
-			vTaskDelay(1 * delay_time_based);
+			vTaskDelay(adcs_state_delay * delay_time_based);
 			adcs_est_ang_rates.angular_X_rate[0] = adcs_est_ang_rates.angular_X_rate[1];
 			adcs_est_ang_rates.angular_Z_rate[0] = adcs_est_ang_rates.angular_Z_rate[1];
 		}
 	}
-	vTaskDelay(1 * delay_time_based);
+	vTaskDelay(adcs_state_delay * delay_time_based);
 }
 
 void Detumbling_Control_RKF()
@@ -542,12 +528,7 @@ void Detumbling_Control_RKF()
 			adcs_est_ang_rates.angular_Y_rate[1] = rxbuf[2] + (rxbuf[3] << 8); //   *256 = <<8, /256= >>8
 			adcs_est_ang_rates.angular_Z_rate[1] = rxbuf[4] + (rxbuf[5] << 8); //   *256 = <<8, /256= >>8
 		}
-		//vTaskDelay(0.075 * delay_time_based);
-		// txbuf[0] = 0x91;   //0d146 Estimated RPY angle
-		// if (i2c_master_transaction_2(0, stm_node, &txbuf, 1, &rxbuf, 6, adcs_delay) == E_NO_ERR)
-		// {
-		// 	adcs_est_rpy_angle.pitch_angle[1] = rxbuf[2] + (rxbuf[3] << 8); //   *256 = <<8, /256= >>8
-		// }
+
 		/*---------------------------Continously condition triggering (Previously in Yes result)-----------------------------*/
 		printf("\tEstimate Y angular rate = %d\n", adcs_est_ang_rates.angular_Y_rate[1]);
 
@@ -607,10 +588,9 @@ void Detumbling_Control_RKF()
 			adcs_status.y_momentum_intial_flag = 0;
 
 			printf("u stay in Detumbling Control with RKF\n");
-			//break;
 		}
 
-		vTaskDelay(1 * delay_time_based);
+		vTaskDelay(adcs_state_delay * delay_time_based);
 		adcs_est_ang_rates.angular_Y_rate[0] = adcs_est_ang_rates.angular_Y_rate[1];
 		Angular_Y_rate_difference[0] = Angular_Y_rate_difference[1];
 	}
@@ -763,10 +743,9 @@ void Detumbling_Control_EKF()
 			adcs_status.y_momentum_intial_flag = 0;
 
 			printf("u stay in Detumbling Control with EKF\n");
-			//break;
 		}
 
-		vTaskDelay(0.9 * delay_time_based);
+		vTaskDelay(adcs_state_delay * delay_time_based);
 		adcs_est_ang_rates.angular_X_rate[0] = adcs_est_ang_rates.angular_X_rate[1];
 		adcs_est_ang_rates.angular_Y_rate[0] = adcs_est_ang_rates.angular_Y_rate[1];
 		adcs_est_ang_rates.angular_Z_rate[0] = adcs_est_ang_rates.angular_Z_rate[1];
@@ -796,7 +775,7 @@ void Y_Momontum_Stabilized_Initial()
 	/*------------------------------Set the Control mode-----------------------------------*/
 	txbuf[0] = 0x12;   //0d18 Set attitude control mode
 	txbuf[1] = 0x03;   //Set to high initial rate detumbling control
-	txbuf[2] = 0x00;   //Default
+	txbuf[2] = 0x01;   //Default
 	txbuf[3] = 0x00;   //Default
 	txbuf[4] = 0x00;   //Default
 	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 5, &rxbuf, 0, adcs_delay) == E_NO_ERR)
@@ -809,7 +788,7 @@ void Y_Momontum_Stabilized_Initial()
 		printf("ID:17\tSet estimation mode into Extended Kalman Filter\n");
 
 	/*---------------------------Triggering detecting--------------------------------------*/
-	int ADCS_current_state = 0;
+	int8_t ADCS_current_state = 0;
 	bool steady_state_flag;
 	int Steady_state_restart_count = 0;
 	int Steady_state_restart_flag = 0;
@@ -817,28 +796,15 @@ void Y_Momontum_Stabilized_Initial()
 	while (1)
 	{
 
-		// txbuf[0] = 0x90;   //0d144 read the current status of ADCS
-		//    if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 6, adcs_delay) == E_NO_ERR)
-		// {
-		// 	ADCS_current_state = rxbuf[0]; //Flag of ADCS State, Attitude Estimation Mode, Control Mode
-		// 	steady_state_flag = (ADCS_current_state << 24 ) < 0; //The "int" has 32 bits, the 24th represents the status of Y-momentum steady-state
-		// }
+		txbuf[0] = 0x90;   //0d144 read the current status of ADCS
+		if (i2c_master_transaction_2(0, stm_node, &txbuf, 1, &rxbuf, 6, adcs_delay) == E_NO_ERR)
+		{
+			ADCS_current_state = rxbuf[0]; //   *256 = <<8, /256= >>8
+		}
 
-		vTaskDelay(5 * delay_time_based);   						//Jerry test
-		ADCS_current_state = 0x91;								//Jerry test
-		steady_state_flag = (ADCS_current_state << 24 ) < 0;    //Jerry test
+		steady_state_flag = (int8_t)((ADCS_current_state << 0 ) < 0); //The "int8_t" has 8 bits, the 0th represents the status of Y-momentum steady-state
 
 		printf("%2x\n", ADCS_current_state);
-
-		// int i;
-		//   	int vbool[8 * sizeof(int)];
-		//   	for (i = 0; i < 8 * sizeof(int); i++)
-		//   	{
-		//       	vbool[i] = (ADCS_current_state << i)<0;
-		//       	printf("%d", vbool[i]);
-		//   	}
-
-		printf("\n");
 		printf("%d\n", steady_state_flag);
 
 		if (steady_state_flag == 1)
@@ -918,12 +884,6 @@ void Y_Momontum_Stabilized_Initial()
 			}
 			else
 			{
-				//vTaskDelay(2* delay_time_based);   		//Jerry test
-				//printf("Start Magnetometer Deploy!\n");
-
-				//magnetometer_deploy = 1;             	//Jerry test
-
-
 				if (magnetometer_deploy == 1)
 				{
 					printf("Start Magnetometer Deploy!\n");
@@ -931,7 +891,7 @@ void Y_Momontum_Stabilized_Initial()
 					adcs_status.detumbling_rkf_flag = 0;
 					adcs_status.detumbling_ekf_flag = 0;
 					adcs_status.y_momentum_intial_flag = 0;
-					break;								 	//Jerry test
+					break;
 				}
 				else
 				{
@@ -944,47 +904,12 @@ void Y_Momontum_Stabilized_Initial()
 		{
 			printf("U Stay in Y_Momontum_Stabilized_Initial_State\n");
 		}
-		vTaskDelay(1 * delay_time_based);
+		vTaskDelay(adcs_state_delay * delay_time_based);
 		adcs_est_ang_rates.angular_X_rate[0] = adcs_est_ang_rates.angular_X_rate[1];
 		adcs_est_ang_rates.angular_Y_rate[0] = adcs_est_ang_rates.angular_Y_rate[1];
 		adcs_est_ang_rates.angular_Z_rate[0] = adcs_est_ang_rates.angular_Z_rate[1];
 	}
 }
-
-
-// void Y_Momontum_Stabilized_Steady_State(uint16_t current_state)
-// {
-//     /*---------------------------Enable the ADCS to run mode-------------------------------*/
-// 	txbuf[0] = 0x03;   //0d03 ADCS run mode
-// 	txbuf[1] = 0x01;
-// 	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 2, &rxbuf, 0, adcs_delay) == E_NO_ERR)
-// 		printf("ID:3\tSet ADCS run mode into enabled\n");
-
-// 	/*---------------------------set the power control-------------------------------------*/
-//     txbuf[0] = 0x05;   //0d05 Set power control command
-// 	txbuf[1] = 0x02;   //cubecontrol signal=auto(2)
-// 	txbuf[2] = 0x01;   //cubecontrol motor=on(1)
-// 	txbuf[3] = 0x02;   //cubesense =auto(2)
-// 	txbuf[4] = 0x01;   //motor power=on(1)
-// 	txbuf[5] = 0x02;   //GPS LAN Power=auto(2)
-// 	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 6, &rxbuf, 0, adcs_delay) == E_NO_ERR)
-// 		printf("ID:05\tSet power control command\n");
-
-// 	/*------------------------------Set the Control mode-----------------------------------*/
-// 	txbuf[0] = 0x12;   //0d18 Set attitude control mode
-// 	txbuf[1] = 0x02;   //Set to high initial rate detumbling control
-// 	txbuf[2] = 0x00;   //Default
-// 	txbuf[3] = 0x00;   //Default
-// 	txbuf[4] = 0x00;   //Default
-// 	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 5, &rxbuf, 0, adcs_delay) == E_NO_ERR)
-// 		printf("ID:18\tSet control mode into y-momentum stabilized - steady state\n");
-
-// 	/*----------------------------Set the estimation mode----------------------------------*/
-// 	txbuf[0] = 0x11;   //0d17 Set attitude estimation mode
-// 	txbuf[1] = 0x04;   // Set to RKF mode
-// 	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 2, &rxbuf, 0, adcs_delay) == E_NO_ERR)
-// 		printf("ID:17\tSet estimation mode into Extended Kalman Filter\n");
-// }
 
 
 void Magnetometer_Calibration_Setup()
@@ -1022,6 +947,13 @@ void Magnetometer_Calibration_Setup()
 	txbuf[30] = 0x09;
 	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 31, &rxbuf, 0, adcs_delay) == E_NO_ERR)
 		printf("ID:86\tSet magnetometer configuration\n");
+
+	if (ground_Test_Mode == 0) //Save the configuration setting to the flash memory
+	{
+		txbuf[0] = 0x64;
+		if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &rxbuf, 0, adcs_delay) == E_NO_ERR)
+			printf("ID:100\tSave current configuration to flash memory\n");
+	}
 }
 
 void Magnetometer_Deployment_Process()
@@ -1070,9 +1002,9 @@ void Magnetometer_Deployment_Process()
 			txbuf[0] = 0xA6;   //0d166 Raw CSS,CSS4 is below magnetometer
 			if (i2c_master_transaction_2(0, stm_node, &txbuf, 1, &rxbuf, 6, adcs_delay) == E_NO_ERR)
 			{
-				CSS4_value = rxbuf[0];
+				CSS4_value = rxbuf[3];
 			}
-			//printf("CSS4 measurement= %d\n", CSS4_value);
+
 			vTaskDelay(0.1 * delay_time_based);
 			if (CSS4_value < CSS4_threshold_value)
 			{
@@ -1085,20 +1017,16 @@ void Magnetometer_Deployment_Process()
 				}
 			}
 
-			//vTaskDelay(2 * delay_time_based); //Jerry test
-			//CSS4_value = 150;             //Jerry test
-
 			printf("CSS4 measurement= %d\n", CSS4_value);
-			//if(rxbuf[3]>100)
 
 			if (CSS4_value > CSS4_threshold_value)
 			{
-				// check the deploy by check the raw mag
-				// newx=y
-				// newy=-x
-				// newz=z
+				// Verify the deployment by checking the raw value of magnetometer measurement
+				// New_X_value =   Previous_Y_value
+				// New_Y_value = -(Previous_X_value)
+				// New_Z_value =   Previous_Z_value
 
-				vTaskDelay(2 * delay_time_based); // Wait for the magnetometer deployment
+				vTaskDelay(1 * delay_time_based); // Wait for the magnetometer deployment
 
 				txbuf[0] = 0xA7;   //0d167 RAW magnetic
 				if (i2c_master_transaction_2(0, stm_node, &txbuf, 1, &rxbuf, 6, adcs_delay) == E_NO_ERR)
@@ -1118,10 +1046,9 @@ void Magnetometer_Deployment_Process()
 				printf("\tRaw Y Magnetic Measurement = %d", adcs_mag_raw_measurement.mag_raw_measurement_Y[1]);
 				printf("\tRaw Z Magnetic Measurement = %d\n", adcs_mag_raw_measurement.mag_raw_measurement_Z[1]);
 
-				if ((abs(adcs_mag_raw_measurement.mag_raw_measurement_X[1] - adcs_mag_raw_measurement.mag_raw_measurement_Y[0]) < 200)
-				        && (abs(adcs_mag_raw_measurement.mag_raw_measurement_Y[1] + adcs_mag_raw_measurement.mag_raw_measurement_X[0]) < 200)
-				        && (abs(adcs_mag_raw_measurement.mag_raw_measurement_Z[1] - adcs_mag_raw_measurement.mag_raw_measurement_Z[0]) < 200))
-					//if (CSS4_value > 125)
+				if ((abs(adcs_mag_raw_measurement.mag_raw_measurement_X[1] - adcs_mag_raw_measurement.mag_raw_measurement_Y[0]) < 2000)
+				        && (abs(adcs_mag_raw_measurement.mag_raw_measurement_Y[1] + adcs_mag_raw_measurement.mag_raw_measurement_X[0]) < 2000)
+				        && (abs(adcs_mag_raw_measurement.mag_raw_measurement_Z[1] - adcs_mag_raw_measurement.mag_raw_measurement_Z[0]) < 2000))
 				{
 					Magnetometer_Calibration_Setup();
 					vTaskDelay(1 * delay_time_based);
@@ -1148,7 +1075,7 @@ void Magnetometer_Deployment_Process()
 				mag_deploy_status_flag = 2;
 			}
 			mag_deploy_check_count += 1;
-			vTaskDelay(1 * delay_time_based);
+			vTaskDelay(adcs_state_delay * delay_time_based);
 		}
 
 		if (mag_deploy_status_flag == 1)
@@ -1162,7 +1089,7 @@ void Magnetometer_Deployment_Process()
 			printf("u restart from initialize process\n");
 			break;
 		}
-		vTaskDelay(1 * delay_time_based);
+		vTaskDelay(adcs_state_delay * delay_time_based);
 	}
 }
 
@@ -1203,6 +1130,7 @@ void Stabilize_Process()
 	adcs_status.detumbling_ekf_flag = 0;
 	adcs_status.y_momentum_intial_flag = 0;
 
+	/*Comment the line below will make the progress start from Y-momentum mode*/
 	// adcs_status.detumbling_rkf_flag = 0;
 	// adcs_status.detumbling_ekf_flag = 0;
 	// adcs_status.y_momentum_intial_flag = 1;
@@ -1245,6 +1173,7 @@ void ADCS_Task(void * pvParameters)
 	adcs_process.stabilize_flag = 0;
 	adcs_process.start_mag_deploy_flag = 0;
 
+	/*Comment the line below will make the progress start from Y-momentum mode*/
 	// adcs_process.initialize_flag = 0;
 	// adcs_process.stabilize_flag = 1;
 	// adcs_process.start_mag_deploy_flag = 0;
@@ -1266,12 +1195,10 @@ void ADCS_Task(void * pvParameters)
 				adcs_process.start_mag_deploy_flag = 1;
 				Magnetometer_Deployment_Process();
 				printf("End of deployment");
-				//break;
 			}
 			else
 			{
 				Stabilize_Process();
-				//break;
 			}
 		}
 		/** End of ADCS TASK, Should never reach this line  */

@@ -131,8 +131,8 @@ void BatteryCheck_Task(void * pvParameters) {
 			if ( (int) vbat < (int) parameters.vbat_safe_threshold && vbat != 0) {
 				if (parameters.vbat_safe_threshold != 0) {
 					printf("safe mode detected\n");
-					HK_frame.mode_status_flag = safe_mode;
 					generate_Error_Report(1, vbat);
+					HK_frame.mode_status_flag = safe_mode;
 				}
 			}
 		}

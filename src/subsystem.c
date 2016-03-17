@@ -177,8 +177,10 @@ int antenna_status_check()
 	uint8_t rxdata[2];
 	txdata = 0xC3;
 	if (i2c_master_transaction_2(0, ant_node, &txdata, 1, &rxdata, 2, com_delay) == E_NO_ERR) {
-		if (rxdata[0] != 0 && rxdata[1] != 0)
+		if (((rxdata[0] == 0x01) || (rxdata[0] == 0x00)) && (rxdata[1] == 0x00))
 			return No_Error;
+		else
+			return Error;
 	}
 	return Error;
 }
@@ -362,11 +364,9 @@ void generate_Error_Report(int type, uint16_t cause_value)
 	/* 13. ADCS temperature out of range */
 	/* 14. ADCS Rate Sensor & Magnetometer temp out of range */
 	/* 15. INMS temperature out of range */
-	/* 16. EPS1 temperature out of range */
-	/* 17. EPS2 temperature out of range */
-	/* 18. EPS3 temperature out of range */
-	/* 19. Battery temperature out of range */
-	
+	/* 16. EPS temperature out of range */
+	/* 17. Battery temperature out of range */
+
 	uint8_t errPacket [10];
 	timestamp_t t;
 	t.tv_sec = 0;

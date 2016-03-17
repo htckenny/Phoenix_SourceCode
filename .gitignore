@@ -213,3 +213,17 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
+
+lib/
+clients/
+doc/
+build/
+jtag/
+CHANGELOG
+waf
+wscript
+README.rst
+INSTALL.rst
+eclipse.py
+.lock-waf_linux2_build
+.waf-1.8.7-e6b2961ae4a2b8021fcc5c4bba50704b

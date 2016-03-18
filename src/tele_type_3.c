@@ -252,6 +252,17 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 		}
 		break;
+
+	/*---------------ID:7 ADCS House Keeping Data ----------------*/
+	case Report_ADCS_HK:
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+		txlen = 1;
+		txBuffer[0] = adcs_para.mag_deploy_status_flag;
+		txBufferWithSID[0] = 37;
+		memcpy(&txBufferWithSID[1], &txBuffer[0], txlen);
+		SendPacketWithCCSDS_AX25(&txBufferWithSID[0], txlen + 1, obc_apid, type, 25);
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		break;
 	/*--------------- ID:8 Report INMS script's status ----------------*/
 	case Report_Script_Stat:
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);

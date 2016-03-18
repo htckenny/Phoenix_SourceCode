@@ -174,7 +174,7 @@ seuv_frame_t seuvFrame;
 typedef struct __attribute__((packed)) {
 
 	uint8_t strategy;
-
+	uint8_t mag_deploy_status_flag;
 } adcs_para_t;
 adcs_para_t adcs_para;
 

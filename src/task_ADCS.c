@@ -500,7 +500,7 @@ void Detumbling_Control_RKF()
 
 	/*------------------------------Set the Control mode-----------------------------------*/
 	txbuf[0] = 0x12;   //0d18 Set attitude control mode
-	txbuf[1] = 0x02;   //Set to high initial rate detumbling control
+	txbuf[1] = 0x02;   //Set to detumbling control
 	txbuf[2] = 0x00;   //Default
 	txbuf[3] = 0x00;   //Default
 	txbuf[4] = 0x00;   //Default
@@ -618,7 +618,7 @@ void Detumbling_Control_EKF()
 
 	/*------------------------------Set the Control mode-----------------------------------*/
 	txbuf[0] = 0x12;   //0d18 Set attitude control mode
-	txbuf[1] = 0x02;   //Set to high initial rate detumbling control
+	txbuf[1] = 0x02;   //Set to detumbling control
 	txbuf[2] = 0x00;   //Default
 	txbuf[3] = 0x00;   //Default
 	txbuf[4] = 0x00;   //Default
@@ -990,14 +990,14 @@ void Magnetometer_Deployment_Process()
 		printf("ID:17\tSet estimation mode into no estimator mode\n");
 
 	/*----------------------------Start to deploy the magnetometer--------------------------------*/
-	int mag_deploy_status_flag = 0;  // 0: Haven't 1: Successfully 2: Unsuccessfully (Already deployed)
+	adcs_para.mag_deploy_status_flag = 0;  // 0: Haven't 1: Successfully 2: Unsuccessfully (Already deployed)
 	int mag_deploy_check_count = 0;
 	int mag_deploy_time_count = 0;
 	uint8_t CSS4_value = 0;
 	int CSS4_threshold_value = 	100;
 	while (adcs_process.start_mag_deploy_flag == 1)
 	{
-		while (mag_deploy_status_flag == 0)
+		while (adcs_para.mag_deploy_status_flag == 0)
 		{
 			txbuf[0] = 0xA6;   //0d166 Raw CSS,CSS4 is below magnetometer
 			if (i2c_master_transaction_2(0, stm_node, &txbuf, 1, &rxbuf, 6, adcs_delay) == E_NO_ERR)
@@ -1052,14 +1052,16 @@ void Magnetometer_Deployment_Process()
 				{
 					Magnetometer_Calibration_Setup();
 					vTaskDelay(1 * delay_time_based);
-					mag_deploy_status_flag = 1;
+					adcs_para.mag_deploy_status_flag = 1;
 					/*--------------------Maybe add something-----------------------*/
 					printf("The magnetometer configuration had been succesfully calibrated and verified\n");
 					break;
 				}
 				else
 				{
-					mag_deploy_status_flag = 2;
+					Magnetometer_Calibration_Setup();
+					vTaskDelay(1 * delay_time_based);
+					adcs_para.mag_deploy_status_flag = 2;
 					vTaskDelay(1 * delay_time_based);
 				}
 			}
@@ -1072,13 +1074,13 @@ void Magnetometer_Deployment_Process()
 			}
 			if (mag_deploy_time_count > 2)
 			{
-				mag_deploy_status_flag = 2;
+				adcs_para.mag_deploy_status_flag = 2;
 			}
 			mag_deploy_check_count += 1;
 			vTaskDelay(adcs_state_delay * delay_time_based);
 		}
 
-		if (mag_deploy_status_flag == 1)
+		if (adcs_para.mag_deploy_status_flag == 1)
 		{
 			adcs_status.initial_flag = 1;
 			adcs_status.high_initial_flag1 = 0;
@@ -1129,6 +1131,11 @@ void Stabilize_Process()
 	adcs_status.detumbling_rkf_flag = 1;
 	adcs_status.detumbling_ekf_flag = 0;
 	adcs_status.y_momentum_intial_flag = 0;
+
+	/*Comment the line below will make the progress start from detumbling EKF mode*/
+	// adcs_status.detumbling_rkf_flag = 0;
+	// adcs_status.detumbling_ekf_flag = 1;
+	// adcs_status.y_momentum_intial_flag = 0;
 
 	/*Comment the line below will make the progress start from Y-momentum mode*/
 	// adcs_status.detumbling_rkf_flag = 0;
@@ -1205,3 +1212,4 @@ void ADCS_Task(void * pvParameters)
 	}
 	vTaskDelete(NULL);
 }
+

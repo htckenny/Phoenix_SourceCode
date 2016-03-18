@@ -31,6 +31,8 @@ FILINFO *fno;
 extern int findMaxBuf(uint8_t sortbuf[]);
 extern int CIC();
 extern void Read_Execute();
+extern void little2big_32(uint8_t * input_data);
+extern void little2big_16(uint8_t * input_data);
 
 void encode_time (char buf[], char * fileName )
 {

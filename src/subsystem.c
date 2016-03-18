@@ -589,6 +589,12 @@ wtime date_to_wtime(struct tm tmbuf)
 
 	return wt;
 }
+void little2big_64(uint8_t * input_data) {
+	uint64_t buffs_64;
+	memcpy(&buffs_64, input_data, 8);
+	buffs_64 = csp_ntoh64(buffs_64);
+	memcpy(input_data, &buffs_64, 8);
+}
 void little2big_32(uint8_t * input_data) {
 	uint32_t buffs_32;
 	memcpy(&buffs_32, input_data, 4);

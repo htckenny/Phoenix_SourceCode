@@ -12,6 +12,7 @@
 #include "tele_function.h"
 #include "fs.h"
 
+extern void little2big_64(uint8_t * input_data);
 extern void little2big_32(uint8_t * input_data);
 extern void little2big_16(uint8_t * input_data);
 
@@ -219,6 +220,8 @@ void decodeService131(uint8_t subType, uint8_t * telecommand) {
 		txBuffer[0] = subType;
 		parameterLength = 64;
 		memcpy(&txBuffer[1], telecommand + 9, parameterLength);
+		for (int i = 0; i < 8 ; i++)
+			little2big_64(&txBuffer[1 + 8 * i]);
 		if (i2c_master_transaction(0, adcs_node, &txBuffer, parameterLength + 1, 0, 0, adcs_delay) == E_NO_ERR)
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		else {
@@ -1620,6 +1623,8 @@ void decodeService131(uint8_t subType, uint8_t * telecommand) {
 		txBuffer[0] = subType;
 		rxBufferLength = 64;
 		if (i2c_master_transaction(0, adcs_node, &txBuffer, 1, &rxBuffer, rxBufferLength, adcs_delay) == E_NO_ERR) {
+			for (int i = 0; i < 8 ; i++)
+				little2big_64(&rxBuffer[8 * i]);
 			rxBufferWithSID[0] = subType;
 			memcpy(&rxBufferWithSID[1], &rxBuffer[0], rxBufferLength);
 			err = SendPacketWithCCSDS_AX25(&rxBufferWithSID[0], rxBufferLength + 1, adcs_apid, 3, 25);

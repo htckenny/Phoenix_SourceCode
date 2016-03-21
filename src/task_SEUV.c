@@ -132,12 +132,17 @@ uint8_t seuv_take_data(uint8_t ch, int gain, uint8_t *frame) {
 
 void seuv_work_with_inms(int switch_status) {
     if (switch_status == 1) {
-        power_control(3, ON);
         seuv_with_INMS = 1;
+        power_control(3, ON);
     }
     else if (switch_status == 0) {
-        power_control(3, OFF);
         seuv_with_INMS = 0;
+        while (1) {
+            if (seuv_sample_run == 0)
+                break;
+            vTaskDelay(0.1 * delay_time_based);
+        }
+        power_control(3, OFF);
     }
 }
 void get_a_packet(int gain) {
@@ -218,16 +223,16 @@ void get_a_packet(int gain) {
 }
 
 void SolarEUV_Task(void * pvParameters) {
-
+    int seuv_sample_run = 0;
     portTickType xLastWakeTime;
     portTickType xFrequency = delay_time_based;
+    if (parameters.seuv_period != 0) {
+        xFrequency = parameters.seuv_period * delay_time_based;
+    }
+    /* Set the delay time during one sampling operation*/
+    xLastWakeTime = xTaskGetTickCount();
     while (1) {
 
-        if (parameters.seuv_period != 0) {
-            xFrequency = parameters.seuv_period * delay_time_based;
-        }
-        /* Set the delay time during one sampling operation*/
-        xLastWakeTime = xTaskGetTickCount();
         if (parameters.seuv_mode == 0x01) {         /* Mode A: check if the CubeSat is in the sun light area */
             if (HK_frame.sun_light_flag == 1) {     /* If True, get a packet */
                 get_a_packet(1);
@@ -251,12 +256,14 @@ void SolarEUV_Task(void * pvParameters) {
         else if (parameters.seuv_mode == 0x04) {    /* Mode D: Sample with INMS mode */
 
             if (seuv_with_INMS == 1) {
+                seuv_sample_run = 1;
                 if (seuv_cm_task == NULL) {
                     xTaskCreate(SEUV_CurrentMonitor, (const signed char *) "SEU_CM", 1024 * 4, NULL, 2, &seuv_cm_task);
                 }
                 get_a_packet(1);
                 vTaskDelay(1 * delay_time_based);
                 get_a_packet(8);
+                seuv_sample_run = 0;
             }
             else {
                 if (seuv_cm_task != NULL) {

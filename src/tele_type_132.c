@@ -51,12 +51,12 @@ void decodeService132(uint8_t subType, uint8_t*telecommand) {
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 		if (packet_length == 1) {
 
-			if (parameters.seuv_mode == 2) {
+			if (parameters.seuv_mode == 2 || parameters.seuv_mode == 4) {
 				if (paras[0] == 3) {
 					power_control(3, OFF);
 				}
 			}
-			else if (parameters.seuv_mode == 3) {
+			else if (parameters.seuv_mode == 3 || parameters.seuv_mode == 4) {
 				if (paras[0] == 2) {
 					power_control(3, ON);
 				}
@@ -115,15 +115,15 @@ err:
 		if (packet_length == 8) {
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 			/* Gain 1 configuration */
-			parameters.seuv_ch1_G1_conf			= paras[0];
-			parameters.seuv_ch2_G1_conf			= paras[1];
-			parameters.seuv_ch3_G1_conf			= paras[2];
-			parameters.seuv_ch4_G1_conf			= paras[3];
+			parameters.seuv_ch1_G1_conf = paras[0];
+			parameters.seuv_ch2_G1_conf = paras[1];
+			parameters.seuv_ch3_G1_conf = paras[2];
+			parameters.seuv_ch4_G1_conf = paras[3];
 			/* Gain 8 configuration */
-			parameters.seuv_ch1_G8_conf			= paras[4];
-			parameters.seuv_ch2_G8_conf			= paras[5];
-			parameters.seuv_ch3_G8_conf			= paras[6];
-			parameters.seuv_ch4_G8_conf			= paras[7];
+			parameters.seuv_ch1_G8_conf = paras[4];
+			parameters.seuv_ch2_G8_conf = paras[5];
+			parameters.seuv_ch3_G8_conf = paras[6];
+			parameters.seuv_ch4_G8_conf = paras[7];
 			para_w_flash();
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}

@@ -23,6 +23,8 @@
 
 #define overCurrentThreshold    400
 extern void SEUV_CurrentMonitor(void * pvParameters);
+int seuv_sample_run = 0;
+
 /**
  * This function is used for calculate the average and the standard deviation of the SEUV data
  * @param ch      channel
@@ -160,10 +162,10 @@ void get_a_packet(int gain) {
         frame_4[i] = 0;
     }
 
-
     /* Take data from SEUV in numbers of samples [Gain = 1]*/
     if (gain == 1) {
-        vTaskDelay(2 * delay_time_based);
+        printf("Gain 1 : take data\n");
+        vTaskDelay(1 * delay_time_based);
         count = 0;
         for (int i = 0 ; i < parameters.seuv_sample_rate ; i++) {
             count += seuv_take_data(1, 1, &frame_1[2 * i]);
@@ -171,7 +173,6 @@ void get_a_packet(int gain) {
             count += seuv_take_data(3, 1, &frame_3[2 * i]);
             count += seuv_take_data(4, 1, &frame_4[2 * i]);
         }
-        printf("Gain 1 : take data\n");
         if (count == 0) {
             calculate_avg_std(1, frame_1, parameters.seuv_sample_rate);
             calculate_avg_std(2, frame_2, parameters.seuv_sample_rate);
@@ -193,7 +194,7 @@ void get_a_packet(int gain) {
     }
     else if (gain == 8) {
         printf("Gain 8 : take data\n");
-        //channel 1~4 sample 50 times
+        vTaskDelay(1 * delay_time_based);
         count = 0;
         for (int i = 0 ; i < parameters.seuv_sample_rate ; i++) {
             count += seuv_take_data(1, 8, &frame_1[2 * i]);
@@ -223,7 +224,6 @@ void get_a_packet(int gain) {
 }
 
 void SolarEUV_Task(void * pvParameters) {
-    int seuv_sample_run = 0;
     portTickType xLastWakeTime;
     portTickType xFrequency = delay_time_based;
     if (parameters.seuv_period != 0) {

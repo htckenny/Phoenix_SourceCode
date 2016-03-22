@@ -935,13 +935,44 @@ int idleunlock(struct command_context * ctx) {
 
 
 int testmode(struct command_context * ctx) {
-	if (init_task != NULL)
-		vTaskDelete(init_task);
+	
 	if (mode_task != NULL)
 		vTaskDelete(mode_task);
 	if (bat_check_task != NULL)
 		vTaskDelete(bat_check_task);
-	printf("Enter ground test mode, plz reboot the satellite if wants leave this mode \r\n");
+	if (com_task != NULL)
+		vTaskDelete(com_task);
+	if (wod_task != NULL)
+		vTaskDelete(wod_task);
+	if (beacon_task != NULL)
+		vTaskDelete(beacon_task);
+
+	if (init_task != NULL)
+		vTaskDelete(init_task);
+	if (adcs_task != NULL)
+		vTaskDelete(adcs_task);
+	if (seuv_task != NULL)
+		vTaskDelete(seuv_task);
+	if (eop_task != NULL)
+		vTaskDelete(eop_task);
+	if (hk_task != NULL)
+		vTaskDelete(hk_task);
+
+	if (inms_error_handle != NULL)
+		vTaskDelete(inms_error_handle);
+	if (inms_current_moniter != NULL)
+		vTaskDelete(inms_current_moniter);
+	if (inms_task != NULL)
+		vTaskDelete(inms_task);
+	if (inms_task_receive != NULL)
+		vTaskDelete(inms_task_receive);
+
+	if (schedule_task != NULL)
+		vTaskDelete(schedule_task);
+	if (seuv_cm_task != NULL)
+		vTaskDelete(seuv_cm_task);
+
+	printf("Enter Ground Test mode, delete all task\r\n");
 	return CMD_ERROR_NONE;
 }
 

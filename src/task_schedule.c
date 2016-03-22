@@ -17,7 +17,7 @@
 #include <inttypes.h>
 #include <stdint.h>
 #include <csp/csp_endian.h>
- 
+
 #include "fs.h"
 #include "tele_function.h"
 #include "parameter.h"
@@ -77,9 +77,9 @@ void schedule_sort(int number)
 		memcpy(&sche_time[i], &sche_buf[2 + i * 20], 4);
 		memcpy(&sche_time_sort[i], &sche_buf[2 + i * 20], 4);
 		sche_time[i] = csp_ntoh32(sche_time[i]) ;
-		sche_time_sort[i] = csp_ntoh32(sche_time_sort[i]) ;                    
+		sche_time_sort[i] = csp_ntoh32(sche_time_sort[i]) ;
 	}
-	
+
 	quicksort(sche_time_sort, 0, number - 1);
 
 	for (int i = 0 ; i < number ; i++) {
@@ -94,7 +94,7 @@ void schedule_sort(int number)
 /* function to send command */
 void sendCommand (uint8_t * telecommand)
 {
- 	uint8_t serviceType = telecommand[7];
+	uint8_t serviceType = telecommand[7];
 	uint8_t serviceSubType = telecommand[8];
 	switch (serviceType) {
 	case T3_SYS_CONF :
@@ -104,19 +104,19 @@ void sendCommand (uint8_t * telecommand)
 		decodeService11(serviceSubType, telecommand);
 		break;
 	case T8_function_management:
-		decodeService8(serviceSubType,telecommand);
+		decodeService8(serviceSubType, telecommand);
 		break;
 	case T13_LargeData_Transfer:
-		decodeService13(serviceSubType,telecommand);
+		decodeService13(serviceSubType, telecommand);
 		break;
 	case T15_dowlink_management:
-		decodeService15(serviceSubType,telecommand);
+		decodeService15(serviceSubType, telecommand);
 		break;
 	case T131_ADCS:
-		decodeService131(serviceSubType,telecommand);
+		decodeService131(serviceSubType, telecommand);
 		break;
 	case T132_SEUV:
-		decodeService132(serviceSubType,telecommand);
+		decodeService132(serviceSubType, telecommand);
 		break;
 
 	default:
@@ -131,7 +131,7 @@ void init_command_buf(uint8_t *sche_buf, int buf_length, uint8_t *final_buf) {
 		final_buf[i] = 0;
 	}
 	total_length = buf_length - 7 ;
-	
+
 	memcpy(&final_buf[5], &total_length, 1);
 	final_buf[6] = 0;
 	for (int i = 7 ; i < buf_length ; i++) {
@@ -181,11 +181,11 @@ void Schedule_Task(void * pvParameters)
 			schedule_unlink_flag = 0;
 		}
 		else {
-			if (schedule_new_command_flag == 1){
+			if (schedule_new_command_flag == 1) {
 				schedule_read_flash(sche_buf);
 				lastNum = findMaxBuf(sche_buf);
 				schedule_new_command_flag = 0;
-			}			
+			}
 		}
 		schedule_sort(lastNum);
 		// printf("last Num : %d\n", lastNum);
@@ -211,7 +211,7 @@ void Schedule_Task(void * pvParameters)
 			/* Add seven byte with contents of zero to match the telecommand */
 			// init_command_buf(*sche_buf[sort_seq[i]], sizeof(sche_buf[sort_seq[i]]), *tele_buf);
 			// printf("%d\n", sche_buf[sort_seq[i] * 20 + 1]);
-			init_command_buf(&sche_buf[sort_seq[i] *20], sche_buf[sort_seq[i] * 20 + 1], tele_buf);
+			init_command_buf(&sche_buf[sort_seq[i] * 20], sche_buf[sort_seq[i] * 20 + 1], tele_buf);
 
 			while (1) {
 
@@ -221,7 +221,7 @@ void Schedule_Task(void * pvParameters)
 				// if (onBoardTime - sche_time[sort_seq[i]] < 10){
 				printf("sche_time = %" PRIu32 " onBoardTime = %" PRIu32 "\n", sche_time[sort_seq[i]], onBoardTime);
 				printf("\E[1A\r");
-				// }		
+				// }
 
 				onBoardTime = update_time();
 				/* determine if the schedule time has exceeded */
@@ -229,7 +229,7 @@ void Schedule_Task(void * pvParameters)
 					break;
 				}
 				/* 5 seconds margin to send the command */
-				if (sche_time[sort_seq[i]] - onBoardTime <= 3) {
+				if (sche_time[sort_seq[i]] - onBoardTime <= 5) {
 					sendCommand(tele_buf);
 					printf("send command !!\n");
 					*tele_buf = 0;

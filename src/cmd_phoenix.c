@@ -60,25 +60,14 @@ int moveScriptFromSD (struct command_context *ctx) {
 
 	int in, out, fdold, fdnew;
 	char old[21], new[21], buf[512];
-	char sd[] = "0";
-	char slot[] = "0";
 	/* Get args */
 	if (ctx->argc != 1)
 		return CMD_ERROR_SYNTAX;
 
-	sprintf(sd, "%d", parameters.SD_partition_flag);
 	for (int i = 0 ; i < scriptNum ; i++) {
 
-		sprintf(slot, "%d", i);
-		strcpy(old, "/sd");
-		strcat(old, sd);
-		strcat(old, "/INMS/idle");
-		strcat(old, slot);
-		strcat(old, ".bin");
-
-		strcpy(new, "/boot/INMS/idle");
-		strcat(new, slot);
-		strcat(new, ".bin");
+		sprintf(old, "/sd%d/INMS/idle%d.bin", parameters.SD_partition_flag, i);
+		sprintf(new, "/boot/INMS/idle%d.bin", i);
 
 		fdold = open(old, O_RDONLY);
 		if (fdold < 0) {
@@ -935,7 +924,7 @@ int idleunlock(struct command_context * ctx) {
 
 
 int testmode(struct command_context * ctx) {
-	
+
 	if (mode_task != NULL)
 		vTaskDelete(mode_task);
 	if (bat_check_task != NULL)
@@ -975,8 +964,6 @@ int testmode(struct command_context * ctx) {
 	printf("Enter Ground Test mode, delete all task\r\n");
 	return CMD_ERROR_NONE;
 }
-
-
 int seuvread(struct command_context * ctx) {
 
 	uint8_t val[5];
@@ -990,19 +977,26 @@ int seuvread(struct command_context * ctx) {
 }
 int seuvwrite(struct command_context * ctx) {
 	unsigned int node;
+	uint8_t txdata;
+	uint8_t rxdata[4];
+	float results;
 	if (ctx->argc != 2) {
 		return CMD_ERROR_SYNTAX;
 	}
 	if (sscanf(ctx->argv[1], "%u", &node) != 1) {
 		return CMD_ERROR_SYNTAX;
 	}
-	uint8_t txdata = node;
+	txdata = node;
 
-	if (i2c_master_transaction_2(0, seuv_node, &txdata, 1, 0, 0, seuv_delay) == E_NO_ERR) {
-		printf("configured SEUV: %x\r\n", node);
+	if (i2c_master_transaction_2(0, seuv_node, &txdata, 1, 0, 0, seuv_delay) == E_NO_ERR) {};
+	vTaskDelay(0.07 * delay_time_based);
+	if (i2c_master_transaction_2(0, seuv_node, &txdata, 1, &rxdata, seuv_data_length, seuv_delay) == E_NO_ERR) {
+		hex_dump(&rxdata, seuv_data_length);
+		results = (rxdata[0] << 8) + rxdata[1];
+		printf("node %x's Value = %.3f\n", node, results);
 	}
 	else
-		printf("ERROR!!  Get no reply from SEUV \r\n");
+		printf("ERROR!! No reply from SEUV \r\n");
 
 	return CMD_ERROR_NONE;
 }

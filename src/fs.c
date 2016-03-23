@@ -686,8 +686,8 @@ int inms_script_read_flash(int buffNum, int packlength, void * txbuf) {
 		goto err_stat;
 	}
 
-	size = stat_buf.st_size;
-
+	// size = stat_buf.st_size;
+	size = packlength;
 	/* Allocate buffer */
 	buf = pvPortMalloc(size);
 	if (!buf) {

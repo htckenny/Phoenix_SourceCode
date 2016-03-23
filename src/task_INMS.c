@@ -633,7 +633,8 @@ void vTaskinms(void * pvParameters) {
 										usart_putstr(2, (char *)&script[rec[i]][flag + j], 1);
 									}
 #endif
-									seuv_work_with_inms(1);
+									if (parameters.seuv_mode == 0x04)
+										seuv_work_with_inms(1);
 								}
 								else {
 									ttflag++;
@@ -651,7 +652,8 @@ void vTaskinms(void * pvParameters) {
 								vTaskDelete(inms_task_receive);
 								inms_task_receive = NULL;
 								power_control(4, OFF);
-								seuv_work_with_inms(0);
+								if (parameters.seuv_mode == 0x04)
+									seuv_work_with_inms(0);
 								/* ---- For simulator ---- */
 #if isSimulator
 								for (int j = 2; j <= leng + 3; j++) {
@@ -743,7 +745,8 @@ void vTaskinms(void * pvParameters) {
 										vTaskDelete(inms_task_receive);
 										power_control(4, OFF);
 										inms_task_receive = NULL;
-										seuv_work_with_inms(0);
+										if (parameters.seuv_mode == 0x04)
+											seuv_work_with_inms(0);
 									}
 									break;
 								}
@@ -958,7 +961,8 @@ void vTaskInmsErrorHandle(void * pvParameters) {
 				vTaskDelete(inms_task_receive);
 				power_control(4, OFF);
 				inms_task_receive = NULL;
-				seuv_work_with_inms(0);
+				if (parameters.seuv_mode == 0x04)
+					seuv_work_with_inms(0);
 			}
 #if isSimulator
 			unsigned int cmd1 = 0xf2;

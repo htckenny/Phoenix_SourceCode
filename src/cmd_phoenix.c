@@ -60,25 +60,14 @@ int moveScriptFromSD (struct command_context *ctx) {
 
 	int in, out, fdold, fdnew;
 	char old[21], new[21], buf[512];
-	char sd[] = "0";
-	char slot[] = "0";
 	/* Get args */
 	if (ctx->argc != 1)
 		return CMD_ERROR_SYNTAX;
 
-	sprintf(sd, "%d", parameters.SD_partition_flag);
 	for (int i = 0 ; i < scriptNum ; i++) {
 
-		sprintf(slot, "%d", i);
-		strcpy(old, "/sd");
-		strcat(old, sd);
-		strcat(old, "/INMS/idle");
-		strcat(old, slot);
-		strcat(old, ".bin");
-
-		strcpy(new, "/boot/INMS/idle");
-		strcat(new, slot);
-		strcat(new, ".bin");
+		sprintf(old, "/sd%d/INMS/idle%d.bin", parameters.SD_partition_flag, i);
+		sprintf(new, "/boot/INMS/idle%d.bin", i);
 
 		fdold = open(old, O_RDONLY);
 		if (fdold < 0) {

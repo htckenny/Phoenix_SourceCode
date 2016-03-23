@@ -353,7 +353,6 @@ void vTaskinms(void * pvParameters) {
 				script_xsum_result[i] = fletcher(script[i], len[i]);
 				if (script_read_result[i] == Error || script_xsum_result[i] != 0) {
 					printf("No. %d script XSUM through Fletcher-16 [FAIL]\n", i);
-					obcSuErrFlag = 6;
 				}
 				else {
 					printf("No. %d script XSUM through Fletcher-16 [PASS]\n", i);
@@ -915,10 +914,6 @@ void vTaskInmsErrorHandle(void * pvParameters) {
 		/* ------------------------------------ */
 		/* others to be defined by PHOENIX team */
 		/* ------------------------------------ */
-		/* INMS checksum error detected */
-		case 6:
-			rsp_err_code = 0xf5;
-			break;
 
 		default:
 			break;

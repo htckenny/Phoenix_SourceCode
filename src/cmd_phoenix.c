@@ -898,30 +898,11 @@ int alldatadelete(struct command_context * ctx) {
 	return CMD_ERROR_NONE;
 }
 
-int inmsdatadelete(struct command_context * ctx) {
-	inms_data_delete();
-	return CMD_ERROR_NONE;
-}
-int woddelete(struct command_context * ctx) {
-	wod_delete();
-	return CMD_ERROR_NONE;
-}
-int seuvdelete(struct command_context * ctx) {
-	seuv_delete();
-	return CMD_ERROR_NONE;
-}
-int hkdelete(struct command_context * ctx) {
-	hk_delete();
-	return CMD_ERROR_NONE;
-}
-
-
 int idleunlock(struct command_context * ctx) {
 	parameters.ant_deploy_flag = 1;
 	idleunlocks = 1 ;
 	return CMD_ERROR_NONE;
 }
-
 
 int testmode(struct command_context * ctx) {
 
@@ -1075,10 +1056,6 @@ command_t __root_command ph_commands[] = {
 	{ .name = "paradelete", .help = "PHOENIX: delete parameters.bin", .handler = paradelete, },
 	{ .name = "T_data_del", .help = "PHOENIX: delete t_obc.bin t_inms.bin", .handler = T_data_del, },
 	{ .name = "alldatadelete", .help = "PHOENIX: delete all on board data.bin", .handler = alldatadelete, },
-	{ .name = "inmsdatadelete", .help = "PHOENIX: delete inmsdata.bin", .handler = inmsdatadelete, },
-	{ .name = "woddelete", .help = "PHOENIX: delete wod.bin", .handler = woddelete, }	,
-	{ .name = "seuvdelete", .help = "PHOENIX: delete seuv.bin", .handler = seuvdelete, }	,
-	{ .name = "hkdelete", .help = "PHOENIX: delete hk.bin", .handler = hkdelete, }	,
 	{ .name = "jump_mode", .help = "PHOENIX: jump_mode [mode] // 0=safe mode, 2=adcs mode,3=payload mode", .handler = jump_mode, },
 	{ .name = "idleunlock", .help = "PHOENIX: skip idle 30m step", .handler = idleunlock, },
 	{ .name = "testmode", .help = "PHOENIX: enter  testmode, please reboot satellite if want to leave this mode", .handler = testmode, },

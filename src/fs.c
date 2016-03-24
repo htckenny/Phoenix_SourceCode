@@ -872,7 +872,7 @@ int seuv_write(int SD_partition)
 	strcat(fileName, ".dat");
 	printf("%s\n", buf);
 
-	seuvFrame.packettime = t.tv_sec;
+	seuvFrame.packettime = t.tv_sec - 946684800;
 	// printf("sample = %d\n", seuvFrame.samples);
 
 	res = f_open(&fileSEUV, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );

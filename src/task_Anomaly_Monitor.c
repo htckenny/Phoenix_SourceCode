@@ -2,12 +2,13 @@
  * task_Anomaly_Monitor.c
  *
  *  Created on: 	2016/03/14
- *  Last updated: 	2016/03/14
+ *  Last updated: 	2016/03/24
  *  Author: 		Kenny Huang
  */
 
 #include <util/timestamp.h>
 #include <util/delay.h>
+#include <util/hexdump.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <nanomind.h>
@@ -26,6 +27,9 @@
 #define overCurrentThreshold_ADCS_33	400
 #define overCurrentThreshold_GPS		400
 
+#define temperature_test			0
+#define current_Test				1
+#define full_test					0
 extern int TS1_4();
 extern int TS5();
 extern int TS6();
@@ -46,6 +50,7 @@ void Anomaly_Monitor_Task(void * pvParameters)
 	int16_t subTemperature_int[11];
 	while (1) {
 
+#if temperature_test
 		/* OBC Temperature */
 		TS9();
 		subTemperature[0] = ThermalFrame.T9;
@@ -133,52 +138,63 @@ void Anomaly_Monitor_Task(void * pvParameters)
 		else {
 			outRangeCounter_temp[6] = 0;
 		}
+
 		/* ----------------------------------------------------- */
 		vTaskDelay(5 * delay_time_based);
+
+#endif
+#if full_test
 		if (adcs_task != NULL) {
+#endif
 
-
+#if current_Test
 			txbuf[0] = 0x08;
 			txbuf[1] = 0x02;
-			if (i2c_master_transaction_2(0, stm_eps_node, &txbuf, 2, &rxbuf, 64 + 2, eps_delay) == E_NO_ERR) {
+			if (i2c_master_transaction_2(0, stm_eps_node, &txbuf, 2, &rxbuf, 10 + 2, eps_delay) == E_NO_ERR) {
 				memcpy(&subCurrent[0], &rxbuf[2], 2);	// i5	ADCS 	H1-47
 				// memcpy(&subCurrent[1], &rxbuf[4], 2);	// i5	 		H1-49
 				// memcpy(&subCurrent[2], &rxbuf[6], 2);	// i5	SEUV 	H1-51
 				memcpy(&subCurrent[3], &rxbuf[8], 2);	// i3.3	ADCS 	H1-48
 				memcpy(&subCurrent[4], &rxbuf[10], 2);	// i3.3	GPS 	H1-50
 				// memcpy(&subCurrent[5], &rxbuf[12], 2);	// i3.3	SEUV 	H1-52
+				hex_dump(&subCurrent[0], 10);
 			}
-
+			printf("ADCS 5: %d\n", subCurrent[0]);
 			if (subCurrent[0] > overCurrentThreshold_ADCS_5 ) {
 				printf("Out of range %d\n", subCurrent[0]);
 				outRangeCounter_ADCS_5 ++;
 				printf("outCounter = %d\n", outRangeCounter_ADCS_5);
 				if (outRangeCounter_ADCS_5 >= 6) {
 					generate_Error_Report(3, subCurrent[0]);
+					outRangeCounter_ADCS_5 = 0;
 				}
 			}
 			else {
 				outRangeCounter_ADCS_5 = 0;
 			}
-
+			printf("ADCS 33: %d\n", subCurrent[3]);
 			if (subCurrent[3] > overCurrentThreshold_ADCS_33 ) {
-				printf("Out of range %d\n", subCurrent[0]);
+				printf("Out of range %d\n", subCurrent[3]);
 				outRangeCounter_ADCS_33 ++;
 				printf("outCounter = %d\n", outRangeCounter_ADCS_33);
 				if (outRangeCounter_ADCS_33 >= 6) {
 					generate_Error_Report(2, subCurrent[3]);
+					outRangeCounter_ADCS_33 = 0;
 				}
 			}
 			else {
 				outRangeCounter_ADCS_33 = 0;
 			}
-
+			printf("GPS: %d\n", subCurrent[4]);
 			if (subCurrent[4] > overCurrentThreshold_GPS ) {
-				printf("Out of range %d\n", subCurrent[0]);
+				printf("Out of range %d\n", subCurrent[4]);
 				outRangeCounter_GPS ++;
 				printf("outCounter = %d\n", outRangeCounter_GPS);
 				if (outRangeCounter_GPS >= 6) {
+					power_control(2, OFF);	//power off GPS
+					use_GPS_header = 0;
 					generate_Error_Report(4, subCurrent[4]);
+					outRangeCounter_GPS = 0;
 				}
 			}
 			else {
@@ -186,6 +202,8 @@ void Anomaly_Monitor_Task(void * pvParameters)
 			}
 			/* ----------------------------------------------------- */
 			vTaskDelay(5 * delay_time_based);
+#endif
+#if temperature_test
 			/* ADCS ARM Temperature */
 			TS7();
 			subTemperature_int[0] = ThermalFrame.T7;
@@ -224,9 +242,12 @@ void Anomaly_Monitor_Task(void * pvParameters)
 			}
 			/* ----------------------------------------------------- */
 			vTaskDelay(5 * delay_time_based);
+#endif
+#if full_test
 		}
-
 		vTaskDelay(5 * delay_time_based);
+#endif
+
 	}
 	/** End of Task, Should Never Reach This */
 	vTaskDelete(NULL);

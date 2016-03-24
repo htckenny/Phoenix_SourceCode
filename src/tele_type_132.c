@@ -89,14 +89,12 @@ err:
 			/* sample SEUV once with gain = 1 */
 			get_a_packet(1);
 			memcpy(&SEUV_data, &seuvFrame, seuv_length);
-			hex_dump(SEUV_data, seuv_length);
 			SendDataWithCCSDS_AX25(3, SEUV_data);
 			/* sample SEUV once with gain = 8 */
 			get_a_packet(8);
 			seuvFrame.samples ++;
 			memcpy(&SEUV_data, &seuvFrame, seuv_length);
 			seuvFrame.samples --;
-			hex_dump(SEUV_data, seuv_length);
 			SendDataWithCCSDS_AX25(3, SEUV_data);
 			if (parameters.seuv_mode == 2) {
 				vTaskResume(seuv_task);

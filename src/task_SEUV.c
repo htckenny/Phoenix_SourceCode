@@ -35,9 +35,12 @@ void calculate_avg_std(uint8_t ch, uint8_t data[], uint8_t numbers) {
     int tmp[numbers];
     int total = 0;
     int flag;
+    int16_t data_signed;
     /* Calculate the raw data from the received three bytes */
-    for (flag = 0; flag < numbers; flag++)
-        tmp[flag] = (data[flag * 2] << 8) + data[flag * 2 + 1];
+    for (flag = 0; flag < numbers; flag++){
+        memcpy(&data_signed, &data[flag * 2], 2);
+        tmp[flag] = data_signed;
+    }
 
     /* Add all of the numbers of samples */
     for (flag = 0; flag < numbers; flag++)

@@ -960,6 +960,7 @@ int seuvwrite(struct command_context * ctx) {
 	unsigned int node;
 	uint8_t txdata;
 	uint8_t rxdata[4];
+	int16_t rxdata_signed;
 	float results;
 	if (ctx->argc != 2) {
 		return CMD_ERROR_SYNTAX;
@@ -973,7 +974,8 @@ int seuvwrite(struct command_context * ctx) {
 	vTaskDelay(0.07 * delay_time_based);
 	if (i2c_master_transaction_2(0, seuv_node, &txdata, 1, &rxdata, seuv_data_length, seuv_delay) == E_NO_ERR) {
 		hex_dump(&rxdata, seuv_data_length);
-		results = (rxdata[0] << 8) + rxdata[1];
+		rxdata_signed = (rxdata[0] << 8) + rxdata[1];
+		results = rxdata_signed;
 		printf("node %x's Value = %.3f\n", node, results);
 	}
 	else

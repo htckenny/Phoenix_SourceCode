@@ -351,14 +351,14 @@ int INMS_switch(struct command_context * ctx) {
 		xTaskCreate(vTaskinms, (const signed char * ) "INMS", 1024 * 4, NULL, 2, &inms_task);
 		// xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "INMS_EH", 1024 * 4, NULL, 2, &inms_error_handle);
 		// xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "INMS_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
-		xTaskCreate(vTaskInmsTemperatureMonitor, (const signed char * ) "InmsTM", 1024 * 4, NULL, 1, &inms_temp_moniter);
+		// xTaskCreate(vTaskInmsTemperatureMonitor, (const signed char * ) "InmsTM", 1024 * 4, NULL, 1, &inms_temp_moniter);
 	}
 	else if (buffer == 0) {
 		vTaskDelete(inms_task);
 		// vTaskDelete(inms_error_handle);
 		// vTaskDelete(inms_task_receive);
 		// vTaskDelete(inms_current_moniter);
-		vTaskDelete(inms_temp_moniter);
+		// vTaskDelete(inms_temp_moniter);
 	}
 	return CMD_ERROR_NONE;
 }
@@ -431,23 +431,23 @@ int ir(struct command_context * ctx) {
 
 	unsigned int buffer;
 	int len;
-
+	uint8_t *script;
 	if (ctx->argc < 2) {
 		return CMD_ERROR_SYNTAX;
 	}
 	if (sscanf(ctx->argv[1], "%u", &buffer) != 1) {
 		return CMD_ERROR_SYNTAX;
 	}
-	printf("slot  = %d\n", buffer);
 	len = inms_script_length_flash((int)buffer);
-	uint8_t script[len] ;
-	printf("length = %d\n", len);
-	if (inms_script_read_flash(buffer, len, &script) == No_Error)
-		hex_dump(&script, len);
+	script = malloc(len);
+	printf("slot = %d  length = %d\n", buffer, len);
+	if (inms_script_read_flash(buffer, len, script) == No_Error) {
+		hex_dump(script, len);
+	}
 	else {
 		return CMD_ERROR_FAIL;
 	}
-
+	free(script);
 	return CMD_ERROR_NONE;
 }
 // Simulate receive telecommand and execute it

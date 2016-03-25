@@ -23,9 +23,9 @@
 #include "subsystem.h"
 #include "parameter.h"
 
-#define overCurrentThreshold_ADCS_5		400
-#define overCurrentThreshold_ADCS_33	400
-#define overCurrentThreshold_GPS		400
+#define overCurrentThreshold_ADCS_5		100
+#define overCurrentThreshold_ADCS_33	200
+#define overCurrentThreshold_GPS		500
 
 #define temperature_test			0
 #define current_Test				1
@@ -161,9 +161,8 @@ void Anomaly_Monitor_Task(void * pvParameters)
 			}
 			printf("ADCS 5: %d\n", subCurrent[0]);
 			if (subCurrent[0] > overCurrentThreshold_ADCS_5 ) {
-				printf("Out of range %d\n", subCurrent[0]);
 				outRangeCounter_ADCS_5 ++;
-				printf("outCounter = %d\n", outRangeCounter_ADCS_5);
+				printf("Out of range detected, counter = %d", outRangeCounter_ADCS_5);
 				if (outRangeCounter_ADCS_5 >= 6) {
 					generate_Error_Report(3, subCurrent[0]);
 					outRangeCounter_ADCS_5 = 0;
@@ -174,9 +173,8 @@ void Anomaly_Monitor_Task(void * pvParameters)
 			}
 			printf("ADCS 33: %d\n", subCurrent[3]);
 			if (subCurrent[3] > overCurrentThreshold_ADCS_33 ) {
-				printf("Out of range %d\n", subCurrent[3]);
 				outRangeCounter_ADCS_33 ++;
-				printf("outCounter = %d\n", outRangeCounter_ADCS_33);
+				printf("Out of range detected, counter = %d", outRangeCounter_ADCS_33);
 				if (outRangeCounter_ADCS_33 >= 6) {
 					generate_Error_Report(2, subCurrent[3]);
 					outRangeCounter_ADCS_33 = 0;
@@ -187,9 +185,8 @@ void Anomaly_Monitor_Task(void * pvParameters)
 			}
 			printf("GPS: %d\n", subCurrent[4]);
 			if (subCurrent[4] > overCurrentThreshold_GPS ) {
-				printf("Out of range %d\n", subCurrent[4]);
 				outRangeCounter_GPS ++;
-				printf("outCounter = %d\n", outRangeCounter_GPS);
+				printf("Out of range detected, counter = %d", outRangeCounter_GPS);
 				if (outRangeCounter_GPS >= 6) {
 					power_control(2, OFF);	//power off GPS
 					use_GPS_header = 0;

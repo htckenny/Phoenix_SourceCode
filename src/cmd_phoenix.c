@@ -371,6 +371,7 @@ int adcs_switch(struct command_context * ctx) {
 	extern void ADCS_Task(void * pvParameters);
 	extern void EOP_Task(void * pvParameters);
 	extern void vTaskfstest(void * pvParameters);
+	extern void Anomaly_Monitor_Task(void * pvParameters);
 	if (ctx->argc < 2) {
 		return CMD_ERROR_SYNTAX;
 	}
@@ -389,6 +390,10 @@ int adcs_switch(struct command_context * ctx) {
 	else if (buffer == 3) {
 		xTaskCreate(EOP_Task, (const signed char * ) "EOP", 1024 * 4, NULL, 2, &eop_task);
 	}
+	else if (buffer == 4) {
+		xTaskCreate(Anomaly_Monitor_Task, (const signed char *) "Anom", 1024 * 4, NULL, 3, NULL);
+	}
+
 	return CMD_ERROR_NONE;
 }
 

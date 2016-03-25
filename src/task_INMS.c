@@ -40,18 +40,18 @@
 #define isFunctionTest			0
 
 extern void seuv_work_with_inms(int switch_status);
-
+extern void vTaskInmsReceive(void * pvParameters);
 typedef struct __attribute__((packed)) {
 	int tt_hour, tt_min, tt_sec, tt_seq;
 } timetable;
 
 int rec[scriptNum];
 
-int scriptRunning = 0;		/* initializing for identifying which script is running */
-int obcSuErrFlag = 0;		/* for the detection of the OBC_SU_ERR */
+int scriptRunning = 0;				/* initializing for identifying which script is running */
+int obcSuErrFlag = 0;				/* for the detection of the OBC_SU_ERR */
 int error_flag = 0;
 int maxlength = 0;
-uint32_t epoch_sec[scriptNum];/* the seconds from UTC epoch time 2000/01/01 00:00:00 Am */
+uint32_t epoch_sec[scriptNum];		/* the seconds from UTC epoch time 2000/01/01 00:00:00 Am */
 uint32_t refsec[scriptNum] ;
 
 /**
@@ -258,6 +258,439 @@ int inmsJumpScriptCheck (int currentScript) {
 }
 
 /**
+ * This is the main INMS task that perform the script handling.
+ */
+void vTaskinms(void * pvParameters) {
+
+	int script_read_result = 0;
+	uint16_t script_xsum_result = 0;
+	int sequence_time_based;
+	int first_rollover = 0;
+	int len[scriptNum];				// the length of each script
+	uint8_t script_short[scriptNum][6];
+	uint8_t *script;
+	uint32_t first_time = 0 ;
+	int flag = 0;				// record which byte is running now
+	int ttflag = 0;				// times_table flag
+	timetable timetable_t[80];
+	int printtflag;
+	int ttflagMax;
+
+	int eotflag [10];  //need prove
+	int eotnum;
+	int nnflag;
+	uint32_t tTable_24 = 0;
+
+	uint32_t refTime;
+	int printTime ;
+	int seqcount;
+
+	uint8_t script_status[scriptNum];
+
+	portTickType xLastWakeTime;
+	portTickType xFrequency;
+
+	printf("Start INMS task......\n");
+	vTaskDelay(5 * delay_time_based);
+	while (1) {
+		if (parameters.inms_status == 1) {
+			for (int i = 0; i < scriptNum; i++) {
+				epoch_sec[i] = 0;
+			}
+			printf("[-------------STEP #1 : Getting start_time of all scripts-------------]\n");
+			/* STEP #1 Get the length of all of the scripts*/
+			for (int i = 0; i < 7; i++) {
+				script_read_result =  inms_script_read_flash(i, 6, &script_short[i]);
+				if (script_read_result == No_Error)
+					epoch_sec[i] = (script_short[i][2]) + (script_short[i][3] << 8) + (script_short[i][4] << 16) + (script_short[i][5] << 24);
+				else
+					epoch_sec[i] = 0;
+			}
+
+			/* Sort these 7 epoch times by calling the function inmssort */
+			inmssort(epoch_sec);
+			vTaskDelay(1 * delay_time_based);
+			/**
+			 * modify here if wanna change the sequence for debugging
+			 * For example:
+			 * rec[0] = 1;
+			 * rec[1] = 0;
+			 */
+#if isFunctionTest
+			rec[0] = Test_Script;
+#endif
+
+			printf("After Modification\n");
+			for (int i = 0; i < scriptNum; i++) {
+				printf("[%d] => %d\n", i, rec[i]);
+			}
+
+			for (int i = 0; i < scriptNum; i++) {
+				if (i == 0) {
+					while (1) {
+						first_time = timeGet(0) - 946684800;
+						printf("\n\t\t\t\t\t\tdiff = %" PRIu32 "\n", epoch_sec[rec[i]] - first_time);
+						printf("\E[2A\r");
+
+						if (first_time > epoch_sec[rec[i]] - 10)
+							break;
+						vTaskDelay(1 * delay_time_based);
+						if (parameters.inms_status == 0)
+							break;
+					}
+				}
+				len[rec[i]] = inms_script_length_flash(rec[i]);
+				script = malloc(len[rec[i]]);
+
+				if (inms_script_read_flash(rec[i], len[rec[i]], script) == No_Error) {
+					hex_dump(script, len[rec[i]]);
+					script_status[rec[i]] = 1;
+				}
+				else {
+					script_status[rec[i]] = 0;
+				}
+
+				/**
+				 * STEP #2 Read the script, put the data into script[]
+				 * and perform Fletcher-16 checksum algorithm
+				 */
+				script_read_result = inms_script_read_flash(rec[i], len[rec[i]], script);
+				script_xsum_result = fletcher(script, len[rec[i]]);
+
+				if (script_read_result == Error || script_xsum_result != 0) {
+					printf("No. %d script XSUM through Fletcher-16 [FAIL]\n", i);
+					obcSuErrFlag = 6;
+					break;
+				}
+				else {
+					printf("No. %d script XSUM through Fletcher-16 [PASS]\n", i);
+				}
+
+				flag = 0;
+				ttflag = 0;
+
+				flag = 15;
+				/* Mark an IDLE-SLOT script buffer as the RUNNING-SCRIPT */
+				scriptRunning = rec[i];
+				sequence_time_based = epoch_sec[rec[i]] % 86400;
+				printtflag = -1;
+				/* EOT = 0x55 */
+				while (script[flag] != 0x55) {
+					/* S1 = 0x41 */
+					if (script[flag] == 0x41)	{
+						timetable_t[ttflag].tt_hour	=	script[flag - 1];
+						timetable_t[ttflag].tt_min	=	script[flag - 2];
+						timetable_t[ttflag].tt_sec	=	script[flag - 3];
+						timetable_t[ttflag].tt_seq	=	1;
+						printf("Sequence 1: \n");
+					}
+					/* S2 = 0x42 */
+					else if (script[flag] == 0x42) {
+						timetable_t[ttflag].tt_hour	=	script[flag - 1];
+						timetable_t[ttflag].tt_min	=	script[flag - 2];
+						timetable_t[ttflag].tt_sec	=	script[flag - 3];
+						timetable_t[ttflag].tt_seq	=	2;
+						printf("Sequence 2: \n");
+					}
+					/* S3 = 0x43 */
+					else if (script[flag] == 0x43) {
+						timetable_t[ttflag].tt_hour	=	script[flag - 1];
+						timetable_t[ttflag].tt_min	=	script[flag - 2];
+						timetable_t[ttflag].tt_sec	=	script[flag - 3];
+						timetable_t[ttflag].tt_seq	=	3;
+						printf("Sequence 3: \n");
+					}
+					/* S4 = 0x44 */
+					else if (script[flag] == 0x44) {
+						timetable_t[ttflag].tt_hour	=	script[flag - 1];
+						timetable_t[ttflag].tt_min	=	script[flag - 2];
+						timetable_t[ttflag].tt_sec	=	script[flag - 3];
+						timetable_t[ttflag].tt_seq	=	4;
+						printf("Sequence 4: \n");
+					}
+					/* S5 = 0x45 */
+					else if (script[flag] == 0x45) {
+						timetable_t[ttflag].tt_hour	=	script[flag - 1];
+						timetable_t[ttflag].tt_min	=	script[flag - 2];
+						timetable_t[ttflag].tt_sec	=	script[flag - 3];
+						timetable_t[ttflag].tt_seq	=	5;
+						printf("Sequence 5: \n");
+					}
+					else {
+						ttflag--;
+					}
+					if (printtflag != ttflag) {
+						printf("hour:%d, min:%d, sec:%d, seq:%d\n", timetable_t[ttflag].tt_hour, timetable_t[ttflag].tt_min, timetable_t[ttflag].tt_sec, timetable_t[ttflag].tt_seq);
+						printtflag = ttflag;
+					}
+					flag ++;
+					ttflag++;
+				}
+				flag++;
+				ttflag--;
+				printf("flag = %d, ttflag = %d\n", flag, ttflag);
+				ttflagMax = ttflag;
+
+				printf("[-------------STEP #6 :Setting End of time flag-------------]\n");
+
+				eotnum = 0;
+				nnflag = flag;
+				for (int i = 0; i < 10; i++) {
+					eotflag[i] = 0;
+				}
+				/* find where is OBC_EOT 0xFE */
+				eotflag[eotnum++] = nnflag;
+				while (nnflag <= (script[0]  + (script[1] << 8))) {
+					if (script[nnflag] == 254) {	//0xFE = 0d254
+						eotflag[eotnum++] = nnflag + 3;
+					}
+					nnflag ++;
+				}
+				for (int i = 0; i < eotnum; i++) {
+					printf("EOTflag[%d] =%d\n", i, eotflag[i]);
+				}
+
+				printf("[---------STEP #7 : Executing command at script %d---------]\n", rec[i]);
+				/* Start execute the command by following the timetable */
+				tTable_24 = 0;
+				refTime = 0;
+				ttflag = 0;
+				printf("%d", timetable_t[ttflag].tt_seq);
+				printTime = 1;
+				seqcount = 0;
+				first_time = 0 ;
+
+				while (1) {
+					if (inmsJumpScriptCheck(i) && i != scriptNum - 1)
+						break;
+					if (parameters.inms_status == 0)
+						break;
+					if (seqcount > ttflagMax) {
+						ttflag = 0;
+						seqcount = 0;
+					}
+
+					vTaskDelay(1 * delay_time_based);
+					refTime = timeGet(1);  /* get the small clock time */
+
+					first_time = timeGet(0) - 946684800;
+					tTable_24  = timetable_t[ttflag].tt_hour * 3600 + timetable_t[ttflag].tt_min * 60 +  timetable_t[ttflag].tt_sec;
+
+					if (script_status[rec[i]] != 0) {
+
+						if (printTime == 1) {
+							printf("\n%.5" PRIu32 " -- %.5" PRIu32 "\n", refTime, tTable_24);
+							printf("%.5" PRIu32 "\n", (tTable_24 < refTime) ? tTable_24 - refTime + 86400 : tTable_24 - refTime);
+							printf("\E[3A\r");
+						}
+						if ((refTime  ==  tTable_24 ) || ((refTime - 1 ) ==  tTable_24 )) {
+							printTime = 0;
+							if (timetable_t[ttflag].tt_seq == 1) {
+								flag = eotflag[0];
+								printf("\n\n\nputting flag 1 done\n");
+							}
+							else if (timetable_t[ttflag].tt_seq == 2) {
+								flag = eotflag[1];
+								printf("\n\n\nputting flag 2 done\n");
+							}
+							else if (timetable_t[ttflag].tt_seq == 3) {
+								flag = eotflag[2];
+								printf("\n\n\nputting flag 3 done\n");
+							}
+							else if (timetable_t[ttflag].tt_seq == 4) {
+								flag = eotflag[3];
+								printf("\n\n\nputting flag 4 done\n");
+							}
+							else if (timetable_t[ttflag].tt_seq == 5) {
+								flag = eotflag[4];
+								printf("\n\n\nputting flag 5 done\n");
+							}
+							int leng;
+							int delayTimeNow = 0 ;
+							int delayTimeTarget = 0;
+							int tempTime = 0;
+							int inTheSequence = 0;
+
+							while (flag <= len[rec[i]]) {
+								if (parameters.inms_status == 0) {
+									break;
+								}
+								printf("In the sequence loop : Sending command.\n");
+								leng = script[flag + 3]; //get Command's length
+
+								if (error_flag == 1) {
+									error_flag = 0;
+									if (inTheSequence == 1) {
+										seqcount ++;
+										ttflag++;
+										printTime = 1;
+										break;
+									}
+								}
+								inTheSequence = 1;
+								/* OBC_SU_ON  = 0xF1 = 0d241 */
+								if (script[flag + 2] == 241) {
+									if (script[flag + 5] == 0x33 || inms_tm_status == 1) {
+										int numGabage = 0;
+										power_control(4, ON);	//command EPS to POWER ON INMS
+										vTaskDelay(0.5 * delay_time_based);
+
+										numGabage = usart_messages_waiting(2);
+										while (numGabage != 0) {
+											usart_getc(2);
+											numGabage = usart_messages_waiting(2);
+										}
+										xTaskCreate(vTaskInmsReceive, (const signed char*) "INMSR", 1024 * 4, NULL, 2, &inms_task_receive);
+
+#if isSimulator						/* ---- For simulator ---- */
+										for (int j = 2; j <= leng + 3; j++) {
+											usart_putstr(2, (char *)&script[flag + j], 1);
+										}
+#endif
+										if (parameters.seuv_mode == 0x04)
+											seuv_work_with_inms(1);
+									}
+									else {
+										ttflag++;
+										seqcount++;
+										break;
+									}
+									/* ----------------------- */
+									printf("COMMAND: OBC_SU_ON...........\n");
+								}
+								/* OBC_SU_OFF = 0xF2 = 0d242 */
+								else if (script[flag + 2] == 242) {
+									printf("delete inms task receive\n");
+
+									vTaskDelay(1 * delay_time_based);
+									vTaskDelete(inms_task_receive);
+									inms_task_receive = NULL;
+									power_control(4, OFF);
+									if (parameters.seuv_mode == 0x04)
+										seuv_work_with_inms(0);
+									/* ---- For simulator ---- */
+#if isSimulator
+									for (int j = 2; j <= leng + 3; j++) {
+										usart_putstr(2, (char *)&script[flag + j], 1);
+									}
+#endif
+									/* --------------------- */
+
+									printf("COMMAND: OBC_SU_OFF...........\n");
+								}
+								/* OBC_EOT  = 0xFE = 0d254 */
+								else if (script[flag + 2] == 254) {
+									printf("COMMAND: OBC_EOT...........\n");
+									ttflag++;
+									seqcount++;
+									printTime = 1;
+
+									/* delay for OBC_EOT */
+									delayTimeNow = refTime;
+									delayTimeTarget = delayTimeNow + script[flag + 1] * 60 + script[flag];
+									tempTime = delayTimeNow;
+									/* Set the delay time during one sampling operation*/
+									xFrequency = 1 * delay_time_based;
+									xLastWakeTime = xTaskGetTickCount();
+
+									while (delayTimeTarget != delayTimeNow) {
+										printf("\n%d-----------%d\n", delayTimeNow - tempTime, delayTimeTarget - tempTime);
+										printf("\E[2A\r");
+										delayTimeNow = delayTimeNow + 1;
+										vTaskDelayUntil(&xLastWakeTime, xFrequency);
+									}
+									printf("%d %d\n", ttflag, ttflagMax);
+									if (ttflag == ttflagMax + 1)
+										script_status[rec[i]] = 0;
+									break;
+								}
+								else {
+									switch (script[flag + 2]) {
+									/* SU_STIM */
+									case 4:
+										if (script[flag + 3] != 2)
+											obcSuErrFlag = 5;
+										break;
+									/* SU_HC */
+									case 6:
+										if (script[flag + 3] != 4)
+											obcSuErrFlag = 5;
+										break;
+									/* SU_CAL */
+									case 7:
+										if (script[flag + 3] != 4)
+											obcSuErrFlag = 5;
+										break;
+									/* SU_SCI */
+									case 8:
+										if (script[flag + 3] != 6)
+											obcSuErrFlag = 5;
+										break;
+									/* SU_DUMP */
+									case 11:
+										if (script[flag + 3] != 1)
+											obcSuErrFlag = 5;
+										break;
+									/* SU_HVARM */
+									case 83:
+										if (script[flag + 3] != 1)
+											obcSuErrFlag = 5;
+										break;
+									/* SU_HVON */
+									case 201:
+										if (script[flag + 3] != 1)
+											obcSuErrFlag = 5;
+										break;
+									}
+									for (int j = 2; j <= leng + 3; j++) {
+										usart_putstr(2, (char *)&script[flag + j], 1); //(char *) check !!
+										printf("COMMAND : %02X \n", script[flag + j]);
+									}
+									vTaskDelay(0.2 * delay_time_based);
+								}
+								/* delay */
+								delayTimeNow = refTime;
+								delayTimeTarget = delayTimeNow + script[flag + 1] * 60 + script[flag];
+								tempTime = delayTimeNow;
+
+								xFrequency = 1 * delay_time_based;
+								xLastWakeTime = xTaskGetTickCount();
+								while (delayTimeTarget != delayTimeNow) {
+
+									printf("\n%d-----------%d\n", delayTimeNow - tempTime, delayTimeTarget - tempTime);
+									printf("\E[2A\r");
+									delayTimeNow = delayTimeNow + 1;
+									if (parameters.inms_status == 0 || inms_tm_status == 0) {
+										if (inms_task_receive != NULL) {
+											vTaskDelete(inms_task_receive);
+											power_control(4, OFF);
+											inms_task_receive = NULL;
+											if (parameters.seuv_mode == 0x04)
+												seuv_work_with_inms(0);
+										}
+										break;
+									}
+									vTaskDelayUntil( &xLastWakeTime, xFrequency );
+								}
+								flag = flag + leng + 4;
+								if (inmsJumpScriptCheck(i) && i != scriptNum - 1) {
+									break;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		else {
+			printf("INMS handler state is disabled\n");
+			printf("use TC 8-17 to enable it\n");
+		}
+		vTaskDelay(3 * delay_time_based);
+	}
+}
+
+/**
  * This task is used for receiving the packet from INMS, should check the Rx buffer every one second
  */
 void vTaskInmsReceive(void * pvParameters) {
@@ -309,483 +742,6 @@ void vTaskInmsReceive(void * pvParameters) {
 		vTaskDelayUntil( &xLastWakeTime, xFrequency );
 	}
 }
-/**
- * This is the main INMS task that perform the script handling.
- */
-void vTaskinms(void * pvParameters) {
-
-	int script_read_result[scriptNum] = {0};
-	uint16_t script_xsum_result[scriptNum] = {0};
-	int sequence_time_based;
-	int first_rollover = 0;
-	printf("Start INMS task......\n");
-	vTaskDelay(5 * delay_time_based);
-	while (1) {
-		vTaskDelay(3 * delay_time_based);
-		if (parameters.inms_status == 1) {
-			int len[scriptNum];	// the length of each script
-			for (int i = 0; i < scriptNum; i++) {
-				epoch_sec[i] = 0;
-			}
-			printf("[-------------STEP #1 : Getting length of all scripts-------------]\n");
-			/* STEP #1 Get the length of all of the scripts*/
-			for (int i = 0; i < scriptNum; i++) {
-				len[i] = inms_script_length_flash(i);
-				printf("script %d: %d\n", i, len[i]);
-				if (len[i] >= maxlength) {
-					maxlength = len[i];
-				}
-			}
-			printf("MAX length : %d\n", maxlength);
-			uint8_t script[scriptNum][maxlength];           //(option) Use pointer  check test/jagged array
-			for (int i = 0 ; i < scriptNum ; i++) {
-				for (int j = 0; j < maxlength; j++) {
-					script[i][j] = 0;
-				}
-			}
-			printf("[-------------STEP #2a : Performing Fletcher 16-------------]\n");
-			/**
-			 * STEP #2 Read the script, put the data into script[]
-			 * and perform Fletcher-16 checksum and additional check
-			 */
-			for (int i = 0; i < scriptNum; i++) {
-				script_read_result[i] =  inms_script_read_flash(i, len[i], &script[i]);
-				script_xsum_result[i] = fletcher(script[i], len[i]);
-				if (script_read_result[i] == Error || script_xsum_result[i] != 0) {
-					printf("No. %d script XSUM through Fletcher-16 [FAIL]\n", i);
-					obcSuErrFlag = 6;
-				}
-				else {
-					printf("No. %d script XSUM through Fletcher-16 [PASS]\n", i);
-				}
-			}
-			printf("[-------------STEP #2b: Performing additional check with script length-------------]\n");
-			for (int i = 0; i < scriptNum; i++) {
-				if (len[i] == script[i][0] + (script[i][1] << 8)) {
-					printf("No. %d script length check [PASS]\n", i);
-				}
-				else {
-					printf("No. %d script length check [FAIL]\n", i);
-					obcSuErrFlag = 2;
-				}
-			}
-
-			printf("[-------------STEP #3 : Converting 4 bytes times into seconds-------------]\n");
-			/* STEP #3 Convert the 4 byte time stamps into seconds since UTC epoch */
-			for (int i = 0; i < scriptNum; i++) {
-				if (script_read_result[i] == No_Error)
-					epoch_sec[i] = (script[i][2]) + (script[i][3] << 8) + (script[i][4] << 16) + (script[i][5] << 24);
-				else
-					epoch_sec[i] = 0;
-#if isFunctionTest
-				epoch_sec[i] -= (3029529600);
-#endif
-			}
-			/**
-			 * Sort these 7 epoch times by calling the function inmssort
-			 */
-			inmssort(epoch_sec);
-			vTaskDelay(1 * delay_time_based);
-
-			/**
-			 * modify here if wanna change the sequence for debugging
-			 * For example:
-			 * rec[0] = 1;
-			 * rec[1] = 0;
-			 */
-#if isFunctionTest
-			rec[0] = Test_Script;
-#endif
-
-			printf("After Modification\n");
-			for (int i = 0; i < scriptNum; i++) {
-				printf("[%d] => %d\n", i, rec[i]);
-			}
-
-			printf("[-------------STEP #4 : Recording TimeTable with structure-------------]\n");
-			/* STEP #4 Record the TimeTable with structure */
-			for (int i = 0; i < scriptNum; i++) {
-				if (script_xsum_result[rec[i]] != 0) {
-					parameters.inms_status = 0;
-					para_w_flash();
-					break;
-				}
-				if (parameters.inms_status == 0)
-					break;
-				/*Initialize*/
-				int flag = 0;		//record which byte is running now
-				int ttflag = 0;		//times_table flag
-				timetable timetable_t[80]; 		//(option) Use pointer
-				flag = 15;
-				/* Mark an IDLE-SLOT script buffer as the RUNNING-SCRIPT */
-				scriptRunning =  rec[i];	//for the need to jump to the next script
-				sequence_time_based = epoch_sec[rec[i]] % 86400;
-				int printtflag = -1;
-				/* EOT = 0x55 */
-				while (script[rec[i]][flag] != 0x55) {
-					if (script_read_result[i] != No_Error)
-						break;
-					/* S1 = 0x41 */
-					if (script[rec[i]][flag] == 0x41)	{
-						timetable_t[ttflag].tt_hour	=	script[rec[i]][flag - 1];
-						timetable_t[ttflag].tt_min	=	script[rec[i]][flag - 2];
-						timetable_t[ttflag].tt_sec	=	script[rec[i]][flag - 3];
-						timetable_t[ttflag].tt_seq	=	1;
-						printf("Sequence 1: \n");
-					}
-					/* S2 = 0x42 */
-					else if (script[rec[i]][flag] == 0x42) {
-						timetable_t[ttflag].tt_hour	=	script[rec[i]][flag - 1];
-						timetable_t[ttflag].tt_min	=	script[rec[i]][flag - 2];
-						timetable_t[ttflag].tt_sec	=	script[rec[i]][flag - 3];
-						timetable_t[ttflag].tt_seq	=	2;
-						printf("Sequence 2: \n");
-					}
-					/* S3 = 0x43 */
-					else if (script[rec[i]][flag] == 0x43) {
-						timetable_t[ttflag].tt_hour	=	script[rec[i]][flag - 1];
-						timetable_t[ttflag].tt_min	=	script[rec[i]][flag - 2];
-						timetable_t[ttflag].tt_sec	=	script[rec[i]][flag - 3];
-						timetable_t[ttflag].tt_seq	=	3;
-						printf("Sequence 3: \n");
-					}
-					/* S4 = 0x44 */
-					else if (script[rec[i]][flag] == 0x44) {
-						timetable_t[ttflag].tt_hour	=	script[rec[i]][flag - 1];
-						timetable_t[ttflag].tt_min	=	script[rec[i]][flag - 2];
-						timetable_t[ttflag].tt_sec	=	script[rec[i]][flag - 3];
-						timetable_t[ttflag].tt_seq	=	4;
-						printf("Sequence 4: \n");
-					}
-					/* S5 = 0x45 */
-					else if (script[rec[i]][flag] == 0x45) {
-						timetable_t[ttflag].tt_hour	=	script[rec[i]][flag - 1];
-						timetable_t[ttflag].tt_min	=	script[rec[i]][flag - 2];
-						timetable_t[ttflag].tt_sec	=	script[rec[i]][flag - 3];
-						timetable_t[ttflag].tt_seq	=	5;
-						printf("Sequence 5: \n");
-					}
-					else {
-						ttflag--;
-					}
-					if (printtflag != ttflag) {
-						printf("hour:%d, min:%d, sec:%d, seq:%d\n", timetable_t[ttflag].tt_hour, timetable_t[ttflag].tt_min, timetable_t[ttflag].tt_sec, timetable_t[ttflag].tt_seq);
-						printtflag = ttflag;
-					}
-					flag ++;
-					ttflag++;
-					// printf("flag = %d, ttflag = %d\n", flag, ttflag);
-					if (flag >= 1000)
-						break;
-				}
-				flag++;
-				ttflag--;
-
-				int ttflagMax = ttflag;
-				printf("[-------------STEP #5 : Checking the correctness of the sequence-------------]\n");
-
-				/*Check if the first sequence is S1 [Req-INMS-I-228]*/
-				if (timetable_t[0].tt_seq == 1) {
-					printf("The first sequence is S1!!\n");
-				}
-				else {
-					printf("The first sequence is not S1, ERROR! \n");
-					obcSuErrFlag = 5;
-				}
-				/*
-					Check if the Script sequence slots be used sequentially [Req-INMS-I-229]
-					need more scenario to test
-				*/
-				int last_seq = timetable_t[0].tt_seq;
-				for (int i = 1; i < ttflag; i++) {
-					if (timetable_t[i].tt_seq - last_seq < 2) {
-						last_seq = timetable_t[i].tt_seq;
-					}
-					else {
-						printf("The sequence slots are not used sequentially, ERROR! \n");
-						obcSuErrFlag = 5;
-					}
-				}
-				printf("[-------------STEP #6 :Setting End of time flag-------------]\n");
-				int eotflag [10];  //need prove
-				int eotnum = 0;
-				int nnflag = flag;
-				for (int i = 0; i < 10; i++) {
-					eotflag[i] = 0;
-				}
-				/* find where is OBC_EOT 0xFE */
-				eotflag[eotnum++] = nnflag;
-				while (nnflag <= (script[rec[i]][0]  + (script[rec[i]][1] << 8))) {
-					if (script[rec[i]][nnflag] == 254) {	//0xFE = 0d254
-						eotflag[eotnum] = nnflag + 3;
-						eotnum++;
-					}
-					nnflag ++;
-				}
-				for (int i = 0; i < eotnum; i++) {
-					printf("EOTflag[%d] =%d\n", i, eotflag[i]);
-				}
-
-				printf("[---------STEP #7 : Executing command at script %d---------]\n", rec[i]);
-				/* Start execute the command by following the timetable */
-				uint32_t tTable_24 = 0;
-				uint32_t refTime = 0;
-				ttflag = 0;
-				printf("%d", timetable_t[ttflag].tt_seq);
-				int printTime = 1;
-				int seqcount = 0;
-				uint32_t first_time = 0 ;
-				if (i == 0) {
-					while (1) {
-						first_time = timeGet(0);
-						first_time -= 946684800;
-						printf("\n\t\t\t\t\t\tdiff = %" PRIu32 "\n", epoch_sec[rec[i]] - first_time);
-						printf("\E[2A\r");
-
-						if (first_time > epoch_sec[rec[i]] - 10)
-							break;
-						vTaskDelay(1 * delay_time_based);
-						if (parameters.inms_status == 0)
-							break;
-					}
-				}
-				while (1) {
-					if (inmsJumpScriptCheck(i) && i != scriptNum - 1)
-						break;
-					if (parameters.inms_status == 0)
-						break;
-					if (seqcount > ttflagMax) {
-						ttflag = 0;
-						seqcount = 0;
-					}
-
-					vTaskDelay(1 * delay_time_based);
-					refTime = timeGet(1);  /* get the small clock time */
-
-
-					first_time = timeGet(0) - 946684800;
-					tTable_24  = timetable_t[ttflag].tt_hour * 3600 + timetable_t[ttflag].tt_min * 60 +  timetable_t[ttflag].tt_sec;
-
-					if (printTime == 1) {
-						printf("\n%.5" PRIu32 " -- %.5" PRIu32 "\n", refTime, tTable_24);
-						printf("%.5" PRIu32 "\n", (tTable_24 < refTime) ? tTable_24 - refTime + 86400 : tTable_24 - refTime);
-						printf("\E[3A\r");
-					}
-					if ((refTime  ==  tTable_24 ) || ((refTime - 1 ) ==  tTable_24 )) {
-						printTime = 0;
-						if (timetable_t[ttflag].tt_seq == 1) {
-							flag = eotflag[0];
-							printf("\n\n\nputting flag 1 done\n");
-						}
-						else if (timetable_t[ttflag].tt_seq == 2) {
-							flag = eotflag[1];
-							printf("\n\n\nputting flag 2 done\n");
-						}
-						else if (timetable_t[ttflag].tt_seq == 3) {
-							flag = eotflag[2];
-							printf("\n\n\nputting flag 3 done\n");
-						}
-						else if (timetable_t[ttflag].tt_seq == 4) {
-							flag = eotflag[3];
-							printf("\n\n\nputting flag 4 done\n");
-						}
-						else if (timetable_t[ttflag].tt_seq == 5) {
-							flag = eotflag[4];
-							printf("\n\n\nputting flag 5 done\n");
-						}
-						int leng;
-						int delayTimeNow = 0 ;
-						int delayTimeTarget = 0;
-						int tempTime = 0;
-						int inTheSequence = 0;
-						while (flag <= (script[rec[i]][0]  + (script[rec[i]][1] << 8))) {
-							if (parameters.inms_status == 0) {
-								break;
-							}
-							printf("In the sequence loop : Sending command.\n");
-							leng = script[rec[i]][flag + 3]; //get Command's length
-
-							if (error_flag == 1) {
-								error_flag = 0;
-								if (inTheSequence == 1) {
-									seqcount ++;
-									ttflag++;
-									printTime = 1;
-									break;
-								}
-							}
-							inTheSequence = 1;
-							/* OBC_SU_ON  = 0xF1 = 0d241 */
-							if (script[rec[i]][flag + 2] == 241) {
-								if (script[rec[i]][flag + 5] == 0x33 || inms_tm_status == 1) {
-									int numGabage = 0;
-									power_control(4, ON);	//command EPS to POWER ON INMS
-									vTaskDelay(0.5 * delay_time_based);
-
-									numGabage = usart_messages_waiting(2);
-									while (numGabage != 0) {
-										usart_getc(2);
-										numGabage = usart_messages_waiting(2);
-									}
-									xTaskCreate(vTaskInmsReceive, (const signed char*) "INMSR", 1024 * 4, NULL, 2, &inms_task_receive);
-
-#if isSimulator						/* ---- For simulator ---- */
-									for (int j = 2; j <= leng + 3; j++) {
-										usart_putstr(2, (char *)&script[rec[i]][flag + j], 1);
-									}
-#endif
-									seuv_work_with_inms(1);
-								}
-								else {
-									ttflag++;
-									seqcount++;
-									break;
-								}
-								/* ----------------------- */
-								printf("COMMAND: OBC_SU_ON...........\n");
-							}
-							/* OBC_SU_OFF = 0xF2 = 0d242 */
-							else if (script[rec[i]][flag + 2] == 242) {
-								printf("delete inms task receive\n");
-
-								vTaskDelay(1 * delay_time_based);
-								vTaskDelete(inms_task_receive);
-								inms_task_receive = NULL;
-								power_control(4, OFF);
-								seuv_work_with_inms(0);
-								/* ---- For simulator ---- */
-#if isSimulator
-								for (int j = 2; j <= leng + 3; j++) {
-									usart_putstr(2, (char *)&script[rec[i]][flag + j], 1);
-								}
-#endif
-								/* --------------------- */
-
-								printf("COMMAND: OBC_SU_OFF...........\n");
-							}
-							/* OBC_EOT  = 0xFE = 0d254 */
-							else if (script[rec[i]][flag + 2] == 254) {
-								printf("COMMAND: OBC_EOT...........\n");
-								ttflag++;
-								seqcount++;
-								printTime = 1;
-
-								/* delay for OBC_EOT */
-								delayTimeNow = refTime;
-								delayTimeTarget = delayTimeNow + script[rec[i]][flag + 1] * 60 + script[rec[i]][flag];
-								tempTime = delayTimeNow;
-								while (delayTimeTarget != delayTimeNow) {
-									printf("\n%d-----------%d\n", delayTimeNow - tempTime, delayTimeTarget - tempTime);
-									printf("\E[2A\r");
-									delayTimeNow = delayTimeNow + 1;
-									vTaskDelay(1 * delay_time_based);
-								}
-								break;
-							}
-							else {
-								switch (script[rec[i]][flag + 2]) {
-								/* SU_STIM */
-								case 4:
-									if (script[rec[i]][flag + 3] != 2)
-										obcSuErrFlag = 5;
-									break;
-								/* SU_HC */
-								case 6:
-									if (script[rec[i]][flag + 3] != 4)
-										obcSuErrFlag = 5;
-									break;
-								/* SU_CAL */
-								case 7:
-									if (script[rec[i]][flag + 3] != 4)
-										obcSuErrFlag = 5;
-									break;
-								/* SU_SCI */
-								case 8:
-									if (script[rec[i]][flag + 3] != 6)
-										obcSuErrFlag = 5;
-									break;
-								/* SU_DUMP */
-								case 11:
-									if (script[rec[i]][flag + 3] != 1)
-										obcSuErrFlag = 5;
-									break;
-								/* SU_HVARM */
-								case 83:
-									if (script[rec[i]][flag + 3] != 1)
-										obcSuErrFlag = 5;
-									break;
-								/* SU_HVON */
-								case 201:
-									if (script[rec[i]][flag + 3] != 1)
-										obcSuErrFlag = 5;
-									break;
-								}
-								for (int j = 2; j <= leng + 3; j++) {
-									usart_putstr(2, (char *)&script[rec[i]][flag + j], 1); //(char *) check !!
-									printf("COMMAND : %02x \n", script[rec[i]][flag + j]);
-								}
-								vTaskDelay(0.2 * delay_time_based);
-							}
-							/* delay */
-							delayTimeNow = refTime;
-							delayTimeTarget = delayTimeNow + script[rec[i]][flag + 1] * 60 + script[rec[i]][flag];
-							tempTime = delayTimeNow;
-							portTickType xLastWakeTime;
-							const portTickType xFrequency = 1 * delay_time_based;
-
-							while (delayTimeTarget != delayTimeNow) {
-								xLastWakeTime = xTaskGetTickCount();
-								printf("\n%d-----------%d\n", delayTimeNow - tempTime, delayTimeTarget - tempTime);
-								printf("\E[2A\r");
-								delayTimeNow = delayTimeNow + 1;
-								vTaskDelayUntil( &xLastWakeTime, xFrequency );
-								if (parameters.inms_status == 0 || inms_tm_status == 0) {
-									if (inms_task_receive != NULL) {
-										vTaskDelete(inms_task_receive);
-										power_control(4, OFF);
-										inms_task_receive = NULL;
-										seuv_work_with_inms(0);
-									}
-									break;
-								}
-							}
-							flag = flag + leng + 4;
-							if (inmsJumpScriptCheck(i) && i != scriptNum - 1) {
-								break;
-							}
-						}
-					}
-					else {
-
-						if (refTime == 0) {
-							first_rollover = 1;
-						}
-						if ((epoch_sec[rec[i]] + tTable_24 - sequence_time_based)  < first_time ) {
-							ttflag++;
-							seqcount++;
-						}
-						if ((first_time - (epoch_sec[rec[i]] - sequence_time_based)) >= 86400 && first_time > (epoch_sec[rec[i]] - sequence_time_based) ) {
-							if (first_rollover) {
-								first_rollover = 0;
-								ttflag = 0;
-								seqcount = 0;
-							}
-							else if (first_rollover == 0) {
-								ttflag--;
-								seqcount--;
-							}
-						}
-					}
-				}
-			}
-		}
-		else {
-			printf("INMS handler state is disabled\n");
-			printf("use TC 8-17 to enable it\n");
-		}
-	}
-}
-
 /**
  * This is the task for inms monitor, if the over-current condition exist,
  * it will send error flag to INMS error handler.
@@ -963,7 +919,8 @@ void vTaskInmsErrorHandle(void * pvParameters) {
 				vTaskDelete(inms_task_receive);
 				power_control(4, OFF);
 				inms_task_receive = NULL;
-				seuv_work_with_inms(0);
+				if (parameters.seuv_mode == 0x04)
+					seuv_work_with_inms(0);
 			}
 #if isSimulator
 			unsigned int cmd1 = 0xf2;

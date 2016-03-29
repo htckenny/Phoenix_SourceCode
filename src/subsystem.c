@@ -176,7 +176,7 @@ int antenna_status_check()
 	uint8_t rxdata[2];
 	txdata = 0xC3;
 	if (i2c_master_transaction_2(0, ant_node, &txdata, 1, &rxdata, 2, com_delay) == E_NO_ERR) {
-		if (((rxdata[0] == 0x01) || (rxdata[0] == 0x00)) && (rxdata[1] == 0x00))
+		if (rxdata[0] == 0x0D && rxdata[1] == 0x0C)	//change
 			return No_Error;
 		else
 			return Error;

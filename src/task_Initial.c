@@ -29,6 +29,7 @@ extern void WOD_Task(void * pvParameters);
 extern int antenna_status_check();
 
 void Init_Task(void * pvParameters) {
+	uint8_t txdata;
 
 	/* Initialize the system parameters */
 	if (parameter_init()  == Error)
@@ -64,15 +65,10 @@ void Init_Task(void * pvParameters) {
 	if (idleunlocks != 1) {
 		deploy_antenna();
 	}
-
 #endif
 	printf("Antenna Deployed!!\n");
 	printf("-----------------------------------------\n");
-	while (antenna_status_check() == Error) {
-		printf("deploy again\n");
-		deploy_antenna();
-		vTaskDelay(30 * delay_time_based);
-	}
+
 	/* Activate telecom task, enable receiver to receive command from GS */
 	if (com_task == NULL) {
 		xTaskCreate(Telecom_Task, (const signed char * ) "COM", 1024 * 4, NULL, 3, &com_task);
@@ -80,6 +76,17 @@ void Init_Task(void * pvParameters) {
 	/* Activate WOD collecting task, and start to transmit the beacon */
 	if (wod_task == NULL) {
 		xTaskCreate(WOD_Task, (const signed char * ) "WOD", 1024 * 4, NULL, 1, &wod_task);
+	}
+	
+	while (antenna_status_check() == Error) {
+		printf("deploy again\n");
+		deploy_antenna();
+		vTaskDelay(30 * delay_time_based);
+	}
+	/* Disarm ant board */
+	txdata = 172;
+	if (i2c_master_transaction_2(0, ant_node, &txdata, 1, 0, 0, com_delay) == E_NO_ERR) {
+		printf("Disarm antenna\n");
 	}
 
 	/* change to the ADCS mode */

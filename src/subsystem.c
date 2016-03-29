@@ -160,7 +160,6 @@ int parameter_init()
 void deploy_antenna()
 {
 	uint8_t txdata[2];
-
 	/* arm ant board */
 	txdata[0] = ant_arm;
 	i2c_master_transaction_2(0, ant_node, &txdata, 1, 0, 0, com_delay);
@@ -170,7 +169,6 @@ void deploy_antenna()
 	txdata[0] = ant_deploy;
 	txdata[1] = ant_deploy_timeout;
 	i2c_master_transaction_2(0, ant_node, &txdata, 2, 0, 0, com_delay);
-	printf("Antenna Deployed!!\n");
 }
 int antenna_status_check()
 {

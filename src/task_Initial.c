@@ -26,7 +26,7 @@
 extern void BatteryCheck_Task(void * pvParameters);
 extern void Telecom_Task(void * pvParameters);
 extern void WOD_Task(void * pvParameters);
-
+extern int antenna_status_check();
 
 void Init_Task(void * pvParameters) {
 
@@ -58,13 +58,21 @@ void Init_Task(void * pvParameters) {
 			para_w_flash();
 		}
 	}
+
+#if !ground_Test_Mode
 	/*   Deploy Device  */
 	if (idleunlocks != 1) {
 		deploy_antenna();
 	}
 
+#endif
+	printf("Antenna Deployed!!\n");
 	printf("-----------------------------------------\n");
-	printf("Active Telecom Task, User can start to upload Ground Telecommand\n");
+	while (antenna_status_check() == Error) {
+		printf("deploy again\n");
+		deploy_antenna();
+		vTaskDelay(30 * delay_time_based);
+	}
 	/* Activate telecom task, enable receiver to receive command from GS */
 	if (com_task == NULL) {
 		xTaskCreate(Telecom_Task, (const signed char * ) "COM", 1024 * 4, NULL, 3, &com_task);
@@ -73,10 +81,11 @@ void Init_Task(void * pvParameters) {
 	if (wod_task == NULL) {
 		xTaskCreate(WOD_Task, (const signed char * ) "WOD", 1024 * 4, NULL, 1, &wod_task);
 	}
+
 	/* change to the ADCS mode */
 	HK_frame.mode_status_flag = 2;
 
-	/** End of init */
+	/* End of init */
 	init_task = NULL;
 	vTaskDelete(NULL);
 }

@@ -50,7 +50,7 @@ int CIC() {
 }
 
 void Telecom_Task(void * pvParameters) {
-
+	printf("Active Telecom Task, User can start to upload Ground Telecommand\n");
 	uint8_t flag;
 	timestamp_t t;
 	uint8_t txBuffer;

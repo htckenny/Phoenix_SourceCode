@@ -360,6 +360,7 @@ void vTaskinms(void * pvParameters) {
 				 * STEP #2 Read the script, put the data into script[]
 				 * and perform Fletcher-16 checksum algorithm
 				 */
+				printf("[-------------STEP #2: Performing fletcher and length check-------------]\n");
 				script_read_result = inms_script_read_flash(rec[i], len[rec[i]], script);
 				script_xsum_result = fletcher(script, len[rec[i]]);
 
@@ -371,8 +372,6 @@ void vTaskinms(void * pvParameters) {
 				else {
 					printf("No. %d script XSUM through Fletcher-16 [PASS]\n", rec[i]);
 				}
-				printf("[-------------STEP #2b: Performing check with script length-------------]\n");
-
 				if (len[rec[i]] == script[0] + (script[1] << 8)) {
 					printf("No. %d script length check [PASS]\n", rec[i]);
 				}
@@ -380,11 +379,8 @@ void vTaskinms(void * pvParameters) {
 					printf("No. %d script length check [FAIL]\n", rec[i]);
 					obcSuErrFlag = 2;
 				}
-
-
-				flag = 0;
+				// flag = 0;
 				ttflag = 0;
-
 				flag = 15;
 				/* Mark an IDLE-SLOT script buffer as the RUNNING-SCRIPT */
 				scriptRunning = rec[i];
@@ -714,19 +710,19 @@ void vTaskInmsReceive(void * pvParameters) {
 	uint8_t ucharAdcs[22];
 	uint8_t ucharTotal[174 + 22];		//response packet is FIXED 174 BYTES+ADCS 22 BYTES
 	int receiveFlag = 0;
-
+	portTickType xLastWakeTime;
+	portTickType xFrequency;
 	for (int k = 0; k < 22; k++) {
 		ucharAdcs[k] = 0;
 	}
 	for (int k = 0; k < 174 + 22; k++) {
 		ucharTotal[k] = 0;
 	}
-	portTickType xLastWakeTime;
-	const portTickType xFrequency = 1 * delay_time_based;
+	xFrequency = 1 * delay_time_based;
+	xLastWakeTime = xTaskGetTickCount();
 
 	while (1) {
 		/* response_pkt */
-		xLastWakeTime = xTaskGetTickCount();
 		receiveFlag++;
 
 		/* INMS requirement generate packet within 400 seconds */
@@ -737,7 +733,6 @@ void vTaskInmsReceive(void * pvParameters) {
 
 		if (numReceive != 0) {
 			printf("Get response packet  %d!\n", numReceive);
-
 			package_with_header(ucharAdcs);
 
 			for (int i = 0; i < 22; i++) {
@@ -746,12 +741,17 @@ void vTaskInmsReceive(void * pvParameters) {
 			for (int i = 22; i < inms_data_length; i++) {
 				ucharTotal[i] = usart_getc(2);
 			}
-
-			if (ucharTotal[22] == 0xBB) { 	// SU_ERR detected!
+			if (ucharTotal[22] == 0x04 || (ucharTotal[22] >= 0x06 && ucharTotal[22] <= 0x0B)) {
+				inms_data_write_dup(ucharTotal);
+			}
+			else if (ucharTotal[22] == 0xBB) { 	// SU_ERR detected!
 				obcSuErrFlag = 5;
+				inms_data_write_dup(ucharTotal);
+			}
+			else {
+				printf("RSP_ID incorrect\n");
 			}
 			hex_dump(ucharTotal, inms_data_length);
-			inms_data_write_dup(ucharTotal);
 			numReceive = 0;
 			receiveFlag = 0;
 		}

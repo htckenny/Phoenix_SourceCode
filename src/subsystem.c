@@ -34,8 +34,6 @@
 #define	SECONDS_DAY			(3600L*24L)
 #define	SECONDS_WEEK		(3600L*24L*7L)
 
-
-
 /*------------------------------------------------------------
  * Conversion of Time
  *------------------------------------------------------------*/
@@ -44,6 +42,9 @@
 
 /* Calendar value of 1980/1/6 00:00:00 */
 #define	TIME_T_ORIGIN		315964800L
+
+extern void notify_error_handler();
+int INMS_power_status = 0;
 
 int status_update()
 {
@@ -263,14 +264,19 @@ void power_control(int device, int stats)
 			vTaskDelay(1 * delay_time_based);
 			io_clear(5);
 			io_clear(1);
+			INMS_power_status = 1;
 		}
 		else if (stats == OFF) {
+			if (INMS_power_status == 1){
+				notify_error_handler();
+			}
 			io_set(6);
 			vTaskDelay(0.3 * delay_time_based);
 			io_set(0);
 			vTaskDelay(1 * delay_time_based);
 			io_clear(6);
 			io_clear(0);
+			INMS_power_status = 0;
 		}
 	}
 	/* Interface Board */

@@ -51,9 +51,15 @@ int scriptRunning = 0;				/* initializing for identifying which script is runnin
 int obcSuErrFlag = 0;				/* for the detection of the OBC_SU_ERR */
 int error_flag = 0;
 int maxlength = 0;
-uint32_t epoch_sec[scriptNum];		/* the seconds from UTC epoch time 2000/01/01 00:00:00 Am */
+uint32_t epoch_sec[scriptNum];		/* the seconds from UTC epoch time 2000/01/01 00:00:00 AM */
 uint32_t refsec[scriptNum] ;
 
+/**
+ * This function is used to detect INMS emergency turn OFF
+ */
+void notify_error_handler() {
+	obcSuErrFlag = 3;
+}
 /**
  * This function is used for sorting the script time
  */
@@ -358,13 +364,23 @@ void vTaskinms(void * pvParameters) {
 				script_xsum_result = fletcher(script, len[rec[i]]);
 
 				if (script_read_result == Error || script_xsum_result != 0) {
-					printf("No. %d script XSUM through Fletcher-16 [FAIL]\n", i);
+					printf("No. %d script XSUM through Fletcher-16 [FAIL]\n", rec[i]);
 					obcSuErrFlag = 6;
 					break;
 				}
 				else {
-					printf("No. %d script XSUM through Fletcher-16 [PASS]\n", i);
+					printf("No. %d script XSUM through Fletcher-16 [PASS]\n", rec[i]);
 				}
+				printf("[-------------STEP #2b: Performing check with script length-------------]\n");
+
+				if (len[rec[i]] == script[0] + (script[1] << 8)) {
+					printf("No. %d script length check [PASS]\n", rec[i]);
+				}
+				else {
+					printf("No. %d script length check [FAIL]\n", rec[i]);
+					obcSuErrFlag = 2;
+				}
+
 
 				flag = 0;
 				ttflag = 0;

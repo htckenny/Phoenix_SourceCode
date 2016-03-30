@@ -39,15 +39,19 @@ extern int TS9();
 
 void Anomaly_Monitor_Task(void * pvParameters)
 {
+	uint8_t txbuf[2];
+	uint8_t rxbuf[66];
+#if current_Test
 	int outRangeCounter_ADCS_5 = 0;
 	int outRangeCounter_ADCS_33 = 0;
 	int outRangeCounter_GPS = 0;
-	int outRangeCounter_temp[11] = {0};
-	uint8_t txbuf[2];
-	uint8_t rxbuf[66];
 	uint16_t subCurrent[6];
+#endif
+#if temperature_test
+	int outRangeCounter_temp[11] = {0};
 	uint16_t subTemperature[11];
 	int16_t subTemperature_int[11];
+#endif
 	while (1) {
 
 #if temperature_test

@@ -25,7 +25,8 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-#define DATALENGTH 1;
+#define DATALENGTH 		1
+#define ADCS_DEBUG		0
 
 // #define adcs_node 0x57
 // #define stm_node 0x7F
@@ -139,12 +140,11 @@ void Initial_Mode()
 				adcs_est_ang_rates.angular_X_rate[1] = rxbuf[0] + (rxbuf[1] << 8); //   *256 = <<8, /256= >>8
 				adcs_est_ang_rates.angular_Y_rate[1] = rxbuf[2] + (rxbuf[3] << 8); //   *256 = <<8, /256= >>8
 				adcs_est_ang_rates.angular_Z_rate[1] = rxbuf[4] + (rxbuf[5] << 8); //   *256 = <<8, /256= >>8
-
+#if ADCS_DEBUG
 				printf("\tWe are in the first logic condition");
-
 				printf("\tEstimate X angular rate = %d", adcs_est_ang_rates.angular_X_rate[1]);
 				printf("\tEstimate Z angular rate = %d\n", adcs_est_ang_rates.angular_Z_rate[1]);
-
+#endif
 			}
 
 			if ((adcs_est_ang_rates.angular_X_rate[1] >= -500) && (adcs_est_ang_rates.angular_X_rate[1] <= 500)
@@ -174,10 +174,10 @@ void Initial_Mode()
 					adcs_est_ang_rates.angular_Y_rate[1] = rxbuf[2] + (rxbuf[3] << 8); //   *256 = <<8, /256= >>8
 					adcs_est_ang_rates.angular_Z_rate[1] = rxbuf[4] + (rxbuf[5] << 8); //   *256 = <<8, /256= >>8
 				}
-
+#if ADCS_DEBUG
 				printf("\tWe are in the Second logic condition (In yes result)");
 				printf("\tEstimate Y angular rate = %d\n", adcs_est_ang_rates.angular_Y_rate[1]);
-
+#endif
 				if ((adcs_est_ang_rates.angular_Y_rate[1] >= -3000) && (adcs_est_ang_rates.angular_Y_rate[1] <= 3000))
 				{
 					Initial_mode_2nd_count += 1;
@@ -199,7 +199,9 @@ void Initial_Mode()
 
 				adcs_process.initialize_flag = 0;
 				adcs_process.stabilize_flag = 1;
+#if ADCS_DEBUG
 				printf("U jump to Detumbling Control mode\n");
+#endif
 				break;
 			}
 			else
@@ -207,8 +209,9 @@ void Initial_Mode()
 				adcs_status.initial_flag = 0;
 				adcs_status.high_initial_flag1 = 1;
 				adcs_status.high_initial_flag2 = 0;
-
+#if ADCS_DEBUG
 				printf("U jump to High Intitial Rate Detumbling mode\n");
+#endif
 				break;
 			}
 		}
@@ -224,13 +227,13 @@ void Initial_Mode()
 					adcs_est_ang_rates.angular_Y_rate[1] = rxbuf[2] + (rxbuf[3] << 8); //   *256 = <<8, /256= >>8
 					adcs_est_ang_rates.angular_Z_rate[1] = rxbuf[4] + (rxbuf[5] << 8); //   *256 = <<8, /256= >>8
 				}
-
+#if ADCS_DEBUG
 				printf("\tWe are in the Second logic condition(In no result)\n");
 
 				printf("\tEstimate X angular rate = %d", adcs_est_ang_rates.angular_X_rate[1]);
 				printf("\tEstimate Y angular rate = %d", adcs_est_ang_rates.angular_Y_rate[1]);
 				printf("\tEstimate Z angular rate = %d", adcs_est_ang_rates.angular_Z_rate[1]);
-
+#endif
 
 				if ((adcs_est_ang_rates.angular_X_rate[1] >= -1500) && (adcs_est_ang_rates.angular_X_rate[1] <= 1500)
 				        && (adcs_est_ang_rates.angular_Y_rate[1] >= -1500) && (adcs_est_ang_rates.angular_Y_rate[1] <= 1500)
@@ -256,7 +259,9 @@ void Initial_Mode()
 
 				adcs_process.initialize_flag = 0;
 				adcs_process.stabilize_flag = 1;
+#if ADCS_DEBUG
 				printf("U jump to Detumbling Control mode\n");
+#endif
 				break;
 			}
 			else
@@ -264,8 +269,9 @@ void Initial_Mode()
 				adcs_status.initial_flag = 0;
 				adcs_status.high_initial_flag1 = 0;
 				adcs_status.high_initial_flag2 = 1;
-
+#if ADCS_DEBUG
 				printf("U jump to High Intitial Rate Detumbling mode\n");
+#endif
 				break;
 			}
 		}
@@ -391,10 +397,12 @@ void High_Initial_Rate_Detumbling(int high_initial_identifier)
 
 		else
 		{
+#if ADCS_DEBUG
 			printf("\tWe jump to the second logic condition (In no result)\n");
 			printf("\tEstimate X angular rate = %d", adcs_est_ang_rates.angular_X_rate[1]);
 			printf("\tEstimate Y angular rate = %d", adcs_est_ang_rates.angular_Y_rate[1]);
 			printf("\tEstimate Z angular rate = %d", adcs_est_ang_rates.angular_Z_rate[1]);
+#endif
 			/*---------------------------Continously condition triggering (Previously in No result)-----------------------------*/
 
 			if (High_Initial_mode_flag == 0)
@@ -653,11 +661,12 @@ void Detumbling_Control_EKF()
 		}
 
 		/*---------------------------Continously condition triggering (Previously in Yes result)-----------------------------*/
+#if ADCS_DEBUG
 		printf("\tEstimate X angular rate = %d\n", adcs_est_ang_rates.angular_X_rate[1]);
 		printf("\tEstimate Y angular rate = %d\n", adcs_est_ang_rates.angular_Y_rate[1]);
 		printf("\tEstimate Z angular rate = %d\n", adcs_est_ang_rates.angular_Z_rate[1]);
 		printf("\tEstimate Pitch angle = %d\n", adcs_est_rpy_angle.pitch_angle[1]);
-
+#endif
 		Angular_Y_rate_difference[1] = adcs_est_ang_rates.angular_Y_rate[1] - Angular_Y_reference_rate;
 		Angular_Y_rate_difference[0] = adcs_est_ang_rates.angular_Y_rate[0] - Angular_Y_reference_rate;
 

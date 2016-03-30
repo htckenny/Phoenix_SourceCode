@@ -9,12 +9,15 @@
 
 #include "parameter.h"
 
-#define ground_Test_Mode	0
+#define ground_Test_Mode	1
+
 #define enable_stm_EPS		0
 #define enable_stm_ADCS		0
 #define enable_stm_IFB		0
-#define antenna_EM_test		1
 
+#define antenna_FM			0
+#define antenna_deploy		0
+ 
 /* !!!!!!!!!!!!!!!!!!!!!!!! UINT = LSB !!!!!!!!!!!!!! */
 /* Script Length */
 #define scriptNum 			7

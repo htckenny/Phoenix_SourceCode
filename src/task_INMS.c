@@ -272,7 +272,6 @@ void vTaskinms(void * pvParameters) {
 	int script_read_result = 0;
 	uint16_t script_xsum_result = 0;
 	int sequence_time_based;
-	int first_rollover = 0;
 	int len[scriptNum];				// the length of each script
 	uint8_t script_short[scriptNum][6];
 	uint8_t *script;

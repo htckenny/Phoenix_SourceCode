@@ -58,7 +58,7 @@ void Anomaly_Monitor_Task(void * pvParameters)
 		/* OBC Temperature */
 		TS9();
 		subTemperature[0] = ThermalFrame.T9;
-		printf("\t\t\tTemperature %.1f degree\r\n", ((((subTemperature[0] * 2493.0) / 1023) - 424) / 6.25));
+		printf("\t\t\tOBC Temperature %.1f degree\r\n", ((((subTemperature[0] * 2493.0) / 1023) - 424) / 6.25));
 		printf("\E[1A\r");
 
 		/* Operational Temperature Range -40 to +60 */
@@ -77,7 +77,7 @@ void Anomaly_Monitor_Task(void * pvParameters)
 		/* COM Temperature */
 		TS5();
 		subTemperature[1] = ThermalFrame.T5;
-		printf("\t\t\tTemperature %.1f degree\r\n", (subTemperature[1] * (-0.0546) + 189.5522));
+		printf("\t\t\tCOM Temperature %.1f degree\r\n", (subTemperature[1] * (-0.0546) + 189.5522));
 		printf("\E[1A\r");
 
 		/* Operational Temperature Range -40 to +85 */
@@ -96,7 +96,7 @@ void Anomaly_Monitor_Task(void * pvParameters)
 		/* Antenna Temperature */
 		TS6();
 		subTemperature[2] = ThermalFrame.T6;
-		printf("\t\t\t(raw)Vout %.1f mV\r\n", (subTemperature[2] * 3.3 * 1000 / 1023));
+		printf("\t\t\tAntenna (raw)Vout %.1f mV\r\n", (subTemperature[2] * 3.3 * 1000 / 1023));
 		printf("\E[1A\r");
 
 		/* Operational Temperature Range -20 to +60 */
@@ -117,8 +117,8 @@ void Anomaly_Monitor_Task(void * pvParameters)
 		subTemperature_int[2] = (ThermalFrame.T1 + ThermalFrame.T2 + ThermalFrame.T3) / 3;
 		subTemperature_int[3] = ThermalFrame.T4;
 
-		printf("\t\t\ttTemperature %d degree\r\n", subTemperature_int[2]);
-		printf("\t\t\ttTemperature %d degree\r\n", subTemperature_int[3]);
+		printf("\t\t\tEPS Temperature %d degree\r\n", subTemperature_int[2]);
+		printf("\t\t\tBAT Temperature %d degree\r\n", subTemperature_int[3]);
 		printf("\E[1A\r");
 
 		/* Operational Temperature Range -10 to +60 */
@@ -208,7 +208,7 @@ void Anomaly_Monitor_Task(void * pvParameters)
 			/* ADCS ARM Temperature */
 			TS7();
 			subTemperature_int[0] = ThermalFrame.T7;
-			printf("\t\t\ttTemperature %d degree\r\n", subTemperature_int[0]);
+			printf("\t\t\tADCS ARM Temperature %d degree\r\n", subTemperature_int[0]);
 			printf("\E[1A\r");
 
 			/* Operational Temperature Range -10 to +60 */
@@ -227,7 +227,7 @@ void Anomaly_Monitor_Task(void * pvParameters)
 			/* ADCS Rate Sensor & Magnetometer Temperature */
 			TS8();
 			subTemperature_int[1] = ThermalFrame.T8;
-			printf("\t\t\ttTemperature %d degree\r\n", subTemperature_int[1]);
+			printf("\t\t\tADCS Rate & M Temperature %d degree\r\n", subTemperature_int[1]);
 			printf("\E[1A\r");
 
 			/* Operational Temperature Range -10 to +60 */
@@ -248,7 +248,6 @@ void Anomaly_Monitor_Task(void * pvParameters)
 		}
 		vTaskDelay(5 * delay_time_based);
 #endif
-
 	}
 	/** End of Task, Should Never Reach This */
 	vTaskDelete(NULL);

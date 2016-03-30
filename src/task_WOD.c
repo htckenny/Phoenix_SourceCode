@@ -120,10 +120,8 @@ int getWodFrame(int fnum) {
 		t.tv_sec = 0;
 		t.tv_nsec = 0;
 		obc_timesync(&t, 6000);
-		wod[0] = t.tv_sec;
-		wod[1] = t.tv_sec >> 8;
-		wod[2] = t.tv_sec >> 16;
-		wod[3] = t.tv_sec >> 24;
+		t.tv_sec -= 946684800;
+		memcpy(&wod[0], &t.tv_sec, 4);
 	}
 	unsigned int mode = 1;
 	if (HK_frame.mode_status_flag == 0)

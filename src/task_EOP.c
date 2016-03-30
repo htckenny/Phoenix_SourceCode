@@ -42,6 +42,7 @@ void EOP_Task(void * pvParameters) {
 		t.tv_sec = 0;
 		t.tv_nsec = 0;
 		obc_timesync(&t, 6000);
+		t.tv_sec -= 946684800;
 		memcpy(&uchar_eop[0], &t.tv_sec, 4);
 
 		txbuf[0] = 0x88;	//ID = 136 Current ADCS state

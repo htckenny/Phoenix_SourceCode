@@ -171,6 +171,7 @@ void package_with_header(uint8_t *ucharAdcs)
 	t.tv_sec = 0;
 	t.tv_nsec = 0;
 	obc_timesync(&t, 6000);
+	t.tv_sec -= 946684800;
 	memcpy(&ucharAdcs[0], &t.tv_sec, 4);
 
 	if (use_GPS_header == 0) {

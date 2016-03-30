@@ -234,7 +234,7 @@ uint8_t hk_get() {
 	t.tv_sec = 0;
 	t.tv_nsec = 0;
 	obc_timesync(&t, 6000);
-	// t.tv_sec = csp_hton32(t.tv_sec);
+	t.tv_sec -= 946684800;
 	memcpy(&hk_buffer[0], &t.tv_sec, 4); // get Time LSB
 
 

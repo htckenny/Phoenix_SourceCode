@@ -176,7 +176,11 @@ int antenna_status_check()
 	uint8_t rxdata[2];
 	txdata = 0xC3;
 	if (i2c_master_transaction_2(0, ant_node, &txdata, 1, &rxdata, 2, com_delay) == E_NO_ERR) {
-		if (rxdata[0] == 0x0D && rxdata[1] == 0x0C)	//change
+#if antenna_EM_test
+		if (rxdata[0] == 0x0D && rxdata[1] == 0x0C)
+#else
+		if (rxdata[0] == 0x05 && rxdata[1] == 0x04)
+#endif
 			return No_Error;
 		else
 			return Error;
@@ -265,7 +269,7 @@ void power_control(int device, int stats)
 			INMS_power_status = 1;
 		}
 		else if (stats == OFF) {
-			if (INMS_power_status == 1){
+			if (INMS_power_status == 1) {
 				notify_error_handler();
 			}
 			io_set(6);

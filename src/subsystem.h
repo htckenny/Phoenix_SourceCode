@@ -13,7 +13,8 @@
 #define enable_stm_EPS		0
 #define enable_stm_ADCS		0
 #define enable_stm_IFB		0
-
+#define antenna_EM_test		1
+ 
 /* !!!!!!!!!!!!!!!!!!!!!!!! UINT = LSB !!!!!!!!!!!!!! */
 /* Script Length */
 #define scriptNum 			7

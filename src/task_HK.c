@@ -100,7 +100,7 @@ int TS9() {
 
 	ThermalFrame.T9 = adc_buffer[0];
 
-	printf("%f\n", ((((adc_buffer[0] * 2493.0) / 1023) - 424) / 6.25));
+	// printf("%f\n", ((((adc_buffer[0] * 2493.0) / 1023) - 424) / 6.25));
 
 	return No_Error;
 }
@@ -157,10 +157,10 @@ int TS1_4() {
 	txbuf[0] = 0x08;
 	txbuf[1] = 0x04;
 	if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 23, eps_delay) == E_NO_ERR) {
-		memcpy(&ThermalFrame.T1, &rxbuf[6], 2);		// temp[0]
-		memcpy(&ThermalFrame.T2, &rxbuf[8], 2);		// temp[1]
-		memcpy(&ThermalFrame.T3, &rxbuf[10], 2);	// temp[2]
-		memcpy(&ThermalFrame.T4, &rxbuf[12], 2);	// temp[3]
+		ThermalFrame.T1 = (rxbuf[6] << 8) + rxbuf[7];
+		ThermalFrame.T2 = (rxbuf[8] << 8) + rxbuf[9];
+		ThermalFrame.T3 = (rxbuf[10] << 8) + rxbuf[11];
+		ThermalFrame.T4 = (rxbuf[12] << 8) + rxbuf[13];
 		return No_Error;
 	}
 	else

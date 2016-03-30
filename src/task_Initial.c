@@ -26,7 +26,6 @@
 extern void BatteryCheck_Task(void * pvParameters);
 extern void Telecom_Task(void * pvParameters);
 extern void WOD_Task(void * pvParameters);
-extern int antenna_status_check();
 
 void Init_Task(void * pvParameters) {
 	uint8_t txdata;
@@ -63,7 +62,7 @@ void Init_Task(void * pvParameters) {
 #if !ground_Test_Mode
 	/*   Deploy Device  */
 	if (idleunlocks != 1) {
-		deploy_antenna();
+		deploy_antenna(ant_deploy_timeout);
 	}
 #endif
 	printf("Antenna Deployed!!\n");
@@ -80,7 +79,7 @@ void Init_Task(void * pvParameters) {
 	
 	while (antenna_status_check() == Error) {
 		printf("deploy again\n");
-		deploy_antenna();
+		deploy_antenna(0);
 		vTaskDelay(30 * delay_time_based);
 	}
 	/* Disarm ant board */

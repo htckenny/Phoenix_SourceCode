@@ -157,7 +157,7 @@ int parameter_init()
 	return Error;
 }
 
-void deploy_antenna()
+void deploy_antenna(int timeout)
 {
 	uint8_t txdata[2];
 	/* arm ant board */
@@ -167,7 +167,7 @@ void deploy_antenna()
 
 	/* deploy ant board one by one */
 	txdata[0] = ant_deploy;
-	txdata[1] = ant_deploy_timeout;
+	txdata[1] = timeout;
 	i2c_master_transaction_2(0, ant_node, &txdata, 2, 0, 0, com_delay);
 }
 int antenna_status_check()

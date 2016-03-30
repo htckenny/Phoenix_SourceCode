@@ -9,12 +9,12 @@
 
 #include "parameter.h"
 
-#define ground_Test_Mode	1
+#define ground_Test_Mode	0
 #define enable_stm_EPS		0
 #define enable_stm_ADCS		0
 #define enable_stm_IFB		0
 #define antenna_EM_test		1
- 
+
 /* !!!!!!!!!!!!!!!!!!!!!!!! UINT = LSB !!!!!!!!!!!!!! */
 /* Script Length */
 #define scriptNum 			7
@@ -77,7 +77,7 @@
 #define ant_node 			49
 #define ant_arm 			173
 #define ant_deploy 			165
-#define ant_deploy_timeout 	255
+#define ant_deploy_timeout 	10
 
 /*--------------common parameters-----------------*/
 #define E_NO_ERR			-1
@@ -180,7 +180,8 @@
 #define OFF 0
 
 void power_control(int device, int stats);
-void deploy_antenna();
+void deploy_antenna(int timeout);
+int antenna_status_check();
 void power_OFF_ALL();
 int parameter_init();
 uint32_t get_time();

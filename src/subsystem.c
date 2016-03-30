@@ -170,7 +170,7 @@ void deploy_antenna(int timeout)
 	txdata[0] = ant_deploy;
 	txdata[1] = timeout;
 	i2c_master_transaction_2(0, ant_node, &txdata, 2, 0, 0, com_delay);
-	printf("Antenna Deployed (Real)\n"); 
+	printf("Antenna Deployed (Real)\n");
 #else
 	printf("Antenna Deployed (Simulation)\n");
 #endif
@@ -362,24 +362,26 @@ uint16_t Interface_5V_current_get()
 
 void generate_Error_Report(int type, uint16_t cause_value)
 {
-	/* 1. Low Battery Condition */
-	/* 2. ADCS 3.3V current too high */
-	/* 3. ADCS 5V current too high */
-	/* 4. GPS current too high */
-	/* 5. SEUV 3.3V current too high */
-	/* 6. SEUV 5V current too high */
-	/* 7. INMS 3.3V current too high */
-	/* 8. INMS 5V current too high */
-	/* 9. OBC temperature out of range */
-	/* 10. COM temperature out of range */
-	/* 11. Antenna temperature out of range */
-	/* 12. IFB temperature out of range */
-	/* 13. ADCS temperature out of range */
-	/* 14. ADCS Rate Sensor & Magnetometer temp out of range */
-	/* 15. INMS temperature out of range */
-	/* 16. EPS temperature out of range */
-	/* 17. Battery temperature out of range */
-
+	/**
+	 *	1. Low Battery Condition
+	 *	2. ADCS 3.3V current too high
+	 *	3. ADCS 5V current too high
+	 *	4. GPS current too high
+	 * 	5. SEUV 3.3V current too high
+	 * 	6. SEUV 5V current too high
+	 *	7. INMS 3.3V current too high
+	 *	8. INMS 5V current too high
+	 *	9. OBC temperature out of range
+	 *	10. COM temperature out of range
+	 *	11. Antenna temperature out of range
+	 *	12. IFB temperature out of range
+	 *	13. ADCS temperature out of range
+	 *	14. ADCS Rate Sensor temp out of range
+	 * 	15. ADCS Magnetometer temp out of range
+	 * 	16. INMS temperature out of range
+	 * 	17. EPS temperature out of range
+	 * 	18. Battery temperature out of range
+	 */
 	uint8_t errPacket [10];
 	timestamp_t t;
 	t.tv_sec = 0;
@@ -388,7 +390,7 @@ void generate_Error_Report(int type, uint16_t cause_value)
 
 	if (HK_frame.mode_status_flag == 2 && parameters.first_flight == 1)
 		HK_frame.mode_status_flag = 4;
-
+	t.tv_sec -= 946684800;
 	memcpy(&errPacket[0], &t.tv_sec, 4);
 	memcpy(&errPacket[4], &parameters.ErrSerialNumber, 2);
 	memcpy(&errPacket[6], &type, 1);

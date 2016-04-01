@@ -332,7 +332,9 @@ void High_Initial_Rate_Detumbling(int high_initial_identifier)
 		/*---------------------------Continously condition triggering (Previously in Yes result)-----------------------------*/
 		if (high_initial_identifier == 1)
 		{
+#if ADCS_DEBUG
 			printf("\tEstimate Y angular rate = %d\n", adcs_est_ang_rates.angular_Y_rate[1]);
+#endif
 			if (High_Initial_mode_flag == 0)
 			{
 				if ((adcs_est_ang_rates.angular_Y_rate[1] >= -3000) && (adcs_est_ang_rates.angular_Y_rate[1] <= 3000))
@@ -378,7 +380,9 @@ void High_Initial_Rate_Detumbling(int high_initial_identifier)
 
 				adcs_process.initialize_flag = 0;
 				adcs_process.stabilize_flag = 1;
+#if ADCS_DEBUG
 				printf("u jump to detumbling mode\n");
+#endif
 				break;
 			}
 			else
@@ -386,8 +390,9 @@ void High_Initial_Rate_Detumbling(int high_initial_identifier)
 				adcs_status.initial_flag = 0;
 				adcs_status.high_initial_flag1 = 1;
 				adcs_status.high_initial_flag2 = 0;
-
+#if ADCS_DEBUG
 				printf("u stay in High Intitial Rate Detumbling\n");
+#endif
 				//break;
 			}
 
@@ -457,15 +462,18 @@ void High_Initial_Rate_Detumbling(int high_initial_identifier)
 
 			if (High_Initial_mode_count > High_Initial_mode_qualified_samples)
 			{
+#if ADCS_DEBUG
 				printf("u success\n");
-
+#endif
 				adcs_status.initial_flag = 0;
 				adcs_status.high_initial_flag1 = 0;
 				adcs_status.high_initial_flag2 = 0;
 
 				adcs_process.initialize_flag = 0;
 				adcs_process.stabilize_flag = 1;
+#if ADCS_DEBUG
 				printf("u jump to detumbling mode\n");
+#endif
 				break;
 			}
 
@@ -475,8 +483,9 @@ void High_Initial_Rate_Detumbling(int high_initial_identifier)
 				adcs_status.initial_flag = 0;
 				adcs_status.high_initial_flag1 = 0;
 				adcs_status.high_initial_flag2 = 1;
-
+#if ADCS_DEBUG
 				printf("u stay in High Intitial Rate Detumbling\n");
+#endif
 				//break;
 			}
 
@@ -538,8 +547,9 @@ void Detumbling_Control_RKF()
 		}
 
 		/*---------------------------Continously condition triggering (Previously in Yes result)-----------------------------*/
+#if ADCS_DEBUG
 		printf("\tEstimate Y angular rate = %d\n", adcs_est_ang_rates.angular_Y_rate[1]);
-
+#endif
 		Angular_Y_rate_difference[1] = adcs_est_ang_rates.angular_Y_rate[1] - Angular_Y_reference_rate;
 		Angular_Y_rate_difference[0] = adcs_est_ang_rates.angular_Y_rate[0] - Angular_Y_reference_rate;
 
@@ -585,8 +595,9 @@ void Detumbling_Control_RKF()
 			adcs_status.detumbling_rkf_flag = 0;
 			adcs_status.detumbling_ekf_flag = 1;
 			adcs_status.y_momentum_intial_flag = 0;
-
+#if ADCS_DEBUG
 			printf("u jump to Detumbling Control with EKF\n");
+#endif
 			break;
 		}
 		else
@@ -594,8 +605,9 @@ void Detumbling_Control_RKF()
 			adcs_status.detumbling_rkf_flag = 1;
 			adcs_status.detumbling_ekf_flag = 0;
 			adcs_status.y_momentum_intial_flag = 0;
-
+#if ADCS_DEBUG
 			printf("u stay in Detumbling Control with RKF\n");
+#endif
 		}
 
 		vTaskDelay(adcs_state_delay * delay_time_based);
@@ -741,8 +753,9 @@ void Detumbling_Control_EKF()
 			adcs_status.detumbling_rkf_flag = 0;
 			adcs_status.detumbling_ekf_flag = 0;
 			adcs_status.y_momentum_intial_flag = 1;
-
+#if ADCS_DEBUG
 			printf("u jump to Y_momentum_initial_state\n");
+#endif
 			break;
 		}
 		else
@@ -750,8 +763,9 @@ void Detumbling_Control_EKF()
 			adcs_status.detumbling_rkf_flag = 0;
 			adcs_status.detumbling_ekf_flag = 1;
 			adcs_status.y_momentum_intial_flag = 0;
-
+#if ADCS_DEBUG
 			printf("u stay in Detumbling Control with EKF\n");
+#endif
 		}
 
 		vTaskDelay(adcs_state_delay * delay_time_based);
@@ -819,8 +833,9 @@ void Y_Momontum_Stabilized_Initial()
 		if (steady_state_flag == 1)
 		{
 			//vTaskDelay(10 * delay_time_based);   //Jerry test
+#if ADCS_DEBUG
 			printf("Enter Y_Momontum_Stabilized_Steady_State\n");
-
+#endif
 
 			txbuf[0] = 0x92;   //0d146 Estimated angular rates
 			if (i2c_master_transaction_2(0, stm_node, &txbuf, 1, &rxbuf, 6, adcs_delay) == E_NO_ERR)
@@ -887,16 +902,19 @@ void Y_Momontum_Stabilized_Initial()
 
 				adcs_process.initialize_flag = 1;
 				adcs_process.stabilize_flag = 0;
+#if ADCS_DEBUG
 				printf("The satellite is really unstable\n");
 				printf("u restart from initialize process\n");
+#endif
 				break;
 			}
 			else
 			{
 				if (magnetometer_deploy == 1)
 				{
+#if ADCS_DEBUG
 					printf("Start Magnetometer Deploy!\n");
-
+#endif
 					adcs_status.detumbling_rkf_flag = 0;
 					adcs_status.detumbling_ekf_flag = 0;
 					adcs_status.y_momentum_intial_flag = 0;
@@ -904,14 +922,18 @@ void Y_Momontum_Stabilized_Initial()
 				}
 				else
 				{
+#if ADCS_DEBUG
 					printf("U Stay in Y_Momontum_Stabilized_Steady_State\n");
+#endif
 				}
 
 			}
 		}
 		else
 		{
+#if ADCS_DEBUG
 			printf("U Stay in Y_Momontum_Stabilized_Initial_State\n");
+#endif
 		}
 		vTaskDelay(adcs_state_delay * delay_time_based);
 		adcs_est_ang_rates.angular_X_rate[0] = adcs_est_ang_rates.angular_X_rate[1];
@@ -1025,9 +1047,9 @@ void Magnetometer_Deployment_Process()
 					adcs_mag_raw_measurement.mag_raw_measurement_Z[0] = rxbuf[4] + (rxbuf[5] << 8); //   *256 = <<8, /256= >>8, display in LSB
 				}
 			}
-
+#if ADCS_DEBUG
 			printf("CSS4 measurement= %d\n", CSS4_value);
-
+#endif
 			if (CSS4_value > CSS4_threshold_value)
 			{
 				// Verify the deployment by checking the raw value of magnetometer measurement
@@ -1044,7 +1066,7 @@ void Magnetometer_Deployment_Process()
 					adcs_mag_raw_measurement.mag_raw_measurement_Y[1] = rxbuf[2] + (rxbuf[3] << 8); //   *256 = <<8, /256= >>8, display in LSB
 					adcs_mag_raw_measurement.mag_raw_measurement_Z[1] = rxbuf[4] + (rxbuf[5] << 8); //   *256 = <<8, /256= >>8, display in LSB
 				}
-
+#if ADCS_DEBUG
 				printf("\t(Previous)\n");
 				printf("\tRaw X Magnetic Measurement = %d", adcs_mag_raw_measurement.mag_raw_measurement_X[0]);
 				printf("\tRaw Y Magnetic Measurement = %d", adcs_mag_raw_measurement.mag_raw_measurement_Y[0]);
@@ -1054,7 +1076,7 @@ void Magnetometer_Deployment_Process()
 				printf("\tRaw X Magnetic Measurement = %d", adcs_mag_raw_measurement.mag_raw_measurement_X[1]);
 				printf("\tRaw Y Magnetic Measurement = %d", adcs_mag_raw_measurement.mag_raw_measurement_Y[1]);
 				printf("\tRaw Z Magnetic Measurement = %d\n", adcs_mag_raw_measurement.mag_raw_measurement_Z[1]);
-
+#endif
 				if ((abs(adcs_mag_raw_measurement.mag_raw_measurement_X[1] - adcs_mag_raw_measurement.mag_raw_measurement_Y[0]) < 2000)
 				        && (abs(adcs_mag_raw_measurement.mag_raw_measurement_Y[1] + adcs_mag_raw_measurement.mag_raw_measurement_X[0]) < 2000)
 				        && (abs(adcs_mag_raw_measurement.mag_raw_measurement_Z[1] - adcs_mag_raw_measurement.mag_raw_measurement_Z[0]) < 2000))
@@ -1063,7 +1085,9 @@ void Magnetometer_Deployment_Process()
 					vTaskDelay(1 * delay_time_based);
 					adcs_para.mag_deploy_status_flag = 1;
 					/*--------------------Maybe add something-----------------------*/
+#if ADCS_DEBUG
 					printf("The magnetometer configuration had been succesfully calibrated and verified\n");
+#endif
 					break;
 				}
 				else
@@ -1097,7 +1121,9 @@ void Magnetometer_Deployment_Process()
 
 			adcs_process.initialize_flag = 1;
 			adcs_process.stabilize_flag = 0;
+#if ADCS_DEBUG
 			printf("u restart from initialize process\n");
+#endif
 			break;
 		}
 		vTaskDelay(adcs_state_delay * delay_time_based);

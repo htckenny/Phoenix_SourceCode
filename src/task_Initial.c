@@ -81,21 +81,25 @@ void Init_Task(void * pvParameters) {
 	if (Anom_mon_task == NULL) {
 		xTaskCreate(Anomaly_Monitor_Task, (const signed char *) "Anom", 1024 * 4, NULL, 2, &Anom_mon_task);
 	}
-	while (antenna_status_check() == Error) {
-		printf("Deploy again(in the loop)\n");
-		deploy_antenna(0);
-		vTaskDelay(30 * delay_time_based);
+	if (parameters.first_flight == 1) {
+		while (antenna_status_check() == Error) {
 #if !antenna_deploy
-		break;
+			break;
 #endif
-	}
+			printf("Deploy again(in the loop)\n");
+			deploy_antenna(0);
+			vTaskDelay(30 * delay_time_based);
+		}
+
 #if antenna_deploy
-	/* Disarm ant board */
-	txdata = 172;
-	if (i2c_master_transaction_2(0, ant_node, &txdata, 1, 0, 0, com_delay) == E_NO_ERR) {
-		printf("Disarm antenna\n");
-	}
+		/* Disarm ant board */
+		txdata = 172;
+		if (i2c_master_transaction_2(0, ant_node, &txdata, 1, 0, 0, com_delay) == E_NO_ERR) {
+			printf("Disarm antenna\n");
+		}
 #endif
+
+	}
 	/* change to the ADCS mode */
 	HK_frame.mode_status_flag = 2;
 

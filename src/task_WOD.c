@@ -225,26 +225,35 @@ int getWodFrame(int fnum) {
  */
 void beacon_Task(void * pvParameters) {
 
-	int period = 30 * delay_time_based;		//Normally the beacon period is 30 sec
-	vTaskDelay(period);
+	uint8_t beacon_withSID[9];
+	vTaskDelay(30 * delay_time_based);
+    portTickType xLastWakeTime;
+    portTickType xFrequency;
 
+    /* Set the delay time during one sampling operation*/
+    xLastWakeTime = xTaskGetTickCount();
 	while (1) {
 
 		if (parameters.first_flight == 1) {
-			period = 10 * delay_time_based;		// when early orbit, beacon period = 10 sec
+			xFrequency = 10 * delay_time_based;		// when early orbit, beacon period = 10 sec
 		}
 		else if (parameters.beacon_period > 0) {
-			period = parameters.beacon_period * delay_time_based;
+			xFrequency = parameters.beacon_period * delay_time_based;
 		}
-		printf("-- Send Beacon with %d--\n", period  / 100);
-		SendPacketWithCCSDS_AX25(&beacon_frame.mode, 8, obc_apid, 0, 0);
-		vTaskDelay(period);
+		else {
+			xFrequency = 30 * delay_time_based;
+		}
+
+		printf("-- Send Beacon with %d--\n", (int)xFrequency / 100);
+		beacon_withSID[0] = 254;
+		memcpy(&beacon_withSID[1], &beacon_frame.mode, 8);
+		SendPacketWithCCSDS_AX25(&beacon_withSID[0], 9, obc_apid, 3, 25);
+		vTaskDelayUntil(&xLastWakeTime, xFrequency);
 	}
 }
 
 void WOD_Task(void * pvParameters) {
 	printf("Active WOD Task\n");
-	vTaskDelay(60 * delay_time_based);
 	xTaskCreate(beacon_Task, (const signed char *) "beacon", 1024 * 4, NULL, 2, &beacon_task);
 
 	while (1) {

@@ -39,6 +39,7 @@
 #define Manual_Heater_Switch		23				/* Switch ON/OFF EPS heater in case of auto switch has problem */
 #define SD_card_format				30				/* Format SD card, and create default folders */
 #define SD_unlock					31				/* Unlock SD card */
+#define enter_crippled_mode			32				/* Enter Crippled mode, change storage place to flash memory */
 
 extern void vTaskinms(void * pvParameters);
 extern struct tm wtime_to_date(wtime wt);
@@ -115,7 +116,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			memcpy(&gps_second, &rxbuf[2], 4);
 
 			wt.week = gps_week;
-			wt.sec = gps_second/1000;
+			wt.sec = gps_second / 1000;
 			/* Display week number and elapsed time */
 			printf("wn=%d, sec=%.3f\n", wt.week, wt.sec);
 
@@ -539,7 +540,23 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			printf("mount %d\n", label);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
-	/*----------------------------Otherwise----------------*/
+	/*---------------  ID:32 Enter Crippled Mode ----------------*/
+	case enter_crippled_mode:
+		if (para_length == 0)
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
+			break;
+		}
+		printf("Execute Type 8 Sybtype 32 Enter Crippled Mode \r\n");
+
+		parameters.SD_partition_flag = 2;
+		para_w_flash();
+		printf("Set storage place to flash\n");
+
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		break;
+	/*---------------- Otherwise ----------------*/
 	default:
 		sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 

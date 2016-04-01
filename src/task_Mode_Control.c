@@ -12,7 +12,6 @@ extern void SolarEUV_Task(void * pvParameters);
 extern void vTaskInmsErrorHandle(void * pvParameters);
 extern void vTaskInmsCurrentMonitor(void * pvParameters);
 extern void vTaskInmsTemperatureMonitor(void * pvParameters);
-extern void Anomaly_Monitor_Task(void * pvParameters);
 
 extern void Enter_Safe_Mode(int last_mode) ;
 
@@ -32,7 +31,6 @@ void ModeControl_Task(void * pvParameters) {
 	HK_frame.mode_status_flag = 1;
 	printf("-----------------------Enter INIT Mode----------------------------\n");
 	xTaskCreate(Init_Task, (const signed char *) "Init", 1024 * 4, NULL, 2, &init_task);
-	xTaskCreate(Anomaly_Monitor_Task, (const signed char *) "Anom", 1024 * 4, NULL, 3, NULL);
 
 	/* Satellite  enter init mode done. */
 	lastmode = 1;

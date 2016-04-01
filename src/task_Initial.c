@@ -26,9 +26,10 @@
 extern void BatteryCheck_Task(void * pvParameters);
 extern void Telecom_Task(void * pvParameters);
 extern void WOD_Task(void * pvParameters);
+extern void Anomaly_Monitor_Task(void * pvParameters);
 
 void Init_Task(void * pvParameters) {
-#if antenna_deploy	
+#if antenna_deploy
 	uint8_t txdata;
 #endif
 	/* Initialize the system parameters */
@@ -77,7 +78,9 @@ void Init_Task(void * pvParameters) {
 	if (wod_task == NULL) {
 		xTaskCreate(WOD_Task, (const signed char * ) "WOD", 1024 * 4, NULL, 1, &wod_task);
 	}
-
+	if (Anom_mon_task == NULL) {
+		xTaskCreate(Anomaly_Monitor_Task, (const signed char *) "Anom", 1024 * 4, NULL, 2, &Anom_mon_task);
+	}
 	while (antenna_status_check() == Error) {
 		printf("Deploy again(in the loop)\n");
 		deploy_antenna(0);

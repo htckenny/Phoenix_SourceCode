@@ -764,14 +764,16 @@ void vTaskInmsReceive(void * pvParameters) {
  *
  */
 void vTaskInmsCurrentMonitor(void * pvParameters) {
-	uint16_t currentValue_5		=	0;
-	uint16_t currentValue_33	=	0;
 	/**
-	 * INMS_ICD issue 10
+	 * INMS_ICD issue 13
 	 * The nominal current for +5V and +3V3 voltage rails are:
 	 *  +5V : 140mA (168 mA peak during SU_SCI)
 	 *  +3V3: 15mA
 	 */
+	uint16_t currentValue_5		=	0;
+	uint16_t currentValue_33	=	0;
+	int Counter_5 = 0;
+	int Counter_33 = 0;
 	double overCurrent_5 		= 	250;	/* mA */
 	double overCurrent_33 		= 	30;		/* mA */
 
@@ -781,19 +783,32 @@ void vTaskInmsCurrentMonitor(void * pvParameters) {
 		currentValue_5 = Interface_5V_current_get() ;
 		currentValue_33 = Interface_3V3_current_get();
 
-		printf("\n\t\t\tCurrent_5V: %.3lf mA\n", (double)currentValue_5 / 4.7);
-		printf("\t\t\tCurrent_3.3V: %.3lf mA\n", (double)currentValue_33 / 68);
-
-		printf("\E[3A\r");
+		printf("\t\t\tCurrent_5V: %.3lf mA\t", (double)currentValue_5 / 4.7);
 		if ((double)currentValue_5 / 4.7 >= overCurrent_5) {
-			obcSuErrFlag = 4;
-			printf("Over-current, 5V: %.3lf mA\n", (double)currentValue_5 / 4.7);
-			generate_Error_Report(8, currentValue_5);
+			Counter_5 ++;
+			printf("Counter = %d\n", Counter_5);
+			if (Counter_5 >= 2) {
+				obcSuErrFlag = 4;
+				generate_Error_Report(8, currentValue_5);
+			}
 		}
+		else {
+			printf("\n");
+			Counter_5 = 0;
+		}
+		printf("\E[1A\r");
+
+		printf("\t\t\tCurrent_3.3V: %.3lf mA\t", (double)currentValue_33 / 68);
 		if ((double)currentValue_33 / 68 >= overCurrent_33) {
-			obcSuErrFlag = 4;
-			printf("Over-current, 3.3V: %.3lf mA\n", (double)currentValue_33 / 68);
-			generate_Error_Report(7, currentValue_33);
+			Counter_33 ++;
+			printf("Counter = %d\n", Counter_33);
+			if (Counter_33 >= 2) {
+				obcSuErrFlag = 4;
+				generate_Error_Report(7, currentValue_33);
+			}
+		}
+		else {
+			printf("\n");
 		}
 		vTaskDelay(5 * delay_time_based);
 	}
@@ -803,7 +818,7 @@ void vTaskInmsTemperatureMonitor(void * pvParameters) {
 	int16_t inms_temperature = 0;
 	int outRangeCounter = 0;
 	int inRangeCounter = 0;
-	vTaskDelay(5 * delay_time_based);
+	vTaskDelay(10 * delay_time_based);
 	while (1) {
 		/* Get temperature data from ADC */
 		inms_temperature = (Interface_inms_thermistor_get() / 3) - 273;
@@ -834,7 +849,7 @@ void vTaskInmsTemperatureMonitor(void * pvParameters) {
 			outRangeCounter = 0;
 			inRangeCounter = 0;
 		}
-		vTaskDelay(1 * delay_time_based);
+		vTaskDelay(5 * delay_time_based);
 	}
 }
 void vTaskInmsErrorHandle(void * pvParameters) {

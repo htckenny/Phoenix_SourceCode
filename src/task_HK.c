@@ -265,8 +265,8 @@ uint8_t hk_get() {
 	// TS1_4();			/* No need to measure EPS temperature, it's in WOD */
 	// TS5();			/* No need to measure COM temperature, it's in WOD */
 	TS6();			/* Measure Antenna Temperature */
-	TS7();			/* Measure ADCS Temperature */
-	TS8();			/* Measure GPS Temperature */ /* No function now */
+	TS7();			/* Measure ADCS CPU Temperature */
+	TS8();			/* Measure ADCS Rate Sensor & Magnetometer Temperature */
 	TS9();			/* Measure OBC Temperature */
 	// TS10();			/* No need to measure interface board temperature, it's in HK */
 	// TS11();			/* No need to measure INMS temperature, it's in HK */

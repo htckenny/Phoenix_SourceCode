@@ -23,9 +23,9 @@
 #include "subsystem.h"
 #include "parameter.h"
 
-#define overCurrentThreshold_ADCS_5		100
-#define overCurrentThreshold_ADCS_33	200
-#define overCurrentThreshold_GPS		500
+#define overCurrentThreshold_ADCS_5		40
+#define overCurrentThreshold_ADCS_33	120
+#define overCurrentThreshold_GPS		420
 
 #define temperature_test			1
 #define current_Test				1

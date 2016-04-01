@@ -788,10 +788,12 @@ void vTaskInmsCurrentMonitor(void * pvParameters) {
 		if ((double)currentValue_5 / 4.7 >= overCurrent_5) {
 			obcSuErrFlag = 4;
 			printf("Over-current, 5V: %.3lf mA\n", (double)currentValue_5 / 4.7);
+			generate_Error_Report(8, currentValue_5);
 		}
 		if ((double)currentValue_33 / 68 >= overCurrent_33) {
 			obcSuErrFlag = 4;
-			printf("Over-current, 3V: %.3lf mA\n", (double)currentValue_33 / 68);
+			printf("Over-current, 3.3V: %.3lf mA\n", (double)currentValue_33 / 68);
+			generate_Error_Report(7, currentValue_33);
 		}
 		vTaskDelay(5 * delay_time_based);
 	}
@@ -806,28 +808,29 @@ void vTaskInmsTemperatureMonitor(void * pvParameters) {
 		/* Get temperature data from ADC */
 		inms_temperature = (Interface_inms_thermistor_get() / 3) - 273;
 
-		printf("\t\t\tTemperature %03d degree\r\n", inms_temperature);
+		printf("\t\t\tTemperature %03d degree\t", inms_temperature);
 		printf("\E[1A\r");
 
 		/* Operational Temperature Range -20 to +40 */
 		if (inms_temperature > 40 || inms_temperature < -20) {
-			printf("Out of range %d\n", inms_temperature);
 			outRangeCounter ++;
-			// printf("outCounter = %d\n", outRangeCounter);
+			printf("outCounter = %d\n", outRangeCounter);
 			if (outRangeCounter >= 6) {
 				inms_tm_status = 0;
 				outRangeCounter = 0;
+				generate_Error_Report(16, inms_temperature);
 			}
 		}
 		else if (inms_temperature <= 37 && inms_temperature >= -17) {
 			inRangeCounter ++;
-			// printf("inCounter = %d\n", inRangeCounter);
+			printf("inCounter = %d\n", inRangeCounter);
 			if (inRangeCounter >= 6) {
 				inms_tm_status = 1;
 				inRangeCounter = 0;
 			}
 		}
 		else {
+			printf("\n");
 			outRangeCounter = 0;
 			inRangeCounter = 0;
 		}

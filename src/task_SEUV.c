@@ -21,7 +21,7 @@
 
 #include "task_SEUV.h"
 
-#define overCurrentThreshold    400
+#define overCurrentThreshold    250
 extern void SEUV_CurrentMonitor(void * pvParameters);
 int seuv_sample_run = 0;
 
@@ -288,43 +288,31 @@ void SEUV_CurrentMonitor(void * pvParameters) {
     uint8_t rxbuf[133];
     uint8_t txbuf[2];
     txbuf[0] = 0x08;
-    txbuf[1] = 0x00;
+    txbuf[1] = 0x02;
 
     vTaskDelay(5 * delay_time_based);
     while (1) {
         /* Get temperature data from ADC */
-        if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 133, eps_delay) == E_NO_ERR) {
-            memcpy(&SEUV_current, &rxbuf[26], 2); // curout[2] SEUV
+        if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 12, eps_delay) == E_NO_ERR) {
+            SEUV_current = (rxbuf[6] << 8) + rxbuf[6];
         }
-
-        printf("\t\t\tSEUV Current %03d mA\r\n", SEUV_current);
-        printf("\E[1A\r");
-
+        printf("\t\t\tSEUV Current %03d mA\t", SEUV_current);
         if (SEUV_current > overCurrentThreshold ) {  // Threshold to be determined.
-            printf("Out of range %d\n", SEUV_current);
-            // inRangeCounter = 0;
             outRangeCounter ++;
             printf("outCounter = %d\n", outRangeCounter);
             if (outRangeCounter >= 6) {
-                // parameters.inms_status = 0;
                 parameters.seuv_mode = 3;
                 para_w_flash();
                 power_control(3, OFF);
                 outRangeCounter = 0;
+                generate_Error_Report(6, SEUV_current);
             }
         }
-        // else if (SEUV_current > 0 && SEUV_current <= 580 ) {
-        //     outRangeCounter = 0;
-        //     inRangeCounter ++;
-        //     printf("inCounter = %d\n", inRangeCounter);
-        //     if (inRangeCounter >= 6) {
-        //         // parameters.inms_status = 1;
-        //         inRangeCounter = 0;
-        //     }
-        // }
         else {
+            printf("\n");
             outRangeCounter = 0;
         }
+        printf("\E[1A\r");
         vTaskDelay(5 * delay_time_based);
     }
 }

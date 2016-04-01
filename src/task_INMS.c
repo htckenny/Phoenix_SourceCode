@@ -274,7 +274,7 @@ void vTaskinms(void * pvParameters) {
 	int sequence_time_based;
 	int len[scriptNum];				// the length of each script
 	uint8_t script_short[scriptNum][6];
-	uint8_t *script;
+	uint8_t *script = NULL;
 	uint32_t first_time = 0 ;
 	int flag = 0;				// record which byte is running now
 	int ttflag = 0;				// times_table flag
@@ -346,7 +346,12 @@ void vTaskinms(void * pvParameters) {
 					}
 				}
 				len[rec[i]] = inms_script_length_flash(rec[i]);
-				script = malloc(len[rec[i]]);
+				if (!script)
+					script = malloc(len[rec[i]]);
+				else {
+					free(script);
+					script = malloc(len[rec[i]]);
+				}
 
 				if (inms_script_read_flash(rec[i], len[rec[i]], script) == No_Error) {
 					hex_dump(script, len[rec[i]]);

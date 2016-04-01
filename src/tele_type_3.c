@@ -34,24 +34,22 @@ extern void little2big_32(uint8_t * input_data);
 extern void little2big_16(uint8_t * input_data);
 
 void perform_fletcher(uint8_t * check_sum_final) {
-	int maxlength = 0;
 	int script_length[scriptNum];
 	uint16_t xsum[scriptNum];
 	int results;
+	uint8_t *script = NULL;
 
-	printf("length read\n");
 	for (int i = 0; i < scriptNum; i++) {
 		script_length[i] = inms_script_length_flash(i);
-		if (script_length[i] >= maxlength) {
-			maxlength = script_length[i];
+		if (!script)
+			script = malloc(script_length[i]);
+		else {
+			free(script);
+			script = malloc(script_length[i]);
 		}
-	}
-	uint8_t script[scriptNum][maxlength];
 
-	printf("data read\n");
-	for (int i = 0 ; i < scriptNum ; i++) {
-		results = inms_script_read_flash(i, script_length[i], &script[i]);
-		xsum[i] = fletcher(script[i], script_length[i]);
+		results = inms_script_read_flash(i, script_length[i], script);
+		xsum[i] = fletcher(script, script_length[i]);
 
 		/* No error */
 		if (xsum[i] == 0 && results == No_Error ) {
@@ -66,6 +64,7 @@ void perform_fletcher(uint8_t * check_sum_final) {
 			check_sum_final[i] = 2;
 		}
 	}
+	free(script);
 }
 
 /* telecommand Service 3  */
@@ -238,6 +237,7 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 
 			printf("Sche_task\t\t%d\n", status_frame.schedule_task);
 			printf("SEUVCM_task\t\t%d\n", status_frame.seuv_cm_task);
+			printf("Anom_Mon task\t%d\n", status_frame.Anom_mon_task);
 
 			memcpy(&txBuffer[0], &status_frame.mode_task, sizeof(status_frame_t));
 

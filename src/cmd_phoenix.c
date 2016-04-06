@@ -348,14 +348,14 @@ int INMS_switch(struct command_context * ctx) {
 	}
 	if (buffer == 1) {
 		// xTaskCreate(vTaskInmsReceive, (const signed char*) "INMSR", 1024 * 4, NULL, 2, &inms_task_receive);
-		xTaskCreate(vTaskinms, (const signed char * ) "INMS", 1024 * 4, NULL, 2, &inms_task);
-		// xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "INMS_EH", 1024 * 4, NULL, 2, &inms_error_handle);
+		// xTaskCreate(vTaskinms, (const signed char * ) "INMS", 1024 * 4, NULL, 2, &inms_task);
+		xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "INMS_EH", 1024 * 4, NULL, 2, &inms_error_handle);
 		// xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "INMS_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
 		// xTaskCreate(vTaskInmsTemperatureMonitor, (const signed char * ) "InmsTM", 1024 * 4, NULL, 1, &inms_temp_moniter);
 	}
 	else if (buffer == 0) {
-		vTaskDelete(inms_task);
-		// vTaskDelete(inms_error_handle);
+		// vTaskDelete(inms_task);
+		vTaskDelete(inms_error_handle);
 		// vTaskDelete(inms_task_receive);
 		// vTaskDelete(inms_current_moniter);
 		// vTaskDelete(inms_temp_moniter);
@@ -770,8 +770,7 @@ int ccsds_send(struct command_context * ctx) {
 }
 
 
-extern void thermal_test(void * pvParameters);
-int T_status = 0;
+extern void Thermal_Task(void * pvParameters);
 xTaskHandle T_task;
 
 int T_test(struct command_context * ctx) {
@@ -784,15 +783,13 @@ int T_test(struct command_context * ctx) {
 		return CMD_ERROR_SYNTAX;
 
 	if (mode == 1)
-		if (T_status == 0) {
-			xTaskCreate(thermal_test, (const signed char *) "T_Test", 1024 * 4, NULL, 2, &T_task);
-			T_status = 1;
+		if (T_task == NULL) {
+			xTaskCreate(Thermal_Task, (const signed char *) "T_Test", 1024 * 4, NULL, 2, &T_task);
 		}
 
 	if (mode == 0)
-		if (T_status == 1) {
+		if (T_task != NULL) {
 			vTaskDelete(T_task);
-			T_status = 0;
 		}
 
 	return CMD_ERROR_NONE;
@@ -860,11 +857,11 @@ int pararead(struct command_context * ctx) {
 	printf("First Flight \t\t\t%d\n", (int) parameters.first_flight);
 	printf("shutdown_flag \t\t\t%d\n", (int) parameters.shutdown_flag);
 	printf("ant_deploy_flag \t\t%d\n", (int) parameters.ant_deploy_flag);
-	printf("wod_store_count \t\t%d\n", (int) parameters.wod_store_count);
-	printf("inms_store_count \t\t%d\n", (int) parameters.inms_store_count);
-	printf("seuv_store_count \t\t%d\n", (int) parameters.seuv_store_count);
-	printf("hk_store_count \t\t\t%d\n", (int) parameters.hk_store_count);
-	printf("eop_store_count \t\t%d\n", (int) parameters.eop_store_count);
+	// printf("wod_store_count \t\t%d\n", (int) parameters.wod_store_count);
+	// printf("inms_store_count \t\t%d\n", (int) parameters.inms_store_count);
+	// printf("seuv_store_count \t\t%d\n", (int) parameters.seuv_store_count);
+	// printf("hk_store_count \t\t\t%d\n", (int) parameters.hk_store_count);
+	// printf("eop_store_count \t\t%d\n", (int) parameters.eop_store_count);
 	printf("obc_packet_sequence_count \t%d\n", (int) parameters.obc_packet_sequence_count);
 	printf("vbat_recover_threshold \t\t%d\n", (int) parameters.vbat_recover_threshold);
 	printf("vbat_safe_threshold \t\t%d\n", (int) parameters.vbat_safe_threshold);
@@ -878,7 +875,7 @@ int pararead(struct command_context * ctx) {
 	printf("inms_status\t\t\t%d\n", (int) parameters.inms_status);
 	printf("INMS_timeout\t\t\t%d\n", (int) parameters.INMS_timeout);
 	printf("combitrate\t\t\t%d\n", (int) parameters.com_bit_rates);
-
+	printf("crippled_Mode\t\t\t%d\n", (int) parameters.crippled_Mode);
 	return CMD_ERROR_NONE;
 }
 

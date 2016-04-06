@@ -17,6 +17,8 @@
 
 #define download_data		9
 #define delete_data			10
+#define download_crippled	11
+#define delete_crippled		12
 #define abort_transfer		128
 
 extern void beacon_Task(void * pvParameters);
@@ -29,7 +31,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 	/*------------------------------------------Telecommand-----------------------------------*/
 
 	uint16_t packet_length = (telecommand[4] << 8) + telecommand[5] - 4;
-
+	uint8_t *rxdata = NULL;
 	uint8_t paras[180];
 	if ( packet_length > 0)
 		memcpy(&paras, telecommand + 9, packet_length );
@@ -209,6 +211,83 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 		else
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 		break;
+	/*---------------ID:11 downlink crippled mode data----------------*/
+	case download_crippled:
+		if (packet_length == 3) {
+			if (paras[0] >= 1 && paras[0] <= 5) {
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+			}
+			if (paras[0] == 1) {
+				rxdata = malloc(hk_length);
+				for (int i = paras[1]; i < paras[1] + paras[2]; i++)
+				{
+					printf("%d\n", i);
+					hk_read_crippled(i, rxdata);
+					vTaskDelay(0.5 * delay_time_based);
+					SendDataWithCCSDS_AX25(2, &rxdata[0]);
+				}
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+			}
+			else if (paras[0] == 2) {
+				rxdata = malloc(inms_data_length);
+				for (int i = paras[1]; i < paras[1] + paras[2]; i++)
+				{
+					printf("%d\n", i);
+					inms_data_read_crippled(i, rxdata);
+					vTaskDelay(0.5 * delay_time_based);
+					SendDataWithCCSDS_AX25(2, &rxdata[0]);
+				}
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+			}
+			else if (paras[0] == 3) {
+				rxdata = malloc(seuv_length);
+				for (int i = paras[1]; i < paras[1] + paras[2]; i++)
+				{
+					printf("%d\n", i);
+					seuv_read_crippled(i, rxdata);
+					vTaskDelay(0.5 * delay_time_based);
+					SendDataWithCCSDS_AX25(2, &rxdata[0]);
+				}
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+			}
+			else if (paras[0] == 4) {
+				rxdata = malloc(eop_length);
+				for (int i = paras[1]; i < paras[1] + paras[2]; i++)
+				{
+					printf("%d\n", i);
+					eop_read_crippled(i, rxdata);
+					vTaskDelay(0.5 * delay_time_based);
+					SendDataWithCCSDS_AX25(2, &rxdata[0]);
+				}
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+			}
+			else if (paras[0] == 5) {
+				rxdata = malloc(wod_length);
+				for (int i = paras[1]; i < paras[1] + paras[2]; i++)
+				{
+					printf("%d\n", i);
+					wod_read_crippled(i, rxdata);
+					vTaskDelay(0.5 * delay_time_based);
+					SendDataWithCCSDS_AX25(2, &rxdata[0]);
+				}
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+			}
+			else {
+				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+			}
+			if (rxdata != NULL)
+				free(rxdata);
+		}
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
+		}
+
+		break;
+	/*---------------ID:12 delete crippled mode data----------------*/
+	case delete_crippled:
+
+		break;
+
 	/*---------------ID:128 abort onging transfer----------------*/
 	case abort_transfer:
 		if (packet_length == 0)

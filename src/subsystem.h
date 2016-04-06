@@ -195,6 +195,7 @@ uint16_t Interface_inms_thermistor_get();
 int status_update();
 void generate_Error_Report(int type, uint16_t cause_value);
 int report_Collected_Data(char *args, uint16_t *buffer_length);
+int report_Crippled_Data(char *args, uint16_t *buffer_length);
 void ECEFtoECI(float * Time, int32_t * r_ECEF, int16_t * r_ECI);
 
 #endif /* SUBSYSTEM_H_ */

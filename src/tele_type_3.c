@@ -328,30 +328,52 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 	/*--------------- ID:12 Report Collected Data Number ----------------*/
 	case Report_Data_Number:
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
-		uint16_t data_number[5];
-		char path[5] = {0};
-		if (parameters.SD_partition_flag == 0) {
-			strcpy(path, "/sd0");
-		}
-		else if (parameters.SD_partition_flag == 1) {
-			strcpy(path, "/sd1");
-		}
-		if (report_Collected_Data(path, data_number) == No_Error) {
-			memcpy(&txBuffer[0], &data_number[0], 10);
-			for (int i = 0; i < 5 ; i++) {
-				little2big_16(&txBuffer[i * 2]);
+		uint16_t data_number[5] ={0};
+		char path[6] = {0};
+		if (parameters.crippled_Mode == 1) {
+			strcpy(path, "/boot");
+			if (report_Crippled_Data(path, data_number) == No_Error) {
+				memcpy(&txBuffer[0], &data_number[0], 10);
+				for (int i = 0; i < 5 ; i++) {
+					little2big_16(&txBuffer[i * 2]);
+				}
+				txlen = 10 ;
+				txBufferWithSID[0] = 42;
+				memcpy(&txBufferWithSID[1], &txBuffer[0], txlen);
+				hex_dump(&txBuffer[0], txlen);
+				SendPacketWithCCSDS_AX25(&txBufferWithSID[0], txlen + 1, obc_apid, type, 25);
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 			}
-			txlen = 10 ;
-			txBufferWithSID[0] = 42;
-			memcpy(&txBufferWithSID[1], &txBuffer[0], txlen);
-			hex_dump(&txBuffer[0], txlen);
-			SendPacketWithCCSDS_AX25(&txBufferWithSID[0], txlen + 1, obc_apid, type, 25);
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+			else {
+				completionError = FS_IO_ERR;
+				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+			}
 		}
 		else {
-			completionError = FS_IO_ERR;
-			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+			if (parameters.SD_partition_flag == 0) {
+				strcpy(path, "/sd0");
+			}
+			else if (parameters.SD_partition_flag == 1) {
+				strcpy(path, "/sd1");
+			}
+			if (report_Collected_Data(path, data_number) == No_Error) {
+				memcpy(&txBuffer[0], &data_number[0], 10);
+				for (int i = 0; i < 5 ; i++) {
+					little2big_16(&txBuffer[i * 2]);
+				}
+				txlen = 10 ;
+				txBufferWithSID[0] = 42;
+				memcpy(&txBufferWithSID[1], &txBuffer[0], txlen);
+				hex_dump(&txBuffer[0], txlen);
+				SendPacketWithCCSDS_AX25(&txBufferWithSID[0], txlen + 1, obc_apid, type, 25);
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+			}
+			else {
+				completionError = FS_IO_ERR;
+				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+			}
 		}
+
 		break;
 	default:
 		sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);

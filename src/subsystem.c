@@ -44,6 +44,7 @@
 #define	TIME_T_ORIGIN		315964800L
 
 extern void notify_error_handler();
+extern char* Name_crippled[5];
 
 int status_update()
 {
@@ -421,6 +422,72 @@ int objects_under(const char *dir)
 
 	return count;
 }
+int report_Crippled_Data(char *args, uint16_t *buffer_length)
+{
+
+	DIR * dirp;
+	struct dirent *ent;
+	struct stat stat_buf;
+	char buf[128 + 2];
+	char * sub;
+	char bytebuf[25];
+	uint16_t data_number[5];
+	char finalByte[6] = {0};
+
+	/* Get args */
+	char path[100];
+	if (args == NULL || sscanf(args, "%s", path) < 1)
+		return Error;
+
+	dirp = opendir(path);
+	if (dirp == NULL) {
+		printf("ls: cannot open '%s' for list\r\n", path);
+		return Error;
+	}
+
+	/* Loop through directories */
+	while ((ent = readdir(dirp))) {
+		if (ent->d_name[0] == '.')
+			continue;
+		strncpy(buf, path, 128);
+		sub = buf;
+		if (path[strlen(path) - 1] != '/')
+			sub = strcat(buf, "/");
+		sub = strcat(sub, ent->d_name);
+		if (ent->d_type & DT_DIR) {
+			sprintf(bytebuf, "%d", objects_under(sub));
+			strcat(ent->d_name, "/");
+		} else {
+			stat(sub, &stat_buf);
+			bytesize(bytebuf, 25, stat_buf.st_size);
+		}
+
+		/* Name */
+		for (int i = 0; i < 5; i++)
+		{
+			if (strcmp(ent->d_name, Name_crippled[i]) == 0) {
+
+				switch (bytebuf[strlen(bytebuf) - 1]) {
+				case 'B':
+					strncpy(finalByte, bytebuf, strlen(bytebuf) - 1);
+					data_number[i] = atof(finalByte) / 196;
+					break;
+				case 'K':
+					strncpy(&finalByte[0], &bytebuf[0], strlen(bytebuf) - 1);
+					data_number[i] = (atof(finalByte) * 1024) / 196 + 1;
+					break;
+				case 'M':
+					strncpy(&finalByte[0], &bytebuf[0], strlen(bytebuf) - 1);
+					data_number[i] = (atof(finalByte) * 1024 * 1024) / 196 + 1;
+					break;
+				}
+				memcpy(&buffer_length[i], &data_number[i], 2);
+			}
+		}
+	}
+	closedir(dirp);
+	return No_Error;
+}
 int report_Collected_Data(char *args, uint16_t *buffer_length)
 {
 
@@ -620,3 +687,5 @@ void little2big_16(uint8_t * input_data) {
 	buffs_16 = csp_ntoh16(buffs_16);
 	memcpy(input_data, &buffs_16, 2);
 }
+
+char* Name_crippled[5] = {"HK_DATA.bin", "INM_DATA.bin", "SEU_DATA.bin", "EOP_DATA.bin", "WOD_DATA.bin"};

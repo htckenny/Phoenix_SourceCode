@@ -271,7 +271,6 @@ void vTaskinms(void * pvParameters) {
 
 	int script_read_result = 0;
 	uint16_t script_xsum_result = 0;
-	int sequence_time_based;
 	int len[scriptNum];				// the length of each script
 	uint8_t script_short[scriptNum][6];
 	uint8_t *script = NULL;
@@ -389,7 +388,6 @@ void vTaskinms(void * pvParameters) {
 				flag = 15;
 				/* Mark an IDLE-SLOT script buffer as the RUNNING-SCRIPT */
 				scriptRunning = rec[i];
-				sequence_time_based = epoch_sec[rec[i]] % 86400;
 				printtflag = -1;
 				/* EOT = 0x55 */
 				while (script[flag] != 0x55) {
@@ -750,11 +748,17 @@ void vTaskInmsReceive(void * pvParameters) {
 				ucharTotal[i] = usart_getc(2);
 			}
 			if (ucharTotal[22] == 0x04 || (ucharTotal[22] >= 0x06 && ucharTotal[22] <= 0x0B)) {
-				inms_data_write_dup(ucharTotal);
+				if (parameters.crippled_Mode == 0)
+					inms_data_write_dup(ucharTotal);
+				else
+					inms_data_write_crippled(ucharTotal);
 			}
 			else if (ucharTotal[22] == 0xBB) { 	// SU_ERR detected!
 				obcSuErrFlag = 5;
-				inms_data_write_dup(ucharTotal);
+				if (parameters.crippled_Mode == 0)
+					inms_data_write_dup(ucharTotal);
+				else
+					inms_data_write_crippled(ucharTotal);
 			}
 			else {
 				printf("RSP_ID incorrect\n");
@@ -955,7 +959,10 @@ void vTaskInmsErrorHandle(void * pvParameters) {
 				errPacketTotal[i] = obcerrpacket[i - 22];
 			}
 			hex_dump(errPacketTotal, inms_data_length);
-			inms_data_write_dup(errPacketTotal);
+			if (parameters.crippled_Mode == 0)
+				inms_data_write_dup(errPacketTotal);
+			else
+				inms_data_write_crippled(errPacketTotal);
 
 			if (inms_task_receive != NULL) {
 				vTaskDelete(inms_task_receive);

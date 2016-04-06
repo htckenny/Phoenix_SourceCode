@@ -462,12 +462,31 @@ int schedule_reset_flash() {
 
 /*  ---------------------------------------------------  */
 /** Start of INMS data related FS function*/
+void inms_data_write_crippled(uint8_t frameCont[])
+{
+	int fd, bytes;
+
+	char fileName[] = "/boot/INM_DATA.bin";
+
+	fd = open(fileName, O_CREAT | O_APPEND | O_RDWR);
+	if (fd < 0) {
+		printf("Failed to open %s\r\n", fileName);
+	}
+	lseek(fd, 0, SEEK_END);
+	bytes = write(fd, frameCont, inms_data_length);
+	if (bytes != inms_data_length) {
+		printf("Failed to write inms data to %s (wrote %d bytes)\r\n", fileName, bytes);
+	}
+	else {
+		printf("wirte success\n");
+	}
+	close(fd);
+}
 void inms_data_write_dup(uint8_t frameCont[])
 {
 	uint8_t frame[inms_data_length];
 	memcpy(frame, frameCont, inms_data_length);
 	inms_data_write(frame, 0);
-	// vTaskDelay(0.1 * delay_time_based);
 	inms_data_write(frame, 1);
 }
 int inms_data_write(uint8_t frameCont[], int SD_partition)

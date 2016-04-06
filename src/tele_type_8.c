@@ -542,18 +542,22 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		break;
 	/*---------------  ID:32 Enter Crippled Mode ----------------*/
 	case enter_crippled_mode:
-		if (para_length == 0)
+		if (para_length == 1)
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 		else {
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 			break;
 		}
 		printf("Execute Type 8 Sybtype 32 Enter Crippled Mode \r\n");
-
-		parameters.SD_partition_flag = 2;
+		if (paras[0] == 1) {
+			parameters.crippled_Mode = 1;
+			printf("Set storage place to flash\n");
+		}
+		else {
+			parameters.crippled_Mode = 0;
+			printf("Set storage place to SD card\n");
+		}
 		para_w_flash();
-		printf("Set storage place to flash\n");
-
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
 	/*---------------- Otherwise ----------------*/

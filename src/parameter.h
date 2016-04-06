@@ -152,7 +152,8 @@ typedef struct __attribute__((packed)) {
 	uint8_t inms_status;
 
 	/* FS related */
-	uint8_t SD_partition_flag;
+	uint8_t SD_partition_flag;	
+	uint8_t crippled_Mode;
 } parameter_t;
 parameter_t parameters;
 

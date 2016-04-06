@@ -262,11 +262,11 @@ int schedule_reset() {
 	para_w_flash();
 	schedule_unlink_flag = 1;
 	if (res != FR_OK) {
-		printf("\r\nschedule file f_unlink() fail .. \r\n");
+		printf("schedule file f_unlink() fail .. \r\n");
 		return Error;
 	}
 	else {
-		printf("\r\nschedule file f_unlink() success .. \r\n");
+		printf("schedule file f_unlink() success .. \r\n");
 		return No_Error;
 	}
 }
@@ -280,19 +280,19 @@ int schedule_write(uint8_t frameCont[])
 
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK) {
-		printf("\r\nopen() fail .. \r\n");
+		printf("open() fail .. \r\n");
 	}
 	else {
-		printf("\r\nopen() success .. \r\n");
+		printf("open() success .. \r\n");
 	}
 	f_lseek(&file, file.fsize);
 
 	res = f_write(&file, snumber, 1, &bw);
 	if (res != FR_OK) {
-		printf("\r\nwrite() fail .. \r\n");
+		printf("write() fail .. \r\n");
 	}
 	else {
-		printf("\r\nwrite() success .. \r\n");
+		printf("write() success .. \r\n");
 	}
 
 	for (int i = 0 ; i < 19 ; i++) {
@@ -300,12 +300,12 @@ int schedule_write(uint8_t frameCont[])
 	}
 	res = f_write(&file, frameCont, 19, &bw);
 	if (res != FR_OK) {
-		printf("\r\nOn Board Schedule write() fail .. \r\n");
+		printf("On Board Schedule write() fail .. \r\n");
 		f_close(&file);
 		return Error;
 	}
 	else {
-		printf("\r\nOn Board Schedule write() success .. \r\n");
+		printf("On Board Schedule write() success .. \r\n");
 		f_close(&file);
 		parameters.schedule_series_number ++;
 		para_w_flash();
@@ -319,10 +319,10 @@ int schedule_read(uint8_t * txbuf)
 	char fileName[] = "0:/OnB_Sch.bin";
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK) {
-		printf("\r\nf_open() fail .. \r\n");
+		printf("f_open() fail .. \r\n");
 	}
 	else {
-		printf("\r\nf_open() success .. \r\n");
+		printf("f_open() success .. \r\n");
 	}
 
 	int c = 0 ;
@@ -333,12 +333,12 @@ int schedule_read(uint8_t * txbuf)
 	}
 	printf("c = %d\n", c);
 	if (res != FR_OK) {
-		printf("\r\nschedule_read() fail .. \r\n");
+		printf("schedule_read() fail .. \r\n");
 		f_close(&file);
 		return Error;
 	}
 	else {
-		printf("\r\nschedule_read() success .. \r\n");
+		printf("schedule_read() success .. \r\n");
 		f_close(&file);
 		return No_Error;
 	}
@@ -478,7 +478,7 @@ void inms_data_write_crippled(uint8_t frameCont[])
 		printf("Failed to write inms data to %s (wrote %d bytes)\r\n", fileName, bytes);
 	}
 	else {
-		printf("wirte success\n");
+		printf("INMS wirte success\n");
 	}
 	close(fd);
 }
@@ -523,7 +523,7 @@ int inms_data_write(uint8_t frameCont[], int SD_partition)
 	res = f_open(&fileINMS, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK)
 	{
-		printf("\r\nf_open() fail .. \r\n");
+		printf("f_open() fail .. \r\n");
 	}
 	//將pointer指向文件最後面
 	f_lseek(&fileINMS, fileINMS.fsize);
@@ -532,41 +532,59 @@ int inms_data_write(uint8_t frameCont[], int SD_partition)
 
 	// hex_dump(frameCont, inms_data_length);
 	if (res != FR_OK) {
-		printf("\rinms_write() %d fail .. \r\n", SD_partition);
+		printf("inms_write() %d fail .. \r\n", SD_partition);
 		f_close(&fileINMS);
 		return Error;
 	}
 	else {
-		printf("\rinms_write() %d success .. \r\n", SD_partition);
+		printf("inms_write() %d success .. \r\n", SD_partition);
 		f_close(&fileINMS);
 		return No_Error;
 	}
 }
+int inms_data_read_crippled(int data_no, void * txbuf)
+{
+	int fd, bytes;
 
+	char fileName[] = "/boot/INM_DATA.bin";
+
+	fd = open(fileName, O_RDONLY);
+	if (fd < 0) {
+		printf("Failed to open %s\r\n", fileName);
+	}
+	lseek(fd, (data_no - 1) * inms_data_length, SEEK_SET);
+
+	bytes = read(fd, txbuf, inms_data_length);
+	if (bytes != inms_data_length) {
+		printf("Failed to read inms data from %s (read %u bytes)\r\n", fileName, bytes);
+		return Error;
+	}
+	hex_dump(txbuf, inms_data_length);
+	close(fd);
+	return No_Error;
+}
 int inms_data_read(char fileName[], void * txbuf) {
 
 	res = f_open(&fileINMS, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
-	if (res != FR_OK)
-	{
-		printf("\r\nINMS_open() fail .. \r\n");
-	} else {
-		printf("\r\nINMS_open() success .. \r\n");
+	if (res != FR_OK) {
+		printf("INMS_open() fail .. \r\n");
+	}
+	else {
+		printf("INMS_open() success .. \r\n");
 	}
 	int c = 0 ;
 	while (1) {
 		res = f_read(&fileINMS, &buffer, 1, &br);
 		memcpy(txbuf + (c++), &buffer, 1);
-		// c++;
 		if (f_eof(&fileINMS)) {break;}
 	}
-	// printf("%d\n", c);
 	if (res != FR_OK) {
-		printf("\r\ninmsdata_read() fail .. \r\n");
+		printf("inmsdata_read() fail .. \r\n");
 		f_close(&fileINMS);
 		return Error;
 	}
 	else {
-		printf("\r\ninmsdata_read() success .. \r\n");
+		printf("inmsdata_read() success .. \r\n");
 		f_close(&fileINMS);
 		return No_Error;
 	}
@@ -578,11 +596,11 @@ int inms_data_delete(char fileName[]) {
 
 	if (res != FR_OK)
 	{
-		printf("%s\r\nf_unlink() fail .. \r\n", fileName);
+		printf("%s f_unlink() fail .. \r\n", fileName);
 		return Error;
 	}
 	else {
-		printf("%s\r\nf_unlink() success .. \r\n", fileName);
+		printf("%s f_unlink() success .. \r\n", fileName);
 		return No_Error;
 	}
 }
@@ -762,6 +780,26 @@ int inms_script_delete_flash(int buffNum) {
 /** End of INMS data/script related FS function*/
 /*  ---------------------------------------------------  */
 /** Start of WOD data related FS function*/
+void wod_write_crippled (uint8_t frameCont[])
+{
+	int fd, bytes;
+
+	char fileName[] = "/boot/WOD_DATA.bin";
+
+	fd = open(fileName, O_CREAT | O_APPEND | O_RDWR);
+	if (fd < 0) {
+		printf("Failed to open %s\r\n", fileName);
+	}
+	lseek(fd, 0, SEEK_END);
+	bytes = write(fd, frameCont, wod_length);
+	if (bytes != wod_length) {
+		printf("Failed to write WOD data to %s (wrote %d bytes)\r\n", fileName, bytes);
+	}
+	else {
+		printf("WOD write success\n");
+	}
+	close(fd);
+}
 void wod_write_dup(uint8_t frameCont[])
 {
 	uint8_t frame[wod_length];
@@ -799,38 +837,58 @@ int wod_write(uint8_t * frameCont, int SD_partition )
 
 	res = f_open(&fileWOD, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK) {
-		printf("\r\nf_open() fail .. \r\n");
+		printf("f_open() fail .. \r\n");
 	}
 
 	f_lseek(&fileWOD, fileWOD.fsize);
 	res = f_write(&fileWOD, frameCont, wod_length, &bw);
 
 	if (res != FR_OK) {
-		printf("\r\nwod_write() %d fail .. \r\n", SD_partition);
+		printf("wod_write() %d fail .. \r\n", SD_partition);
 		f_close(&fileWOD);
 		return Error;
 	}
 	else {
-		printf("\r\nwod_write() %d success .. \r\n", SD_partition);
+		printf("wod_write() %d success .. \r\n", SD_partition);
 
 		f_close(&fileWOD);
 		return No_Error;
 	}
 }
+int wod_read_crippled(int data_no, void * txbuf)
+{
+	int fd, bytes;
 
-int wod_read(char fileName[], void * txbuf) // serial =1~N
+	char fileName[] = "/boot/WOD_DATA.bin";
+
+	fd = open(fileName, O_RDONLY);
+	if (fd < 0) {
+		printf("Failed to open %s\r\n", fileName);
+	}
+	lseek(fd, (data_no - 1) * wod_length, SEEK_SET);
+
+	bytes = read(fd, txbuf, wod_length);
+	if (bytes != wod_length) {
+		printf("Failed to read wod data from %s (read %u bytes)\r\n", fileName, bytes);
+		return Error;
+	}
+	hex_dump(txbuf, wod_length);
+	close(fd);
+	return No_Error;
+}
+int wod_read(char fileName[], void * txbuf)
 {
 	res = f_open(&fileWOD, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK) {
-		printf("\r\nWOD_open() fail .. \r\n");
+		printf("WOD_open() fail .. \r\n");
 	}
 	else {
-		printf("\r\nWOD_open() success .. \r\n");
+		printf("WOD_open() success .. \r\n");
 	}
 	res = f_read(&fileWOD, &buffer, wod_length, &br);
 
 	if (res != FR_OK) {
-		printf("\r\nwod_read() fail .. \r\n");
+		printf("wod_read() fail .. \r\n");
 		f_close(&fileWOD);
 		return Error;
 	}
@@ -846,11 +904,11 @@ int wod_delete(char filename[])
 	res = f_unlink(filename);
 
 	if (res != FR_OK) {
-		printf("\r\nf_unlink() fail .. \r\n");
+		printf("f_unlink() fail .. \r\n");
 		return Error;
 	}
 	else {
-		printf("\r\nf_unlink() success .. \r\n");
+		printf("f_unlink() success .. \r\n");
 		return No_Error;
 	}
 }
@@ -858,6 +916,26 @@ int wod_delete(char filename[])
 /** End of WOD data related FS function*/
 /*  ---------------------------------------------------  */
 /** Start of SEUV data related FS function*/
+void seuv_write_crippled (uint8_t frameCont[])
+{
+	int fd, bytes;
+
+	char fileName[] = "/boot/SEU_DATA.bin";
+
+	fd = open(fileName, O_CREAT | O_APPEND | O_RDWR);
+	if (fd < 0) {
+		printf("Failed to open %s\r\n", fileName);
+	}
+	lseek(fd, 0, SEEK_END);
+	bytes = write(fd, frameCont, seuv_length);
+	if (bytes != seuv_length) {
+		printf("Failed to write seuv data to %s (wrote %d bytes)\r\n", fileName, bytes);
+	}
+	else {
+		printf("seuv write success\n");
+	}
+	close(fd);
+}
 void seuv_write_dup()
 {
 	seuv_write(0);
@@ -917,25 +995,45 @@ int seuv_write(int SD_partition)
 		return No_Error;
 	}
 }
+int seuv_read_crippled(int data_no, void * txbuf)
+{
+	int fd, bytes;
 
+	char fileName[] = "/boot/SEU_DATA.bin";
+
+	fd = open(fileName, O_RDONLY);
+	if (fd < 0) {
+		printf("Failed to open %s\r\n", fileName);
+	}
+	lseek(fd, (data_no - 1) * seuv_length, SEEK_SET);
+
+	bytes = read(fd, txbuf, seuv_length);
+	if (bytes != seuv_length) {
+		printf("Failed to read seuv data from %s (read %u bytes)\r\n", fileName, bytes);
+		return Error;
+	}
+	hex_dump(txbuf, seuv_length);
+	close(fd);
+	return No_Error;
+}
 int seuv_read(char fileName[], void * txbuf)
 {
 	res = f_open(&fileSEUV, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK) {
-		printf("\r\nSEUV_open() fail .. \r\n");
+		printf("SEUV_open() fail .. \r\n");
 	}
 	else {
-		printf("\r\nSEUV_open() success .. \r\n");
+		printf("SEUV_open() success .. \r\n");
 	}
 	res = f_read(&fileSEUV, &buffer, seuv_length, &br);
 
 	if (res != FR_OK) {
-		printf("\r\nseuv_read() fail .. \r\n");
+		printf("seuv_read() fail .. \r\n");
 		f_close(&fileSEUV);
 		return Error;
 	}
 	else {
-		printf("\r\nseuv_read() success .. \r\n");
+		printf("seuv_read() success .. \r\n");
 		memcpy(txbuf, &buffer, seuv_length);
 		f_close(&fileSEUV);
 		return No_Error;
@@ -946,17 +1044,37 @@ int seuv_delete(char fileName[])
 	res = f_unlink(fileName);
 
 	if (res != FR_OK) {
-		printf("\r\nf_unlink() fail .. \r\n");
+		printf("f_unlink() fail .. \r\n");
 		return Error;
 	}
 	else {
-		printf("\r\nf_unlink() success .. \r\n");
+		printf("f_unlink() success .. \r\n");
 		return No_Error;
 	}
 }
 /** End of SEUV data related FS function*/
 /*  ---------------------------------------------------  */
 /** Start of HK data related FS function*/
+void hk_write_crippled(uint8_t * frameCont)
+{
+	int fd, bytes;
+
+	char fileName[] = "/boot/HK_DATA.bin";
+
+	fd = open(fileName, O_CREAT | O_APPEND | O_RDWR);
+	if (fd < 0) {
+		printf("Failed to open %s\r\n", fileName);
+	}
+	lseek(fd, 0, SEEK_END);
+	bytes = write(fd, frameCont, hk_length);
+	if (bytes != hk_length) {
+		printf("Failed to write hk data to %s (wrote %d bytes)\r\n", fileName, bytes);
+	}
+	else {
+		printf("HK write success\n");
+	}
+	close(fd);
+}
 void hk_write_dup(uint8_t * frameCont)
 {
 	uint8_t frame[hk_length];
@@ -990,8 +1108,6 @@ int hk_write(uint8_t * frameCont, int SD_partition)
 
 	encode_time(buf, fileName_decode);
 	strcat(fileName, fileName_decode);
-	// strcat(fileName, buf);
-	// strcat(fileName, "_H");
 	strcat(fileName, ".dat");
 	printf("%s\n", fileName);
 
@@ -1000,30 +1116,50 @@ int hk_write(uint8_t * frameCont, int SD_partition)
 	res = f_write(&fileHK, frameCont, hk_length, &bw);
 
 	if (res != FR_OK) {
-		printf("\r\nhk_write() %d fail .. \r\n", SD_partition);
+		printf("hk_write() %d fail .. \r\n", SD_partition);
 		f_close(&fileHK);
 		return Error;
 	}
 	else {
-		printf("\r\nhk_write() %d success .. \r\n", SD_partition);
+		printf("hk_write() %d success .. \r\n", SD_partition);
 		f_close(&fileHK);
 		return No_Error;
 	}
 }
+int hk_read_crippled(int data_no, void * txbuf)
+{
+	int fd, bytes;
 
-int hk_read(char fileName[], void * txbuf) // serial =1~N
+	char fileName[] = "/boot/HK_DATA.bin";
+
+	fd = open(fileName, O_RDONLY);
+	if (fd < 0) {
+		printf("Failed to open %s\r\n", fileName);
+	}
+	lseek(fd, (data_no - 1) * hk_length, SEEK_SET);
+
+	bytes = read(fd, txbuf, hk_length);
+	if (bytes != hk_length) {
+		printf("Failed to read hk data from %s (read %u bytes)\r\n", fileName, bytes);
+		return Error;
+	}
+	hex_dump(txbuf, hk_length);
+	close(fd);
+	return No_Error;
+}
+int hk_read(char fileName[], void * txbuf)
 {
 	res = f_open(&fileHK, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK) {
-		printf("\r\nHK_open() fail .. \r\n");
+		printf("HK_open() fail .. \r\n");
 	}
 	else {
-		printf("\r\nHK_open() success .. \r\n");
+		printf("HK_open() success .. \r\n");
 	}
 	res = f_read(&fileHK, &buffer, hk_length, &br);
 
 	if (res != FR_OK) {
-		printf("\r\nhk_read() fail .. \r\n");
+		printf("hk_read() fail .. \r\n");
 		f_close(&fileHK);
 		return Error;
 	}
@@ -1039,11 +1175,11 @@ int hk_delete(char fileName[])
 	res = f_unlink(fileName);
 
 	if (res != FR_OK) {
-		printf("\r\nf_unlink() fail .. \r\n");
+		printf("f_unlink() fail .. \r\n");
 		return Error;
 	}
 	else {
-		printf("\r\nf_unlink() success .. \r\n");
+		printf("f_unlink() success .. \r\n");
 		return No_Error;
 	}
 }
@@ -1051,6 +1187,26 @@ int hk_delete(char fileName[])
 /** End of HK data related FS function*/
 /*  ---------------------------------------------------  */
 /** Start of EOP data related FS function*/
+void eop_write_crippled (uint8_t frameCont[])
+{
+	int fd, bytes;
+
+	char fileName[] = "/boot/EOP_DATA.bin";
+
+	fd = open(fileName, O_CREAT | O_APPEND | O_RDWR);
+	if (fd < 0) {
+		printf("Failed to open %s\r\n", fileName);
+	}
+	lseek(fd, 0, SEEK_END);
+	bytes = write(fd, frameCont, eop_length);
+	if (bytes != eop_length) {
+		printf("Failed to write EOP data to %s (wrote %d bytes)\r\n", fileName, bytes);
+	}
+	else {
+		printf("EOP write success\n");
+	}
+	close(fd);
+}
 void eop_write_dup(uint8_t frameCont [])
 {
 	uint8_t frame[eop_length];
@@ -1104,7 +1260,27 @@ int eop_write(uint8_t *frameCont, int SD_partition)		//SD_partition available : 
 		return No_Error;
 	}
 }
+int eop_read_crippled(int data_no, void * txbuf)
+{
+	int fd, bytes;
 
+	char fileName[] = "/boot/EOP_DATA.bin";
+
+	fd = open(fileName, O_RDONLY);
+	if (fd < 0) {
+		printf("Failed to open %s\r\n", fileName);
+	}
+	lseek(fd, (data_no - 1) * eop_length, SEEK_SET);
+
+	bytes = read(fd, txbuf, eop_length);
+	if (bytes != eop_length) {
+		printf("Failed to read eop data from %s (read %u bytes)\r\n", fileName, bytes);
+		return Error;
+	}
+	hex_dump(txbuf, eop_length);
+	close(fd);
+	return No_Error;
+}
 int eop_read(char fileName[], void * txbuf)
 {
 
@@ -1243,16 +1419,16 @@ int adcs_para_r() {
 	char fileName[] = "0:/adcs_para.bin";
 	res = f_open(&file, fileName, FA_READ | FA_WRITE );
 	if (res != FR_OK) {
-		printf("\r\nf_open() fail .. \r\n");
+		printf("f_open() fail .. \r\n");
 		return Error;
 	}
 	else {
-		printf("\r\nf_open() success .. \r\n");
+		printf("f_open() success .. \r\n");
 		res = f_read(&file, &buffer, (int)sizeof(adcs_para_t), &br);
 	}
 
 	if (res != FR_OK) {
-		printf("\r\nADCS para read fail .. \r\n");
+		printf("ADCS para read fail .. \r\n");
 		f_close(&file);
 		return Error;
 	}
@@ -1269,16 +1445,16 @@ int adcs_para_w()
 	char fileName[] = "0:/adcs_para.bin";
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK) {
-		printf("\r\nf_open() fail .. \r\n");
+		printf("f_open() fail .. \r\n");
 	}
 	else {
-		printf("\r\nf_write open() success .. \r\n");
+		printf("f_write open() success .. \r\n");
 	}
 
 	res = f_write(&file, &adcs_para.strategy, (int)sizeof(adcs_para_t), &br);
 
 	if (res != FR_OK) {
-		printf("\r\npara write() fail .. \r\n");
+		printf("para write() fail .. \r\n");
 		f_close(&file);
 		return Error;
 	}
@@ -1294,11 +1470,11 @@ int adcs_para_d()
 	res = f_unlink(fileName);
 
 	if (res != FR_OK) {
-		printf("\r\nf_unlink() fail .. \r\n");
+		printf("f_unlink() fail .. \r\n");
 		return Error;
 	}
 	else {
-		printf("\r\nf_unlink() success .. \r\n");
+		printf("f_unlink() success .. \r\n");
 		return No_Error;
 	}
 }
@@ -1368,19 +1544,19 @@ int T_data_d()
 
 	if (res != FR_OK)
 	{
-		printf("\r\nt_obc.bin f_unlink() fail .. \r\n");
+		printf("t_obc.bin f_unlink() fail .. \r\n");
 	}
 	else {
-		printf("\r\nt_obc.bin f_unlink() success .. \r\n");
+		printf("t_obc.bin f_unlink() success .. \r\n");
 	}
 	char fileName2[] = "0:/t_inms.bin";
 	res = f_unlink(fileName2);
 
 	if (res != FR_OK) {
-		printf("\r\nt_inms.bin f_unlink() fail .. \r\n");
+		printf("t_inms.bin f_unlink() fail .. \r\n");
 	}
 	else {
-		printf("\r\nt_inms.bin f_unlink() success .. \r\n");
+		printf("t_inms.bin f_unlink() success .. \r\n");
 	}
 	return No_Error;
 }

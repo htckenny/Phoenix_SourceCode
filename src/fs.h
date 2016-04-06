@@ -19,30 +19,39 @@ int inms_script_delete_flash(int buffNum);
 /*---------------------------------------------------*/
 /*             		  INMS Data                      */
 void inms_data_write_crippled(uint8_t frameCont[]);
+int inms_data_read_crippled(int data_no, void * txbuf);
 void inms_data_write_dup(uint8_t frameCont[]);
 int inms_data_write(uint8_t frameCont[], int SD_partition);
-int inms_data_read(char fileName[], void * txbuf);      					 // serial= which packet you want to read , Range 1~N
-int inms_data_delete();                                                       //return 0 when success, return -1 when fail.
+int inms_data_read(char fileName[], void * txbuf);
+int inms_data_delete();
 /*---------------------------------------------------*/
 /*                Whole Orbit Data                   */
+void wod_write_crippled(uint8_t frameCont[]);
+int wod_read_crippled(int data_no, void * txbuf);
 void wod_write_dup(uint8_t frameCont[]);
 int wod_write(uint8_t frameCont[], int SD_partition);
 int wod_read(char fileName[], void * txbuf);
 int wod_delete();
 /*---------------------------------------------------*/
 /*                 Solar EUV Data                    */
+void seuv_write_crippled(uint8_t frameCont[]);
+int seuv_read_crippled(int data_no, void * txbuf);
 void seuv_write_dup();
 int seuv_write(int SD_partition);
 int seuv_read(char fileName[], void * txbuf);
 int seuv_delete();
 /*---------------------------------------------------*/
 /*              House Keeping Data                   */
+void hk_write_crippled(uint8_t frameCont[]);
+int hk_read_crippled(int data_no, void * txbuf);
 void hk_write_dup(uint8_t frameCont[]);
 int hk_write(uint8_t frameCont[], int SD_partition);
 int hk_read(char fileName[], void * txbuf);
 int hk_delete();
 /*---------------------------------------------------*/
 /*            Early Orbit Phase Data                 */
+void eop_write_crippled(uint8_t frameCont[]);
+int eop_read_crippled(int data_no, void * txbuf);
 void eop_write_dup(uint8_t frameCont[]);
 int eop_write(uint8_t frameCont[], int SD_partition);
 int eop_read(char fileName[], void * txbuf);

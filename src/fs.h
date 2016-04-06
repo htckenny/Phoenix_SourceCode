@@ -62,8 +62,8 @@ int delete_data_between_t(uint8_t datatype, uint16_t time1, uint16_t time2);
 
 /*---------------------------------------------------*/
 int T_data_d();
-int thurmal_2_w();
-int thurmal_1_w();
+int thermal_2_w();
+int thermal_1_w();
 /*---------------------------------------------------*/
 /*                 Schedule related                  */
 int schedule_reset_flash();

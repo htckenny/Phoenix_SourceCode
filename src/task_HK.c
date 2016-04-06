@@ -43,7 +43,7 @@ void TS12_16() {
 		if ((uint8_t)uchar[0] == 0x0A) {
 			memcpy(&Tdata[0], &num, 4);
 			memcpy(&Tdata[4], &uchar[0], 174);
-			thurmal_2_w();
+			thermal_2_w();
 			printf("Get a Side panel thermal sensor packet # %d \n", num);
 			hex_dump(&Tdata[0], 178);
 		}
@@ -52,43 +52,13 @@ void TS12_16() {
 
 /* interface board  INMS temperature */
 int TS11() {
-	uint8_t rx[10];
-	uint8_t tx[2];
-	tx[0] = 0xD0;
-	tx[1] = 0xD0;
-
-	i2c_master_transaction_2(0, interface_node, &tx, 2, &rx, 4, seuv_delay);
-
-	if (i2c_master_transaction_2(0, interface_node, 0 , 0, &rx, 4, seuv_delay) != E_NO_ERR)
-		return Error;
-
-	// memcpy(&ThermalFrame.T10,&rx[0],3);
-	ThermalFrame.T11 = (rx[0] << 8) + rx[1];
-
-
+	ThermalFrame.T11 = Interface_inms_thermistor_get();
 	return No_Error;
 }
 
 /* interface temperature */
 int TS10() {
-	uint8_t rx[10];
-
-	uint8_t tx[2];
-	tx[0] = 0xF0;
-	tx[1] = 0xF0;
-
-
-	i2c_master_transaction_2(0, interface_node, &tx , 2, &rx, 4, seuv_delay);
-
-
-	if (i2c_master_transaction_2(0, interface_node, 0 , 0, &rx, 4, seuv_delay) != E_NO_ERR)
-		return Error;
-
-
-	// memcpy(&ThermalFrame.T10,&rx[0],3);
-	ThermalFrame.T10 = (rx[0] << 8) + rx[1];
-	//ThermalFrame.T10=0x0A;
-
+	ThermalFrame.T10 = Interface_tmp_get();
 	return No_Error;
 }
 
@@ -179,15 +149,18 @@ void clean_all() {
 	ThermalFrame.T10 = 0;
 	ThermalFrame.T11 = 0;
 }
-void thermal_test(void * pvParameters) {
-	int nums = 0;
-	char uchar[174 * 10];
+/**
+ * This task is used only when conducting the thermal vacuum test
+ * @param pvParameters [description]
+ */
+void Thermal_Task(void * pvParameters) {
+	// int uart_nums = 0;
+	// char uchar[174 * 10];
 	num = 0;
 	power_OFF_ALL();
 	vTaskDelay(2 * delay_time_based);
 
-
-	power_control(4, ON);
+	// power_control(4, ON);
 	power_control(1, ON);
 
 	while (1) {
@@ -199,31 +172,34 @@ void thermal_test(void * pvParameters) {
 		TS5();
 		TS6();
 		TS7();
+		TS8();
 		TS9();
 		TS10();
 		TS11();
 		printf("------------------------------------- \n");
-		printf("NUM = %d ,T1= %04X ,T2 %04X ,T3= %04X ,T4= %04X ,T5= %04X \n", (int)ThermalFrame.packet_number, ThermalFrame.T1, ThermalFrame.T2, ThermalFrame.T3, ThermalFrame.T4, ThermalFrame.T5);
-		printf("T6= %04X ,T7 %04X ,T8= %04X ,T9= %04X ,T10= %04X \n", ThermalFrame.T6, ThermalFrame.T7, ThermalFrame.T8, ThermalFrame.T9, ThermalFrame.T10);
+		printf("NUM = %d\n", (int)ThermalFrame.packet_number);
+		printf("EPS1 %03d\tESP2 %03d\tEPS3 %03d\tBatt %03d\n",  ThermalFrame.T1, ThermalFrame.T2, ThermalFrame.T3, ThermalFrame.T4);
+		printf("COM %.2f\tAnt %.2f mV\tOBC %.2f\n", (ThermalFrame.T5 * (-0.0546) + 189.5522), (ThermalFrame.T6 * 3.3 * 1000 / 1023), ((((ThermalFrame.T9 * 2493.0) / 1023) - 424) / 6.25));
+		printf("A_ARM %03d\tA_Rate %03d\tA_Mag %03d\n", ThermalFrame.T7, (ThermalFrame.T8 % 256), (ThermalFrame.T8 >> 8));
+		printf("IFB %03d\tINMS %03d\n", (int)(159 - 0.08569 * ThermalFrame.T10), (int)((ThermalFrame.T11 / 3) - 273));
 
-		thurmal_1_w();
-		TS12_16();
+		thermal_1_w();
+		// TS12_16();
 
+		// uart_nums = usart_messages_waiting(2);
+		// if (uart_nums != 0) {
+		// 	for (int f = 0; f < uart_nums; f++)
+		// 		uchar[f] = usart_getc(2);
+		// 	hex_dump(&uchar, 174);
 
-		nums = usart_messages_waiting(2);
-		if (nums != 0) {
-			for (int f = 0; f < nums; f++)
-				uchar[f] = usart_getc(2);
-			hex_dump(&uchar, 174);
+		// 	timestamp_t t;
+		// 	t.tv_sec = 0;
+		// 	t.tv_nsec = 0;
+		// 	obc_timesync(&t, 6000);
+		// 	time_t tt = t.tv_sec + 946684800;
 
-			timestamp_t t;
-			t.tv_sec = 0;
-			t.tv_nsec = 0;
-			obc_timesync(&t, 6000);
-			time_t tt = t.tv_sec + 946684800;
-
-			printf("OBC time is: %s\r\n", ctime(&tt));
-		}
+		// 	printf("OBC time is: %s\r\n", ctime(&tt));
+		// }
 		vTaskDelay(1 * delay_time_based);
 	}
 }

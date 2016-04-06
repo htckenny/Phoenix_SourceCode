@@ -306,7 +306,7 @@ void power_OFF_ALL()
 uint16_t Interface_tmp_get()
 {
 	uint8_t rx[5];
-	uint8_t tx[2];
+	uint8_t tx[1];
 	tx[0] = 0xF0;	//0d240
 
 	i2c_master_transaction_2(0, interface_node, &tx, 1, 0, 0, interface_delay) ;
@@ -320,7 +320,7 @@ uint16_t Interface_tmp_get()
 uint16_t Interface_inms_thermistor_get()
 {
 	uint8_t rx[5];
-	uint8_t tx[2];
+	uint8_t tx[1];
 	tx[0] = 0xD0;	//0d208
 
 	i2c_master_transaction_2(0, interface_node, &tx, 1, 0, 0, interface_delay) ;

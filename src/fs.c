@@ -1288,25 +1288,24 @@ int adcs_para_d()
 /*  ---------------------------------------------------  */
 /** Start of thermal related FS function*/
 
-int thurmal_1_w()
-{	// serial =1~N
+int thermal_1_w()
+{
 	char fileName[] = "0:/t_obc.bin";
 
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 
 	if (res != FR_OK) {
-		printf("\r\n@@ %d @@ \r\n", res);
-		printf("\r\nf_open() fail .. \r\n");
+		printf("f_open() fail .. \r\n");
 	}
 	else {
-		//printf("\r\nf_open() success .. \r\n");
+		printf("f_open() success .. \r\n");
 	}
 
 	f_lseek(&file, file.fsize);
 	res = f_write(&file, &ThermalFrame.packet_number, (int)sizeof(thermal_frame_t), &br);
 
 	if (res != FR_OK) {
-		printf("\r\nthurmal_1_w write() fail .. \r\n");
+		printf("thermal_1_w write() fail .. \r\n");
 		f_close(&file);
 		return Error;
 	}
@@ -1314,29 +1313,24 @@ int thurmal_1_w()
 		f_close(&file);
 		return No_Error;
 	}
-
-	return No_Error;
 }
 
-int thurmal_2_w()
-{	// serial =1~N
+int thermal_2_w()
+{
 	char fileName[] = "0:/t_inms.bin";
 
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
-	if (res != FR_OK)
-	{
-		printf("\r\n@@ %d @@ \r\n", res);
-		printf("\r\nf_open() fail .. \r\n");
+	if (res != FR_OK) {
+		printf("f_open() fail .. \r\n");
 	}
 	else {
-
-		//printf("\r\nf_open() success .. \r\n");
+		printf("f_open() success .. \r\n");
 	}
 	f_lseek(&file, file.fsize);
 	res = f_write(&file, &Tdata[0], 178, &br);
 
 	if (res != FR_OK) {
-		printf("\r\nthurmal_2_w write() fail .. \r\n");
+		printf("thermal_2_w write() fail .. \r\n");
 		f_close(&file);
 		return Error;
 	}

@@ -96,6 +96,7 @@ uint32_t lastCommandTime;
 uint8_t use_GPS_header;
 uint8_t inms_tm_status;
 uint8_t seuv_with_INMS;
+uint8_t INMS_power_status;
 
 typedef struct __attribute__((packed)) {
 

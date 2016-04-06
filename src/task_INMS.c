@@ -372,7 +372,7 @@ void vTaskinms(void * pvParameters) {
 				if (script_read_result == Error || script_xsum_result != 0) {
 					printf("No. %d script XSUM through Fletcher-16 [FAIL]\n", rec[i]);
 					obcSuErrFlag = 6;
-					break;
+					// break;
 				}
 				else {
 					printf("No. %d script XSUM through Fletcher-16 [PASS]\n", rec[i]);
@@ -472,7 +472,7 @@ void vTaskinms(void * pvParameters) {
 				tTable_24 = 0;
 				refTime = 0;
 				ttflag = 0;
-				printf("%d", timetable_t[ttflag].tt_seq);
+				// printf("%d", timetable_t[ttflag].tt_seq);
 				printTime = 1;
 				seqcount = 0;
 				first_time = 0 ;
@@ -550,6 +550,7 @@ void vTaskinms(void * pvParameters) {
 									if (script[flag + 5] == 0x33 || inms_tm_status == 1) {
 										int numGabage = 0;
 										power_control(4, ON);	//command EPS to POWER ON INMS
+										INMS_power_status = 1;
 										vTaskDelay(0.5 * delay_time_based);
 
 										numGabage = usart_messages_waiting(2);
@@ -582,6 +583,7 @@ void vTaskinms(void * pvParameters) {
 									vTaskDelay(1 * delay_time_based);
 									vTaskDelete(inms_task_receive);
 									inms_task_receive = NULL;
+									INMS_power_status = 0;
 									power_control(4, OFF);
 									if (parameters.seuv_mode == 0x04)
 										seuv_work_with_inms(0);
@@ -680,6 +682,7 @@ void vTaskinms(void * pvParameters) {
 									if (parameters.inms_status == 0 || inms_tm_status == 0) {
 										if (inms_task_receive != NULL) {
 											vTaskDelete(inms_task_receive);
+											INMS_power_status = 0;
 											power_control(4, OFF);
 											inms_task_receive = NULL;
 											if (parameters.seuv_mode == 0x04)
@@ -956,6 +959,7 @@ void vTaskInmsErrorHandle(void * pvParameters) {
 
 			if (inms_task_receive != NULL) {
 				vTaskDelete(inms_task_receive);
+				INMS_power_status = 0;
 				power_control(4, OFF);
 				inms_task_receive = NULL;
 				if (parameters.seuv_mode == 0x04)

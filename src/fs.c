@@ -1320,6 +1320,37 @@ int eop_delete(char fileName[])
 }
 /*  ---------------------------------------------------  */
 /** Start of parameter related FS function*/
+void crippled_data_delete(int dataType)
+{
+	struct stat st;
+	int ret;
+	char path[20] = {0};
+
+	/* Get args */
+	if (dataType == 1)
+		strcpy(path, "/boot/HK_DATA.bin");
+	else if (dataType == 2)
+		strcpy(path, "/boot/INM_DATA.bin");
+	else if (dataType == 3)
+		strcpy(path, "/boot/SEU_DATA.bin");
+	else if (dataType == 4)
+		strcpy(path, "/boot/EOP_DATA.bin");
+	else if (dataType == 5)
+		strcpy(path, "/boot/WOD_DATA.bin");
+
+	if (stat(path, &st) < 0) {
+		printf("rm: cannot stat %s\r\n", path);
+	}
+
+	if (st.st_mode & S_IFDIR)
+		ret = rmdir(path);
+	else
+		ret = remove(path);
+
+	if (ret != 0) {
+		printf("rm: cannot remove %s\r\n", path);
+	}
+}
 void para_d_flash() {
 	struct stat st;
 	int ret;

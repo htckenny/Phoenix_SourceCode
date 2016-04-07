@@ -45,7 +45,7 @@
 
 extern void notify_error_handler();
 extern char* Name_crippled[5];
-
+extern uint8_t length_crippled[5];
 int status_update()
 {
 	status_frame.mode_task = (mode_task != NULL) ? 1 : 0;
@@ -470,15 +470,15 @@ int report_Crippled_Data(char *args, uint16_t *buffer_length)
 				switch (bytebuf[strlen(bytebuf) - 1]) {
 				case 'B':
 					strncpy(finalByte, bytebuf, strlen(bytebuf) - 1);
-					data_number[i] = atof(finalByte) / 196;
+					data_number[i] = atof(finalByte) / length_crippled[i];
 					break;
 				case 'K':
 					strncpy(&finalByte[0], &bytebuf[0], strlen(bytebuf) - 1);
-					data_number[i] = (atof(finalByte) * 1024) / 196 + 1;
+					data_number[i] = (atof(finalByte) * 1024) / length_crippled[i] + 1;
 					break;
 				case 'M':
 					strncpy(&finalByte[0], &bytebuf[0], strlen(bytebuf) - 1);
-					data_number[i] = (atof(finalByte) * 1024 * 1024) / 196 + 1;
+					data_number[i] = (atof(finalByte) * 1024 * 1024) / length_crippled[i] + 1;
 					break;
 				}
 				memcpy(&buffer_length[i], &data_number[i], 2);
@@ -689,3 +689,4 @@ void little2big_16(uint8_t * input_data) {
 }
 
 char* Name_crippled[5] = {"HK_DATA.bin", "INM_DATA.bin", "SEU_DATA.bin", "EOP_DATA.bin", "WOD_DATA.bin"};
+uint8_t length_crippled[5] = {hk_length, inms_data_length, seuv_length, eop_length, wod_length};

@@ -372,6 +372,10 @@ int adcs_switch(struct command_context * ctx) {
 	extern void EOP_Task(void * pvParameters);
 	extern void vTaskfstest(void * pvParameters);
 	extern void Anomaly_Monitor_Task(void * pvParameters);
+	xTaskHandle fs_task;
+	extern xTaskHandle adcs_task;
+	extern xTaskHandle eop_task;
+	extern xTaskHandle Anom_mon_task;
 	if (ctx->argc < 2) {
 		return CMD_ERROR_SYNTAX;
 	}
@@ -381,19 +385,25 @@ int adcs_switch(struct command_context * ctx) {
 	if (buffer == 1) {
 		xTaskCreate(ADCS_Task, (const signed char * ) "ADCS", 1024 * 4, NULL, 1, &adcs_task);
 	}
-	else if (buffer == 0) {
-		vTaskDelete(adcs_task);
-	}
 	else if (buffer == 2) {
-		xTaskCreate(vTaskfstest, (const signed char *) "FS_T", 1024 * 4, NULL, 2, NULL);
+		xTaskCreate(vTaskfstest, (const signed char *) "FS_T", 1024 * 4, NULL, 2, &fs_task);
 	}
 	else if (buffer == 3) {
 		xTaskCreate(EOP_Task, (const signed char * ) "EOP", 1024 * 4, NULL, 2, &eop_task);
 	}
 	else if (buffer == 4) {
-		xTaskCreate(Anomaly_Monitor_Task, (const signed char *) "Anom", 1024 * 4, NULL, 3, NULL);
+		xTaskCreate(Anomaly_Monitor_Task, (const signed char *) "Anom", 1024 * 4, NULL, 3, &Anom_mon_task);
 	}
-
+	else if (buffer == 0) {
+		if (adcs_task != NULL)
+			vTaskDelete(adcs_task);
+		else if (eop_task != NULL)
+			vTaskDelete(eop_task);
+		else if (Anom_mon_task != NULL)
+			vTaskDelete(Anom_mon_task);
+		else if (fs_task != NULL)
+			vTaskDelete(fs_task);
+	}
 	return CMD_ERROR_NONE;
 }
 

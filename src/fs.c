@@ -551,12 +551,14 @@ int inms_data_read_crippled(int data_no, void * txbuf)
 	fd = open(fileName, O_RDONLY);
 	if (fd < 0) {
 		printf("Failed to open %s\r\n", fileName);
+		return Error;
 	}
 	lseek(fd, (data_no - 1) * inms_data_length, SEEK_SET);
 
 	bytes = read(fd, txbuf, inms_data_length);
 	if (bytes != inms_data_length) {
 		printf("Failed to read inms data from %s (read %u bytes)\r\n", fileName, bytes);
+		close(fd);
 		return Error;
 	}
 	hex_dump(txbuf, inms_data_length);
@@ -864,12 +866,14 @@ int wod_read_crippled(int data_no, void * txbuf)
 	fd = open(fileName, O_RDONLY);
 	if (fd < 0) {
 		printf("Failed to open %s\r\n", fileName);
+		return Error;
 	}
 	lseek(fd, (data_no - 1) * wod_length, SEEK_SET);
 
 	bytes = read(fd, txbuf, wod_length);
 	if (bytes != wod_length) {
 		printf("Failed to read wod data from %s (read %u bytes)\r\n", fileName, bytes);
+		close(fd);
 		return Error;
 	}
 	hex_dump(txbuf, wod_length);
@@ -1004,12 +1008,14 @@ int seuv_read_crippled(int data_no, void * txbuf)
 	fd = open(fileName, O_RDONLY);
 	if (fd < 0) {
 		printf("Failed to open %s\r\n", fileName);
+		return Error;
 	}
 	lseek(fd, (data_no - 1) * seuv_length, SEEK_SET);
 
 	bytes = read(fd, txbuf, seuv_length);
 	if (bytes != seuv_length) {
 		printf("Failed to read seuv data from %s (read %u bytes)\r\n", fileName, bytes);
+		close(fd);
 		return Error;
 	}
 	hex_dump(txbuf, seuv_length);
@@ -1135,12 +1141,14 @@ int hk_read_crippled(int data_no, void * txbuf)
 	fd = open(fileName, O_RDONLY);
 	if (fd < 0) {
 		printf("Failed to open %s\r\n", fileName);
+		return Error;
 	}
 	lseek(fd, (data_no - 1) * hk_length, SEEK_SET);
 
 	bytes = read(fd, txbuf, hk_length);
 	if (bytes != hk_length) {
 		printf("Failed to read hk data from %s (read %u bytes)\r\n", fileName, bytes);
+		close(fd);
 		return Error;
 	}
 	hex_dump(txbuf, hk_length);
@@ -1269,12 +1277,14 @@ int eop_read_crippled(int data_no, void * txbuf)
 	fd = open(fileName, O_RDONLY);
 	if (fd < 0) {
 		printf("Failed to open %s\r\n", fileName);
+		return Error;
 	}
 	lseek(fd, (data_no - 1) * eop_length, SEEK_SET);
 
 	bytes = read(fd, txbuf, eop_length);
 	if (bytes != eop_length) {
 		printf("Failed to read eop data from %s (read %u bytes)\r\n", fileName, bytes);
+		close(fd);
 		return Error;
 	}
 	hex_dump(txbuf, eop_length);

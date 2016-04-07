@@ -241,24 +241,27 @@ uint8_t CCSDS_GenerateTelemetryPacketWithTime(uint8_t* telemetryBuffer,
 	return ERR_SUCCESS;
 }
 
-
-
 // Generates a complete telemetry packet with the values and data specified
 uint8_t CCSDS_GenerateTelemetryPacket(uint8_t* telemetryBuffer,
                                       uint8_t* telemetryBufferSize, uint16_t apid, uint8_t serviceType,
                                       uint8_t serviceSubtype, uint8_t* sourceData, uint8_t sourceDataLength) {
-	uint32_t time;
-	timestamp_t t;
-	t.tv_sec = 0;
-	t.tv_nsec = 0;
-	obc_timesync(&t, 6000);
-	time = t.tv_sec - 946684800;
 
+	uint32_t frame_time;
+	timestamp_t t;
+
+	if (serviceType == 3 && serviceSubtype == 25 && sourceData[0] == 0xFF) {
+		frame_time = (sourceData[1] << 24) + (sourceData[2] << 16) + (sourceData[3] << 8) + sourceData[4];
+	}
+	else {
+		t.tv_sec = 0;
+		t.tv_nsec = 0;
+		obc_timesync(&t, 6000);
+		frame_time = t.tv_sec - 946684800;
+	}
 	return CCSDS_GenerateTelemetryPacketWithTime(telemetryBuffer,
 	        telemetryBufferSize, apid, serviceType, serviceSubtype, sourceData,
-	        sourceDataLength, time);
+	        sourceDataLength, frame_time);
 }
-
 
 // packet with AX.25 Secondary header and Send to COM
 uint8_t AX25_GenerateTelemetryPacket_Send(uint8_t* data , uint8_t data_len) {
@@ -494,6 +497,7 @@ uint8_t SendDataWithCCSDS_AX25(uint8_t datatype, uint8_t* data) { //add sid then
 	uint8_t datalength;
 	uint8_t databuffer[250];
 	uint8_t txframe[246];
+	uint8_t txframe_time[246];
 	uint8_t tx_length = 245;
 	uint8_t err;
 
@@ -502,8 +506,15 @@ uint8_t SendDataWithCCSDS_AX25(uint8_t datatype, uint8_t* data) { //add sid then
 		datalength = hk_length + 1;
 	}
 	else if (datatype == 2) {
-		databuffer[0] = inms_sid;
-		datalength = inms_data_length + 1;
+		datalength = inms_data_length;
+		memcpy(&databuffer[0], &data[0], datalength);
+		err = CCSDS_GenerateTelemetryPacket(&txframe[0], &tx_length, obc_apid, 128, 1, &databuffer[0], datalength);
+		if (err == ERR_SUCCESS) {
+			AX25_GenerateTelemetryPacket_Send(&txframe[0], tx_length);
+			return No_Error;
+		}
+		else
+			return Error;
 	}
 	else if (datatype == 3) {
 		databuffer[0] = seuv_sid;
@@ -516,40 +527,23 @@ uint8_t SendDataWithCCSDS_AX25(uint8_t datatype, uint8_t* data) { //add sid then
 	else if (datatype == 5) {
 
 		databuffer[0] = wod_sid;
-		// datalength = wod_length + 1;
-		// memcpy(&databuffer[1], data, datalength - 1);	//copy data to databuffer
 
-		// err = CCSDS_GenerateTelemetryPacket(&txframe[0], &tx_length, obc_apid, 3, 25, &databuffer[0], datalength);
+		memcpy(&databuffer[1], &data[0], 4 + 57 * 3);
+		err = CCSDS_GenerateTelemetryPacket(&txframe_time[0], &tx_length, obc_apid, 3, 25, &databuffer[0], 4 + 57 * 3 + 1);
 
-		// if (err == ERR_SUCCESS) {
-		// 	return AX25_GenerateTelemetryPacket_Send(&txframe[0], tx_length);
-		// }
-		// else
-		// 	printf("have error on generate CCSDS packet, maybe overflow  , tx_length = %d \n", tx_length);
-
-		// return Error;
-
-		// databuffer[1] = 1; //the head part of the WOD packet,
-		memcpy(&databuffer[1], &data[4], 57); //the first 150 byte of WOD data
-		err = CCSDS_GenerateTelemetryPacket(&txframe[0], &tx_length, obc_apid, 3, 25, &databuffer[0], 58);
-		if (err == ERR_SUCCESS)
-			AX25_GenerateTelemetryPacket_Send(&txframe[0], tx_length);
+		memcpy(&txframe[0], &txframe_time[0], 15);
+		memcpy(&txframe[15], &txframe_time[19], tx_length - 15 - 4);
+		if (err == ERR_SUCCESS) {
+			AX25_GenerateTelemetryPacket_Send(&txframe[0], tx_length - 4);
+			return No_Error;
+		}
 		else
 			return Error;
-
-		// databuffer[1] = 2; //the last part of the WOD packet,
-		// memcpy(&databuffer[1], data + 118, 114); //the rest 82 byte of WOD data
-		// err = CCSDS_GenerateTelemetryPacket(&txframe[0], &tx_length, obc_apid, 3, 25, &databuffer[0], 115);
-		// if (err == ERR_SUCCESS)
-		// 	AX25_GenerateTelemetryPacket_Send(&txframe[0], tx_length);
-		// else
-			// return Error;
-		return No_Error;
 	}
 	else
 		return Error;
 
-	memcpy(&databuffer[1], data, datalength - 1);	//copy data to databuffer
+	memcpy(&databuffer[1], data, datalength - 1);
 
 	err = CCSDS_GenerateTelemetryPacket(&txframe[0], &tx_length, obc_apid, 15, 9, &databuffer[0], datalength);
 

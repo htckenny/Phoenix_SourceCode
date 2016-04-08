@@ -34,7 +34,7 @@ int wod_read(char fileName[], void * txbuf);
 int wod_delete();
 /*---------------------------------------------------*/
 /*                 Solar EUV Data                    */
-void seuv_write_crippled(uint8_t frameCont[]);
+void seuv_write_crippled();
 int seuv_read_crippled(int data_no, void * txbuf);
 void seuv_write_dup();
 int seuv_write(int SD_partition);

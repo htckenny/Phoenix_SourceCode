@@ -920,7 +920,7 @@ int wod_delete(char filename[])
 /** End of WOD data related FS function*/
 /*  ---------------------------------------------------  */
 /** Start of SEUV data related FS function*/
-void seuv_write_crippled (uint8_t frameCont[])
+void seuv_write_crippled ()
 {
 	int fd, bytes;
 
@@ -931,7 +931,7 @@ void seuv_write_crippled (uint8_t frameCont[])
 		printf("Failed to open %s\r\n", fileName);
 	}
 	lseek(fd, 0, SEEK_END);
-	bytes = write(fd, frameCont, seuv_length);
+	bytes = write(fd, &seuvFrame, seuv_length);
 	if (bytes != seuv_length) {
 		printf("Failed to write seuv data to %s (wrote %d bytes)\r\n", fileName, bytes);
 	}

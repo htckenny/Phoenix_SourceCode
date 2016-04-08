@@ -106,8 +106,6 @@ void calmulbit(int dataSet, int data, int value) {
 		if (rec[j] == 1) {
 			curbit = 57 * (dataSet - 1) + 8 * (data - 1) + j + 1;
 			sa(curbit / 8 + 5, curbit % 8); //+1(next)+4(32bit time)
-			//printf("%d\n",curbit/8+5);
-			//printf("%d\n",curbit%8);
 		}
 	}
 }
@@ -227,11 +225,11 @@ void beacon_Task(void * pvParameters) {
 
 	uint8_t beacon_withSID[9];
 	vTaskDelay(30 * delay_time_based);
-    portTickType xLastWakeTime;
-    portTickType xFrequency;
+	portTickType xLastWakeTime;
+	portTickType xFrequency;
 
-    /* Set the delay time during one sampling operation*/
-    xLastWakeTime = xTaskGetTickCount();
+	/* Set the delay time during one sampling operation*/
+	xLastWakeTime = xTaskGetTickCount();
 	while (1) {
 
 		if (parameters.first_flight == 1) {
@@ -268,7 +266,10 @@ void WOD_Task(void * pvParameters) {
 			}
 			vTaskDelay(60 * delay_time_based);
 		}
-		wod_write_dup(&wod[0]);
+		if (parameters.crippled_Mode == 0)
+			wod_write_dup(&wod[0]);
+		else
+			wod_write_crippled(&wod[0]);
 
 		for (int i = 0; i < 232; i++) {
 			wod[i] = 0;

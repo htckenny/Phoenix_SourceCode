@@ -282,7 +282,11 @@ void HK_Task(void * pvParameters) {
 		if (hk_get() != No_Error)
 			printf("HK get fail\n");
 		else {
-			hk_write_dup(&hk_buffer[0]);
+			if (parameters.crippled_Mode == 0)
+				hk_write_dup(&hk_buffer[0]);
+			else
+				hk_write_crippled(&hk_buffer[0]);
+
 			printf("HK Get and Saved\n");
 		}
 	}

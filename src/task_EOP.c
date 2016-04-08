@@ -55,7 +55,7 @@ void EOP_Task(void * pvParameters) {
 			printf("(EOP)Error, cannot communicate with ADCS\n");
 		}
 		counter ++;
-		
+
 		if ((counter % 6) == 1) {
 			/* eps_hk_vi_t */
 			txbuf[0] = 8;
@@ -77,9 +77,13 @@ void EOP_Task(void * pvParameters) {
 			counter = 1;
 		}
 		printf("power_counter = %d\n", counter);
-		eop_write(uchar_eop, 0);
-		eop_write(uchar_eop, 1);
-		// eop_write_dup(uchar_eop);
+		if (parameters.crippled_Mode == 0) {
+			eop_write(uchar_eop, 0);
+			eop_write(uchar_eop, 1);
+		}
+		else
+			eop_write_crippled(uchar_eop);
+
 		hex_dump(&uchar_eop[0], eop_length);
 		vTaskDelay(10 * delay_time_based);
 	}

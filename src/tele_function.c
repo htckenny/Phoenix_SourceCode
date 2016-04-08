@@ -250,7 +250,7 @@ uint8_t CCSDS_GenerateTelemetryPacket(uint8_t* telemetryBuffer,
 	timestamp_t t;
 
 	if (serviceType == 3 && serviceSubtype == 25 && sourceData[0] == 0xFF) {
-		frame_time = (sourceData[1] << 24) + (sourceData[2] << 16) + (sourceData[3] << 8) + sourceData[4];
+		memcpy(&frame_time, &sourceData[1], 4);
 	}
 	else {
 		t.tv_sec = 0;
@@ -500,6 +500,8 @@ uint8_t SendDataWithCCSDS_AX25(uint8_t datatype, uint8_t* data) { //add sid then
 	uint8_t txframe_time[246];
 	uint8_t tx_length = 245;
 	uint8_t err;
+	uint16_t chk;
+	unsigned int LTbl[256];
 
 	if (datatype == 1) {
 		databuffer[0] = phoenix_hk_sid;
@@ -533,12 +535,37 @@ uint8_t SendDataWithCCSDS_AX25(uint8_t datatype, uint8_t* data) { //add sid then
 
 		memcpy(&txframe[0], &txframe_time[0], 15);
 		memcpy(&txframe[15], &txframe_time[19], tx_length - 15 - 4);
+
+		txframe[5] -= 4;
+		// Packet Error Control (16 bits)
+		chk = 0xFFFF;
+		InitLtbl(LTbl);
+
+		printf("tx_length = %d\n",tx_length);
+		hex_dump(txframe_time, tx_length);
+		printf("\n");
+
+		// Compute CRC (all packet data except FCS field)
+		for (int i = 0; i < tx_length - 6; i++)
+			chk = crc_opt(txframe[i], chk, LTbl);
+
+		// Fill CRC field
+		txframe[tx_length - 6] = (uint8_t)(chk >> 8);
+		txframe[tx_length - 5] = (uint8_t)(chk);
+
+		hex_dump(txframe, tx_length - 4);
 		if (err == ERR_SUCCESS) {
 			AX25_GenerateTelemetryPacket_Send(&txframe[0], tx_length - 4);
 			return No_Error;
 		}
 		else
 			return Error;
+		// if (err == ERR_SUCCESS) {
+		// 	AX25_GenerateTelemetryPacket_Send(&txframe_time[0], tx_length);
+		// 	return No_Error;
+		// }
+		// else
+		// 	return Error;
 	}
 	else
 		return Error;

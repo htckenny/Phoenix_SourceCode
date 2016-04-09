@@ -92,6 +92,7 @@ uint8_t Test_Script;
 uint8_t magnetometer_deploy;
 uint8_t abort_transfer_flag;
 uint8_t SD_lock_flag;
+uint8_t i2c_lock_flag;
 uint32_t lastCommandTime;
 uint8_t use_GPS_header;
 uint8_t inms_tm_status;

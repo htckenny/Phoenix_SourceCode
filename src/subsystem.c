@@ -93,6 +93,7 @@ int parameter_init()
 	magnetometer_deploy					= 0;
 	HK_frame.sun_light_flag				= 0;
 	SD_lock_flag						= 0;
+	i2c_lock_flag						= 0;
 	use_GPS_header						= 0;
 	inms_tm_status						= 1;
 	seuv_with_INMS 						= 0;

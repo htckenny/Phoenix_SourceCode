@@ -18,6 +18,14 @@ uint16_t battery_read() {
 
 	if (i2c_master_transaction_2(0, stm_eps_node, &txbuf, 1, &rxbuf, 43 + 2, eps_delay) == E_NO_ERR) {
 		memcpy(&Vbat, &rxbuf[10], 2);
+		i2c_lock_flag = 0;
+	}
+	else {
+		i2c_lock_flag ++;
+		if (i2c_lock_flag >= 3) {
+			power_control(5, OFF);
+			i2c_lock_flag = 0;
+		}
 	}
 	return csp_ntoh16(Vbat);
 }

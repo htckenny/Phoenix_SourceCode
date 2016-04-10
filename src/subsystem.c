@@ -216,7 +216,8 @@ void power_control(int device, int stats)
 	eps_switch.mode = (uint8_t)stats;
 	eps_switch.delay = 0;
 
-	uint8_t txdata[100];
+	uint8_t txdata[10];
+	uint8_t rxdata[5];
 	txdata[0] = EPS_PORT_SET_SINGLE_OUTPUT;
 	/* ADCS  */
 	if (device == 1) {
@@ -237,6 +238,17 @@ void power_control(int device, int stats)
 
 		memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));
 		i2c_master_transaction_2(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
+		if (adcs_task != NULL) {
+			txdata[0] = 134;
+			if (i2c_master_transaction_2(0, adcs_node, &txdata, 1, &rxdata, 5, adcs_delay) == E_NO_ERR) {
+				txdata[0] = 5;
+				for (int i = 1; i < 5; i++) {
+					txdata[i] = rxdata[i - 1];
+				}
+				txdata[5] = 1;	/* LNA = ON */
+				i2c_master_transaction_2(0, adcs_node, &txdata, 6, 0, 0, adcs_delay);
+			}
+		}
 	}
 	/* SEUV */
 	else if (device == 3) {

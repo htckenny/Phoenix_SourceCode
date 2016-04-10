@@ -435,10 +435,14 @@ int telecom(struct command_context * ctx) {
 		return CMD_ERROR_SYNTAX;
 	}
 	if (buffer == 1) {
-		xTaskCreate(Telecom_Task, (const signed char * ) "COM", 1024 * 4, NULL, 2, &com_task);
+		if (com_task == NULL)
+			xTaskCreate(Telecom_Task, (const signed char * ) "COM", 1024 * 4, NULL, 2, &com_task);
 	}
 	else if (buffer == 0) {
-		vTaskDelete(com_task);
+		if (com_task != NULL) {
+			vTaskDelete(com_task);
+			com_task = NULL;
+		}
 	}
 	return CMD_ERROR_NONE;
 }

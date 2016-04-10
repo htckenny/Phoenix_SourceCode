@@ -1763,7 +1763,7 @@ int scan_files_Downlink (
 	struct tm t;
 	time_t t_of_day;
 	uint8_t flag;
-
+	uint8_t related_file = 1;
 
 	res = f_opendir(&dir, path);                       /* Open the directory */
 	if (res == FR_OK) {
@@ -1837,6 +1837,9 @@ int scan_files_Downlink (
 						SendDataWithCCSDS_AX25(5, &wod_data[0]);
 					}
 				}
+				else {
+					related_file = 0;
+				}
 				break;
 			case 2:
 				if (timeRec_T1 > (unsigned)t_of_day) {
@@ -1868,6 +1871,10 @@ int scan_files_Downlink (
 						wod_read(full_path, wod_data);
 						SendDataWithCCSDS_AX25(5, &wod_data[0]);
 					}
+
+				}
+				else {
+					related_file = 0;
 				}
 				break;
 			case 3:
@@ -1900,6 +1907,10 @@ int scan_files_Downlink (
 						wod_read(full_path, wod_data);
 						SendDataWithCCSDS_AX25(5, &wod_data[0]);
 					}
+
+				}
+				else {
+					related_file = 0;
 				}
 				break;
 			default:
@@ -1913,7 +1924,10 @@ int scan_files_Downlink (
 				Read_Execute();
 				printf("--------------------------------------------- \r\n");
 			}
-			vTaskDelay(0.5 * delay_time_based);
+			if (related_file != 0)
+				vTaskDelay(0.5 * delay_time_based);
+			else
+				related_file = 1;
 		}
 	}
 	return res;

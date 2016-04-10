@@ -69,7 +69,7 @@ void perform_fletcher(uint8_t * check_sum_final) {
 
 /* telecommand Service 3  */
 void decodeService3(uint8_t subType, uint8_t* telecommand) {
-	uint8_t txBufferWithSID[254];
+	uint8_t txBufferWithSID[254] = {0};
 	uint8_t txBuffer[254];
 	uint8_t txlen;
 	uint16_t buffs;
@@ -195,12 +195,19 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 	/*---------------ID:5 Report_COM_HK_2    ----------------*/
 	case Report_COM_HK_2:
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
-
+		txlen = 5;
 		i2c_tx[0] = com_tx_hk;
 		if (i2c_master_transaction_2(0, com_tx_node, &i2c_tx, 1, &txBuffer, 1, com_delay) == E_NO_ERR) {
-			txlen = 1;
 			txBufferWithSID[0] = 35;
-			memcpy(&txBufferWithSID[1], &txBuffer[0], txlen);
+			memcpy(&txBufferWithSID[1], &txBuffer[0], 1);
+		}
+		i2c_tx[0] = 0xC3;
+		if (i2c_master_transaction_2(0, ant_node, &i2c_tx, 1, &txBuffer[0], 2, com_delay) == E_NO_ERR) {
+			memcpy(&txBufferWithSID[2], &txBuffer[0], 2);
+		}
+		i2c_tx[0] = 0xC0;
+		if (i2c_master_transaction_2(0, ant_node, &i2c_tx, 1, &txBuffer[0], 2, com_delay) == E_NO_ERR) {
+			memcpy(&txBufferWithSID[4], &txBuffer[0], 2);
 			SendPacketWithCCSDS_AX25(&txBufferWithSID[0], txlen + 1, obc_apid, type, 25);
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}
@@ -328,7 +335,7 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 	/*--------------- ID:12 Report Collected Data Number ----------------*/
 	case Report_Data_Number:
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
-		uint16_t data_number[5] ={0};
+		uint16_t data_number[5] = {0};
 		char path[6] = {0};
 		if (parameters.crippled_Mode == 1) {
 			strcpy(path, "/boot");

@@ -289,7 +289,7 @@ void vTaskinms(void * pvParameters) {
 	uint32_t refTime;
 	int printTime ;
 	int seqcount;
-
+	int sequence_time_based;
 	uint8_t script_status[scriptNum];
 
 	portTickType xLastWakeTime;
@@ -371,6 +371,7 @@ void vTaskinms(void * pvParameters) {
 				if (script_read_result == Error || script_xsum_result != 0) {
 					printf("No. %d script XSUM through Fletcher-16 [FAIL]\n", rec[i]);
 					obcSuErrFlag = 6;
+					script_status[rec[i]] = 0;
 					// break;
 				}
 				else {
@@ -388,6 +389,7 @@ void vTaskinms(void * pvParameters) {
 				flag = 15;
 				/* Mark an IDLE-SLOT script buffer as the RUNNING-SCRIPT */
 				scriptRunning = rec[i];
+				sequence_time_based = epoch_sec[rec[i]] % 86400;
 				printtflag = -1;
 				/* EOT = 0x55 */
 				while (script[flag] != 0x55) {
@@ -615,6 +617,9 @@ void vTaskinms(void * pvParameters) {
 										printf("\E[2A\r");
 										delayTimeNow = delayTimeNow + 1;
 										vTaskDelayUntil(&xLastWakeTime, xFrequency);
+										if (error_flag == 1) {
+											break;
+										}
 									}
 									printf("%d %d\n", ttflag, ttflagMax);
 									if (ttflag == ttflagMax + 1)
@@ -694,6 +699,12 @@ void vTaskinms(void * pvParameters) {
 								if (inmsJumpScriptCheck(i) && i != scriptNum - 1) {
 									break;
 								}
+							}
+						}
+						else {
+							if ((epoch_sec[rec[i]] + tTable_24 - sequence_time_based) < first_time) {
+								ttflag ++;
+								seqcount ++;
 							}
 						}
 					}

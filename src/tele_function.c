@@ -568,6 +568,10 @@ void decodeCCSDS_Command(uint8_t * telecommand, uint8_t packet_length) {
 	/* Check CRC field */
 	if (telecommand[packet_length - 2] == (uint8_t)(chk >> 8) && telecommand[packet_length - 1] == (uint8_t)(chk) ) {
 		printf("Telecommand Pass CRC Check\n");
+		t.tv_sec = 0;
+		t.tv_nsec = 0;
+		obc_timesync(&t, 6000);
+		lastCommandTime = t.tv_sec;
 
 		switch (serviceType) {
 
@@ -594,13 +598,8 @@ void decodeCCSDS_Command(uint8_t * telecommand, uint8_t packet_length) {
 			break;
 		default:
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
-
 			break;
 		}
-		t.tv_sec = 0;
-		t.tv_nsec = 0;
-		obc_timesync(&t, 6000);
-		lastCommandTime = t.tv_sec;
 	}
 	else {
 		printf("CRC Check not pass!!!\n");

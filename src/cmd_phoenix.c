@@ -29,6 +29,26 @@
 #include "tele_function.h"
 #include "fs.h"
 
+int powerControl(struct command_context * ctx) {
+	unsigned int buffer[2];
+
+	if (ctx->argc < 3) {
+		return CMD_ERROR_SYNTAX;
+	}
+	if (sscanf(ctx->argv[1], "%u", &buffer[0]) != 1) {
+		return CMD_ERROR_SYNTAX;
+	}
+	if (sscanf(ctx->argv[2], "%u", &buffer[1]) != 1) {
+		return CMD_ERROR_SYNTAX;
+	}
+	if (buffer[1] == 1)
+		power_control(buffer[0], ON);
+	else if (buffer[1] == 0)
+		power_control(buffer[0], OFF);
+	else
+		return CMD_ERROR_SYNTAX;
+	return CMD_ERROR_NONE;
+}
 int eps_switch(struct command_context * ctx) {
 	unsigned int buffer;
 	extern void EPS_Task(void * pvParameters);
@@ -1030,6 +1050,8 @@ int comhk(struct command_context * ctx) {
 }
 
 command_t __root_command ph_commands[] = {
+	
+	{ .name = "pc", .help = "PHOENIX: pc [sub] [ON(1), OFF(0)]", .usage = "pc [sub] [ON(1), OFF(0)]", .handler = powerControl, },
 	{ .name = "epss", .help = "PHOENIX: epss []", .handler = eps_switch, },
 	{ .name = "ff", .help = "PHOENIX: first flight switch", .handler = firstflight_switch, },
 	{ .name = "mSFD", .help = "PHOENIX: mSFD", .handler = moveScriptFromSD, },

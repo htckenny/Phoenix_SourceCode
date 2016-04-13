@@ -519,10 +519,6 @@ uint8_t SendDataWithCCSDS_AX25(uint8_t datatype, uint8_t* data) { //add sid then
 		chk = 0xFFFF;
 		InitLtbl(LTbl);
 
-		printf("tx_length = %d\n",tx_length);
-		hex_dump(txframe_time, tx_length);
-		printf("\n");
-
 		// Compute CRC (all packet data except FCS field)
 		for (int i = 0; i < tx_length - 6; i++)
 			chk = crc_opt(txframe[i], chk, LTbl);
@@ -531,19 +527,12 @@ uint8_t SendDataWithCCSDS_AX25(uint8_t datatype, uint8_t* data) { //add sid then
 		txframe[tx_length - 6] = (uint8_t)(chk >> 8);
 		txframe[tx_length - 5] = (uint8_t)(chk);
 
-		hex_dump(txframe, tx_length - 4);
 		if (err == ERR_SUCCESS) {
 			AX25_GenerateTelemetryPacket_Send(&txframe[0], tx_length - 4);
 			return No_Error;
 		}
 		else
 			return Error;
-		// if (err == ERR_SUCCESS) {
-		// 	AX25_GenerateTelemetryPacket_Send(&txframe_time[0], tx_length);
-		// 	return No_Error;
-		// }
-		// else
-		// 	return Error;
 	}
 	else
 		return Error;
@@ -561,7 +550,6 @@ uint8_t SendDataWithCCSDS_AX25(uint8_t datatype, uint8_t* data) { //add sid then
 	return Error;
 }
 
-
 void decodeCCSDS_Command(uint8_t * telecommand, uint8_t packet_length) {
 
 	uint8_t serviceType =  telecommand[7];
@@ -577,8 +565,7 @@ void decodeCCSDS_Command(uint8_t * telecommand, uint8_t packet_length) {
 	for (int i = 0; i < packet_length - 2; i++)
 		chk = crc_opt(telecommand[i], chk, LTbl);
 
-	printf("CRC check performing\n");
-	// Check CRC field
+	/* Check CRC field */
 	if (telecommand[packet_length - 2] == (uint8_t)(chk >> 8) && telecommand[packet_length - 1] == (uint8_t)(chk) ) {
 		printf("Telecommand Pass CRC Check\n");
 

@@ -60,18 +60,18 @@ void Telecom_Task(void * pvParameters) {
 
 	set_Call_Sign(0);
 	set_tx_rate(8);
-	lastCommandTime = initila_Time;		// 946684800
+	lastCommandTime = initila_Time;
 
 	if (parameters.shutdown_flag == 1) {
 		printf("Shutdown Command Detected!! \r\n");
 	}
-	
+
 	while (1) {
 
 		t.tv_sec = 0;
 		t.tv_nsec = 0;
 		obc_timesync(&t, 6000);
-		// printf("difference = %" PRIu32 "\n", t.tv_sec - lastCommandTime);
+		printf("\t\tdiff = %" PRIu32 "\t\n", t.tv_sec - lastCommandTime);
 		// printf("\E[1A\r");
 		if (t.tv_sec > lastCommandTime + Communication_timeout) {
 			printf("\nTimeout !! reboot whole system\n");
@@ -87,13 +87,12 @@ void Telecom_Task(void * pvParameters) {
 			set_tx_rate(8);
 			tx_wdt_flag = 0;
 		}
-
 		/*----------------------------------*/
 		flag = CIC();
 
 		if ((flag > 0) && (flag < 41)) {
 			printf("--------------------------------------------- \r\n");
-			printf("Find %d frame in receive buffer \r\n", flag);
+			printf("Find %d frame in receiver buffer \r\n", flag);
 			Read_Execute();
 			printf("--------------------------------------------- \r\n");
 			vTaskDelay(0.1 * delay_time_based);

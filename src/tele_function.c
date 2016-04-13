@@ -13,25 +13,6 @@
 #include "tele_function.h"
 #include "fs.h"
 
-int tx_mode(uint8_t mode) {
-
-	if (mode == 1)
-		printf("Set COM to Normal Mode \r\n");
-	else if (mode == 0)
-		printf("Set COM to external telemetry mode \r\n");
-	else if (mode == 3)
-		printf("Set COM to receive loopback mode \r\n");
-
-	uint8_t txdata[2];
-	txdata[0] = com_tx_mode;
-	txdata[1] = mode;
-	if ( i2c_master_transaction_2(0, com_tx_node, &txdata, 2, 0, 0, com_delay) == E_NO_ERR) {
-		return 0;
-	}
-	else
-		return 1;
-}
-
 int set_tx_rate(uint8_t mode) {
 	/**
 	 * mode = 1, Baud rate = 1200 bps
@@ -47,7 +28,6 @@ int set_tx_rate(uint8_t mode) {
 
 }
 void set_Call_Sign(int SSID) {
-
 
 	uint8_t txdata[8];
 	txdata[0] = 0x22; 	// set TO Call-Sign //
@@ -71,8 +51,6 @@ void set_Call_Sign(int SSID) {
 	txdata[7] = 0x60 + 2 * (uint8_t)SSID;
 
 	i2c_master_transaction_2(0, com_tx_node, &txdata, 8, 0, 0, com_delay);
-
-
 }
 
 // Generates sequenceCount , reset if overflow

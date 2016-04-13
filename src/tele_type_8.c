@@ -150,10 +150,6 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		parameters.shutdown_flag = 1;
 		para_w_flash();
 		printf("Shutdown Command Detected!! \r\n");
-		if (tx_mode(3) != 0) {
-			printf("tx_mode set fail \r\n");
-		}
-
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
 
@@ -163,8 +159,6 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		parameters.shutdown_flag = 0;
 		para_w_flash();
 		printf("Shutdown Resume Command Detected!! \r\n");
-		if (tx_mode(1) != 0)   //set transceiver into standby mode
-			printf("tx_mode set fail \r\n");
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
 

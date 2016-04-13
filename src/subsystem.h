@@ -17,7 +17,7 @@
 
 #define antenna_FM			0
 #define antenna_deploy		0
- 
+#define initila_Time		1475280000 			//946684800 
 /* !!!!!!!!!!!!!!!!!!!!!!!! UINT = LSB !!!!!!!!!!!!!! */
 /* Script Length */
 #define scriptNum 			7
@@ -42,7 +42,6 @@
 #define com_tx_node 		0x61	//0x61
 #define com_tx_send 		0x10
 #define com_tx_send_with_callsign 0x11
-#define com_tx_mode 		0x25
 #define com_tx_beacon_send 	0x14
 #define com_to_callsign 	0x22
 #define com_from_callsign 	0x23

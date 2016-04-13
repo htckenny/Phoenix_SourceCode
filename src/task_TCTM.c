@@ -52,24 +52,20 @@ int CIC() {
 void Telecom_Task(void * pvParameters) {
 	printf("Active Telecom Task, User can start to upload Ground Telecommand\n");
 	uint8_t flag;
-	timestamp_t t;
 	uint8_t txBuffer;
-	int tx_wdt_flag = 0;
 	uint8_t txdata = com_tx_hk;
 	uint8_t rxdata = 0;
+	int tx_wdt_flag = 0;
+	timestamp_t t;
 
 	set_Call_Sign(0);
-
 	set_tx_rate(8);
-	lastCommandTime = 946684800;
+	lastCommandTime = initila_Time;		// 946684800
 
 	if (parameters.shutdown_flag == 1) {
 		printf("Shutdown Command Detected!! \r\n");
 	}
-	if (tx_mode(1) != 0) {  //set transceiver into auto mode
-		printf("tx_mode set fail \r\n");
-	}
-
+	
 	while (1) {
 
 		t.tv_sec = 0;

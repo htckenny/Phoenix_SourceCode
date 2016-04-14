@@ -568,6 +568,7 @@ int jumpTime(struct command_context * ctx)
 	}
 	t.tv_sec += waitingTime;
 	obc_timesync(&t, 1000);
+	lastCommandTime = t.tv_sec;
 	printf("\n");
 	return CMD_ERROR_NONE;
 }
@@ -1050,7 +1051,7 @@ int comhk(struct command_context * ctx) {
 }
 
 command_t __root_command ph_commands[] = {
-	
+
 	{ .name = "pc", .help = "PHOENIX: pc [sub] [ON(1), OFF(0)]", .usage = "pc [sub] [ON(1), OFF(0)]", .handler = powerControl, },
 	{ .name = "epss", .help = "PHOENIX: epss []", .handler = eps_switch, },
 	{ .name = "ff", .help = "PHOENIX: first flight switch", .handler = firstflight_switch, },

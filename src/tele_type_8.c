@@ -91,6 +91,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 
 		obc_timesync(&t, 1000);
 		tt = t.tv_sec ;
+		lastCommandTime = t.tv_sec;
 		printf("OBC time Sync by telecommand to : %s\r\n", ctime(&tt));
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
@@ -133,6 +134,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			t.tv_nsec = 0;
 			t.tv_sec = t_of_day ;
 			obc_timesync(&t, 1000);
+			lastCommandTime = t.tv_sec;
 		}
 
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);

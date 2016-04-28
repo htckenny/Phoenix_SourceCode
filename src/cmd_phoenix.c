@@ -29,6 +29,47 @@
 #include "tele_function.h"
 #include "fs.h"
 
+int changeHeater (struct command_context * ctx) {
+	unsigned int buffer[1];
+	uint8_t txdata[60];
+	uint8_t rxdata[60];
+
+	if (ctx->argc < 2) {
+		return CMD_ERROR_SYNTAX;
+	}
+	if (sscanf(ctx->argv[1], "%u", &buffer[0]) != 1) {
+		return CMD_ERROR_SYNTAX;
+	}
+	txdata[0] = 18;
+	if (i2c_master_transaction_2(0, eps_node, &txdata, 1, &rxdata, 60, eps_delay) == E_NO_ERR) {};
+	for (int i = 0; i < 58; i++)
+	{
+		txdata[i + 1] = rxdata[i + 2];
+	}
+	if (buffer[0] == 1) {
+		txdata[2] = 1;
+	}
+	else if (buffer[0] == 0) {
+		txdata[2] = 0;
+	}
+	else if (buffer[0] == 2) {
+		txdata[3] = 0xFB;
+		txdata[4] = 0;
+	}
+	else if (buffer[0] == 3) {
+		txdata[3] = 25;
+		txdata[4] = 30;
+	}
+	else if (buffer[0] == 4) {
+		txdata[3] = 30;
+		txdata[4] = 35;
+	}
+	else
+		return CMD_ERROR_SYNTAX;
+	txdata[0] = 19;
+	if (i2c_master_transaction_2(0, eps_node, &txdata, 59, 0, 0, eps_delay) == E_NO_ERR) {};
+	return CMD_ERROR_NONE;
+}
 int powerControl(struct command_context * ctx) {
 	unsigned int buffer[2];
 
@@ -825,6 +866,7 @@ int T_test(struct command_context * ctx) {
 	if (mode == 0)
 		if (T_task != NULL) {
 			vTaskDelete(T_task);
+			T_task = NULL;
 		}
 
 	return CMD_ERROR_NONE;
@@ -1051,7 +1093,8 @@ int comhk(struct command_context * ctx) {
 }
 
 command_t __root_command ph_commands[] = {
-
+	 
+	{ .name = "ch", .help = "PHOENIX: ch [ON(1), OFF(0)]", .usage = "ch 1:AUTO 0:Manual", .handler = changeHeater, },
 	{ .name = "pc", .help = "PHOENIX: pc [sub] [ON(1), OFF(0)]", .usage = "pc [sub] [ON(1), OFF(0)]", .handler = powerControl, },
 	{ .name = "epss", .help = "PHOENIX: epss []", .handler = eps_switch, },
 	{ .name = "ff", .help = "PHOENIX: first flight switch", .handler = firstflight_switch, },

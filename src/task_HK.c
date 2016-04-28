@@ -110,13 +110,13 @@ int TS6() {
 }
 /* COM board temp */
 int TS5() {
-	uint8_t txbuffer = com_rx_hk;
-	uint16_t rxbuffer[7];
+	uint8_t txbuffer = 0x25;
+	uint16_t rxbuffer[4];
 
-	if (i2c_master_transaction_2(0, com_rx_node, &txbuffer, 1, &rxbuffer, 14, com_delay) != E_NO_ERR)
+	if (i2c_master_transaction_2(0, com_tx_node, &txbuffer, 1, &rxbuffer, 8, com_delay) != E_NO_ERR)
 		return Error;
 
-	ThermalFrame.T5 = rxbuffer[5];
+	ThermalFrame.T5 = rxbuffer[1];
 	return No_Error;
 }
 

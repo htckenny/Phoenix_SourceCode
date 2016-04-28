@@ -13,6 +13,7 @@
 #include <string.h>
 #include <math.h>
 #include <csp/csp_endian.h>
+#include <util/hexdump.h>
 #include <csp/csp.h>
 #include <dev/arm/ds1302.h>
 #include <util/timestamp.h>
@@ -183,11 +184,8 @@ int antenna_status_check()
 	uint8_t rxdata[2];
 	txdata = 0xC3;
 	if (i2c_master_transaction_2(0, ant_node, &txdata, 1, &rxdata, 2, com_delay) == E_NO_ERR) {
-#if antenna_FM
-		if (rxdata[0] == 0x05 && rxdata[1] == 0x04)
-#else
-		if (rxdata[0] == 0x0D && rxdata[1] == 0x0C)
-#endif
+		hex_dump(&rxdata, 2);
+		if (rxdata[0] < 8 && rxdata[1] < 8)
 			return No_Error;
 		else
 			return Error;

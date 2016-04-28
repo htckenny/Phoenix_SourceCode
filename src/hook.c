@@ -41,22 +41,22 @@ void hook_init(void) {
 	printf("Welcome to nanomind...\r\n");
 
 	/* GPIO initialization */
-	for (int i = 0; i < 7; i++){	// Set all gpio as output
+	for (int i = 0; i < 7; i++) {	// Set all gpio as output
 		io_init(i, 1);
 	}
 	io_set(2);						// set interface board relay to ON as default
 
 	/* Start Self-defined Tasks */
-	// parameter_init();
+	parameter_init();
 
-	extern void ModeControl_Task(void * pvParameters);
-	xTaskCreate(ModeControl_Task, (const signed char *) "MC", 1024*4, NULL, 2, &mode_task);
-	
+	// extern void ModeControl_Task(void * pvParameters);
+	// xTaskCreate(ModeControl_Task, (const signed char *) "MC", 1024*4, NULL, 2, &mode_task);
+
 	// extern void Anomaly_Handler_Task(void * pvParameters);
 	// xTaskCreate(Anomaly_Handler_Task, (const signed char *) "AH", 1024*4, NULL, 2, NULL);
 	// extern void BatteryCheck_Task(void * pvParameters);
 	// xTaskCreate(BatteryCheck_Task, (const signed char *) "BatCk", 1024 * 4, NULL, 2, NULL);
-	
+
 	// extern void EOP_Task(void * pvParameters);
 	// xTaskCreate(EOP_Task, (const signed char * ) "EOP", 1024 * 4, NULL, 2, &eop_task);
 
@@ -65,10 +65,10 @@ void hook_init(void) {
 
 	// extern void Telecom_Task(void * pvParameters);
 	// xTaskCreate(Telecom_Task, (const signed char * ) "COM", 1024 * 4, NULL, 2, &com_task);
-	
+
 	// extern void WOD_Task(void * pvParameters);
 	// xTaskCreate(WOD_Task, (const signed char * ) "WOD", 1024 * 4, NULL, 2, NULL);
-	
+
 	// extern void SolarEUV_Task(void * pvParameters);
 	// xTaskCreate(SolarEUV_Task, (const signed char *) "SEUV", 1024*4, NULL, 2, NULL);
 
@@ -77,16 +77,16 @@ void hook_init(void) {
 
 	// extern void vTaskfstest(void * pvParameters);
 	// xTaskCreate(vTaskfstest, (const signed char *) "FS_T", 1024*4, NULL, 2, NULL);
-	
+
 	// extern void Schedule_Task(void * pvParameters);
 	// xTaskCreate(Schedule_Task, (const signed char * ) "SCHE", 1024 * 4, NULL,2,NULL);
-	
-	// extern void thermal_test(void * pvParameters);
-	// xTaskCreate(thermal_test, (const signed char *) "T_Test", 1024*4, NULL, 2, NULL);
-	
+
+	// extern void Thermal_Task(void * pvParameters);
+	// xTaskCreate(Thermal_Task, (const signed char *) "T_Test", 1024*4, NULL, 2, NULL);
+
 	// extern void ADCS_Task(void * pvParameters);
 	// xTaskCreate(ADCS_Task, (const signed char * ) "ADCS", 1024 * 4, NULL, 2, NULL);
-	
+
 	// extern void vTaskinms(void * pvParameters);
 	// xTaskCreate(vTaskinms, (const signed char *) "INMS", 1024*4, NULL, 2, &inms_task);
 	// extern void vTaskInmsReceive(void * pvParameters);
@@ -94,6 +94,6 @@ void hook_init(void) {
 	// extern void vTaskInmsErrorHandle(void * pvParameters);
 	// xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "INMS_EH", 1024 * 4, NULL, 2, &inms_error_handle);
 	// extern void vTaskInmsCurrentMonitor(void * pvParameters);
- 	// xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "INMS_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
-	
+	// xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "INMS_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
+
 }

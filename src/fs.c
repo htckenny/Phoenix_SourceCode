@@ -26,8 +26,8 @@ FATFS fs[2];
 FRESULT res;
 FIL file, fileHK, fileINMS, fileSEUV, fileEOP, fileWOD, fileErr;
 UINT br, bw;
-uint8_t buffer[300];
-FILINFO *fno;
+uint8_t buffer[250];
+
 extern int findMaxBuf(uint8_t sortbuf[]);
 extern int CIC();
 extern void Read_Execute();
@@ -1740,7 +1740,6 @@ int scan_files_Downlink (
     uint32_t timeRec_T2
 )
 {
-	FRESULT res;
 	FILINFO fno;
 	FATDIR dir;
 	char *fn;   			/* This function assumes non-Unicode configuration */
@@ -1939,7 +1938,6 @@ int scan_files_Delete (
     uint32_t timeRec_T2
 )
 {
-	FRESULT res;
 	FILINFO fno;
 	FATDIR dir;
 	char *fn;   			/* This function assumes non-Unicode configuration */
@@ -2075,7 +2073,6 @@ int scan_files_Count (
     uint32_t timeRec_T2
 )
 {
-	FRESULT res;
 	FILINFO fno;
 	FATDIR dir;
 	char *fn;   			/* This function assumes non-Unicode configuration */

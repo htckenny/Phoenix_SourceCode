@@ -65,8 +65,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 				if (paras[0] == 1) {
 					if (hk_task != NULL)
 						vTaskSuspend(hk_task);
-					if (scan_files_Count(fileName_HK[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
-					};
+					if (scan_files_Count(fileName_HK[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {};
 					if (scan_files_Downlink(fileName_HK[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
 						sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 						break;
@@ -78,8 +77,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 				else if (paras[0] == 2) {
 					if (inms_task != NULL)
 						vTaskSuspend(inms_task);
-					if (scan_files_Count(fileName_INMS[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
-					};
+					if (scan_files_Count(fileName_INMS[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {};
 					if (scan_files_Downlink(fileName_INMS[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
 						sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 						break;
@@ -91,8 +89,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 				else if (paras[0] == 3) {
 					if (seuv_task != NULL)
 						vTaskSuspend(seuv_task);
-					if (scan_files_Count(fileName_SEUV[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
-					};
+					if (scan_files_Count(fileName_SEUV[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {};
 					if (scan_files_Downlink(fileName_SEUV[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
 						sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 						break;
@@ -104,8 +101,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 				else if (paras[0] == 4) {
 					if (eop_task != NULL)
 						vTaskSuspend(eop_task);
-					if (scan_files_Count(fileName_EOP[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
-					};
+					if (scan_files_Count(fileName_EOP[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {};
 					if (scan_files_Downlink(fileName_EOP[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
 						sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 						break;
@@ -117,8 +113,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 				else if (paras[0] == 5) {
 					if (wod_task != NULL)
 						vTaskSuspend(wod_task);
-					if (scan_files_Count(fileName_WOD[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
-					};
+					if (scan_files_Count(fileName_WOD[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {};
 					if (scan_files_Downlink(fileName_WOD[parameters.SD_partition_flag], paras[1], T1, T2) != No_Error) {
 						sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 						break;

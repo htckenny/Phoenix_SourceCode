@@ -71,7 +71,7 @@ void Telecom_Task(void * pvParameters) {
 		t.tv_sec = 0;
 		t.tv_nsec = 0;
 		obc_timesync(&t, 6000);
-		printf("\t\tdiff = %" PRIu32 "\t\n", t.tv_sec - lastCommandTime);
+		// printf("\t\tdiff = %" PRIu32 "\t\n", t.tv_sec - lastCommandTime);
 		// printf("\E[1A\r");
 		if (t.tv_sec > lastCommandTime + Communication_timeout) {
 			printf("\nTimeout !! reboot whole system\n");

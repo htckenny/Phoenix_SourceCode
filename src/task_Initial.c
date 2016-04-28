@@ -81,6 +81,7 @@ void Init_Task(void * pvParameters) {
 	if (Anom_mon_task == NULL) {
 		xTaskCreate(Anomaly_Monitor_Task, (const signed char *) "Anom", 1024 * 4, NULL, 2, &Anom_mon_task);
 	}
+	vTaskDelay(5 * delay_time_based);
 	if (parameters.first_flight == 1) {
 		while (antenna_status_check() == Error) {
 #if !antenna_deploy

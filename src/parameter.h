@@ -196,6 +196,7 @@ typedef struct __attribute__((packed)) {
 	uint16_t T9;  		// OBC temp
 	uint16_t T10; 		// interface temp
 	uint16_t T11; 		// interface INMS temp
+	uint16_t Vbat;
 
 } thermal_frame_t;
 thermal_frame_t ThermalFrame;

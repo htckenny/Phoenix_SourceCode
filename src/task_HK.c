@@ -158,8 +158,9 @@ void Thermal_Task(void * pvParameters) {
 	// char uchar[174 * 10];
 	num = 0;
 	power_OFF_ALL();
-	vTaskDelay(2 * delay_time_based);
-
+	vTaskDelay(5 * delay_time_based);
+	uint8_t txbuf = 0x08;
+	uint8_t rxbuf[45];
 	// power_control(4, ON);
 	power_control(1, ON);
 
@@ -176,8 +177,12 @@ void Thermal_Task(void * pvParameters) {
 		TS9();
 		TS10();
 		TS11();
+		if (i2c_master_transaction_2(0, stm_eps_node, &txbuf, 1, &rxbuf, 43 + 2, eps_delay) == E_NO_ERR) {
+			ThermalFrame.Vbat = (rxbuf[10] << 8) + rxbuf[11];
+		}
 		printf("------------------------------------- \n");
 		printf("NUM = %d\n", (int)ThermalFrame.packet_number);
+		printf("Vbatt = %d\n", ThermalFrame.Vbat);
 		printf("EPS1 %03d\tESP2 %03d\tEPS3 %03d\tBatt %03d\n",  ThermalFrame.T1, ThermalFrame.T2, ThermalFrame.T3, ThermalFrame.T4);
 		printf("COM %.2f\tAnt %.2f mV\tOBC %.2f\n", (ThermalFrame.T5 * (-0.0546) + 189.5522), (ThermalFrame.T6 * 3.3 * 1000 / 1023), ((((ThermalFrame.T9 * 2493.0) / 1023) - 424) / 6.25));
 		printf("A_ARM %03d\tA_Rate %03d\tA_Mag %03d\n", ThermalFrame.T7, (ThermalFrame.T8 % 256), (ThermalFrame.T8 >> 8));
@@ -200,7 +205,7 @@ void Thermal_Task(void * pvParameters) {
 
 		// 	printf("OBC time is: %s\r\n", ctime(&tt));
 		// }
-		vTaskDelay(1 * delay_time_based);
+		vTaskDelay(30 * delay_time_based);
 	}
 }
 

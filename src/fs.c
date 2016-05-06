@@ -106,8 +106,140 @@ void decode_time (char fileName[], char * buf )
 	strcat(buf, Sec);
 }
 
-/* Start of Schedule related FS function */
+void image_merge(uint8_t last_part, uint16_t last_bytes)
+{
+	FILE *doc_in, *doc_out;
+	char filename[50];
+	uint8_t B1;
 
+	doc_out = fopen("/sd0/image/nanomind_test.bin.lzo", "wb+");
+	for (int i = 0; i < (int)last_part; i++) {
+		sprintf(filename, "/sd0/image/part%d.bin", i + 1);
+		doc_in = fopen(filename, "rb");
+
+		if (i == (last_part - 1)) {
+			uint16_t j = 0x0;
+			while (j < last_bytes) {
+				B1 = 0x0;
+				fread(&B1, sizeof(uint8_t), 1, doc_in);
+				fwrite(&B1, sizeof(uint8_t), 1, doc_out);
+				j += 0x1;
+			}
+		}
+		else {
+			while (1) {
+				B1 = 0x0;
+				if (fread(&B1, sizeof(uint8_t), 1, doc_in)) {
+					fwrite(&B1, sizeof(uint8_t), 1, doc_out);
+				}
+				else
+					break;
+			}
+		}
+		fclose(doc_in);
+	}
+	fclose(doc_out);
+}
+int image_check(uint8_t last_partNo, uint16_t last_part_length, uint16_t * Error_record, int * total_Errnumber)
+{
+	FILE *image;
+	char path[22];
+	int piece_number = last_part_length / 150;
+	uint8_t load_byte;
+	uint16_t check_byte = 0;
+	int error_number = 0;
+	for (int i = 1; i < last_partNo; i++) {
+		sprintf(path, "/sd0/image/part%d.bin", i);
+		image = fopen(path, "rb");
+
+		for (int j = 0; j < 255; j++) {
+			fseek (image , 150 * j, SEEK_SET);
+			check_byte = 0;
+			for (int k = 0; k < 150; k++) {
+				load_byte = 0;
+				fread(&load_byte, sizeof(uint8_t), 1, image);
+				check_byte += load_byte;
+			}
+			if (check_byte == 0) {
+				printf("record into table with %d, %d in %d\n", i, j, error_number);
+				Error_record[error_number ++] = (i << 8) + j;
+			}
+		}
+	}
+	sprintf(path, "part%d.bin", last_partNo);
+	image = fopen(path, "rb");
+	for (int j = 0; j < piece_number; j++) {
+		fseek (image , 150 * j, SEEK_SET);
+		check_byte = 0;
+		for (int k = 0; k < 150; k++) {
+			load_byte = 0;
+			fread(&load_byte, sizeof(uint8_t), 1, image);
+			check_byte += load_byte;
+		}
+		if (check_byte == 0) {
+			printf("Error Number: %d\n", error_number);
+			Error_record[error_number ++] = (last_partNo << 8) + j;
+		}
+	}
+	fseek (image , 150 * piece_number, SEEK_SET);
+	check_byte = 0;
+	for (int k = 0; k < (last_part_length - piece_number * 150); k++) {
+		load_byte = 0;
+		fread(&load_byte, sizeof(uint8_t), 1, image);
+		check_byte += load_byte;
+	}
+	if (check_byte == 0) {
+		printf("Error Number: %d\n", error_number);
+		Error_record[error_number ++] = (last_partNo << 8) + piece_number;
+	}
+	*total_Errnumber = error_number;
+	return No_Error;
+}
+/**
+ * [image_write description]
+ * @param  part_no      [Specify the name of the file]
+ * @param  piece_no     [Specify the location of the file]
+ * @param  scriptCont   [data contents]
+ * @param  size         [write size]
+ * @param  initial_flag [idicate if this is the first package]
+ */
+int image_write(int part_no, uint8_t piece_no, uint8_t scriptCont[], int size, int initial_flag) {
+
+	FILE *image;
+	char path[22];
+	int eof = 0xff;
+	sprintf(path, "/sd0/image/part%d.bin", part_no);
+	printf("%s\n", path);
+	if (initial_flag == 1) {
+		remove(path);
+		image = fopen(path, "wb+");
+		if (image != NULL) {
+			fseek (image , 150 * 255 - 1, SEEK_SET);
+			fwrite(&eof, sizeof(uint8_t), 1, image);
+			fclose(image);
+			return No_Error;
+		}
+		else {
+			fclose(image);
+			return Error;
+		}
+	}
+	else {
+		image = fopen(path, "rb+");
+
+		if (image != NULL) {
+			fseek (image, piece_no * 150, SEEK_SET);
+			fwrite(&scriptCont[0], sizeof(uint8_t), size, image);
+			fclose(image);
+			return No_Error;
+		}
+		else {
+			fclose(image);
+			return Error;
+		}
+	}
+}
+/* Start of Schedule related FS function */
 /**
  * Dump all the scheduled command stored in the FS
  * @return error code

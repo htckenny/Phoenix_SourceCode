@@ -98,8 +98,10 @@ int errPacket_dump();
 int errPacket_reset();
 
 int image_write(int part_no, uint8_t piece_no, uint8_t scriptCont[], int size, int initial_flag);
-int image_check(uint8_t last_partNo, uint16_t last_part_length, uint16_t * Error_record, int * total_Errnumber);
+int image_part_check(uint8_t partNo, uint8_t * Error_record, int * total_Errnumber);
+int image_check(uint8_t last_partNo, uint16_t last_part_length, uint8_t * Error_record, int * total_Errnumber);
 void image_merge(uint8_t last_part, uint16_t last_bytes);
+int image_move();
 
 extern char* fileName_HK[2];
 extern char* fileName_INMS[2];

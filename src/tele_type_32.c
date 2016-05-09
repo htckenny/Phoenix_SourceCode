@@ -22,26 +22,26 @@
 #include "fs.h"
 
 /* Definition of the subtype */
-#define Request_Image_Status		1				/* Request Image's status */
-#define Downlink_missing_frame		2				/* Downlink missing part number in LUT */
-#define perform_merge				3				/* Merge the part into one file */
-
-
-extern int image_check(uint8_t last_partNo, uint16_t last_part_length, uint16_t * Error_record, int * total_Errnumber);
+#define Configure_Image				1				/* Configure Image's related parameter */
+#define Request_part_Status			2				/* Request Image part's status */
+#define Request_Image_Status		3				/* Request Image's status */
+#define perform_merge				4				/* Merge the part into one file */
+#define move_to_flash				5				/* Move the image from SD card to FLASH memory */
 
 void decodeService32(uint8_t subType, uint8_t*telecommand) {
 	uint8_t completionError = I2C_SEND_ERROR;
 	uint16_t para_length = (telecommand[4] << 8) + telecommand[5] - 4;
 	uint8_t paras[180];
-	uint16_t Miss_table[256 * 15];
+	uint8_t Miss_Part_table[255];
+	uint8_t Miss_table[20];
 	int total_number[1];
 
 	if (para_length > 0)
 		memcpy(&paras, telecommand + 9, para_length);
 	switch (subType) {
 
-	/*--------------- ID:1 Request Image Status ----------------*/
-	case Request_Image_Status:
+	/*--------------- ID:1 Configure Image's related parameter ----------------*/
+	case Configure_Image:
 		if (para_length == 3)
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 		else {
@@ -50,34 +50,53 @@ void decodeService32(uint8_t subType, uint8_t*telecommand) {
 		}
 		image_lastPartNum = paras[0];
 		image_lastPartLen = (paras[1] << 8) + paras[2];
-		// uint16_t last_length = (paras[1] << 8) + paras[2];
-		if (image_check(image_lastPartNum, image_lastPartLen, Miss_table, total_number) == Error) {
+		printf("%d %d\n", image_lastPartNum, image_lastPartLen);
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		break;
+	/*--------------- ID:2 Request Image part's status ----------------*/
+	case Request_part_Status:
+		if (para_length == 1)
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
+			break;
+		}
+
+		if (image_part_check(paras[0], Miss_Part_table, total_number) == Error) {
 			completionError = FS_IO_ERR;
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 		}
 		else {
 			SendPacketWithCCSDS_AX25(&total_number[0], 2, obc_apid, 32, subType);
+			if (total_number[0] > 190) {
+				SendPacketWithCCSDS_AX25(&Miss_Part_table[0], 190, obc_apid, 32, subType);
+				SendPacketWithCCSDS_AX25(&Miss_Part_table[190], total_number[0] - 190, obc_apid, 32, subType);
+			}
+			else {
+				SendPacketWithCCSDS_AX25(&Miss_Part_table[0], total_number[0], obc_apid, 32, subType);
+			}
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}
 		break;
-	/*--------------- ID:2 Downlink missing part number in LUT ----------------*/
-	case Downlink_missing_frame:
+	/*--------------- ID:3 Request Image Status ----------------*/
+	case Request_Image_Status:
 		if (para_length == 0)
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 		else {
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 			break;
 		}
-		int remaining_number = total_number[0] % 90 ;
-		for (int i = 0; i < (total_number[0] / 90); i++) {
-			SendPacketWithCCSDS_AX25(&Miss_table[i * 90], 2 * 90, obc_apid, 32, subType);
-			printf("delay?\n");
+		if (image_check(image_lastPartNum, image_lastPartLen, Miss_table, total_number) == Error) {
+			completionError = FS_IO_ERR;
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 		}
-		SendPacketWithCCSDS_AX25(&Miss_table[90 * (total_number[0] / 90) ], 2 * remaining_number, obc_apid, 32, subType);
-
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		else {
+			SendPacketWithCCSDS_AX25(&total_number[0], 2, obc_apid, 32, subType);
+			SendPacketWithCCSDS_AX25(&Miss_table[0], total_number[0], obc_apid, 32, subType);
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		}
 		break;
-	/*--------------- ID:3 Downlink missing part number in LUT ----------------*/
+	/*--------------- ID:4 Merge the part into one file ----------------*/
 	case perform_merge:
 		if (para_length == 0)
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
@@ -85,9 +104,24 @@ void decodeService32(uint8_t subType, uint8_t*telecommand) {
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 			break;
 		}
-
 		image_merge(image_lastPartNum, image_lastPartLen);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		break;
+	/*--------------- ID:5 Move the image from SD card to FLASH memory ----------------*/
+	case move_to_flash:
+		if (para_length == 0)
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
+			break;
+		}
+		if (image_move() == Error) {
+			completionError = FS_IO_ERR;
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+		}
+		else {
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		}
 		break;
 	/*---------------- Otherwise ----------------*/
 	default:

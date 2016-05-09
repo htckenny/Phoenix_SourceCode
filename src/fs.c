@@ -105,92 +105,167 @@ void decode_time (char fileName[], char * buf )
 	strcat(buf, Min);
 	strcat(buf, Sec);
 }
+int image_move()
+{
+	int in, out, fdold, fdnew;
+	char *old = "/sd0/nanomind.bin" ;
+	char *new = "/boot/nanomind.bin.lzo";
+	char buf[512];
 
+	fdold = open(old, O_RDONLY);
+	if (fdold < 0) {
+		printf("cp: failed to open %s\r\n", old);
+		return Error;
+	}
+
+	fdnew = open(new, O_CREAT | O_TRUNC | O_WRONLY);
+	if (fdnew < 0) {
+		printf("cp: failed to open %s\r\n", old);
+		close(fdold);
+		return Error;
+	}
+	do {
+		in = read(fdold, buf, sizeof(buf));
+		if (in > 0) {
+			out = write(fdnew, buf, in);
+			if (in != out) {
+				printf("cp: failed to write to %s\r\n", new);
+				close(fdold);
+				close(fdnew);
+				return Error;
+			}
+		}
+	} while (in > 1);
+
+	printf("cp: success write into %s\r\n", new);
+	close(fdold);
+	close(fdnew);
+	return No_Error;
+}
 void image_merge(uint8_t last_part, uint16_t last_bytes)
 {
-	FILE *doc_in, *doc_out;
-	char filename[50];
-	uint8_t B1;
+	int in, out, fdold, fdnew;
+	char filename_sd[50];
+	char filename_flash[] = "/sd0/nanomind.bin";
+	char buf[255];
 
-	doc_out = fopen("/sd0/image/nanomind_test.bin.lzo", "wb+");
+	fdnew = open(filename_flash, O_CREAT | O_TRUNC | O_WRONLY);
+
 	for (int i = 0; i < (int)last_part; i++) {
-		sprintf(filename, "/sd0/image/part%d.bin", i + 1);
-		doc_in = fopen(filename, "rb");
-
+		sprintf(filename_sd, "/sd0/image/part%d.bin", i + 1);
+		fdold = open(filename_sd, O_RDONLY);
 		if (i == (last_part - 1)) {
-			uint16_t j = 0x0;
+			uint16_t j = 0;
 			while (j < last_bytes) {
-				B1 = 0x0;
-				fread(&B1, sizeof(uint8_t), 1, doc_in);
-				fwrite(&B1, sizeof(uint8_t), 1, doc_out);
-				j += 0x1;
+				in = read(fdold, buf, sizeof(buf));
+				if (in > 0) {
+					out = write(fdnew, buf, in);
+					if (in != out) {
+						printf("cp: failed to write to %s\r\n", filename_flash);
+						close(fdold);
+						close(fdnew);
+					}
+				}
+				j++;
 			}
 		}
 		else {
-			while (1) {
-				B1 = 0x0;
-				if (fread(&B1, sizeof(uint8_t), 1, doc_in)) {
-					fwrite(&B1, sizeof(uint8_t), 1, doc_out);
+			do {
+				in = read(fdold, buf, sizeof(buf));
+				if (in > 0) {
+					out = write(fdnew, buf, in);
+					if (in != out) {
+						printf("cp: failed to write to %s\r\n", filename_flash);
+						close(fdold);
+						close(fdnew);
+					}
 				}
-				else
-					break;
-			}
+			} while (in > 1);
 		}
-		fclose(doc_in);
+		close(fdold);
 	}
-	fclose(doc_out);
+	close(fdnew);
 }
-int image_check(uint8_t last_partNo, uint16_t last_part_length, uint16_t * Error_record, int * total_Errnumber)
+int image_part_check(uint8_t partNo, uint8_t * Error_record, int * total_Errnumber)
 {
-	FILE *image;
+	int fd;
 	char path[22];
-	int piece_number = last_part_length / 150;
+	int piece_number;
 	uint8_t load_byte;
 	uint16_t check_byte = 0;
 	int error_number = 0;
-	for (int i = 1; i < last_partNo; i++) {
-		sprintf(path, "/sd0/image/part%d.bin", i);
-		image = fopen(path, "rb");
 
+	sprintf(path, "/sd0/image/part%d.bin", partNo);
+
+	fd = open(path, O_RDONLY);
+
+	if (partNo != image_lastPartNum) {
 		for (int j = 0; j < 255; j++) {
-			fseek (image , 150 * j, SEEK_SET);
+			lseek(fd, 150 * j, SEEK_SET);
 			check_byte = 0;
 			for (int k = 0; k < 150; k++) {
 				load_byte = 0;
-				fread(&load_byte, sizeof(uint8_t), 1, image);
+				read(fd, &load_byte, sizeof(load_byte));
 				check_byte += load_byte;
 			}
 			if (check_byte == 0) {
-				printf("record into table with %d, %d in %d\n", i, j, error_number);
-				Error_record[error_number ++] = (i << 8) + j;
+				printf("record piece %d into table in %d\n", j, error_number);
+				Error_record[error_number ++] = j;
 			}
 		}
 	}
-	sprintf(path, "part%d.bin", last_partNo);
-	image = fopen(path, "rb");
-	for (int j = 0; j < piece_number; j++) {
-		fseek (image , 150 * j, SEEK_SET);
+	else {
+		piece_number = image_lastPartLen / 150 ;
+		for (int j = 0; j < piece_number; j++) {
+			lseek(fd, 150 * j, SEEK_SET);
+			check_byte = 0;
+			for (int k = 0; k < 150; k++) {
+				load_byte = 0;
+				read(fd, &load_byte, sizeof(load_byte));
+				check_byte += load_byte;
+			}
+			if (check_byte == 0) {
+				printf("record piece %d into table in %d\n", j, error_number);
+				Error_record[error_number ++] = j;
+			}
+		}
+		lseek(fd, 150 * piece_number, SEEK_SET);
 		check_byte = 0;
-		for (int k = 0; k < 150; k++) {
+		for (int k = 0; k < (image_lastPartLen - piece_number * 150); k++) {
 			load_byte = 0;
-			fread(&load_byte, sizeof(uint8_t), 1, image);
+			read(fd, &load_byte, sizeof(load_byte));
 			check_byte += load_byte;
 		}
 		if (check_byte == 0) {
 			printf("Error Number: %d\n", error_number);
-			Error_record[error_number ++] = (last_partNo << 8) + j;
+			Error_record[error_number ++] = piece_number;
 		}
+
 	}
-	fseek (image , 150 * piece_number, SEEK_SET);
-	check_byte = 0;
-	for (int k = 0; k < (last_part_length - piece_number * 150); k++) {
-		load_byte = 0;
-		fread(&load_byte, sizeof(uint8_t), 1, image);
-		check_byte += load_byte;
-	}
-	if (check_byte == 0) {
-		printf("Error Number: %d\n", error_number);
-		Error_record[error_number ++] = (last_partNo << 8) + piece_number;
+	*total_Errnumber = error_number;
+	return No_Error;
+}
+int image_check(uint8_t last_partNo, uint16_t last_part_length, uint8_t * Error_record, int * total_Errnumber)
+{
+	FILE *image;
+	char path[22];
+	int error_number = 0;
+	int part_size;
+	for (int i = 1; i < last_partNo; i++) {
+		sprintf(path, "/sd0/image/part%d.bin", i);
+		image = fopen(path, "rb");
+		fseek(image, 0L, SEEK_END);
+		part_size = ftell(image);
+		if (i != last_partNo) {
+			if (part_size != 150 * 255) {
+				Error_record[error_number ++] = i;
+			}
+		}
+		else {
+			if (part_size != last_part_length) {
+				Error_record[error_number ++] = i;
+			}
+		}
 	}
 	*total_Errnumber = error_number;
 	return No_Error;

@@ -64,7 +64,7 @@
 #define seuv_node 			0x6E	//110
 /* Interface Board */
 #if ground_Test_Mode && enable_stm_IFB
-#define interface_node 		0x7D	
+#define interface_node 		0x7D
 #else
 #define interface_node 		0x6D	//109
 #endif
@@ -165,6 +165,7 @@
 #define T11_OnBoard_Schedule		11
 #define T13_LargeData_Transfer		13
 #define T15_dowlink_management 		15
+#define T32_image_upload	 		32
 #define T131_ADCS 					131
 #define T132_SEUV 					132
 

@@ -537,8 +537,6 @@ int ct(struct command_context * ctx) {
 	unsigned int serviceSubType;
 	unsigned int buffers[200];
 	uint8_t para[50] = {0};
-	// int i;
-
 
 	if (ctx->argc < 3) {
 		return CMD_ERROR_SYNTAX;
@@ -549,7 +547,6 @@ int ct(struct command_context * ctx) {
 	if (sscanf(ctx->argv[2], "%u", &serviceSubType) != 1) {
 		return CMD_ERROR_SYNTAX;
 	}
-	// printf("%d\n", ctx->argc);
 	if (ctx->argc > 3) {
 		for (int i = 0; i < (ctx->argc - 3); i++) {
 			sscanf(ctx->argv[i + 3], "%u", &buffers[i + 9]);
@@ -577,6 +574,9 @@ int ct(struct command_context * ctx) {
 	case T15_dowlink_management:
 		decodeService15(serviceSubType, para);
 		break;
+	case T32_image_upload:
+		decodeService32(serviceSubType, para);
+		break;	
 	case T131_ADCS:
 		decodeService131(serviceSubType, para);
 		break;

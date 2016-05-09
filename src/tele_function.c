@@ -586,6 +586,9 @@ void decodeCCSDS_Command(uint8_t * telecommand, uint8_t packet_length) {
 		case T15_dowlink_management:
 			decodeService15(serviceSubType, telecommand);
 			break;
+		case T32_image_upload:
+			decodeService32(serviceSubType, telecommand);
+			break;
 		case T131_ADCS:
 			decodeService131(serviceSubType, telecommand);
 			break;

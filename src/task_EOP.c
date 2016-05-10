@@ -56,7 +56,7 @@ void EOP_Task(void * pvParameters) {
 		}
 		counter ++;
 
-		if ((counter % 6) == 1) {
+		if ((counter % 2) == 1) {
 			/* eps_hk_vi_t */
 			txbuf[0] = 8;
 			txbuf[1] = 1;
@@ -69,14 +69,12 @@ void EOP_Task(void * pvParameters) {
 				cursys = csp_ntoh16(cursys);
 				p_sun = (float) cursun * (float) vbatt / 1000.0;
 				p_sys = (float) cursys * (float) vbatt / 1000.0;
-				printf("p_sun = %d\n", p_sun);
-				printf("p_sys = %d\n", p_sys);
+				printf("p_sun = %d\tp_sys = %d\n", p_sun, p_sys);
 				memcpy(&uchar_eop[28], &p_sun, 2);
 				memcpy(&uchar_eop[30], &p_sys, 2);
 			}
 			counter = 1;
 		}
-		printf("power_counter = %d\n", counter);
 		if (parameters.crippled_Mode == 0) {
 			eop_write(uchar_eop, 0);
 			eop_write(uchar_eop, 1);
@@ -85,7 +83,7 @@ void EOP_Task(void * pvParameters) {
 			eop_write_crippled(uchar_eop);
 
 		hex_dump(&uchar_eop[0], eop_length);
-		vTaskDelay(10 * delay_time_based);
+		vTaskDelay(30 * delay_time_based);
 	}
 	/** End of init */
 	vTaskDelete(NULL);

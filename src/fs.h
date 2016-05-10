@@ -102,6 +102,7 @@ int image_part_check(uint8_t partNo, uint8_t * Error_record, int * total_Errnumb
 int image_check(uint8_t last_partNo, uint16_t last_part_length, uint8_t * Error_record, int * total_Errnumber);
 void image_merge(uint8_t last_part, uint16_t last_bytes);
 int image_move();
+int image_boot_write(uint8_t configure[]);
 
 extern char* fileName_HK[2];
 extern char* fileName_INMS[2];

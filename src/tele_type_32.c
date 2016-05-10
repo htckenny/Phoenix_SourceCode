@@ -27,6 +27,7 @@
 #define Request_Image_Status		3				/* Request Image's status */
 #define perform_merge				4				/* Merge the part into one file */
 #define move_to_flash				5				/* Move the image from SD card to FLASH memory */
+#define boot_configure				6				/* Upload the boot.conf file */
 
 void decodeService32(uint8_t subType, uint8_t*telecommand) {
 	uint8_t completionError = I2C_SEND_ERROR;
@@ -126,6 +127,22 @@ void decodeService32(uint8_t subType, uint8_t*telecommand) {
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}
 		break;
+	/*--------------- ID:6 Move the image from SD card to FLASH memory ----------------*/
+	case boot_configure:
+		if (para_length == 0)
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
+			break;
+		}
+		if (image_boot_write(&paras[0]) == Error) {
+			completionError = FS_IO_ERR;
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+		}
+		else {
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		}
+		break;	
 	/*---------------- Otherwise ----------------*/
 	default:
 		sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);

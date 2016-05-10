@@ -105,6 +105,28 @@ void decode_time (char fileName[], char * buf )
 	strcat(buf, Min);
 	strcat(buf, Sec);
 }
+int image_boot_write(uint8_t configure[])
+{
+	int fd;
+	char path[] = "/boot/boot.conf";
+	uint8_t boot_path[] = "/boot/nanomind.bin.lzo\n";
+	uint8_t next_line[] = "\n";
+	/* Open file */
+	fd = open(path, O_CREAT | O_APPEND | O_RDWR);
+	if (fd < 0) {
+		printf("Failed to open %s\r\n", path);
+	}
+
+	write(fd, boot_path, 23);
+	write(fd, &configure[0], 8);
+	write(fd, next_line, 1);
+	write(fd, &configure[8], 1);
+	write(fd, next_line, 1);
+
+	close(fd);
+	return No_Error;
+
+}
 int image_move()
 {
 	int in, out, fdold, fdnew;

@@ -148,18 +148,20 @@ void image_merge(uint8_t last_part, uint16_t last_bytes)
 	char filename_sd[50];
 	char filename_flash[] = "/sd0/nanomind.bin";
 	char buf[255];
+	char buf1[1];
 
 	fdnew = open(filename_flash, O_CREAT | O_TRUNC | O_WRONLY);
 
 	for (int i = 0; i < (int)last_part; i++) {
 		sprintf(filename_sd, "/sd0/image/part%d.bin", i + 1);
 		fdold = open(filename_sd, O_RDONLY);
+		lseek(fdold, 0, SEEK_SET);
 		if (i == (last_part - 1)) {
 			uint16_t j = 0;
 			while (j < last_bytes) {
-				in = read(fdold, buf, sizeof(buf));
+				in = read(fdold, buf1, sizeof(buf1));
 				if (in > 0) {
-					out = write(fdnew, buf, in);
+					out = write(fdnew, buf1, in);
 					if (in != out) {
 						printf("cp: failed to write to %s\r\n", filename_flash);
 						close(fdold);
@@ -209,8 +211,8 @@ int image_part_check(uint8_t partNo, uint8_t * Error_record, int * total_Errnumb
 				check_byte += load_byte;
 			}
 			if (check_byte == 0) {
-				printf("record piece %d into table in %d\n", j, error_number);
-				Error_record[error_number ++] = j;
+				printf("record piece %d into table in %d\n", j + 1, error_number);
+				Error_record[error_number ++] = j + 1;
 			}
 		}
 	}
@@ -225,8 +227,8 @@ int image_part_check(uint8_t partNo, uint8_t * Error_record, int * total_Errnumb
 				check_byte += load_byte;
 			}
 			if (check_byte == 0) {
-				printf("record piece %d into table in %d\n", j, error_number);
-				Error_record[error_number ++] = j;
+				printf("record piece %d into table in %d\n", j + 1, error_number);
+				Error_record[error_number ++] = j + 1;
 			}
 		}
 		lseek(fd, 150 * piece_number, SEEK_SET);
@@ -240,8 +242,8 @@ int image_part_check(uint8_t partNo, uint8_t * Error_record, int * total_Errnumb
 			printf("Error Number: %d\n", error_number);
 			Error_record[error_number ++] = piece_number;
 		}
-
 	}
+	close(fd);
 	*total_Errnumber = error_number;
 	return No_Error;
 }
@@ -254,18 +256,24 @@ int image_check(uint8_t last_partNo, uint16_t last_part_length, uint8_t * Error_
 	for (int i = 1; i < last_partNo; i++) {
 		sprintf(path, "/sd0/image/part%d.bin", i);
 		image = fopen(path, "rb");
-		fseek(image, 0L, SEEK_END);
-		part_size = ftell(image);
-		if (i != last_partNo) {
-			if (part_size != 150 * 255) {
-				Error_record[error_number ++] = i;
-			}
+		if (image == NULL) {
+			Error_record[error_number ++] = i;
 		}
 		else {
-			if (part_size != last_part_length) {
-				Error_record[error_number ++] = i;
+			fseek(image, 0L, SEEK_END);
+			part_size = ftell(image);
+			if (i != last_partNo) {
+				if (part_size != 150 * 255) {
+					Error_record[error_number ++] = i;
+				}
+			}
+			else {
+				if (part_size != last_part_length) {
+					Error_record[error_number ++] = i;
+				}
 			}
 		}
+		fclose(image);
 	}
 	*total_Errnumber = error_number;
 	return No_Error;
@@ -280,37 +288,40 @@ int image_check(uint8_t last_partNo, uint16_t last_part_length, uint8_t * Error_
  */
 int image_write(int part_no, uint8_t piece_no, uint8_t scriptCont[], int size, int initial_flag) {
 
-	FILE *image;
+	FIL fileImage;
+	// int fd, out;
 	char path[22];
 	int eof = 0xff;
-	sprintf(path, "/sd0/image/part%d.bin", part_no);
+	sprintf(path, "0:/image/part%d.bin", part_no);
 	printf("%s\n", path);
+
 	if (initial_flag == 1) {
-		remove(path);
-		image = fopen(path, "wb+");
-		if (image != NULL) {
-			fseek (image , 150 * 255 - 1, SEEK_SET);
-			fwrite(&eof, sizeof(uint8_t), 1, image);
-			fclose(image);
-			return No_Error;
+		f_unlink(path);
+		res = f_open(&fileImage, path, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+		if (res != FR_OK) {
+			printf("f_open() fail .. \r\n");
+			f_close(&fileImage);
+			return Error;
 		}
 		else {
-			fclose(image);
-			return Error;
+			f_lseek(&fileImage, 150 * 255 - 1);
+			res = f_write(&fileImage, &eof, 1, &bw);
+			f_close(&fileImage);
+			return No_Error;
 		}
 	}
 	else {
-		image = fopen(path, "rb+");
-
-		if (image != NULL) {
-			fseek (image, piece_no * 150, SEEK_SET);
-			fwrite(&scriptCont[0], sizeof(uint8_t), size, image);
-			fclose(image);
-			return No_Error;
+		res = f_open(&fileImage, path, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
+		if (res != FR_OK) {
+			printf("f_open() fail .. \r\n");
+			f_close(&fileImage);
+			return Error;
 		}
 		else {
-			fclose(image);
-			return Error;
+			f_lseek(&fileImage, 150 * (piece_no - 1));
+			res = f_write(&fileImage, &scriptCont[0], size, &bw);
+			f_close(&fileImage);
+			return No_Error;
 		}
 	}
 }

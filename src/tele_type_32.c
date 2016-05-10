@@ -68,12 +68,14 @@ void decodeService32(uint8_t subType, uint8_t*telecommand) {
 		}
 		else {
 			SendPacketWithCCSDS_AX25(&total_number[0], 2, obc_apid, 32, subType);
-			if (total_number[0] > 190) {
-				SendPacketWithCCSDS_AX25(&Miss_Part_table[0], 190, obc_apid, 32, subType);
-				SendPacketWithCCSDS_AX25(&Miss_Part_table[190], total_number[0] - 190, obc_apid, 32, subType);
-			}
-			else {
-				SendPacketWithCCSDS_AX25(&Miss_Part_table[0], total_number[0], obc_apid, 32, subType);
+			if (total_number[0] != 0) {
+				if (total_number[0] > 190) {
+					SendPacketWithCCSDS_AX25(&Miss_Part_table[0], 190, obc_apid, 32, subType);
+					SendPacketWithCCSDS_AX25(&Miss_Part_table[190], total_number[0] - 190, obc_apid, 32, subType);
+				}
+				else {
+					SendPacketWithCCSDS_AX25(&Miss_Part_table[0], total_number[0], obc_apid, 32, subType);
+				}
 			}
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}
@@ -92,7 +94,8 @@ void decodeService32(uint8_t subType, uint8_t*telecommand) {
 		}
 		else {
 			SendPacketWithCCSDS_AX25(&total_number[0], 2, obc_apid, 32, subType);
-			SendPacketWithCCSDS_AX25(&Miss_table[0], total_number[0], obc_apid, 32, subType);
+			if (total_number[0] != 0)
+				SendPacketWithCCSDS_AX25(&Miss_table[0], total_number[0], obc_apid, 32, subType);
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}
 		break;

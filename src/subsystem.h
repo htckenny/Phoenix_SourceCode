@@ -15,9 +15,8 @@
 #define enable_stm_ADCS		0
 #define enable_stm_IFB		0
 
-#define antenna_FM			0
 #define antenna_deploy		0
-#define initila_Time		946684800		//1475280000 			//946684800 
+#define initila_Time		1462838400		//1475280000 			//946684800 
 /* !!!!!!!!!!!!!!!!!!!!!!!! UINT = LSB !!!!!!!!!!!!!! */
 /* Script Length */
 #define scriptNum 			7

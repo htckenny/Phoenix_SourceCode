@@ -989,6 +989,7 @@ int inms_script_read_flash(int buffNum, int packlength, void * txbuf) {
 	return No_Error;
 err:
 	vPortFree(buf);
+	fclose(fp);
 	return Error;
 err_stat:
 	fclose(fp);

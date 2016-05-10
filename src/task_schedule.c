@@ -74,8 +74,8 @@ void schedule_sort(int number)
 	uint32_t sche_time_sort [maxNum] = {0};
 
 	for (int i = 0 ; i < number ; i++) {
-		memcpy(&sche_time[i], &sche_buf[2 + i * 20], 4);
-		memcpy(&sche_time_sort[i], &sche_buf[2 + i * 20], 4);
+		memcpy(&sche_time[i], &sche_buf[2 + i * maxlength], 4);
+		memcpy(&sche_time_sort[i], &sche_buf[2 + i * maxlength], 4);
 		sche_time[i] = csp_ntoh32(sche_time[i]) ;
 		sche_time_sort[i] = csp_ntoh32(sche_time_sort[i]) ;
 	}
@@ -144,7 +144,7 @@ int findMaxBuf(uint8_t sortbuf[])
 {
 	int length = 0;
 	for (int i = 0 ; i < maxNum ; i++) {
-		if (sortbuf[20 * i] != 0 && sortbuf[20 * i] != 0xA5) {
+		if (sortbuf[maxlength * i] != 0 && sortbuf[maxlength * i] != 0xA5) {
 			length = i + 1;
 		}
 		else
@@ -205,13 +205,13 @@ void Schedule_Task(void * pvParameters)
 			   seq	len	Absolute Time Tag		Telecommand Packet
 			   									type	s_type	para........
 			*/
-			memcpy(&sche_time[sort_seq[i]], &sche_buf[sort_seq[i] * 20 + 2], 4);
+			memcpy(&sche_time[sort_seq[i]], &sche_buf[sort_seq[i] * maxlength + 2], 4);
 			sche_time[sort_seq[i]] = csp_ntoh32(sche_time[sort_seq[i]]);
 			sche_time[sort_seq[i]] += 946684800;
 			/* Add seven byte with contents of zero to match the telecommand */
 			// init_command_buf(*sche_buf[sort_seq[i]], sizeof(sche_buf[sort_seq[i]]), *tele_buf);
 			// printf("%d\n", sche_buf[sort_seq[i] * 20 + 1]);
-			init_command_buf(&sche_buf[sort_seq[i] * 20], sche_buf[sort_seq[i] * 20 + 1], tele_buf);
+			init_command_buf(&sche_buf[sort_seq[i] * maxlength], sche_buf[sort_seq[i] * maxlength + 1], tele_buf);
 
 			while (1) {
 

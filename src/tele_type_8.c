@@ -319,9 +319,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		printf("Execute Type 8 Sybtype 16 ,enter nominal mode  \r\n");
 
 		HK_frame.mode_status_flag = 3;
-		parameters.com_bit_rates = 8;
 		para_w_flash();
-		set_tx_rate(parameters.com_bit_rates);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 
 		break;

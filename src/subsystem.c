@@ -118,7 +118,7 @@ int parameter_init()
 	parameters.hk_collect_period		= 60;
 	parameters.beacon_period			= 30;
 	parameters.reboot_count				= 0;
-	parameters.com_bit_rates			= 0x01;
+	parameters.com_bit_rates			= 0x08;
 
 	/*  seuv related  */
 	parameters.seuv_period				= 15;

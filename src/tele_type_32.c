@@ -22,12 +22,14 @@
 #include "fs.h"
 
 /* Definition of the subtype */
-#define Configure_Image				1				/* Configure Image's related parameter */
-#define Request_part_Status			2				/* Request Image part's status */
-#define Request_Image_Status		3				/* Request Image's status */
-#define perform_merge				4				/* Merge the part into one file */
-#define move_to_flash				5				/* Move the image from SD card to FLASH memory */
-#define boot_configure				6				/* Upload the boot.conf file */
+#define Enter_Upload_mode			1				/* Enter firmware upload mode */ 
+#define Configure_Image				2				/* Configure Image's related parameter */
+#define Request_part_Status			3				/* Request Image part's status */
+#define Request_Image_Status		4				/* Request Image's status */
+#define perform_merge				5				/* Merge the part into one file */
+#define move_to_flash				6				/* Move the image from SD card to FLASH memory */
+#define boot_configure				7				/* Upload the boot.conf file */
+
 
 void decodeService32(uint8_t subType, uint8_t*telecommand) {
 	uint8_t completionError = I2C_SEND_ERROR;
@@ -41,7 +43,22 @@ void decodeService32(uint8_t subType, uint8_t*telecommand) {
 		memcpy(&paras, telecommand + 9, para_length);
 	switch (subType) {
 
-	/*--------------- ID:1 Configure Image's related parameter ----------------*/
+	/*---------------  ID:1 enter firmware upload mode  ----------------*/
+	case Enter_Upload_mode:
+		if (para_length == 0)
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
+			break;
+		}
+		printf("Execute Type 32 Sybtype 1, enter firmware upload mode\r\n");
+		HK_frame.mode_status_flag = 2;
+		para_w_flash();
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+
+		break;
+
+	/*--------------- ID:2 Configure Image's related parameter ----------------*/
 	case Configure_Image:
 		if (para_length == 3)
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
@@ -54,7 +71,7 @@ void decodeService32(uint8_t subType, uint8_t*telecommand) {
 		printf("%d %d\n", image_lastPartNum, image_lastPartLen);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
-	/*--------------- ID:2 Request Image part's status ----------------*/
+	/*--------------- ID:3 Request Image part's status ----------------*/
 	case Request_part_Status:
 		if (para_length == 1)
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
@@ -81,7 +98,7 @@ void decodeService32(uint8_t subType, uint8_t*telecommand) {
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}
 		break;
-	/*--------------- ID:3 Request Image Status ----------------*/
+	/*--------------- ID:4 Request Image Status ----------------*/
 	case Request_Image_Status:
 		if (para_length == 0)
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
@@ -100,7 +117,7 @@ void decodeService32(uint8_t subType, uint8_t*telecommand) {
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}
 		break;
-	/*--------------- ID:4 Merge the part into one file ----------------*/
+	/*--------------- ID:5 Merge the part into one file ----------------*/
 	case perform_merge:
 		if (para_length == 0)
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
@@ -111,7 +128,7 @@ void decodeService32(uint8_t subType, uint8_t*telecommand) {
 		image_merge(image_lastPartNum, image_lastPartLen);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
-	/*--------------- ID:5 Move the image from SD card to FLASH memory ----------------*/
+	/*--------------- ID:6 Move the image from SD card to FLASH memory ----------------*/
 	case move_to_flash:
 		if (para_length == 0)
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
@@ -127,7 +144,7 @@ void decodeService32(uint8_t subType, uint8_t*telecommand) {
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}
 		break;
-	/*--------------- ID:6 Move the image from SD card to FLASH memory ----------------*/
+	/*--------------- ID:7 Move the image from SD card to FLASH memory ----------------*/
 	case boot_configure:
 		if (para_length == 0)
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);

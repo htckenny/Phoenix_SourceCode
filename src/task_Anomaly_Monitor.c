@@ -242,40 +242,40 @@ void Anomaly_Monitor_Task(void * pvParameters)
 			/* ----------------------------------------------------- */
 			vTaskDelay(5 * delay_time_based);
 			/* ADCS Rate Sensor & Magnetometer Temperature */
-			TS8();
-			subTemperature_int[1] = ThermalFrame.T8;
-			adcsTemp[0] = subTemperature_int[1] % 256;
-			printf("ADCS Rate Temperature %d degree\t", adcsTemp[0]);
-			/* Operational Temperature Range -10 to +60 */
-			if (adcsTemp[0] > 60 || adcsTemp[0] < -10) {
-				outRangeCounter_temp[4] ++;
-				printf("counter = %d\n", outRangeCounter_temp[4]);
-				if (outRangeCounter_temp[4] >= 6) {
-					generate_Error_Report(14, adcsTemp[0]);
-					outRangeCounter_temp[4] = 0;
-				}
-			}
-			else {
-				printf("\n");
-				outRangeCounter_temp[4] = 0;
-			}
-			adcsTemp[1] = (subTemperature_int[1] >> 8) ;
-			printf("ADCS Magnetometer Temperature %d degree\t", adcsTemp[1]);
-			/* Operational Temperature Range -10 to +60 */
-			if (adcsTemp[1] > 60 || adcsTemp[1] < -10) {
-				outRangeCounter_temp[7] ++;
-				printf("counter = %d\n", outRangeCounter_temp[7]);
-				if (outRangeCounter_temp[7] >= 6) {
-					generate_Error_Report(15, adcsTemp[1]);
-					outRangeCounter_temp[7] = 0;
-				}
-			}
-			else {
-				printf("\n");
-				outRangeCounter_temp[7] = 0;
-			}
-			/* ----------------------------------------------------- */
-			vTaskDelay(5 * delay_time_based);
+			// TS8();
+			// subTemperature_int[1] = ThermalFrame.T8;
+			// adcsTemp[0] = subTemperature_int[1] % 256;
+			// printf("ADCS Rate Temperature %d degree\t", adcsTemp[0]);
+			// /* Operational Temperature Range -10 to +60 */
+			// if (adcsTemp[0] > 60 || adcsTemp[0] < -10) {
+			// 	outRangeCounter_temp[4] ++;
+			// 	printf("counter = %d\n", outRangeCounter_temp[4]);
+			// 	if (outRangeCounter_temp[4] >= 6) {
+			// 		generate_Error_Report(14, adcsTemp[0]);
+			// 		outRangeCounter_temp[4] = 0;
+			// 	}
+			// }
+			// else {
+			// 	printf("\n");
+			// 	outRangeCounter_temp[4] = 0;
+			// }
+			// adcsTemp[1] = (subTemperature_int[1] >> 8) ;
+			// printf("ADCS Magnetometer Temperature %d degree\t", adcsTemp[1]);
+			// /* Operational Temperature Range -10 to +60 */
+			// if (adcsTemp[1] > 60 || adcsTemp[1] < -10) {
+			// 	outRangeCounter_temp[7] ++;
+			// 	printf("counter = %d\n", outRangeCounter_temp[7]);
+			// 	if (outRangeCounter_temp[7] >= 6) {
+			// 		generate_Error_Report(15, adcsTemp[1]);
+			// 		outRangeCounter_temp[7] = 0;
+			// 	}
+			// }
+			// else {
+			// 	printf("\n");
+			// 	outRangeCounter_temp[7] = 0;
+			// }
+			// /* ----------------------------------------------------- */
+			// vTaskDelay(5 * delay_time_based);
 #endif
 		}
 		vTaskDelay(5 * delay_time_based);

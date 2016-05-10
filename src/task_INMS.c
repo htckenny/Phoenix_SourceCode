@@ -809,7 +809,6 @@ void vTaskInmsCurrentMonitor(void * pvParameters) {
 		printf("\t\t\tCurrent_5V: %.3lf mA\t", (double)currentValue_5 / 4.7);
 		if ((double)currentValue_5 / 4.7 >= overCurrent_5) {
 			Counter_5 ++;
-			printf("Counter = %d\n", Counter_5);
 			if (Counter_5 >= 2) {
 				obcSuErrFlag = 4;
 				generate_Error_Report(8, currentValue_5);
@@ -824,7 +823,6 @@ void vTaskInmsCurrentMonitor(void * pvParameters) {
 		printf("\t\t\tCurrent_3.3V: %.3lf mA\t", (double)currentValue_33 / 68);
 		if ((double)currentValue_33 / 68 >= overCurrent_33) {
 			Counter_33 ++;
-			printf("Counter = %d\n", Counter_33);
 			if (Counter_33 >= 2) {
 				obcSuErrFlag = 4;
 				generate_Error_Report(7, currentValue_33);
@@ -852,7 +850,6 @@ void vTaskInmsTemperatureMonitor(void * pvParameters) {
 		/* Operational Temperature Range -20 to +40 */
 		if (inms_temperature > 40 || inms_temperature < -20) {
 			outRangeCounter ++;
-			printf("outCounter = %d\n", outRangeCounter);
 			if (outRangeCounter >= 6) {
 				inms_tm_status = 0;
 				outRangeCounter = 0;
@@ -861,7 +858,6 @@ void vTaskInmsTemperatureMonitor(void * pvParameters) {
 		}
 		else if (inms_temperature <= 37 && inms_temperature >= -17) {
 			inRangeCounter ++;
-			printf("inCounter = %d\n", inRangeCounter);
 			if (inRangeCounter >= 6) {
 				inms_tm_status = 1;
 				inRangeCounter = 0;

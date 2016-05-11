@@ -37,6 +37,7 @@
 #define Enable_GPS_header			21				/* use GPS to get position data instead of ADCS */
 #define Reset_Error_Report			22				/* Reset Error Report, should be conducted after successful downlink of Error Report */
 #define Manual_Heater_Switch		23				/* Switch ON/OFF EPS heater in case of auto switch has problem */
+#define switchInterfaceBoard		24				/* switch the use of interface board, in case the IFB failed in cold platue */
 #define SD_card_format				30				/* Format SD card, and create default folders */
 #define SD_unlock					31				/* Unlock SD card */
 #define enter_crippled_mode			32				/* Enter Crippled mode, change storage place to flash memory */
@@ -474,7 +475,27 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 		}
 		break;
+	/*---------------  ID:24 swicth the use of interface board ----------------*/
+	case switchInterfaceBoard:
+		if (para_length == 1)
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
+			break;
+		}
+		printf("Execute Type 8 Sybtype 24, switch the use of interface board\r\n");
 
+		if (paras[0] == 1) {
+			parameters.use_IFB = 1;
+			printf("enable IFB\n");
+		}
+		else if (paras[0] == 0) {
+			parameters.use_IFB = 0;
+			printf("disable IFB\n");
+		}
+		para_w_flash();
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		break;
 	/*---------------  ID:30 Format SD and Initialize ----------------*/
 	case SD_card_format:
 		if (para_length == 1)

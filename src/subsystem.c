@@ -145,6 +145,7 @@ int parameter_init()
 
 	parameters.ErrSerialNumber			= 0;
 	parameters.crippled_Mode			= 0;
+	parameters.use_IFB					= 1;
 	seuvFrame.samples = parameters.seuv_sample_rate << 1 ;		/* samples */
 	/* 0 1 2 3 4 5 6 |  7    */
 	/*  sample rate  | Gain  */

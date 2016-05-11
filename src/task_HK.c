@@ -234,11 +234,12 @@ uint8_t hk_get() {
 
 	/* get System Status */
 	HK_frame.reboot_count			= parameters.reboot_count;
-	HK_frame.interface_3V3_current	= Interface_3V3_current_get();
-	HK_frame.interface_5V_current	= Interface_5V_current_get();
-	HK_frame.interface_temp			= Interface_tmp_get();
-	HK_frame.interface_thermistor	= Interface_inms_thermistor_get();
-
+	if (parameters.use_IFB == 1) {
+		HK_frame.interface_3V3_current	= Interface_3V3_current_get();
+		HK_frame.interface_5V_current	= Interface_5V_current_get();
+		HK_frame.interface_temp			= Interface_tmp_get();
+		HK_frame.interface_thermistor	= Interface_inms_thermistor_get();
+	}
 	memcpy(&hk_buffer[100], &HK_frame.mode_status_flag, (int)sizeof(hk_frame_t));
 
 

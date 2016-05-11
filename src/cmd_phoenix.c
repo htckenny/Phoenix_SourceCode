@@ -576,7 +576,7 @@ int ct(struct command_context * ctx) {
 		break;
 	case T32_image_upload:
 		decodeService32(serviceSubType, para);
-		break;	
+		break;
 	case T131_ADCS:
 		decodeService131(serviceSubType, para);
 		break;
@@ -953,6 +953,8 @@ int pararead(struct command_context * ctx) {
 	printf("INMS_timeout\t\t\t%d\n", (int) parameters.INMS_timeout);
 	printf("combitrate\t\t\t%d\n", (int) parameters.com_bit_rates);
 	printf("crippled_Mode\t\t\t%d\n", (int) parameters.crippled_Mode);
+	printf("use_IFB\t\t\t\t%d\n", (int) parameters.use_IFB);
+
 	return CMD_ERROR_NONE;
 }
 
@@ -1093,7 +1095,7 @@ int comhk(struct command_context * ctx) {
 }
 
 command_t __root_command ph_commands[] = {
-	 
+
 	{ .name = "ch", .help = "PHOENIX: ch [ON(1), OFF(0)]", .usage = "ch 1:AUTO 0:Manual", .handler = changeHeater, },
 	{ .name = "pc", .help = "PHOENIX: pc [sub] [ON(1), OFF(0)]", .usage = "pc [sub] [ON(1), OFF(0)]", .handler = powerControl, },
 	{ .name = "epss", .help = "PHOENIX: epss []", .handler = eps_switch, },

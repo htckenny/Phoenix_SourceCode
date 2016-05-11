@@ -85,9 +85,9 @@ void ModeControl_Task(void * pvParameters) {
 					xTaskCreate(SolarEUV_Task, (const signed char * ) "SEUV", 1024 * 4, NULL, 2, &seuv_task);
 				if (inms_error_handle == NULL)
 					xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "InmsEH", 1024 * 4, NULL, 2, &inms_error_handle);
-				if (inms_current_moniter == NULL)
+				if (inms_current_moniter == NULL && parameters.use_IFB == 1)
 					xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "InmsCM", 1024 * 4, NULL, 1, &inms_current_moniter);
-				if (inms_temp_moniter == NULL)
+				if (inms_temp_moniter == NULL && parameters.use_IFB == 1)
 					xTaskCreate(vTaskInmsTemperatureMonitor, (const signed char * ) "InmsTM", 1024 * 4, NULL, 1, &inms_temp_moniter);
 				lastmode = HK_frame.mode_status_flag;   /* ENTER PAYLOAD MODE */
 			}

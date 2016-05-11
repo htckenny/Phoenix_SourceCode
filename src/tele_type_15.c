@@ -214,9 +214,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 			}
 			if (paras[0] == 1) {
 				rxdata = malloc(hk_length);
-				for (int i = paras[1]; i < paras[1] + paras[2]; i++)
-				{
-					printf("No %d:\n", i);
+				for (int i = paras[1]; i < paras[1] + paras[2]; i++) {
 					if (hk_read_crippled(i, rxdata) == No_Error) {
 						SendDataWithCCSDS_AX25(2, &rxdata[0]);
 						vTaskDelay(0.5 * delay_time_based);
@@ -228,9 +226,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 			}
 			else if (paras[0] == 2) {
 				rxdata = malloc(inms_data_length);
-				for (int i = paras[1]; i < paras[1] + paras[2]; i++)
-				{
-					printf("No %d:\n", i);
+				for (int i = paras[1]; i < paras[1] + paras[2]; i++) {
 					if (inms_data_read_crippled(i, rxdata) == No_Error) {
 						SendDataWithCCSDS_AX25(2, &rxdata[0]);
 						vTaskDelay(0.5 * delay_time_based);
@@ -242,9 +238,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 			}
 			else if (paras[0] == 3) {
 				rxdata = malloc(seuv_length);
-				for (int i = paras[1]; i < paras[1] + paras[2]; i++)
-				{
-					printf("No %d:\n", i);
+				for (int i = paras[1]; i < paras[1] + paras[2]; i++) {
 					if (seuv_read_crippled(i, rxdata) == No_Error) {
 						SendDataWithCCSDS_AX25(2, &rxdata[0]);
 						vTaskDelay(0.5 * delay_time_based);
@@ -256,9 +250,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 			}
 			else if (paras[0] == 4) {
 				rxdata = malloc(eop_length);
-				for (int i = paras[1]; i < paras[1] + paras[2]; i++)
-				{
-					printf("No %d:\n", i);
+				for (int i = paras[1]; i < paras[1] + paras[2]; i++) {
 					if (eop_read_crippled(i, rxdata) == No_Error) {
 						SendDataWithCCSDS_AX25(2, &rxdata[0]);
 						vTaskDelay(0.5 * delay_time_based);
@@ -270,9 +262,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 			}
 			else if (paras[0] == 5) {
 				rxdata = malloc(wod_length);
-				for (int i = paras[1]; i < paras[1] + paras[2]; i++)
-				{
-					printf("No %d:\n", i);
+				for (int i = paras[1]; i < paras[1] + paras[2]; i++) {
 					if (wod_read_crippled(i, rxdata) == No_Error) {
 						SendDataWithCCSDS_AX25(2, &rxdata[0]);
 						vTaskDelay(0.5 * delay_time_based);

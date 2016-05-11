@@ -62,15 +62,12 @@ void decodeService132(uint8_t subType, uint8_t*telecommand) {
 				}
 			}
 			else {
-				goto err;
+				completionError = PARA_ERR;
+				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 			}
 			parameters.seuv_mode = paras[0];	//set the seuv mode
 			para_w_flash();
-
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
-err:
-			completionError = PARA_ERR;
-			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 		}
 		else
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);

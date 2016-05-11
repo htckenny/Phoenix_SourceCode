@@ -188,12 +188,6 @@ void Schedule_Task(void * pvParameters)
 			}
 		}
 		schedule_sort(lastNum);
-		// printf("last Num : %d\n", lastNum);
-		// schedule_new_command_flag = 0;
-		// }
-		// else {
-		// 	schedule_sort(lastNum);
-		// }
 		for (int i = 0 ; i < lastNum ; i++) {
 			/* check if there's new command comming in or something changed in the buffer */
 			if (schedule_new_command_flag == 1) {
@@ -209,8 +203,6 @@ void Schedule_Task(void * pvParameters)
 			sche_time[sort_seq[i]] = csp_ntoh32(sche_time[sort_seq[i]]);
 			sche_time[sort_seq[i]] += 946684800;
 			/* Add seven byte with contents of zero to match the telecommand */
-			// init_command_buf(*sche_buf[sort_seq[i]], sizeof(sche_buf[sort_seq[i]]), *tele_buf);
-			// printf("%d\n", sche_buf[sort_seq[i] * 20 + 1]);
 			init_command_buf(&sche_buf[sort_seq[i] * maxlength], sche_buf[sort_seq[i] * maxlength + 1], tele_buf);
 
 			while (1) {
@@ -218,10 +210,8 @@ void Schedule_Task(void * pvParameters)
 				if (schedule_new_command_flag == 1) {
 					break;
 				}
-				// if (onBoardTime - sche_time[sort_seq[i]] < 10){
 				printf("sche_time = %" PRIu32 " onBoardTime = %" PRIu32 "\n", sche_time[sort_seq[i]], onBoardTime);
 				printf("\E[1A\r");
-				// }
 
 				onBoardTime = update_time();
 				/* determine if the schedule time has exceeded */

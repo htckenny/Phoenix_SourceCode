@@ -27,7 +27,6 @@ void  decodeService13(uint8_t subType, uint8_t *telecommand) {
 	int script_ID = 0;
 	if (packet_length > 0)
 		memcpy(&paras, telecommand + 9, packet_length);
-	printf("packet = %d\n", packet_length);
 	script_ID = paras[0];
 	printf("Scrip ID : %d\n", script_ID);
 

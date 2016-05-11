@@ -22,7 +22,7 @@
 #include "fs.h"
 
 /* Definition of the subtype */
-#define Enter_Upload_mode			1				/* Enter firmware upload mode */ 
+#define Enter_Upload_mode			1				/* Enter firmware upload mode */
 #define Configure_Image				2				/* Configure Image's related parameter */
 #define Request_part_Status			3				/* Request Image part's status */
 #define Request_Image_Status		4				/* Request Image's status */
@@ -159,7 +159,7 @@ void decodeService32(uint8_t subType, uint8_t*telecommand) {
 		else {
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}
-		break;	
+		break;
 	/*---------------- Otherwise ----------------*/
 	default:
 		sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);

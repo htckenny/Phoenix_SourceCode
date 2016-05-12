@@ -253,7 +253,6 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 				for (int i = paras[1]; i < paras[1] + paras[2]; i++) {
 					if (eop_read_crippled(i, rxdata) == No_Error) {
 						SendDataWithCCSDS_AX25(4, &rxdata[0]);
-						SendPacketWithCCSDS_AX25(&test, 9, obc_apid, 3, 25);
 						vTaskDelay(0.5 * delay_time_based);
 					}
 					else

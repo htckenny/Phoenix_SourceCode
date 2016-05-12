@@ -93,7 +93,8 @@ void Telecom_Task(void * pvParameters) {
 		if ((flag > 0) && (flag < 41)) {
 			printf("--------------------------------------------- \r\n");
 			printf("Find %d frame in receiver buffer \r\n", flag);
-			Read_Execute();
+			if (decode_command == 0)
+				Read_Execute();
 			printf("--------------------------------------------- \r\n");
 			vTaskDelay(0.1 * delay_time_based);
 		}

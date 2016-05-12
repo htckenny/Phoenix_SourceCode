@@ -100,6 +100,7 @@ uint8_t seuv_with_INMS;
 uint8_t INMS_power_status;
 uint8_t image_lastPartNum;
 uint16_t image_lastPartLen;
+uint8_t decode_command;
 
 typedef struct __attribute__((packed)) {
 
@@ -155,7 +156,7 @@ typedef struct __attribute__((packed)) {
 	uint8_t inms_status;
 
 	/* FS related */
-	uint8_t SD_partition_flag;	
+	uint8_t SD_partition_flag;
 	uint8_t crippled_Mode;
 
 	uint8_t use_IFB;

@@ -551,7 +551,7 @@ uint8_t SendDataWithCCSDS_AX25(uint8_t datatype, uint8_t* data) { //add sid then
 }
 
 void decodeCCSDS_Command(uint8_t * telecommand, uint8_t packet_length) {
-
+	decode_command = 1;
 	uint8_t serviceType =  telecommand[7];
 	uint8_t serviceSubType = telecommand[8];
 	uint16_t chk;
@@ -592,7 +592,7 @@ void decodeCCSDS_Command(uint8_t * telecommand, uint8_t packet_length) {
 		case T131_ADCS:
 			decodeService131(serviceSubType, telecommand);
 			break;
-		case  T132_SEUV:
+		case T132_SEUV:
 			decodeService132(serviceSubType, telecommand);
 			break;
 		default:
@@ -607,4 +607,5 @@ void decodeCCSDS_Command(uint8_t * telecommand, uint8_t packet_length) {
 	else {
 		printf("CRC Check not pass!!!\n");
 	}
+	decode_command = 0;
 }  /* end of decodeCCSDS_Command */

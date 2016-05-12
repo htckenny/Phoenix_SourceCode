@@ -98,7 +98,7 @@ int parameter_init()
 	use_GPS_header						= 0;
 	inms_tm_status						= 1;
 	seuv_with_INMS 						= 0;
-
+	decode_command						= 0;
 	/*--File System store count--*/
 	parameters.wod_store_count			= 0;
 	parameters.inms_store_count			= 0;

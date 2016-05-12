@@ -63,6 +63,7 @@ int status_update()
 
 	status_frame.inms_error_handle = (inms_error_handle != NULL) ? 1 : 0;
 	status_frame.inms_current_moniter = (inms_current_moniter != NULL) ? 1 : 0;
+	status_frame.inms_temp_moniter = (inms_temp_moniter != NULL) ? 1 : 0;
 	status_frame.inms_task = (inms_task != NULL) ? 1 : 0;
 	status_frame.inms_task_receive = (inms_task_receive != NULL) ? 1 : 0;
 

@@ -160,6 +160,7 @@ typedef struct __attribute__((packed)) {
 	uint8_t crippled_Mode;
 
 	uint8_t use_IFB;
+	uint32_t GS_threshold;
 } parameter_t;
 parameter_t parameters;
 

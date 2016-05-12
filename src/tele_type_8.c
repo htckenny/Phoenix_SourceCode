@@ -38,6 +38,7 @@
 #define Reset_Error_Report			22				/* Reset Error Report, should be conducted after successful downlink of Error Report */
 #define Manual_Heater_Switch		23				/* Switch ON/OFF EPS heater in case of auto switch has problem */
 #define switchInterfaceBoard		24				/* switch the use of interface board, in case the IFB failed in cold platue */
+#define GS_timeout_change			25				/* Set GS anomaly's threshole value */
 #define SD_card_format				30				/* Format SD card, and create default folders */
 #define SD_unlock					31				/* Unlock SD card */
 #define enter_crippled_mode			32				/* Enter Crippled mode, change storage place to flash memory */
@@ -496,6 +497,27 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		para_w_flash();
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
+	/*---------------  ID:25 Set GS anomaly's threshole value ----------------*/
+	case GS_timeout_change:
+		if (para_length == 4)
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
+			break;
+		}
+		printf("Execute Type 8 Sybtype 25, Set GS anomaly's threshole value\r\n");
+		memcpy(&parameters.GS_threshold, &paras[0], 4);
+		if (parameters.GS_threshold > 0) {
+			para_w_flash();
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		}
+		else {
+			completionError = FS_IO_ERR;
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+		}
+
+		break;
+
 	/*---------------  ID:30 Format SD and Initialize ----------------*/
 	case SD_card_format:
 		if (para_length == 1)
@@ -550,7 +572,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		label = paras[0];
 		if (f_mount(label, NULL) == FR_OK)
 			printf("unmount %d\n", label);
-		vTaskDelay(3 * delay_time_based);
+		vTaskDelay(0.5 * delay_time_based);
 		if (f_mount(label, &fs) == FR_OK)
 			printf("mount %d\n", label);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);

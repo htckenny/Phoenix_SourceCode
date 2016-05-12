@@ -12,8 +12,6 @@
 #include "tele_function.h"
 #include "fs.h"
 
-#define Communication_timeout 1209600		/* Two week duration */
-
 void delete_buf() {
 
 	uint8_t txdata = com_rx_delete;
@@ -73,7 +71,7 @@ void Telecom_Task(void * pvParameters) {
 		obc_timesync(&t, 6000);
 		// printf("\t\tdiff = %" PRIu32 "\t\n", t.tv_sec - lastCommandTime);
 		// printf("\E[1A\r");
-		if (t.tv_sec > lastCommandTime + Communication_timeout) {
+		if (t.tv_sec > lastCommandTime + parameters.GS_threshold) {
 			printf("\nTimeout !! reboot whole system\n");
 			txBuffer = 20;
 			i2c_master_transaction_2(0, eps_node, &txBuffer, 1, 0, 0, eps_delay);

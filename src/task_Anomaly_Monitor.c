@@ -23,7 +23,7 @@
 #include "subsystem.h"
 #include "parameter.h"
 
-#define overCurrentThreshold_ADCS_5		40
+#define overCurrentThreshold_ADCS_5		85
 #define overCurrentThreshold_ADCS_33	120
 #define overCurrentThreshold_GPS		420
 

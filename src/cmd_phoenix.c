@@ -64,6 +64,10 @@ int changeHeater (struct command_context * ctx) {
 		txdata[3] = 30;
 		txdata[4] = 35;
 	}
+	else if (buffer[0] == 5) {
+		txdata[3] = 0;
+		txdata[4] = 3;
+	}
 	else
 		return CMD_ERROR_SYNTAX;
 	txdata[0] = 19;

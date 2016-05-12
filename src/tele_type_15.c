@@ -289,6 +289,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 			if (paras[0] >= 1 && paras[0] <= 5) {
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 				crippled_data_delete(paras[0]);
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 			}
 			else {
 				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);

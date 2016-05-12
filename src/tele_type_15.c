@@ -216,7 +216,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 				rxdata = malloc(hk_length);
 				for (int i = paras[1]; i < paras[1] + paras[2]; i++) {
 					if (hk_read_crippled(i, rxdata) == No_Error) {
-						SendDataWithCCSDS_AX25(2, &rxdata[0]);
+						SendDataWithCCSDS_AX25(1, &rxdata[0]);
 						vTaskDelay(0.5 * delay_time_based);
 					}
 					else
@@ -240,7 +240,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 				rxdata = malloc(seuv_length);
 				for (int i = paras[1]; i < paras[1] + paras[2]; i++) {
 					if (seuv_read_crippled(i, rxdata) == No_Error) {
-						SendDataWithCCSDS_AX25(2, &rxdata[0]);
+						SendDataWithCCSDS_AX25(3, &rxdata[0]);
 						vTaskDelay(0.5 * delay_time_based);
 					}
 					else
@@ -252,7 +252,8 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 				rxdata = malloc(eop_length);
 				for (int i = paras[1]; i < paras[1] + paras[2]; i++) {
 					if (eop_read_crippled(i, rxdata) == No_Error) {
-						SendDataWithCCSDS_AX25(2, &rxdata[0]);
+						SendDataWithCCSDS_AX25(4, &rxdata[0]);
+						SendPacketWithCCSDS_AX25(&test, 9, obc_apid, 3, 25);
 						vTaskDelay(0.5 * delay_time_based);
 					}
 					else
@@ -264,7 +265,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 				rxdata = malloc(wod_length);
 				for (int i = paras[1]; i < paras[1] + paras[2]; i++) {
 					if (wod_read_crippled(i, rxdata) == No_Error) {
-						SendDataWithCCSDS_AX25(2, &rxdata[0]);
+						SendDataWithCCSDS_AX25(5, &rxdata[0]);
 						vTaskDelay(0.5 * delay_time_based);
 					}
 					else

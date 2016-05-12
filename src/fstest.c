@@ -28,10 +28,12 @@
 #define Test_xHandle		0
 #define Test_Err_Packet		0
 #define Test_ECEF_ECI		0
-#define Test_infinite_loop	0
+#define Test_infinite_loop	1
 #define Test_OBC_Temp		0
-#define Test_Crippled_mode	1
+#define Test_Crippled_mode	0
 #define Test_Malloc			0
+#define Test_boot_conf		0
+#define Test_Queue			0
 
 extern void encode_time (char buf[], char * fileName);
 
@@ -479,10 +481,15 @@ void vTaskfstest(void * pvParameters) {
 
 #if Test_infinite_loop
 	vTaskDelay(5 * delay_time_based);
-
+	int times = 0;
 	while (1) {
-
+		vTaskDelay(5*delay_time_based);
+		times ++;
+		printf("hey %d\n",times);
+		if (times == 2)
+			break;
 	}
+
 #endif
 
 
@@ -603,4 +610,23 @@ void vTaskfstest(void * pvParameters) {
 	printf("success\n");
 	vTaskDelete(NULL);
 #endif
+
+#if Test_boot_conf
+	uint8_t test[] = {0x42, 0x41, 0x31, 0x33, 0x42, 0x42, 0x31, 0x44, 0x35};
+	printf("test1\n");
+	image_boot_write(test);
+	vTaskDelete(NULL);
+#endif	
+#if Test_Queue
+	long lValueToSend;
+	portBASE_TYPE xStatus;
+	xQueueHandle xQueue;
+	xQueue = xQueueCreate (5, sizeof(long));
+	while(1) {
+
+		xStatus = xQueueSendToBack (xQueue, &lValueToSend, 0);
+		taskYIELD();
+
+	}
+#endif	
 }

@@ -51,6 +51,7 @@ typedef struct __attribute__((packed)) {
 
 	uint8_t inms_error_handle;
 	uint8_t inms_current_moniter;
+	uint8_t inms_temp_moniter;
 	uint8_t inms_task;
 	uint8_t inms_task_receive;
 

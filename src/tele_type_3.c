@@ -239,6 +239,7 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 
 			printf("I_EH_task\t\t%d\n", status_frame.inms_error_handle);
 			printf("I_CM_task\t\t%d\n", status_frame.inms_current_moniter);
+			printf("I_TM_task\t\t%d\n", status_frame.inms_temp_moniter);
 			printf("I_SH_task\t\t%d\n", status_frame.inms_task);
 			printf("I_RH_task\t\t%d\n", status_frame.inms_task_receive);
 

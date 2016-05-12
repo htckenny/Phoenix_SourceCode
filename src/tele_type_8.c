@@ -7,6 +7,7 @@
 #include <csp/csp_endian.h>
 #include <time.h>
 #include <fat_sd/ff.h>
+#include <inttypes.h>
 /* Self defined header file*/
 #include "subsystem.h"
 #include "parameter.h"
@@ -45,6 +46,7 @@
 
 extern void vTaskinms(void * pvParameters);
 extern struct tm wtime_to_date(wtime wt);
+extern void little2big_32(uint8_t * input_data);
 
 void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	uint8_t txBuffer[200];
@@ -70,7 +72,6 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			break;
 		}
 		printf("Execute Type 8 Sybtype 3 , Rebooting \r\n");
-
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		txBuffer[0] = 20;
 		i2c_master_transaction_2(0, eps_node, &txBuffer, 1, 0, 0, eps_delay);
@@ -492,6 +493,14 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		}
 		else if (paras[0] == 0) {
 			parameters.use_IFB = 0;
+			if (inms_temp_moniter != NULL) {
+				vTaskDelete(inms_temp_moniter);
+				inms_temp_moniter = NULL;
+			}
+			if (inms_current_moniter != NULL) {
+				vTaskDelete(inms_current_moniter);
+				inms_current_moniter = NULL;
+			}
 			printf("disable IFB\n");
 		}
 		para_w_flash();
@@ -506,8 +515,11 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			break;
 		}
 		printf("Execute Type 8 Sybtype 25, Set GS anomaly's threshole value\r\n");
+		little2big_32(&paras[0]);
+
 		memcpy(&parameters.GS_threshold, &paras[0], 4);
 		if (parameters.GS_threshold > 0) {
+			printf("%" PRIu32 "\n", parameters.GS_threshold);
 			para_w_flash();
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}

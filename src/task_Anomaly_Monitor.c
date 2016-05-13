@@ -78,25 +78,31 @@ void Anomaly_Monitor_Task(void * pvParameters)
 		/* ----------------------------------------------------- */
 		vTaskDelay(5 * delay_time_based);
 		/* COM Temperature */
-		TS5();
-		subTemperature[1] = ThermalFrame.T5;
-		printf("COM Temperature %.1f degree\t", (subTemperature[1] * (-0.0546) + 189.5522));
+		if (TS5() == No_Error) {
+			subTemperature[1] = ThermalFrame.T5;
+			printf("COM Temperature %.1f degree\t", (subTemperature[1] * (-0.0546) + 189.5522));
 
-		/* Operational Temperature Range -40 to +85 */
-		if ((subTemperature[1] * (-0.0546) + 189.5522) > 85 || (subTemperature[1] * (-0.0546) + 189.5522) < - 40) {
-			outRangeCounter_temp[1] ++;
-			printf("counter = %d\n", outRangeCounter_temp[1]);
-			if (outRangeCounter_temp[1] >= 6) {
-				generate_Error_Report(10, subTemperature[1]);
+			/* Operational Temperature Range -40 to +85 */
+			if ((subTemperature[1] * (-0.0546) + 189.5522) > 85 || (subTemperature[1] * (-0.0546) + 189.5522) < - 40) {
+				outRangeCounter_temp[1] ++;
+				printf("counter = %d\n", outRangeCounter_temp[1]);
+				if (outRangeCounter_temp[1] >= 6) {
+					generate_Error_Report(10, subTemperature[1]);
+					outRangeCounter_temp[1] = 0;
+				}
+			}
+			else {
+				printf("\n");
 				outRangeCounter_temp[1] = 0;
 			}
 		}
 		else {
-			printf("\n");
-			outRangeCounter_temp[1] = 0;
+			printf("Cannot communicate with COM board\n");
 		}
+
 		/* ----------------------------------------------------- */
 		vTaskDelay(5 * delay_time_based);
+
 		/* Antenna Temperature */
 		if (TS6() == No_Error) {
 			subTemperature[2] = ThermalFrame.T6;
@@ -160,7 +166,6 @@ void Anomaly_Monitor_Task(void * pvParameters)
 #endif
 #if full_test
 		if (adcs_task != NULL) {
-
 
 #if current_Test
 			txbuf[0] = 0x08;
@@ -240,42 +245,6 @@ void Anomaly_Monitor_Task(void * pvParameters)
 				outRangeCounter_temp[3] = 0;
 			}
 			/* ----------------------------------------------------- */
-			vTaskDelay(5 * delay_time_based);
-			/* ADCS Rate Sensor & Magnetometer Temperature */
-			// TS8();
-			// subTemperature_int[1] = ThermalFrame.T8;
-			// adcsTemp[0] = subTemperature_int[1] % 256;
-			// printf("ADCS Rate Temperature %d degree\t", adcsTemp[0]);
-			// /* Operational Temperature Range -10 to +60 */
-			// if (adcsTemp[0] > 60 || adcsTemp[0] < -10) {
-			// 	outRangeCounter_temp[4] ++;
-			// 	printf("counter = %d\n", outRangeCounter_temp[4]);
-			// 	if (outRangeCounter_temp[4] >= 6) {
-			// 		generate_Error_Report(14, adcsTemp[0]);
-			// 		outRangeCounter_temp[4] = 0;
-			// 	}
-			// }
-			// else {
-			// 	printf("\n");
-			// 	outRangeCounter_temp[4] = 0;
-			// }
-			// adcsTemp[1] = (subTemperature_int[1] >> 8) ;
-			// printf("ADCS Magnetometer Temperature %d degree\t", adcsTemp[1]);
-			// /* Operational Temperature Range -10 to +60 */
-			// if (adcsTemp[1] > 60 || adcsTemp[1] < -10) {
-			// 	outRangeCounter_temp[7] ++;
-			// 	printf("counter = %d\n", outRangeCounter_temp[7]);
-			// 	if (outRangeCounter_temp[7] >= 6) {
-			// 		generate_Error_Report(15, adcsTemp[1]);
-			// 		outRangeCounter_temp[7] = 0;
-			// 	}
-			// }
-			// else {
-			// 	printf("\n");
-			// 	outRangeCounter_temp[7] = 0;
-			// }
-			// /* ----------------------------------------------------- */
-			// vTaskDelay(5 * delay_time_based);
 #endif
 		}
 		vTaskDelay(5 * delay_time_based);

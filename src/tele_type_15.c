@@ -211,8 +211,14 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 		if (packet_length == 3) {
 			if (paras[0] >= 1 && paras[0] <= 5) {
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+				if (beacon_task != NULL) {
+					vTaskDelete(beacon_task);
+					beacon_task = NULL;
+				}
 			}
 			if (paras[0] == 1) {
+				if (hk_task != NULL)
+					vTaskSuspend(hk_task);
 				rxdata = malloc(hk_length);
 				for (int i = paras[1]; i < paras[1] + paras[2]; i++) {
 					if (hk_read_crippled(i, rxdata) == No_Error) {
@@ -222,9 +228,13 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 					else
 						break;
 				}
+				if (hk_task != NULL)
+					vTaskResume(hk_task);
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 			}
 			else if (paras[0] == 2) {
+				if (inms_task != NULL)
+					vTaskSuspend(inms_task);
 				rxdata = malloc(inms_data_length);
 				for (int i = paras[1]; i < paras[1] + paras[2]; i++) {
 					if (inms_data_read_crippled(i, rxdata) == No_Error) {
@@ -234,9 +244,13 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 					else
 						break;
 				}
+				if (inms_task != NULL)
+					vTaskResume(inms_task);
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 			}
 			else if (paras[0] == 3) {
+				if (seuv_task != NULL)
+					vTaskSuspend(seuv_task);
 				rxdata = malloc(seuv_length);
 				for (int i = paras[1]; i < paras[1] + paras[2]; i++) {
 					if (seuv_read_crippled(i, rxdata) == No_Error) {
@@ -246,9 +260,13 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 					else
 						break;
 				}
+				if (seuv_task != NULL)
+					vTaskResume(seuv_task);
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 			}
 			else if (paras[0] == 4) {
+				if (eop_task != NULL)
+					vTaskSuspend(eop_task);
 				rxdata = malloc(eop_length);
 				for (int i = paras[1]; i < paras[1] + paras[2]; i++) {
 					if (eop_read_crippled(i, rxdata) == No_Error) {
@@ -258,9 +276,13 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 					else
 						break;
 				}
+				if (eop_task != NULL)
+					vTaskResume(eop_task);
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 			}
 			else if (paras[0] == 5) {
+				if (wod_task != NULL)
+					vTaskSuspend(wod_task);
 				rxdata = malloc(wod_length);
 				for (int i = paras[1]; i < paras[1] + paras[2]; i++) {
 					if (wod_read_crippled(i, rxdata) == No_Error) {
@@ -270,6 +292,8 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 					else
 						break;
 				}
+				if (wod_task != NULL)
+					vTaskResume(wod_task);
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 			}
 			else {
@@ -277,6 +301,8 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 			}
 			if (rxdata != NULL)
 				free(rxdata);
+			if (beacon_task == NULL)
+				xTaskCreate(beacon_Task, (const signed char *) "beacon", 1024 * 4, NULL, 2, &beacon_task);
 		}
 		else {
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);

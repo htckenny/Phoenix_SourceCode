@@ -121,7 +121,7 @@ int image_boot_write(uint8_t configure[])
 	write(fd, boot_path, 23);
 	write(fd, &configure[0], 8);
 	write(fd, next_line, 1);
-	write(fd, &configure[8], 1);
+	write(fd, &configure[9], configure[8]);
 	write(fd, next_line, 1);
 
 	close(fd);

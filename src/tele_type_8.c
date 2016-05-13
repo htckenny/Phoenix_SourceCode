@@ -313,15 +313,15 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		break;
 	/*---------------  ID:16 enter nominal mode      ----------------*/
 	case enter_nominal_mode:
-		if (para_length == 0)
+		if (para_length == 1)
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 		else {
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 			break;
 		}
-		printf("Execute Type 8 Sybtype 16 ,enter nominal mode  \r\n");
+		printf("Execute Type 8 Sybtype 16 ,enter differnt mode  \r\n");
 
-		HK_frame.mode_status_flag = 3;
+		HK_frame.mode_status_flag = paras[0];
 		para_w_flash();
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 
@@ -554,6 +554,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			f_mkdir("0:/SEU_DATA");
 			f_mkdir("0:/EOP_DATA");
 			f_mkdir("0:/WOD_DATA");
+			f_mkdir("0:/image");
 			f_open(&file, "0:/part0", FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 			f_close(&file);
 		}

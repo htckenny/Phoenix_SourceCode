@@ -97,6 +97,12 @@ void ModeControl_Task(void * pvParameters) {
 				Enter_Safe_Mode(lastmode);
 				lastmode = HK_frame.mode_status_flag;	/* ENTER SAFE Mode */
 			}
+			/* desire to Enter the Recovery Mode. */
+			else if (HK_frame.mode_status_flag == 5) {
+				printf("-------------------Enter Recovery Mode----------------------\n");
+				Enter_Safe_Mode(lastmode);
+				lastmode = HK_frame.mode_status_flag;	/* ENTER Recovery Mode */
+			}
 		}
 		/* Check if the mode is changed or not every second */
 		vTaskDelay(1 * delay_time_based);

@@ -111,6 +111,7 @@ int image_boot_write(uint8_t configure[])
 	char path[] = "/boot/boot.conf";
 	uint8_t boot_path[] = "/boot/nanomind.bin.lzo\n";
 	uint8_t next_line[] = "\n";
+	remove(path);
 	/* Open file */
 	fd = open(path, O_CREAT | O_APPEND | O_RDWR);
 	if (fd < 0) {

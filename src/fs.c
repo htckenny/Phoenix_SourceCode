@@ -537,6 +537,7 @@ int schedule_read_flash(uint8_t * txbuf) {
 	return No_Error;
 err:
 	vPortFree(buf);
+	fclose(fp);
 	return Error;
 err_stat:
 	fclose(fp);
@@ -547,9 +548,7 @@ int schedule_write_flash(uint8_t frameCont[]) {
 	/* Test */
 	char snumber[] = "0";
 	sprintf(snumber, "%d", parameters.schedule_series_number);
-
 	int size = 19;
-
 	char path[] = "/boot/OnB_Sch.bin";
 
 	/* Open file */
@@ -559,9 +558,7 @@ int schedule_write_flash(uint8_t frameCont[]) {
 		goto err;
 	}
 	/* write Data into flash */
-
 	bytes = write(fd, snumber, 1);
-
 	bytes = write(fd, frameCont, 19);
 
 	if (bytes != size) {
@@ -577,6 +574,7 @@ int schedule_write_flash(uint8_t frameCont[]) {
 	return No_Error;
 
 err:
+	close(fd);
 	return Error;
 }
 int schedule_reset_flash() {
@@ -681,7 +679,6 @@ int inms_data_write(uint8_t frameCont[], int SD_partition)
 
 	res = f_write(&fileINMS, frameCont, inms_data_length, &bw);
 
-	// hex_dump(frameCont, inms_data_length);
 	if (res != FR_OK) {
 		printf("inms_write() %d fail .. \r\n", SD_partition);
 		f_close(&fileINMS);
@@ -747,8 +744,7 @@ int inms_data_delete(char fileName[]) {
 
 	res = f_unlink(fileName);
 
-	if (res != FR_OK)
-	{
+	if (res != FR_OK) {
 		printf("%s f_unlink() fail .. \r\n", fileName);
 		return Error;
 	}
@@ -1004,7 +1000,6 @@ int wod_write(uint8_t * frameCont, int SD_partition )
 	}
 	else {
 		printf("wod_write() %d success .. \r\n", SD_partition);
-
 		f_close(&fileWOD);
 		return No_Error;
 	}
@@ -1121,21 +1116,16 @@ int seuv_write(int SD_partition)
 	strftime(buf, sizeof(buf), "%Y%m%d_%H%M%S", &ts);
 	encode_time(buf, fileName_decode);
 	strcat(fileName, fileName_decode);
-	// strcat(fileName, "_S");
 	strcat(fileName, ".dat");
 	printf("%s\n", buf);
 
 	seuvFrame.packettime = t.tv_sec - 946684800;
-	// printf("sample = %d\n", seuvFrame.samples);
 
 	res = f_open(&fileSEUV, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 	if (res != FR_OK) {
 		printf("SEUV  f_open fail!!\n");
 	}
-	// else
-	// printf("SEUV f_open success \n");
 
-	// printf("%d\n", (int)sizeof(seuv_frame_t) );
 	hex_dump(&seuvFrame, seuv_length);
 	f_lseek(&fileSEUV, fileSEUV.fsize);
 	res = f_write(&fileSEUV, &seuvFrame, (int)sizeof(seuv_frame_t), &bw);
@@ -1392,7 +1382,6 @@ int eop_write(uint8_t *frameCont, int SD_partition)		//SD_partition available : 
 	t.tv_sec = 0;
 	t.tv_nsec = 0;
 	obc_timesync(&t, 6000);
-	// memcpy(&frameCont[0], &t.tv_sec, 4);
 	time_t tt = t.tv_sec;
 	time(&tt);
 	/* Format time, "ddd yyyy-mm-dd hh:mm:ss zzz" */
@@ -1401,8 +1390,6 @@ int eop_write(uint8_t *frameCont, int SD_partition)		//SD_partition available : 
 
 	encode_time(buf, fileName_decode);
 	strcat(fileName, fileName_decode);
-	// strcat(fileName, buf);
-	// strcat(fileName, "_E");
 	strcat(fileName, ".dat");
 	printf("%s\n", buf);
 
@@ -1423,7 +1410,6 @@ int eop_write(uint8_t *frameCont, int SD_partition)		//SD_partition available : 
 int eop_read_crippled(int data_no, void * txbuf)
 {
 	int fd, bytes;
-
 	char fileName[] = "/boot/EOP_DATA.bin";
 
 	fd = open(fileName, O_RDONLY);
@@ -1598,6 +1584,7 @@ int para_r_flash() {
 	return No_Error;
 err:
 	vPortFree(buf);
+	fclose(fp);
 	return Error;
 err_stat:
 	fclose(fp);
@@ -1605,81 +1592,11 @@ err_stat:
 }
 /** End of parameter related FS function*/
 /*  ---------------------------------------------------  */
-/** Start of ADCS parameter related FS function*/
-
-int adcs_para_r() {
-
-	char fileName[] = "0:/adcs_para.bin";
-	res = f_open(&file, fileName, FA_READ | FA_WRITE );
-	if (res != FR_OK) {
-		printf("f_open() fail .. \r\n");
-		return Error;
-	}
-	else {
-		printf("f_open() success .. \r\n");
-		res = f_read(&file, &buffer, (int)sizeof(adcs_para_t), &br);
-	}
-
-	if (res != FR_OK) {
-		printf("ADCS para read fail .. \r\n");
-		f_close(&file);
-		return Error;
-	}
-	else {
-		f_close(&file);
-		memcpy(&adcs_para.strategy, &buffer, (int)sizeof(adcs_para_t)); //import
-		hex_dump(&buffer, (int)sizeof(adcs_para_t));
-		return No_Error;
-	}
-}
-
-int adcs_para_w()
-{
-	char fileName[] = "0:/adcs_para.bin";
-	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
-	if (res != FR_OK) {
-		printf("f_open() fail .. \r\n");
-	}
-	else {
-		printf("f_write open() success .. \r\n");
-	}
-
-	res = f_write(&file, &adcs_para.strategy, (int)sizeof(adcs_para_t), &br);
-
-	if (res != FR_OK) {
-		printf("para write() fail .. \r\n");
-		f_close(&file);
-		return Error;
-	}
-	else {
-		f_close(&file);
-		return No_Error;
-	}
-}
-
-int adcs_para_d()
-{
-	char fileName[] = "0:/adcs_para.bin";
-	res = f_unlink(fileName);
-
-	if (res != FR_OK) {
-		printf("f_unlink() fail .. \r\n");
-		return Error;
-	}
-	else {
-		printf("f_unlink() success .. \r\n");
-		return No_Error;
-	}
-}
-
-/** End of ADCS parameter related FS function*/
-/*  ---------------------------------------------------  */
 /** Start of thermal related FS function*/
 
 int thermal_1_w()
 {
 	char fileName[] = "0:/t_obc.bin";
-
 	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 
 	if (res != FR_OK) {
@@ -1726,8 +1643,6 @@ int thermal_2_w()
 		f_close(&file);
 		return No_Error;
 	}
-
-	return No_Error;
 }
 
 int T_data_d()
@@ -1747,11 +1662,12 @@ int T_data_d()
 
 	if (res != FR_OK) {
 		printf("t_inms.bin f_unlink() fail .. \r\n");
+		return Error;
 	}
 	else {
 		printf("t_inms.bin f_unlink() success .. \r\n");
+		return No_Error;
 	}
-	return No_Error;
 }
 
 /** End of thermal related FS function */
@@ -1782,6 +1698,7 @@ int errPacket_write(uint8_t *frameCont)
 	close(fd);
 	return No_Error;
 err:
+	close(fd);
 	return Error;
 }
 int errPacket_read(uint8_t * txbuf)
@@ -1824,6 +1741,7 @@ int errPacket_read(uint8_t * txbuf)
 	return No_Error;
 err:
 	vPortFree(buf);
+	fclose(fp);
 	return Error;
 err_stat:
 	fclose(fp);
@@ -1851,7 +1769,6 @@ int errPacket_dump()
 		little2big_16(&err_buf[10 * i + 8]);
 		SendPacketWithCCSDS_AX25(&txBufferWithSID[0], txlen + 1, obc_apid, 3, 25);
 		vTaskDelay(0.3 * delay_time_based);
-		// hex_dump(&err_buf[0 + 10 * i], 10);
 	}
 	return No_Error;
 }
@@ -2022,7 +1939,6 @@ int scan_files_Downlink (
 						wod_read(full_path, wod_data);
 						SendDataWithCCSDS_AX25(5, &wod_data[0]);
 					}
-
 				}
 				else {
 					related_file = 0;
@@ -2058,7 +1974,6 @@ int scan_files_Downlink (
 						wod_read(full_path, wod_data);
 						SendDataWithCCSDS_AX25(5, &wod_data[0]);
 					}
-
 				}
 				else {
 					related_file = 0;
@@ -2076,7 +1991,7 @@ int scan_files_Downlink (
 				printf("--------------------------------------------- \r\n");
 			}
 			if (related_file != 0)
-				vTaskDelay(0.5 * delay_time_based);
+				vTaskDelay(0.3 * delay_time_based);
 			else
 				related_file = 1;
 		}
@@ -2300,7 +2215,6 @@ int scan_files_Count (
 		}
 		SendPacketWithCCSDS_AX25(&NumberCount, 2, obc_apid, 15, 9);
 		printf("Total packet: %" PRIu16 "\n", NumberCount);
-		// hex_dump(&NumberCount, 2);
 	}
 	return res;
 }

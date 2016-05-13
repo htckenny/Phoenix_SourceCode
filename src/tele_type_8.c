@@ -319,10 +319,10 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 			break;
 		}
-		printf("Execute Type 8 Sybtype 16 ,enter differnt mode  \r\n");
+		printf("Execute Type 8 Sybtype 16, enter specific mode  \r\n");
 
 		HK_frame.mode_status_flag = paras[0];
-		para_w_flash();
+		printf("%d\n", HK_frame.mode_status_flag );
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 
 		break;

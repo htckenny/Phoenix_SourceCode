@@ -29,7 +29,73 @@ uint16_t battery_read() {
 	}
 	return csp_ntoh16(Vbat);
 }
+void Enter_Recovery_Mode() {
 
+	if (wod_task != NULL) {
+		printf("Shutting WOD Task\n");
+		vTaskDelete(wod_task);
+		wod_task = NULL;
+	}
+	if (Anom_mon_task != NULL) {
+		printf("Shutting Anomaly Task\n");
+		vTaskDelete(Anom_mon_task);
+		Anom_mon_task = NULL;
+	}
+	if (schedule_task != NULL) {
+		printf("Shutting Down schedule Task\n");
+		vTaskDelete(schedule_task);
+		schedule_task = NULL;
+	}
+	if (parameters.first_flight == 1) {
+		if (eop_task != NULL) {
+			printf("Shutting Down EOP Task\n");
+			vTaskDelete(eop_task);
+			eop_task = NULL;
+		}
+	}
+	if (hk_task != NULL) {
+		printf("Shutting Down HK_Task\n");
+		vTaskDelete(hk_task);
+		hk_task = NULL;
+	}
+	if (seuv_task != NULL) {
+		printf("Shutting Down SEUV_Task\n");
+		vTaskDelete(seuv_task);
+		seuv_task = NULL;
+	}
+	if (seuv_cm_task != NULL) {
+		printf("Shutting Down SEUV Current Monitor Task\n");
+		vTaskDelete(seuv_cm_task);
+		seuv_cm_task = NULL;
+	}
+	if (inms_error_handle != NULL) {
+		printf("Shutting Down INMS Error task \n");
+		vTaskDelete(inms_error_handle);
+		inms_error_handle = NULL;
+	}
+	if (inms_current_moniter != NULL) {
+		printf("Shutting Down INMS current task \n");
+		vTaskDelete(inms_current_moniter);
+		inms_current_moniter = NULL;
+	}
+	if (inms_task != NULL) {
+		printf("Shutting Down INMS task \n");
+		vTaskDelete(inms_task);
+		inms_task = NULL;
+	}
+	if (inms_task_receive != NULL) {
+		printf("Shutting Down INMS receive task \n");
+		vTaskDelete(inms_task_receive);
+		inms_task_receive = NULL;
+	}
+	if (inms_temp_moniter != NULL) {
+		printf("Shutting Down INMS temperature monitor task \n");
+		vTaskDelete(inms_temp_moniter);
+		inms_temp_moniter = NULL;
+	}
+
+	power_control(2, OFF);      // Power OFF GPS
+}
 void Enter_Safe_Mode(int last_mode) {
 
 	/* last mode = Init Mode */
@@ -51,9 +117,7 @@ void Enter_Safe_Mode(int last_mode) {
 			vTaskDelete(adcs_task);
 			adcs_task = NULL;
 		}
-
 	}
-
 	power_control(1, OFF);      // Power OFF ADCS
 	power_control(2, OFF);      // Power OFF GPS
 
@@ -106,22 +170,7 @@ void Enter_Safe_Mode(int last_mode) {
 void Leave_safe_mode()
 {
 	printf("Recover from Safe Mode \n");
-	printf("Recover from Safe Mode \n");
-	printf("Recover from Safe Mode \n");
-
 	HK_frame.mode_status_flag = init_mode;
-
-	// i2c_frame_t * frame;
-	// frame = csp_buffer_get(I2C_MTU);
-	// frame->dest = 2;
-	// frame->data[0] = EPS_PORT_HARDRESET;
-	// frame->len = 1;
-	// frame->len_rx = 0;
-	// frame->retries = 0;
-	// if (i2c_send(0, frame, 0) != E_NO_ERR) {
-	// 	csp_buffer_free(frame);
-	// }
-	// last_mode = HK_frame.mode_status_flag;
 }
 
 void BatteryCheck_Task(void * pvParameters) {

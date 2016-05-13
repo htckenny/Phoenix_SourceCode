@@ -14,6 +14,7 @@ extern void vTaskInmsCurrentMonitor(void * pvParameters);
 extern void vTaskInmsTemperatureMonitor(void * pvParameters);
 
 extern void Enter_Safe_Mode(int last_mode) ;
+extern void Enter_Recovery_Mode() ;
 
 void ModeControl_Task(void * pvParameters) {
 	/* Mode 1 = INIT Mode
@@ -100,7 +101,7 @@ void ModeControl_Task(void * pvParameters) {
 			/* desire to Enter the Recovery Mode. */
 			else if (HK_frame.mode_status_flag == 5) {
 				printf("-------------------Enter Recovery Mode----------------------\n");
-				Enter_Safe_Mode(lastmode);
+				Enter_Recovery_Mode();
 				lastmode = HK_frame.mode_status_flag;	/* ENTER Recovery Mode */
 			}
 		}

@@ -142,7 +142,7 @@ int image_move()
 
 	fdnew = open(new, O_CREAT | O_TRUNC | O_WRONLY);
 	if (fdnew < 0) {
-		printf("cp: failed to open %s\r\n", old);
+		printf("cp: failed to open %s\r\n", new);
 		close(fdold);
 		return Error;
 	}
@@ -492,96 +492,6 @@ int schedule_delete(int range, uint8_t * frameCont)
 
 	return No_Error;
 
-}
-int schedule_reset() {
-
-	char fileName[] = "0:/OnB_Sch.bin";
-	res = f_unlink(fileName);
-
-	parameters.schedule_series_number = 0 ;
-	para_w_flash();
-	schedule_unlink_flag = 1;
-	if (res != FR_OK) {
-		printf("schedule file f_unlink() fail .. \r\n");
-		return Error;
-	}
-	else {
-		printf("schedule file f_unlink() success .. \r\n");
-		return No_Error;
-	}
-}
-int schedule_write(uint8_t frameCont[])
-{
-	char fileName[] = "0:/OnB_Sch.bin";
-	char snumber[] = "0";
-
-	printf("schedule_series_number = %d\n", parameters.schedule_series_number);
-	sprintf(snumber, "%d", parameters.schedule_series_number);
-
-	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
-	if (res != FR_OK) {
-		printf("open() fail .. \r\n");
-	}
-	else {
-		printf("open() success .. \r\n");
-	}
-	f_lseek(&file, file.fsize);
-
-	res = f_write(&file, snumber, 1, &bw);
-	if (res != FR_OK) {
-		printf("write() fail .. \r\n");
-	}
-	else {
-		printf("write() success .. \r\n");
-	}
-
-	for (int i = 0 ; i < 19 ; i++) {
-		printf("%u ", frameCont[i]);
-	}
-	res = f_write(&file, frameCont, 19, &bw);
-	if (res != FR_OK) {
-		printf("On Board Schedule write() fail .. \r\n");
-		f_close(&file);
-		return Error;
-	}
-	else {
-		printf("On Board Schedule write() success .. \r\n");
-		f_close(&file);
-		parameters.schedule_series_number ++;
-		para_w_flash();
-		return No_Error;
-	}
-}
-
-int schedule_read(uint8_t * txbuf)
-{
-
-	char fileName[] = "0:/OnB_Sch.bin";
-	res = f_open(&file, fileName, FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
-	if (res != FR_OK) {
-		printf("f_open() fail .. \r\n");
-	}
-	else {
-		printf("f_open() success .. \r\n");
-	}
-
-	int c = 0 ;
-	while (1) {
-		res = f_read(&file, &buffer, 1, &br);
-		memcpy(&txbuf[c++], &buffer, 1);
-		if (f_eof(&file)) {break;}
-	}
-	printf("c = %d\n", c);
-	if (res != FR_OK) {
-		printf("schedule_read() fail .. \r\n");
-		f_close(&file);
-		return Error;
-	}
-	else {
-		printf("schedule_read() success .. \r\n");
-		f_close(&file);
-		return No_Error;
-	}
 }
 int schedule_read_flash(uint8_t * txbuf) {
 

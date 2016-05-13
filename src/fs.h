@@ -62,16 +62,6 @@ void para_d_flash();
 void para_w_flash();
 int para_r_flash();
 /*---------------------------------------------------*/
-int downlink_data_before_t(uint8_t datatype, uint32_t time1);
-int downlink_data_after_t(uint8_t datatype, uint16_t time1);
-int downlink_data_between_t(uint8_t datatype, uint16_t time1, uint16_t time2);
-
-int delete_data_before_t(uint8_t datatype, uint32_t time1);
-int delete_data_after_t(uint8_t datatype, uint16_t time1);
-int delete_data_between_t(uint8_t datatype, uint16_t time1, uint16_t time2);
-/*---------------------------------------------------*/
-
-/*---------------------------------------------------*/
 int T_data_d();
 int thermal_2_w();
 int thermal_1_w();
@@ -80,9 +70,6 @@ int thermal_1_w();
 int schedule_reset_flash();
 int schedule_write_flash(uint8_t * frameCont);
 int schedule_read_flash(uint8_t * txbuf);
-int schedule_write(uint8_t * frameCont);
-int schedule_read(uint8_t * txbuf);
-int schedule_reset();
 int schedule_delete(int range, uint8_t * frameCont);
 int schedule_shift(uint8_t *frameCont);
 int schedule_dump();

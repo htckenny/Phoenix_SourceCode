@@ -146,7 +146,7 @@ void decodeService32(uint8_t subType, uint8_t*telecommand) {
 		break;
 	/*--------------- ID:7 Move the image from SD card to FLASH memory ----------------*/
 	case boot_configure:
-		if (para_length == 0)
+		if (para_length >= 10)
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 		else {
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);

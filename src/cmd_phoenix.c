@@ -958,6 +958,7 @@ int pararead(struct command_context * ctx) {
 	printf("combitrate\t\t\t%d\n", (int) parameters.com_bit_rates);
 	printf("crippled_Mode\t\t\t%d\n", (int) parameters.crippled_Mode);
 	printf("use_IFB\t\t\t\t%d\n", (int) parameters.use_IFB);
+	printf("GS_threshold\t\t\t%d\n", (int) parameters.GS_threshold);
 
 	return CMD_ERROR_NONE;
 }

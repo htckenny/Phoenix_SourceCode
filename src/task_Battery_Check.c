@@ -106,7 +106,7 @@ void Enter_Safe_Mode(int last_mode) {
 		}
 	}
 	/* last mode = ADCS Mode */
-	if (last_mode == 2) {
+	if (last_mode == 2 || last_mode == 4) {
 		if (parameters.first_flight == 1) {
 			if (eop_task != NULL) {
 				vTaskDelete(eop_task);

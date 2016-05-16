@@ -134,16 +134,16 @@ int getWodFrame(int fnum) {
 	uint8_t tempBat = 0 ;
 	uint8_t txdata[19] = {};
 
-	uint16_t val[7];
+	uint16_t val[4];
 
 	uint16_t EPS_HK[12];
 	uint8_t txbuf[2];
 	uint8_t rxbuf[64 + 2];
 
 
-	txdata[0] = com_rx_hk;
-	if (i2c_master_transaction_2(0, com_rx_node, &txdata, 1, &val, com_rx_hk_len, com_delay) == E_NO_ERR) {
-		tempComm  = __max(__min(floor(4 * (float)(189.5522 - 0.0546 * val[5] ) + 60), 255), 0);
+	txdata[0] = 0x25;
+	if (i2c_master_transaction_2(0, com_tx_node, &txdata, 1, &val, 8, com_delay) == E_NO_ERR) {
+		tempComm  = __max(__min(floor(4 * (float)(189.5522 - 0.0546 * val[1] ) + 60), 255), 0);
 	} else
 		return Error;
 
@@ -184,7 +184,7 @@ int getWodFrame(int fnum) {
 	printf("i5.0 = %u\n", (EPS_HK[5] + EPS_HK[6] + EPS_HK[7]));
 	printf("EPS temp = %u\n", (EPS_HK[8] + EPS_HK[9] + EPS_HK[10]) / 3);
 	printf("BAT temp = %u\n", EPS_HK[11]);
-	printf("COM temp = %.2f\n", 189.5522 - 0.0546 * val[5]);
+	printf("COM temp = %.2f\n", 189.5522 - 0.0546 * val[1]);
 
 	batVoltage = __max(__min(floor(20 * ((float)EPS_HK[0] / 1000) - 60), 255), 0);
 	batCurrent = __max(__min(floor(127 * ((float)EPS_HK[1] / 1000) + 127), 255), 0);
@@ -234,6 +234,9 @@ void beacon_Task(void * pvParameters) {
 		}
 		else if (parameters.beacon_period > 0) {
 			xFrequency = parameters.beacon_period * delay_time_based;
+		}
+		else if (HK_frame.mode_status_flag == 0) {	// Safe mode
+			xFrequency = 20 * delay_time_based;
 		}
 		else {
 			xFrequency = 30 * delay_time_based;

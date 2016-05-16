@@ -203,9 +203,6 @@ int getWodFrame(int fnum) {
 	calmulbit(fnum, 7, tempBat);
 
 	/* Beacon Message UPDATE */
-	if (HK_frame.mode_status_flag == 2 && parameters.first_flight == 1)
-		HK_frame.mode_status_flag = 4;
-	beacon_frame.mode = HK_frame.mode_status_flag;
 	beacon_frame.batVoltage = batVoltage;
 	beacon_frame.batCurrent = batCurrent;
 	beacon_frame.bus3v3Current = bus3v3Current;
@@ -241,6 +238,10 @@ void beacon_Task(void * pvParameters) {
 		else {
 			xFrequency = 30 * delay_time_based;
 		}
+		/* Beacon Message UPDATE */
+		if (HK_frame.mode_status_flag == 2 && parameters.first_flight == 1)
+			HK_frame.mode_status_flag = 4;
+		beacon_frame.mode = HK_frame.mode_status_flag;
 
 		printf("-- Send Beacon with %d--\n", (int)xFrequency / 100);
 		beacon_withSID[0] = 254;

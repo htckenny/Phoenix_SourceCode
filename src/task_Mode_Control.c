@@ -55,14 +55,10 @@ void ModeControl_Task(void * pvParameters) {
 				if (parameters.first_flight == 1) {
 					if (eop_task == NULL)
 						xTaskCreate(EOP_Task, (const signed char * ) "EOP", 1024 * 4, NULL, 2, &eop_task);
-
-					/* TODO: implement GPS task and activate this line */
-					// if (gps_task == NULL)
-					//     xTaskCreate(GPS_Task, (const signed char * ) "GPS", 1024 * 4, NULL, 1, &gps_task);
+					HK_frame.mode_status_flag = 4;
 				}
 				if (adcs_task == NULL)
 					xTaskCreate(ADCS_Task, (const signed char * ) "ADCS", 1024 * 4, NULL, 2, &adcs_task);
-
 				lastmode = HK_frame.mode_status_flag; /* ENTER ADCS MODE */
 			}
 			/* desire to Enter the Payload Mode. */

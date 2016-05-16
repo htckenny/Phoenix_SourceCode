@@ -59,6 +59,8 @@ void Init_Task(void * pvParameters) {
 			parameters.ant_deploy_flag = 1;
 			para_w_flash();
 		}
+		if (idleunlocks == 1)
+			break;
 	}
 
 #if !ground_Test_Mode

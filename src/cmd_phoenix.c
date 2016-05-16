@@ -985,7 +985,6 @@ int alldatadelete(struct command_context * ctx) {
 }
 
 int idleunlock(struct command_context * ctx) {
-	parameters.ant_deploy_flag = 1;
 	idleunlocks = 1 ;
 	return CMD_ERROR_NONE;
 }

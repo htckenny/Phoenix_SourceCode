@@ -277,10 +277,7 @@ void HK_Task(void * pvParameters) {
 
 	while (1) {
 
-		if (parameters.first_flight == 1)
-			vTaskDelay(30 * delay_time_based);  //30000
-		else
-			vTaskDelay(60 * delay_time_based);  //60000
+		vTaskDelay(60 * delay_time_based);  //60000
 
 		clean_hk_buffer();
 		clean_all();

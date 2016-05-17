@@ -28,8 +28,8 @@
 #define overCurrentThreshold_GPS		420
 
 #define temperature_test			1
-#define current_Test				1
-#define full_test					1
+#define current_Test				0
+#define full_test					0
 
 extern int TS1_4();
 extern int TS5();
@@ -63,7 +63,7 @@ void Anomaly_Monitor_Task(void * pvParameters)
 		printf("OBC Temperature %.1f degree\t", ((((subTemperature[0] * 2493.0) / 1023) - 424) / 6.25));
 
 		/* Operational Temperature Range -40 to +60 */
-		if (((((subTemperature[0] * 2493.0) / 1023) - 424) / 6.25) > 60 || ((((subTemperature[0] * 2493.0) / 1023) - 424) / 6.25) < - 40) {
+		if (((((subTemperature[0] * 2493.0) / 1023) - 424) / 6.25) > 60 || ((((subTemperature[0] * 2493.0) / 1023) - 424) / 6.25) < - 10) {
 			outRangeCounter_temp[0] ++;
 			printf("counter = %d\n", outRangeCounter_temp[0]);
 			if (outRangeCounter_temp[0] >= 6) {
@@ -83,7 +83,7 @@ void Anomaly_Monitor_Task(void * pvParameters)
 			printf("COM Temperature %.1f degree\t", (subTemperature[1] * (-0.0546) + 189.5522));
 
 			/* Operational Temperature Range -40 to +85 */
-			if ((subTemperature[1] * (-0.0546) + 189.5522) > 85 || (subTemperature[1] * (-0.0546) + 189.5522) < - 40) {
+			if ((subTemperature[1] * (-0.0546) + 189.5522) > 60 || (subTemperature[1] * (-0.0546) + 189.5522) < - 10) {
 				outRangeCounter_temp[1] ++;
 				printf("counter = %d\n", outRangeCounter_temp[1]);
 				if (outRangeCounter_temp[1] >= 6) {
@@ -112,7 +112,7 @@ void Anomaly_Monitor_Task(void * pvParameters)
 		printf("Antenna (raw)Vout %.1f mV\t", (subTemperature[2] * 3.3 * 1000 / 1023));
 
 		/* Operational Temperature Range -20 to +60 */
-		if ((subTemperature[2] * 3.3 * 1000 / 1023) > 2313 || (subTemperature[2] * 3.3 * 1000 / 1023) < 1448) {
+		if ((subTemperature[2] * 3.3 * 1000 / 1023) > 2260 || (subTemperature[2] * 3.3 * 1000 / 1023) < 1448) {
 			outRangeCounter_temp[2] ++;
 			printf("counter = %d\n", outRangeCounter_temp[2]);
 			if (outRangeCounter_temp[2] >= 6) {
@@ -133,7 +133,7 @@ void Anomaly_Monitor_Task(void * pvParameters)
 		subTemperature_int[3] = ThermalFrame.T4;
 
 		printf("EPS Temperature %d degree\t", subTemperature_int[2]);
-		if (subTemperature_int[2] > 125 || subTemperature_int[2] < -40) {
+		if (subTemperature_int[2] > 80 || subTemperature_int[2] < -5) {
 			outRangeCounter_temp[5] ++;
 			printf("counter = %d\n", outRangeCounter_temp[5]);
 			if (outRangeCounter_temp[5] >= 6) {
@@ -147,7 +147,7 @@ void Anomaly_Monitor_Task(void * pvParameters)
 		}
 
 		printf("BAT Temperature %d degree\t", subTemperature_int[3]);
-		if (subTemperature_int[3] > 125 || subTemperature_int[3] < -40) {
+		if (subTemperature_int[3] > 80 || subTemperature_int[3] < -5) {
 			outRangeCounter_temp[6] ++;
 			printf("counter = %d\n", outRangeCounter_temp[6]);
 			if (outRangeCounter_temp[6] >= 6) {
@@ -232,10 +232,10 @@ void Anomaly_Monitor_Task(void * pvParameters)
 			printf("ADCS ARM Temperature %d degree\t", subTemperature_int[0]);
 
 			/* Operational Temperature Range -10 to +60 */
-			if (subTemperature_int[0] > 60 || subTemperature_int[0] < -10) {
+			if (subTemperature_int[0] > 60 || subTemperature_int[0] <= 0) {
 				outRangeCounter_temp[3] ++;
 				printf("counter = %d\n", outRangeCounter_temp[3]);
-				if (outRangeCounter_temp[3] >= 6) {
+				if (outRangeCounter_temp[3] >= 10) {
 					generate_Error_Report(13, subTemperature_int[0]);
 					outRangeCounter_temp[3] = 0;
 				}

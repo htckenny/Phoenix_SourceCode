@@ -103,7 +103,7 @@ int TS6() {
 	uint8_t txbuffer = 0xC0;
 	uint8_t rxbuffer[2];
 
-	if (i2c_master_transaction_2(0, ant_node, &txbuffer, 1, &rxbuffer, 2, com_delay) != E_NO_ERR)
+	if (i2c_master_transaction_2(0, stm_ant_node, &txbuffer, 1, &rxbuffer, 2, com_delay) != E_NO_ERR)
 		return Error;
 	memcpy(&ThermalFrame.T6, &rxbuffer, 2);
 	return No_Error;
@@ -113,7 +113,7 @@ int TS5() {
 	uint8_t txbuffer = 0x25;
 	uint16_t rxbuffer[4];
 
-	if (i2c_master_transaction_2(0, com_tx_node, &txbuffer, 1, &rxbuffer, 8, com_delay) != E_NO_ERR)
+	if (i2c_master_transaction_2(0, stm_com_tx_node, &txbuffer, 1, &rxbuffer, 8, com_delay) != E_NO_ERR)
 		return Error;
 
 	ThermalFrame.T5 = rxbuffer[1];
@@ -177,7 +177,7 @@ void Thermal_Task(void * pvParameters) {
 		TS9();
 		TS10();
 		TS11();
-		if (i2c_master_transaction_2(0, stm_eps_node, &txbuf, 1, &rxbuf, 43 + 2, eps_delay) == E_NO_ERR) {
+		if (i2c_master_transaction_2(0, eps_node, &txbuf, 1, &rxbuf, 43 + 2, eps_delay) == E_NO_ERR) {
 			ThermalFrame.Vbat = (rxbuf[10] << 8) + rxbuf[11];
 		}
 		printf("------------------------------------- \n");

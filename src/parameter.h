@@ -102,6 +102,7 @@ uint8_t INMS_power_status;
 uint8_t image_lastPartNum;
 uint16_t image_lastPartLen;
 uint8_t decode_command;
+uint8_t seuv_finished;
 
 typedef struct __attribute__((packed)) {
 

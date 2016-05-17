@@ -151,7 +151,7 @@ void seuv_work_with_inms(int switch_status) {
     }
 }
 void get_a_packet(int gain) {
-
+    seuv_finished = 0;
     uint8_t count = 0;           // error count , 0 = no error
     uint8_t frame_1 [2 * parameters.seuv_sample_rate];
     uint8_t frame_2 [2 * parameters.seuv_sample_rate];
@@ -227,6 +227,7 @@ void get_a_packet(int gain) {
             printf("Fail to get SEUV data\n");
         }
     }
+    seuv_finished = 1;
 }
 
 void SolarEUV_Task(void * pvParameters) {
@@ -296,17 +297,24 @@ void SEUV_CurrentMonitor(void * pvParameters) {
     vTaskDelay(5 * delay_time_based);
     while (1) {
         /* Get temperature data from ADC */
-        if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 12, eps_delay) == E_NO_ERR) {
-            SEUV_current = (rxbuf[6] << 8) + rxbuf[6];
+        if (i2c_master_transaction_2(0, stm_eps_node, &txbuf, 2, &rxbuf, 12, eps_delay) == E_NO_ERR) {
+            SEUV_current = (rxbuf[6] << 8) + rxbuf[7];
         }
-        printf("\t\t\tSEUV Current %03d mA\t", SEUV_current);
+        printf("\t\t\t\tSEUV Current %03d mA\t", SEUV_current);
         if (SEUV_current > overCurrentThreshold ) {  // Threshold to be determined.
             outRangeCounter ++;
             printf("outCounter = %d\n", outRangeCounter);
             if (outRangeCounter >= 6) {
+
+                while (1) {
+                    if (seuv_finished == 1) {
+                        power_control(3, OFF);
+                        break;
+                    }
+                    vTaskDelay(0.5 * delay_time_based);
+                }
                 parameters.seuv_mode = 3;
                 para_w_flash();
-                power_control(3, OFF);
                 outRangeCounter = 0;
                 generate_Error_Report(6, SEUV_current);
             }

@@ -72,16 +72,15 @@ void Init_Task(void * pvParameters) {
 	if (bat_check_task == NULL)
 		xTaskCreate(BatteryCheck_Task, (const signed char *) "BatCk", 1024 * 4, NULL, 2, &bat_check_task);
 	/* Activate telecom task, enable receiver to receive command from GS */
-	if (com_task == NULL) {
+	if (com_task == NULL)
 		xTaskCreate(Telecom_Task, (const signed char * ) "COM", 1024 * 4, NULL, 3, &com_task);
-	}
 	/* Activate WOD collecting task, and start to transmit the beacon */
-	if (wod_task == NULL) {
+	if (wod_task == NULL)
 		xTaskCreate(WOD_Task, (const signed char * ) "WOD", 1024 * 4, NULL, 1, &wod_task);
-	}
-	if (Anom_mon_task == NULL) {
+	/* Activate Anomaly Monitor task, monitoring all the anomaies */
+	if (Anom_mon_task == NULL)
 		xTaskCreate(Anomaly_Monitor_Task, (const signed char *) "Anom", 1024 * 4, NULL, 2, &Anom_mon_task);
-	}
+
 	vTaskDelay(5 * delay_time_based);
 	if (parameters.first_flight == 1) {
 		while (antenna_status_check() == Error) {

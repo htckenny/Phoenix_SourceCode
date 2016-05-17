@@ -47,6 +47,7 @@
 extern void vTaskinms(void * pvParameters);
 extern struct tm wtime_to_date(wtime wt);
 extern void little2big_32(uint8_t * input_data);
+extern void task_format(void * pvParameters) ;
 
 void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	uint8_t txBuffer[200];
@@ -57,8 +58,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	uint8_t paras[180];
 	uint16_t threshold;
 	FATFS fs;
-	FIL file;
-	BYTE label;
+	uintptr_t label;
 
 	if (para_length > 0)
 		memcpy(&paras, telecommand + 9, para_length);
@@ -532,46 +532,21 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 
 	/*---------------  ID:30 Format SD and Initialize ----------------*/
 	case SD_card_format:
-		if (para_length == 1)
+		if (para_length == 1) {
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+		}
 		else {
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 			break;
 		}
 		printf("Execute Type 8 Sybtype 30\r\n");
-
 		label = paras[0];
-		if (f_mount(label, NULL) == FR_OK)
-			printf("unmount %d\n", label);
-
-		if (f_mount(label, &fs) == FR_OK)
-			printf("mount %d\n", label);
-
-		if (paras[0] == 0) {
-			f_mkfs(0, 0, 0);
-			f_mkdir("0:/HK_DATA");
-			f_mkdir("0:/INM_DATA");
-			f_mkdir("0:/SEU_DATA");
-			f_mkdir("0:/EOP_DATA");
-			f_mkdir("0:/WOD_DATA");
-			f_mkdir("0:/image");
-			f_open(&file, "0:/part0", FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
-			f_close(&file);
-		}
-		else if (paras[0] == 1) {
-			f_mkfs(1, 0, 0);
-			f_mkdir("1:/HK_DATA");
-			f_mkdir("1:/INM_DATA");
-			f_mkdir("1:/SEU_DATA");
-			f_mkdir("1:/EOP_DATA");
-			f_mkdir("1:/WOD_DATA");
-			f_open(&file, "1:/part1", FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
-			f_close(&file);
+		if (label == 0 || label == 1) {
+			xTaskCreate(task_format, (const signed char*) "FORMAT", 1024 * 4, (void *)label, 2, NULL);
 		}
 		else
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
 	/*---------------  ID:31 unlock SD (Test Stage) ----------------*/
 	case SD_unlock:

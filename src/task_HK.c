@@ -91,7 +91,7 @@ int TS7()
 	uint8_t txbuffer = 173;		// check 135
 	uint8_t rxbuffer[6];
 
-	if (i2c_master_transaction_2(0, adcs_node, &txbuffer, 1, &rxbuffer, 6, adcs_delay) != E_NO_ERR)
+	if (i2c_master_transaction_2(0, stm_adcsT_node, &txbuffer, 1, &rxbuffer, 6, adcs_delay) != E_NO_ERR)
 		return Error;
 
 	memcpy(&ThermalFrame.T7, &rxbuffer[4], 2);
@@ -126,7 +126,7 @@ int TS1_4() {
 	uint8_t rxbuf[23];
 	txbuf[0] = 0x08;
 	txbuf[1] = 0x04;
-	if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, 23, eps_delay) == E_NO_ERR) {
+	if (i2c_master_transaction_2(0, stm_eps_node, &txbuf, 2, &rxbuf, 23, eps_delay) == E_NO_ERR) {
 		ThermalFrame.T1 = (rxbuf[6] << 8) + rxbuf[7];
 		ThermalFrame.T2 = (rxbuf[8] << 8) + rxbuf[9];
 		ThermalFrame.T3 = (rxbuf[10] << 8) + rxbuf[11];

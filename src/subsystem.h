@@ -11,11 +11,12 @@
 
 #define ground_Test_Mode	1
 
-#define enable_stm_EPS		1
+#define enable_stm_EPS		0
 #define enable_stm_ADCS		0
 #define enable_stm_IFB		0
 #define enable_stm_COM		0
 #define enable_stm_ANT		0
+#define enable_stm_ADCS_T	0
 
 #define antenna_deploy		0
 #define initila_Time		1462838400		//1475280000 			//946684800 
@@ -45,7 +46,7 @@
 #define stm_com_tx_node 	0x71
 #else
 #define stm_com_tx_node 	0x61
-#endif 
+#endif
 #define com_tx_send 		0x10
 #define com_tx_send_with_callsign 0x11
 #define com_tx_beacon_send 	0x14
@@ -80,6 +81,12 @@
 #define stm_node			0x77
 #else
 #define stm_node			0x57
+#endif
+
+#if ground_Test_Mode && enable_stm_ADCS_T
+#define stm_adcsT_node		0x7A
+#else
+#define stm_adcsT_node		0x57
 #endif
 /* Antenna Board*/
 #define ant_node 			0x31	// 49

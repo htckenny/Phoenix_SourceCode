@@ -105,6 +105,43 @@ void decode_time (char fileName[], char * buf )
 	strcat(buf, Min);
 	strcat(buf, Sec);
 }
+int image_remove (int type)
+{
+	int ret;
+	char conf_path[] = "/boot/boot.conf";
+	char image_path[] = "/boot/nanomind.bin.lzo";
+
+	if (type == 1) {
+		ret = remove(conf_path);
+		if (ret != 0) {
+			printf("rm: cannot remove %s\r\n", conf_path);
+			return Error;
+		}
+	}
+	else if (type == 2) {
+		ret = remove(image_path);
+		if (ret != 0) {
+			printf("rm: cannot remove %s\r\n", image_path);
+			return Error;
+		}
+	}
+	else if (type == 3) {
+		ret = remove(conf_path);
+		if (ret != 0) {
+			printf("rm: cannot remove %s\r\n", conf_path);
+			return Error;
+		}
+		ret = remove(image_path);
+		if (ret != 0) {
+			printf("rm: cannot remove %s\r\n", image_path);
+			return Error;
+		}
+	}
+	else {
+		return Error;
+	}
+	return No_Error;
+}
 int image_boot_write(uint8_t configure[])
 {
 	int fd;

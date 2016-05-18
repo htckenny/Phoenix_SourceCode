@@ -412,18 +412,38 @@ int INMS_switch(struct command_context * ctx) {
 		return CMD_ERROR_SYNTAX;
 	}
 	if (buffer == 1) {
-		// xTaskCreate(vTaskInmsReceive, (const signed char*) "INMSR", 1024 * 4, NULL, 2, &inms_task_receive);
-		// xTaskCreate(vTaskinms, (const signed char * ) "INMS", 1024 * 4, NULL, 2, &inms_task);
-		xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "INMS_EH", 1024 * 4, NULL, 2, &inms_error_handle);
-		// xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "INMS_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
-		// xTaskCreate(vTaskInmsTemperatureMonitor, (const signed char * ) "InmsTM", 1024 * 4, NULL, 1, &inms_temp_moniter);
+		if (inms_error_handle == NULL)
+			xTaskCreate(vTaskInmsErrorHandle, (const signed char * ) "INMS_EH", 1024 * 4, NULL, 2, &inms_error_handle);
+	} else if (buffer == 2) {
+		if (inms_task == NULL)
+			xTaskCreate(vTaskinms, (const signed char * ) "INMS", 1024 * 4, NULL, 2, &inms_task);
+	} else if (buffer == 3) {
+		if (inms_current_moniter == NULL)
+			xTaskCreate(vTaskInmsCurrentMonitor, (const signed char * ) "INMS_CM", 1024 * 4, NULL, 2, &inms_current_moniter);
+	} else if (buffer == 4) {
+		if (inms_temp_moniter == NULL)
+			xTaskCreate(vTaskInmsTemperatureMonitor, (const signed char * ) "InmsTM", 1024 * 4, NULL, 1, &inms_temp_moniter);
 	}
+
+	// xTaskCreate(vTaskInmsReceive, (const signed char*) "INMSR", 1024 * 4, NULL, 2, &inms_task_receive);
+
 	else if (buffer == 0) {
-		// vTaskDelete(inms_task);
-		vTaskDelete(inms_error_handle);
-		// vTaskDelete(inms_task_receive);
-		// vTaskDelete(inms_current_moniter);
-		// vTaskDelete(inms_temp_moniter);
+		if (inms_error_handle != NULL) {
+			vTaskDelete(inms_error_handle);
+			inms_error_handle = NULL;
+		}
+		if (inms_task != NULL) {
+			vTaskDelete(inms_task);
+			inms_task = NULL;
+		}
+		if (inms_current_moniter != NULL) {
+			vTaskDelete(inms_current_moniter);
+			inms_current_moniter = NULL;
+		}
+		if (inms_temp_moniter != NULL) {
+			vTaskDelete(inms_temp_moniter);
+			inms_temp_moniter = NULL;
+		}
 	}
 	return CMD_ERROR_NONE;
 }

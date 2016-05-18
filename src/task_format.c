@@ -47,8 +47,10 @@ void task_format(void* pvParameters) {
 		f_mkdir("1:/SEU_DATA");
 		f_mkdir("1:/EOP_DATA");
 		f_mkdir("1:/WOD_DATA");
+		f_mkdir("1:/image");
 		f_open(&file, "1:/part1", FA_OPEN_ALWAYS | FA_READ | FA_WRITE );
 		f_close(&file);
 	}
+	format_task = NULL;
 	vTaskDelete(NULL);
 }

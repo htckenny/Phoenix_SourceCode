@@ -57,7 +57,6 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	uint16_t para_length = (telecommand[4] << 8) + telecommand[5] - 4;
 	uint8_t paras[180];
 	uint16_t threshold;
-	FATFS fs;
 	uintptr_t label;
 
 	if (para_length > 0)
@@ -322,7 +321,6 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		printf("Execute Type 8 Sybtype 16, enter specific mode  \r\n");
 
 		HK_frame.mode_status_flag = paras[0];
-		printf("%d\n", HK_frame.mode_status_flag );
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 
 		break;
@@ -541,8 +539,19 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		}
 		printf("Execute Type 8 Sybtype 30\r\n");
 		label = paras[0];
-		if (label == 0 || label == 1) {
-			xTaskCreate(task_format, (const signed char*) "FORMAT", 1024 * 4, (void *)label, 2, NULL);
+		if (HK_frame.mode_status_flag == 5) {
+			if (label == 0 || label == 1) {
+				xTaskCreate(task_format, (const signed char*) "FORMAT", 1024 * 4, (void *)label, 2, &format_task);
+				while (1) {
+					if (format_task == NULL) {
+						sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+						break;
+					}
+					vTaskDelay(1 * delay_time_based);
+				}
+			}
+			else
+				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 		}
 		else
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);

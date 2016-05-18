@@ -30,6 +30,7 @@ xTaskHandle inms_task_receive;
 xTaskHandle schedule_task;
 xTaskHandle seuv_cm_task;
 xTaskHandle Anom_mon_task;
+xTaskHandle format_task;
 
 #define safe_mode 0
 #define init_mode 1

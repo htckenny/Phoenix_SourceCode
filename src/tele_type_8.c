@@ -41,7 +41,6 @@
 #define switchInterfaceBoard		24				/* switch the use of interface board, in case the IFB failed in cold platue */
 #define GS_timeout_change			25				/* Set GS anomaly's threshole value */
 #define SD_card_format				30				/* Format SD card, and create default folders */
-#define SD_unlock					31				/* Unlock SD card */
 #define enter_crippled_mode			32				/* Enter Crippled mode, change storage place to flash memory */
 
 extern void vTaskinms(void * pvParameters);
@@ -556,23 +555,6 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		else
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 
-		break;
-	/*---------------  ID:31 unlock SD (Test Stage) ----------------*/
-	case SD_unlock:
-		if (para_length == 1)
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
-		else {
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
-			break;
-		}
-		printf("Execute Type 8 Sybtype 31\r\n");
-		label = paras[0];
-		if (f_mount(label, NULL) == FR_OK)
-			printf("unmount %d\n", label);
-		vTaskDelay(0.5 * delay_time_based);
-		if (f_mount(label, &fs) == FR_OK)
-			printf("mount %d\n", label);
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
 	/*---------------  ID:32 Enter Crippled Mode ----------------*/
 	case enter_crippled_mode:

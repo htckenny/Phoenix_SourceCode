@@ -581,8 +581,10 @@ void vTaskinms(void * pvParameters) {
 									printf("delete inms task receive\n");
 
 									vTaskDelay(1 * delay_time_based);
-									vTaskDelete(inms_task_receive);
-									inms_task_receive = NULL;
+									if (inms_task_receive != NULL) {
+										vTaskDelete(inms_task_receive);
+										inms_task_receive = NULL;
+									}
 									INMS_power_status = 0;
 									power_control(4, OFF);
 									if (parameters.seuv_mode == 0x04)
@@ -685,9 +687,9 @@ void vTaskinms(void * pvParameters) {
 									if (parameters.inms_status == 0 || inms_tm_status == 0) {
 										if (inms_task_receive != NULL) {
 											vTaskDelete(inms_task_receive);
-											INMS_power_status = 0;
-											power_control(4, OFF);
 											inms_task_receive = NULL;
+											power_control(4, OFF);
+											printTime = 1;
 											if (parameters.seuv_mode == 0x04)
 												seuv_work_with_inms(0);
 										}

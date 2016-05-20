@@ -222,7 +222,6 @@ void package_with_header(uint8_t *ucharAdcs)
 					memcpy(&rxbuf_ADCS[0], &rxbuf[18], 12);
 					adcs2body(&rxbuf_ADCS[0], &rxbuf_Body[0]);
 					memcpy(&ucharAdcs[4], &rxbuf_Body[0], 12);
-					memcpy(&ucharAdcs[16], &rxbuf_ADCS[0], 6);
 				}
 			}
 			else {

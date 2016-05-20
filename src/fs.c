@@ -105,6 +105,26 @@ void decode_time (char fileName[], char * buf )
 	strcat(buf, Min);
 	strcat(buf, Sec);
 }
+int phote_write(uint8_t frameCont [], uint16_t length)
+{
+	char fileName[45];
+	strcpy(fileName, "0:/IMG.JPG");
+	printf("%s\n", fileName);
+
+	res = f_open(&fileEOP, fileName, FA_OPEN_ALWAYS | FA_WRITE );
+	f_lseek(&fileEOP, fileEOP.fsize);
+	res = f_write(&fileEOP, frameCont, length, &bw);
+	if (res != FR_OK) {
+		printf("photo_write() fail .. \r\n");
+		f_close(&fileEOP);
+		return Error;
+	}
+	else {
+		printf("photo_write() success .. \r\n");
+		f_close(&fileEOP);
+		return No_Error;
+	}
+}
 int photo_download(char fileName [])
 {
 	char full_name[13];
@@ -112,40 +132,50 @@ int photo_download(char fileName [])
 	uint8_t rxBuffer[256];
 
 	strcpy(full_name, fileName);
-	strcat(full_name, ".jpg");
+	strcat(full_name, ".JPG");
 	printf("photo name = %s\n", full_name);
 
 	txBuffer[0] = 116;
-	memcpy(&txBuffer[0], &full_name[0], 13);
+	memcpy(&txBuffer[1], &full_name[0], 13);
+	hex_dump(&txBuffer[0], 14);
 	if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 14, 0, 0, adcs_delay) == E_NO_ERR) {
 		printf("Initial file download\n");
 	}
+	vTaskDelay(1 * delay_time_based);
+	int counter = 1;
+	uint8_t blockLength;
+	while (1) {
 
-	txBuffer[0] = 241;
-	if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 1, &rxBuffer, 6, adcs_delay) == E_NO_ERR) {
+		txBuffer[0] = 241;
+		if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 1, &rxBuffer, 6, adcs_delay) == E_NO_ERR) {
+			hex_dump(&rxBuffer, 6);
+			printf("Check file block\n");
+			blockLength = rxBuffer[2];
+			txBuffer[0] = 242;
+			if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 1, &rxBuffer, 256, adcs_delay) == E_NO_ERR) {
+				if (blockLength != 0) {
+					phote_write(rxBuffer, blockLength);
+					hex_dump(&rxBuffer[0], blockLength);
+				}
+				else {
+					phote_write(rxBuffer, 256);
+					hex_dump(&rxBuffer[0], 256);
+				}
 
-		printf("Check file block\n");
-
-		if(rxBuffer[3] == 2)// Check this value
-		{
-			
-		} 
+			}
+			if (blockLength != 0) // Check this value
+				break;
+			else {
+				txBuffer[0] = 117;
+				memcpy(&txBuffer[1], &counter, 2);
+				if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 3, 0, 0, adcs_delay) == E_NO_ERR) {
+					printf("next block read\n");
+				}
+				counter ++;
+			}
+		}
+		vTaskDelay(0.5 * delay_time_based);
 	}
-	txBuffer[0] = 117;
-	if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 1, &rxBuffer, 6, adcs_delay) == E_NO_ERR) {
-
-		printf("next block read\n");
-	}
-
-
-
-	txBuffer[0] = 242;
-	if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 1, &rxBuffer, 256, adcs_delay) == E_NO_ERR) {
-
-		printf("Download photo\n");
-	}
-
-
 	return No_Error;
 
 }

@@ -29,6 +29,35 @@
 #include "tele_function.h"
 #include "fs.h"
 
+int gpsTest (struct command_context * ctx) {
+	uint8_t txbuf[6];
+	uint8_t rxbuf[60];
+
+	if (ctx->argc < 1) {
+		return CMD_ERROR_SYNTAX;
+	}
+	power_OFF_ALL();
+	power_control(1, ON);
+	vTaskDelay(20 * delay_time_based);
+	txbuf[0] = 0x03;   //0d03 ADCS run mode
+	txbuf[1] = 0x01;
+	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 2, 0, 0, adcs_delay) == E_NO_ERR)
+		printf("ID:3\tSet ADCS run mode into enabled\n");
+	vTaskDelay(1 * delay_time_based);
+	/*---------------------------set the power control-------------------------------------*/
+	txbuf[0] = 0x05;   //0d05 Set power control command
+	txbuf[1] = 0x01;   //cubecontrol signal=auto(2)
+	txbuf[2] = 0x00;   //cubecontrol motor=on(1)
+	txbuf[3] = 0x01;   //cubesense =auto(2)
+	txbuf[4] = 0x00;   //motor power=on(1)
+	txbuf[5] = 0x01;   //GPS LAN Power=auto(2)
+	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 6, 0, 0, adcs_delay) == E_NO_ERR)
+		printf("ID:05\tSet power control command\n");
+	power_control(2, ON);
+	printf("start to watch GPS status\n");
+
+	return CMD_ERROR_NONE;
+}
 int changeHeater (struct command_context * ctx) {
 	unsigned int buffer[1];
 	uint8_t txdata[60];
@@ -1123,6 +1152,7 @@ int comhk(struct command_context * ctx) {
 
 command_t __root_command ph_commands[] = {
 
+	{ .name = "gpstest", .help = "PHOENIX: gpstest", .usage = "", .handler = gpsTest, },
 	{ .name = "ch", .help = "PHOENIX: ch [ON(1), OFF(0)]", .usage = "ch 1:AUTO 0:Manual", .handler = changeHeater, },
 	{ .name = "pc", .help = "PHOENIX: pc [sub] [ON(1), OFF(0)]", .usage = "pc [sub] [ON(1), OFF(0)]", .handler = powerControl, },
 	{ .name = "epss", .help = "PHOENIX: epss []", .handler = eps_switch, },

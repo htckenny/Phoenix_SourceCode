@@ -62,9 +62,9 @@ void decodeService31(uint8_t subType, uint8_t*telecommand) {
 		}
 		txBuffer[0] = 230;
 		memcpy(&txBuffer[1], paras, para_length);
-		if (i2c_master_transaction_2(0, adcs_node, &txBuffer, para_length + 1, &rxBuffer, 16, adcs_delay) == E_NO_ERR) {
-			hex_dump(&rxBuffer, 16);
-			SendPacketWithCCSDS_AX25(&rxBuffer, 16, adcs_apid, 32, subType);
+		if (i2c_master_transaction_2(0, adcs_node, &txBuffer, para_length + 1, &rxBuffer, 2, adcs_delay) == E_NO_ERR) {
+			hex_dump(&rxBuffer, 2);
+			SendPacketWithCCSDS_AX25(&rxBuffer, 2, adcs_apid, 32, subType);
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}
 		else {
@@ -90,7 +90,7 @@ void decodeService31(uint8_t subType, uint8_t*telecommand) {
 			txBuffer[0] = 240;
 			if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 1, &rxBuffer, 22, adcs_delay) == E_NO_ERR) {
 				printf("get file information\n");
-				printf("%d\n", rxBuffer[0]);
+				hex_dump(&rxBuffer, 22);
 				// SendPacketWithCCSDS_AX25(&rxBuffer, 16, adcs_apid, 32, subType); // Send to ground
 				if (rxBuffer[0] == 2)  // Check this value
 					break;
@@ -116,8 +116,8 @@ void decodeService31(uint8_t subType, uint8_t*telecommand) {
 		}
 		char full_path[9];
 		memcpy(full_path, &paras[0], 8);
+		// photo_download("IMG00011");
 		photo_download(full_path);
-
 		break;
 
 	/*---------------- Otherwise ----------------*/

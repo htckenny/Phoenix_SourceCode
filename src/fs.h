@@ -92,6 +92,8 @@ int image_move();
 int image_boot_write(uint8_t configure[]);
 int image_remove (int type);
 
+int photo_download(char fileName []);
+
 extern char* fileName_HK[2];
 extern char* fileName_INMS[2];
 extern char* fileName_SEUV[2];

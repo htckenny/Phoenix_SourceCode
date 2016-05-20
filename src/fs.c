@@ -105,6 +105,50 @@ void decode_time (char fileName[], char * buf )
 	strcat(buf, Min);
 	strcat(buf, Sec);
 }
+int photo_download(char fileName [])
+{
+	char full_name[13];
+	uint8_t txBuffer[13];
+	uint8_t rxBuffer[256];
+
+	strcpy(full_name, fileName);
+	strcat(full_name, ".jpg");
+	printf("photo name = %s\n", full_name);
+
+	txBuffer[0] = 116;
+	memcpy(&txBuffer[0], &full_name[0], 13);
+	if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 14, 0, 0, adcs_delay) == E_NO_ERR) {
+		printf("Initial file download\n");
+	}
+
+	txBuffer[0] = 241;
+	if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 1, &rxBuffer, 6, adcs_delay) == E_NO_ERR) {
+
+		printf("Check file block\n");
+
+		if(rxBuffer[3] == 2)// Check this value
+		{
+			
+		} 
+	}
+	txBuffer[0] = 117;
+	if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 1, &rxBuffer, 6, adcs_delay) == E_NO_ERR) {
+
+		printf("next block read\n");
+	}
+
+
+
+	txBuffer[0] = 242;
+	if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 1, &rxBuffer, 256, adcs_delay) == E_NO_ERR) {
+
+		printf("Download photo\n");
+	}
+
+
+	return No_Error;
+
+}
 int image_remove (int type)
 {
 	int ret;

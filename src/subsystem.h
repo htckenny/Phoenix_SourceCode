@@ -183,6 +183,7 @@
 #define T11_OnBoard_Schedule		11
 #define T13_LargeData_Transfer		13
 #define T15_dowlink_management 		15
+#define T31_photo_processing 		31
 #define T32_image_upload	 		32
 #define T131_ADCS 					131
 #define T132_SEUV 					132

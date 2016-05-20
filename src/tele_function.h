@@ -30,7 +30,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand);
 void decodeService131(uint8_t subType, uint8_t*telecommand);
 void decodeService132(uint8_t subType, uint8_t*telecommand);
 void decodeService32(uint8_t subType, uint8_t*telecommand);
-
+void decodeService31(uint8_t subType, uint8_t*telecommand);
 
 /*Type 129 ADCS Telecommand Table*/
 #define Reset 1

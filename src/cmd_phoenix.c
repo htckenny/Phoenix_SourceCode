@@ -598,6 +598,9 @@ int ct(struct command_context * ctx) {
 	case T15_dowlink_management:
 		decodeService15(serviceSubType, para);
 		break;
+	case T31_photo_processing:
+		decodeService31(serviceSubType, para);
+		break;
 	case T32_image_upload:
 		decodeService32(serviceSubType, para);
 		break;

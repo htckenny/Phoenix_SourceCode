@@ -31,7 +31,6 @@
 
 int gpsTest (struct command_context * ctx) {
 	uint8_t txbuf[6];
-	uint8_t rxbuf[60];
 
 	if (ctx->argc < 1) {
 		return CMD_ERROR_SYNTAX;

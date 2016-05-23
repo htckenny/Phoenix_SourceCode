@@ -52,7 +52,7 @@ void decodeService32(uint8_t subType, uint8_t*telecommand) {
 			break;
 		}
 		printf("Execute Type 32 Sybtype 1, enter firmware upload mode\r\n");
-		HK_frame.mode_status_flag = 2;
+		HK_frame.mode_status_flag = 5;
 		para_w_flash();
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 

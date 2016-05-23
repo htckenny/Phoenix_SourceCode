@@ -159,7 +159,7 @@ void decodeService31(uint8_t subType, uint8_t*telecommand) {
 				break;
 			}
 		}
-		if (photo_downlink(count + 1, photo_buffer, photo_last_size[0]) == No_Error) {
+		if (photo_downlink(count, photo_buffer, photo_last_size[0]) == No_Error) {
 			SendPacketWithCCSDS_AX25(&photo_buffer, photo_last_size[0], obc_apid, 32, subType);
 		}
 		else {

@@ -151,7 +151,7 @@ int photo_downlink(uint8_t frame_id, uint8_t * txbuf, uint8_t last_bytes)
 	else {
 		printf("IMG.JPG open success .. \r\n");
 	}
-	f_lseek(&filePhoto, frame_id * last_bytes);		// TODO: check this!!
+	f_lseek(&filePhoto, frame_id * 190);		// TODO: check this!!
 	res = f_read(&filePhoto, &buffer, last_bytes, &br);
 
 	if (res != FR_OK) {

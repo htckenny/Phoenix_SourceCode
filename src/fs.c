@@ -24,7 +24,7 @@
 #define maxNum		50
 FATFS fs[2];
 FRESULT res;
-FIL file, fileHK, fileINMS, fileSEUV, fileEOP, fileWOD, fileErr;
+FIL file, fileHK, fileINMS, fileSEUV, fileEOP, fileWOD, filePhoto;
 UINT br, bw;
 uint8_t buffer[250];
 
@@ -105,31 +105,100 @@ void decode_time (char fileName[], char * buf )
 	strcat(buf, Min);
 	strcat(buf, Sec);
 }
+int photo_remove(char fileName [])
+{
+	char full_name[13];
+	uint8_t txBuffer[13];
+
+
+	strcpy(full_name, fileName);
+	strcat(full_name, ".JPG");
+	printf("photo name = %s\n", fileName);
+	printf("photo name = %s\n", full_name);
+
+	txBuffer[0] = 118;
+	memcpy(&txBuffer[1], &full_name[0], 13);
+	hex_dump(&txBuffer[0], 14);
+	if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 14, 0, 0, adcs_delay) == E_NO_ERR) {
+		printf("remove specific file on ADCS\n");
+		return No_Error;
+	}
+	else
+		return Error;
+}
+uint16_t photo_count(uint8_t * size)
+{
+	char fileName[] = "0:/IMG.JPG";
+	int total_size;
+	uint16_t frame_total;
+	uint8_t buf;
+	f_open(&filePhoto, fileName, FA_OPEN_ALWAYS | FA_READ );
+	total_size = f_size(&filePhoto);
+	frame_total = total_size / 190;
+	buf = total_size % 190;
+	memcpy(&buf, size, 1);
+
+	f_close(&filePhoto);
+	return frame_total;
+}
+int photo_downlink(uint8_t frame_id, uint8_t * txbuf, uint8_t last_bytes)
+{
+	char fileName[] = "0:/IMG.JPG";
+	res = f_open(&filePhoto, fileName, FA_OPEN_ALWAYS | FA_READ );
+	if (res != FR_OK) {
+		printf("IMG.JPG open fail .. \r\n");
+	}
+	else {
+		printf("IMG.JPG open success .. \r\n");
+	}
+	f_lseek(&filePhoto, frame_id * last_bytes);		// TODO: check this!!
+	res = f_read(&filePhoto, &buffer, last_bytes, &br);
+
+	if (res != FR_OK) {
+		printf("IMG.JPG read fail .. \r\n");
+		f_close(&filePhoto);
+		return Error;
+	}
+	else {
+		memcpy(txbuf, &buffer, last_bytes);
+		f_close(&filePhoto);
+		return No_Error;
+	}
+	// SendPacketWithCCSDS_AX25(&NumberCount, 2, obc_apid, 15, 9);
+	return No_Error;
+}
+int photoe_delete()
+{
+	char fileName[] = "0:/IMG.JPG";
+	f_unlink(fileName);
+	return No_Error;
+}
 int phote_write(uint8_t frameCont [], uint16_t length)
 {
-	char fileName[45];
-	strcpy(fileName, "0:/IMG.JPG");
+	char fileName[] = "0:/IMG.JPG";
 	printf("%s\n", fileName);
 
-	res = f_open(&fileEOP, fileName, FA_OPEN_ALWAYS | FA_WRITE );
-	f_lseek(&fileEOP, fileEOP.fsize);
-	res = f_write(&fileEOP, frameCont, length, &bw);
+	res = f_open(&filePhoto, fileName, FA_OPEN_ALWAYS | FA_WRITE );
+	f_lseek(&filePhoto, filePhoto.fsize);
+	res = f_write(&filePhoto, frameCont, length, &bw);
 	if (res != FR_OK) {
 		printf("photo_write() fail .. \r\n");
-		f_close(&fileEOP);
+		f_close(&filePhoto);
 		return Error;
 	}
 	else {
 		printf("photo_write() success .. \r\n");
-		f_close(&fileEOP);
+		f_close(&filePhoto);
 		return No_Error;
 	}
 }
-int photo_download(char fileName [])
+int photo_save(char fileName [])
 {
 	char full_name[13];
 	uint8_t txBuffer[13];
 	uint8_t rxBuffer[256];
+	int counter = 1;
+	uint8_t blockLength;
 
 	strcpy(full_name, fileName);
 	strcat(full_name, ".JPG");
@@ -141,9 +210,10 @@ int photo_download(char fileName [])
 	if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 14, 0, 0, adcs_delay) == E_NO_ERR) {
 		printf("Initial file download\n");
 	}
+	else
+		return Error;
 	vTaskDelay(1 * delay_time_based);
-	int counter = 1;
-	uint8_t blockLength;
+
 	while (1) {
 
 		txBuffer[0] = 241;
@@ -161,23 +231,28 @@ int photo_download(char fileName [])
 					phote_write(rxBuffer, 256);
 					hex_dump(&rxBuffer[0], 256);
 				}
-
 			}
-			if (blockLength != 0) // Check this value
+			else
+				return Error;
+
+			if (blockLength != 0)
 				break;
 			else {
 				txBuffer[0] = 117;
 				memcpy(&txBuffer[1], &counter, 2);
 				if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 3, 0, 0, adcs_delay) == E_NO_ERR) {
 					printf("next block read\n");
+					counter ++;
 				}
-				counter ++;
+				else
+					return Error;
 			}
+			vTaskDelay(0.5 * delay_time_based);
 		}
-		vTaskDelay(0.5 * delay_time_based);
+		else
+			return Error;
 	}
 	return No_Error;
-
 }
 int image_remove (int type)
 {

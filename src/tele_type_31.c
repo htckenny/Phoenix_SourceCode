@@ -22,7 +22,9 @@
 #define capture_save_photo		1				/* Capture and save image */
 #define status_of_capture		2				/* Status of image capture and save operation */
 #define file_list_process		3				/* File list operation */
-#define file_download_process	4				/* File download operation */
+#define file_save				4				/* File save operation */
+#define file_download			5				/* File download operation */
+#define file_remove				6				/* File remove operation */
 
 void decodeService31(uint8_t subType, uint8_t*telecommand) {
 	uint8_t completionError = I2C_SEND_ERROR;
@@ -30,6 +32,7 @@ void decodeService31(uint8_t subType, uint8_t*telecommand) {
 	uint8_t paras[180];
 	uint8_t txBuffer[13];
 	uint8_t rxBuffer[256];
+	char full_path[9];
 
 	if (para_length > 0)
 		memcpy(&paras, telecommand + 9, para_length);
@@ -42,6 +45,16 @@ void decodeService31(uint8_t subType, uint8_t*telecommand) {
 		else {
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 			break;
+		}
+		txBuffer[0] = 134;
+		if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 1, &rxBuffer, 5, adcs_delay) == E_NO_ERR) {
+			txBuffer[0] = 5;
+			txBuffer[1] = rxBuffer[0];
+			txBuffer[2] = rxBuffer[1];
+			txBuffer[3] = 1 ;
+			txBuffer[4] = rxBuffer[3];
+			txBuffer[5] = rxBuffer[4];
+			i2c_master_transaction_2(0, adcs_node, &txBuffer, 6, 0, 0, adcs_delay);
 		}
 		txBuffer[0] = 110;
 		memcpy(&txBuffer[1], paras, para_length);
@@ -106,24 +119,78 @@ void decodeService31(uint8_t subType, uint8_t*telecommand) {
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 
 		break;
-	/*---------------  ID:4 File download operation  ----------------*/
-	case file_download_process:
+	/*---------------  ID:4 Save the file from ADCS to OBC  ----------------*/
+	case file_save:
 		if (para_length == 8)
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 		else {
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 			break;
 		}
-		char full_path[9];
 		memcpy(full_path, &paras[0], 8);
-		// photo_download("IMG00011");
-		photo_download(full_path);
+		photoe_delete();
+		if (photo_save(full_path) == No_Error) {
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		}
+		else {
+			completionError = FS_IO_ERR;
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+		}
 		break;
-
+	/*---------------  ID:5 File download operation  ----------------*/
+	case file_download:
+		if (para_length == 0)
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
+			break;
+		}
+		uint8_t photo_buffer[190];
+		uint16_t count ;
+		uint8_t photo_last_size[1];
+		count = photo_count(photo_last_size);
+		for (int i = 0; i < count; i++) {
+			if (photo_downlink(i, photo_buffer, 190) == No_Error) {
+				SendPacketWithCCSDS_AX25(&photo_buffer, 190, obc_apid, 32, subType);
+			}
+			else {
+				completionError = FS_IO_ERR;
+				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+				break;
+			}
+		}
+		if (photo_downlink(count + 1, photo_buffer, photo_last_size[0]) == No_Error) {
+			SendPacketWithCCSDS_AX25(&photo_buffer, photo_last_size[0], obc_apid, 32, subType);
+		}
+		else {
+			completionError = FS_IO_ERR;
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+			break;
+		}
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		break;
+	/*---------------  ID:6 File remove operation   ----------------*/
+	case file_remove:
+		if (para_length == 8)
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
+			break;
+		}
+		memcpy(&full_path[0], &paras[0], 8);
+		full_path[8] = 0;
+		printf("%s\n", full_path);
+		if (photo_remove(full_path) == No_Error) {
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		}
+		else {
+			completionError = FS_IO_ERR;
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+		}
+		break;
 	/*---------------- Otherwise ----------------*/
 	default:
 		sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
-
 		break;
 	}
 }

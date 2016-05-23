@@ -92,7 +92,11 @@ int image_move();
 int image_boot_write(uint8_t configure[]);
 int image_remove (int type);
 
-int photo_download(char fileName []);
+int photo_save(char fileName []);
+int photo_downlink(uint8_t frame_id, uint8_t * txbuf, uint8_t last_bytes);
+int photoe_delete();
+uint16_t photo_count(uint8_t * size);
+int photo_remove(char fileName []);
 
 extern char* fileName_HK[2];
 extern char* fileName_INMS[2];

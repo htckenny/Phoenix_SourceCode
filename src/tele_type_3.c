@@ -28,6 +28,7 @@
 #define Report_GPS_Status	10		/* Report GPS's status */
 #define Report_Error_Record	11		/* Report Error Record */
 #define Report_Data_Number	12		/* Report Collected Data Number */
+#define Report_GPS_Record	13		/* Report GPS's Record */
 
 extern uint16_t fletcher(uint8_t *script, size_t length);
 extern void little2big_32(uint8_t * input_data);
@@ -381,7 +382,21 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 			}
 		}
-
+		break;
+	/*--------------- ID:13 Report GPS's Record ----------------*/
+	case Report_GPS_Record:
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+		uint8_t gps_data[180];
+		txlen = 180 ;
+		txBufferWithSID[0] = 43;
+		for (int i = 0 ; i < 10 ; i++)
+		{
+			if (GPS_read(gps_data, i) == No_Error) {
+				memcpy(&txBufferWithSID[1], &gps_data[0], txlen);
+				SendPacketWithCCSDS_AX25(&txBufferWithSID[0], txlen + 1, obc_apid, type, 25);
+			}
+		}
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
 	default:
 		sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);

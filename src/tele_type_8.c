@@ -40,13 +40,16 @@
 #define Manual_Heater_Switch		23				/* Switch ON/OFF EPS heater in case of auto switch has problem */
 #define switchInterfaceBoard		24				/* switch the use of interface board, in case the IFB failed in cold platue */
 #define GS_timeout_change			25				/* Set GS anomaly's threshole value */
+#define Activate_GPS_process		26				/* Activate GPS process, and record the information */
 #define SD_card_format				30				/* Format SD card, and create default folders */
 #define enter_crippled_mode			32				/* Enter Crippled mode, change storage place to flash memory */
 
 extern void vTaskinms(void * pvParameters);
 extern struct tm wtime_to_date(wtime wt);
 extern void little2big_32(uint8_t * input_data);
-extern void task_format(void * pvParameters) ;
+extern void task_format(void * pvParameters);
+extern void GPS_task(void* pvParameters);
+
 
 void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	uint8_t txBuffer[200];
@@ -120,7 +123,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			wt.week = gps_week;
 			wt.sec = gps_second / 1000;
 			/* Display week number and elapsed time */
-			printf("wn=%d, sec=%.3f\n", wt.week, wt.sec);
+			// printf("wn=%d, sec=%.3f\n", wt.week, wt.sec);
 
 			/* Display time in the form of "YYYY/MM/DD HH:MM:SS" */
 			tmbuf = wtime_to_date(wt);
@@ -130,12 +133,13 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 
 			/* Construct struct time to epoch seconds */
 			t_of_day = mktime(&tmbuf);
-			// t_of_day -= 946684800;
 			ctime(&t_of_day);
 			t.tv_nsec = 0;
 			t.tv_sec = t_of_day ;
 			obc_timesync(&t, 1000);
+			tt = t.tv_sec;
 			lastCommandTime = t.tv_sec;
+			printf("OBC time Sync by GPS to : %s\r\n", ctime(&tt));
 		}
 
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
@@ -511,7 +515,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 			break;
 		}
-		printf("Execute Type 8 Sybtype 25, Set GS anomaly's threshole value\r\n");
+		printf("Execute Type 8 Sybtype 25, Set GS anomaly's threshold value\r\n");
 		little2big_32(&paras[0]);
 
 		memcpy(&parameters.GS_threshold, &paras[0], 4);
@@ -526,7 +530,18 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		}
 
 		break;
-
+	/*---------------  ID:26 Activate GPS process, and record the information ----------------*/
+	case Activate_GPS_process:
+		if (para_length == 0)
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
+			break;
+		}
+		printf("Execute Type 8 Sybtype 26, Activate GPS process\r\n");
+		if (gps_task == NULL)
+			xTaskCreate(GPS_task, (const signed char*) "GPS", 1024 * 4, NULL, 3, &gps_task);
+		break;
 	/*---------------  ID:30 Format SD and Initialize ----------------*/
 	case SD_card_format:
 		if (para_length == 1) {

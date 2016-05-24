@@ -98,6 +98,9 @@ int photoe_delete();
 uint16_t photo_count(uint8_t * size);
 int photo_remove(char fileName []);
 
+int GPS_write(uint8_t frameCont []);
+int GPS_read(uint8_t * txbuf, uint8_t number);
+
 extern char* fileName_HK[2];
 extern char* fileName_INMS[2];
 extern char* fileName_SEUV[2];

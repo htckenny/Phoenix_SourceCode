@@ -24,7 +24,7 @@
 #define maxNum		50
 FATFS fs[2];
 FRESULT res;
-FIL file, fileHK, fileINMS, fileSEUV, fileEOP, fileWOD, filePhoto;
+FIL file, fileHK, fileINMS, fileSEUV, fileEOP, fileWOD, filePhoto, fileGPS;
 UINT br, bw;
 uint8_t buffer[250];
 
@@ -105,6 +105,41 @@ void decode_time (char fileName[], char * buf )
 	strcat(buf, Min);
 	strcat(buf, Sec);
 }
+int GPS_read(uint8_t * txbuf, uint8_t number)
+{
+	char fileName[] = "0:/GPS.bin";
+	res = f_open(&fileGPS, fileName, FA_OPEN_ALWAYS | FA_READ );
+	f_lseek(&fileGPS, number * 180);
+	res = f_read(&fileGPS, &buffer, 180, &br);
+	if (res != FR_OK) {
+		printf("GPS_write() fail .. \r\n");
+		f_close(&fileGPS);
+		return Error;
+	}
+	else {
+		memcpy(txbuf, &buffer, 180);
+		f_close(&fileGPS);
+		return No_Error;
+	}
+}
+int GPS_write(uint8_t frameCont [])
+{
+	char fileName[] = "0:/GPS.bin";
+	f_unlink(fileName);
+	res = f_open(&fileGPS, fileName, FA_OPEN_ALWAYS | FA_WRITE );
+	f_lseek(&fileGPS, fileGPS.fsize);
+	res = f_write(&fileGPS, frameCont, 30, &bw);
+	if (res != FR_OK) {
+		printf("GPS_write() fail .. \r\n");
+		f_close(&fileGPS);
+		return Error;
+	}
+	else {
+		printf("GPS_write() success .. \r\n");
+		f_close(&fileGPS);
+		return No_Error;
+	}
+}
 int photo_remove(char fileName [])
 {
 	char full_name[13];
@@ -164,8 +199,6 @@ int photo_downlink(uint8_t frame_id, uint8_t * txbuf, uint8_t last_bytes)
 		f_close(&filePhoto);
 		return No_Error;
 	}
-	// SendPacketWithCCSDS_AX25(&NumberCount, 2, obc_apid, 15, 9);
-	return No_Error;
 }
 int photoe_delete()
 {

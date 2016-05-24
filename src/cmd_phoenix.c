@@ -541,7 +541,7 @@ int adcs_switch(struct command_context * ctx) {
 		xTaskCreate(Anomaly_Monitor_Task, (const signed char *) "Anom", 1024 * 4, NULL, 3, &Anom_mon_task);
 	}
 	else if (buffer == 5) {
-		xTaskCreate(GPS_task, (const signed char *) "Anom", 1024 * 4, NULL, 3, NULL);
+		xTaskCreate(GPS_task, (const signed char *) "GPS", 1024 * 4, NULL, 3, NULL);
 	}
 	else if (buffer == 0) {
 		if (adcs_task != NULL)

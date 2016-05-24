@@ -1,6 +1,6 @@
 /**
 	*******************************************************************
- 	* @file		task_ADCS_test_3.0.c
+ 	* @file		task_ADCS_test_2.0_M.c
  	* @Author 	Jerry Wu, Kai Wu
  	* @Version	V1.0
  	* @Date     2016/1/25
@@ -945,37 +945,42 @@ void Y_Momontum_Stabilized_Initial()
 
 void Magnetometer_Calibration_Setup()
 {
+	//Phoenix magenetometer mounting angle
+	//Configuration:  [Alpha, Beta, Gamma]
+	//Stored:         [  0  ,  0  ,  180 ]
+	//Deployment:     [ -90 ,  0  ,  180 ]
+
 	txbuf[0]  = 0x56;  //0d86 Set magnetometer configuration
-	txbuf[1]  = 0x46;  //mounting alpha vina:00B4/180
-	txbuf[2]  = 0x50;
-	txbuf[3]  = 0x46;  //mounting beta vina:00b4/180
-	txbuf[4]  = 0x50;
-	txbuf[5]  = 0xD8;  //mounting gamma  vina:ffa6/-90
-	txbuf[6]  = 0xDC;
-	txbuf[7]  = 0xB5;  //offset 1
+	txbuf[1]  = 0xD8;  //mounting alpha  		Jerry: DCD8/-90
+	txbuf[2]  = 0xDC;
+	txbuf[3]  = 0x00;  //mounting beta   		Jerry: 0000/0
+	txbuf[4]  = 0x00;
+	txbuf[5]  = 0x50;  //mounting gamma  		Jerry: 4650/180
+	txbuf[6]  = 0x46;
+	txbuf[7]  = 0xB5;  //offset 1:       		Jerrr: FEB5/-331
 	txbuf[8]  = 0xFE;
-	txbuf[9]  = 0x32;  //offset 2
+	txbuf[9]  = 0x32;  //offset 2:       		Jerry: 0532/1330
 	txbuf[10] = 0x05;
-	txbuf[11] = 0x70;  //offset 3
+	txbuf[11] = 0x70;  //offset 3:       		Jerry: 0970/2416
 	txbuf[12] = 0x09;
-	txbuf[13] = 0xCC;  //S11 Sensitivity Matrix
-	txbuf[14] = 0x08;
-	txbuf[15] = 0x00;  //S12 Sensitivity Matrix
+	txbuf[13] = 0xD0;  //S11 Sensitivity Matrix Jerry: 07D0/2000
+	txbuf[14] = 0x07;
+	txbuf[15] = 0x00;  //S12 Sensitivity Matrix Jerry: 0000/0
 	txbuf[16] = 0x00;
-	txbuf[17] = 0x00;  //S13 Sensitivity Matrix
+	txbuf[17] = 0x00;  //S13 Sensitivity Matrix Jerry: 0000/0
 	txbuf[18] = 0x00;
-	txbuf[19] = 0x00;  //S21 Sensitivity Matrix
+	txbuf[19] = 0x00;  //S21 Sensitivity Matrix Jerry: 0000/0
 	txbuf[20] = 0x00;
-	txbuf[21] = 0xD9;  //S22 Sensitivity Matrix
-	txbuf[22] = 0x08;
-	txbuf[23] = 0x00;  //S23 Sensitivity Matrix
+	txbuf[21] = 0xD0;  //S22 Sensitivity Matrix Jerry: 07D0/2000
+	txbuf[22] = 0x07;
+	txbuf[23] = 0x00;  //S23 Sensitivity Matrix Jerry: 0000/0
 	txbuf[24] = 0x00;
-	txbuf[25] = 0x00;  //S31 Sensitivity Matrix
+	txbuf[25] = 0x00;  //S31 Sensitivity Matrix Jerry: 0000/0
 	txbuf[26] = 0x00;
-	txbuf[27] = 0x00;  //S32 Sensitivity Matrix
+	txbuf[27] = 0x00;  //S32 Sensitivity Matrix Jerry: 0000/0
 	txbuf[28] = 0x00;
-	txbuf[29] = 0x3D;  //S33 Sensitivity Matrix
-	txbuf[30] = 0x09;
+	txbuf[29] = 0xD0;  //S33 Sensitivity Matrix Jerry: 07D0/2000
+	txbuf[30] = 0x07;
 	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 31, &rxbuf, 0, adcs_delay) == E_NO_ERR)
 		printf("ID:86\tSet magnetometer configuration\n");
 

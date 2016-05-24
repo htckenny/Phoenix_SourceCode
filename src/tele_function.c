@@ -482,8 +482,15 @@ uint8_t SendDataWithCCSDS_AX25(uint8_t datatype, uint8_t* data) { //add sid then
 	unsigned int LTbl[256];
 
 	if (datatype == 1) {
-		databuffer[0] = phoenix_hk_sid;
-		datalength = hk_length + 1;
+		datalength = hk_length;
+		memcpy(&databuffer[0], &data[0], datalength);
+		err = CCSDS_GenerateTelemetryPacket(&txframe[0], &tx_length, obc_apid, 128, 1, &databuffer[0], datalength);
+		if (err == ERR_SUCCESS) {
+			AX25_GenerateTelemetryPacket_Send(&txframe[0], tx_length);
+			return No_Error;
+		}
+		else
+			return Error;
 	}
 	else if (datatype == 2) {
 		datalength = inms_data_length;
@@ -497,12 +504,26 @@ uint8_t SendDataWithCCSDS_AX25(uint8_t datatype, uint8_t* data) { //add sid then
 			return Error;
 	}
 	else if (datatype == 3) {
-		databuffer[0] = seuv_sid;
-		datalength = seuv_length + 1;
+		datalength = seuv_length;
+		memcpy(&databuffer[0], &data[0], datalength);
+		err = CCSDS_GenerateTelemetryPacket(&txframe[0], &tx_length, obc_apid, 127, 1, &databuffer[0], datalength);
+		if (err == ERR_SUCCESS) {
+			AX25_GenerateTelemetryPacket_Send(&txframe[0], tx_length);
+			return No_Error;
+		}
+		else
+			return Error;
 	}
 	else if (datatype == 4) {
-		databuffer[0] = eop_sid;
-		datalength = eop_length + 1;
+		datalength = eop_length;
+		memcpy(&databuffer[0], &data[0], datalength);
+		err = CCSDS_GenerateTelemetryPacket(&txframe[0], &tx_length, obc_apid, 126, 1, &databuffer[0], datalength);
+		if (err == ERR_SUCCESS) {
+			AX25_GenerateTelemetryPacket_Send(&txframe[0], tx_length);
+			return No_Error;
+		}
+		else
+			return Error;
 	}
 	else if (datatype == 5) {
 

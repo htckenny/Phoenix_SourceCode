@@ -29,6 +29,38 @@
 #include "tele_function.h"
 #include "fs.h"
 
+int finalCheck (struct command_context * ctx)
+{
+	if (ctx->argc < 1) {
+		return CMD_ERROR_SYNTAX;
+	}
+	printf("\n\n");
+	printf("\tNCKU PHOENIX Final Parameter Check:\n");
+	printf("_________________________________________________\n");
+	printf("|                                               |\n");
+	printf("| \E[0;32mSoftware Version: \t\t%s\t\t\E[0m|\n", software_version);
+	printf("| \E[0;32mLast Update Time: \t\t%s\t\E[0m|\n", Last_Update_time);
+	printf("|-----------------------------------------------|\n");
+	if (ground_Test_Mode == 1)
+		printf("| \E[1;31mGround Test Mode\t\t%d\E[0m\t\t|\n", ground_Test_Mode);
+	else
+		printf("| Ground Test Mode\t\t%d\t\t|\n", ground_Test_Mode);
+	printf("|-----------------------------------------------|\n");
+	printf("| enable_stm_EPS\t\t%d\t\t|\n", enable_stm_EPS);
+	printf("| enable_stm_ADCS\t\t%d\t\t|\n", enable_stm_ADCS);
+	printf("| enable_stm_IFB\t\t%d\t\t|\n", enable_stm_IFB);
+	printf("| enable_stm_COM\t\t%d\t\t|\n", enable_stm_COM);
+	printf("| enable_stm_ANT\t\t%d\t\t|\n", enable_stm_ANT);
+	printf("| enable_stm_ADCS_T\t\t%d\t\t|\n", enable_stm_ADCS_T);
+	printf("|-----------------------------------------------|\n");
+	if (antenna_deploy == 0)
+		printf("| \E[1;31mantenna_deploy\t\t%d\E[0m\t\t|\n", antenna_deploy);
+	else
+		printf("| antenna_deploy\t\t%d\t\t|\n", antenna_deploy);
+	printf("| initila_Time\t\t\t%d\t|\n", initila_Time);
+	printf("|_______________________________________________|\n");
+	return CMD_ERROR_NONE;
+}
 int gpsTest (struct command_context * ctx) {
 	uint8_t txbuf[6];
 
@@ -484,6 +516,7 @@ int adcs_switch(struct command_context * ctx) {
 	extern void ADCS_Task(void * pvParameters);
 	extern void EOP_Task(void * pvParameters);
 	extern void vTaskfstest(void * pvParameters);
+	extern void GPS_task(void * pvParameters);
 	extern void Anomaly_Monitor_Task(void * pvParameters);
 	xTaskHandle fs_task;
 	extern xTaskHandle adcs_task;
@@ -506,6 +539,9 @@ int adcs_switch(struct command_context * ctx) {
 	}
 	else if (buffer == 4) {
 		xTaskCreate(Anomaly_Monitor_Task, (const signed char *) "Anom", 1024 * 4, NULL, 3, &Anom_mon_task);
+	}
+	else if (buffer == 5) {
+		xTaskCreate(GPS_task, (const signed char *) "Anom", 1024 * 4, NULL, 3, NULL);
 	}
 	else if (buffer == 0) {
 		if (adcs_task != NULL)
@@ -1151,7 +1187,8 @@ int comhk(struct command_context * ctx) {
 
 command_t __root_command ph_commands[] = {
 
-	{ .name = "gpstest", .help = "PHOENIX: gpstest", .usage = "", .handler = gpsTest, },
+	{ .name = "finalCheck", .help = "PHOENIX: finalCheck", .handler = finalCheck, },
+	{ .name = "gpstest", .help = "PHOENIX: gpstest", .handler = gpsTest, },
 	{ .name = "ch", .help = "PHOENIX: ch [ON(1), OFF(0)]", .usage = "ch 1:AUTO 0:Manual", .handler = changeHeater, },
 	{ .name = "pc", .help = "PHOENIX: pc [sub] [ON(1), OFF(0)]", .usage = "pc [sub] [ON(1), OFF(0)]", .handler = powerControl, },
 	{ .name = "epss", .help = "PHOENIX: epss []", .handler = eps_switch, },

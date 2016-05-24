@@ -28,8 +28,8 @@
 #define overCurrentThreshold_GPS		420
 
 #define temperature_test			1
-#define current_Test				0
-#define full_test					0
+#define current_Test				1
+#define full_test					1
 
 extern int TS1_4();
 extern int TS5();
@@ -52,7 +52,6 @@ void Anomaly_Monitor_Task(void * pvParameters)
 	int outRangeCounter_temp[11] = {0};
 	uint16_t subTemperature[11];
 	int16_t subTemperature_int[11];
-	int8_t adcsTemp[2];
 #endif
 	while (1) {
 

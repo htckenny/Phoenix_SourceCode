@@ -206,7 +206,6 @@ int photo_save(char fileName [])
 
 	txBuffer[0] = 116;
 	memcpy(&txBuffer[1], &full_name[0], 13);
-	hex_dump(&txBuffer[0], 14);
 	if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 14, 0, 0, adcs_delay) == E_NO_ERR) {
 		printf("Initial file download\n");
 	}

@@ -32,14 +32,14 @@ void decodeService31(uint8_t subType, uint8_t*telecommand) {
 	uint8_t paras[180];
 	uint8_t txBuffer[13];
 	uint8_t rxBuffer[256];
-	char full_path[9];
+	char full_path[9] = {0};
 
 	if (para_length > 0)
 		memcpy(&paras, telecommand + 9, para_length);
 	switch (subType) {
 
 	/*---------------  ID:1 Capture and save image  ----------------*/
-	case Capture_And_Save_Image:
+	case capture_save_photo:
 		if (para_length == 10)
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 		else {
@@ -56,8 +56,10 @@ void decodeService31(uint8_t subType, uint8_t*telecommand) {
 			txBuffer[5] = rxBuffer[4];
 			i2c_master_transaction_2(0, adcs_node, &txBuffer, 6, 0, 0, adcs_delay);
 		}
+		vTaskDelay(1 * delay_time_based);
 		txBuffer[0] = 110;
 		memcpy(&txBuffer[1], paras, para_length);
+		hex_dump(&txBuffer[0], 11);
 		if (i2c_master_transaction_2(0, adcs_node, &txBuffer, para_length + 1, 0, 0, adcs_delay) == E_NO_ERR)
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		else {
@@ -74,10 +76,9 @@ void decodeService31(uint8_t subType, uint8_t*telecommand) {
 			break;
 		}
 		txBuffer[0] = 230;
-		memcpy(&txBuffer[1], paras, para_length);
 		if (i2c_master_transaction_2(0, adcs_node, &txBuffer, para_length + 1, &rxBuffer, 2, adcs_delay) == E_NO_ERR) {
 			hex_dump(&rxBuffer, 2);
-			SendPacketWithCCSDS_AX25(&rxBuffer, 2, adcs_apid, 32, subType);
+			SendPacketWithCCSDS_AX25(&rxBuffer, 2, adcs_apid, 31, subType);
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}
 		else {
@@ -104,7 +105,7 @@ void decodeService31(uint8_t subType, uint8_t*telecommand) {
 			if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 1, &rxBuffer, 22, adcs_delay) == E_NO_ERR) {
 				printf("get file information\n");
 				hex_dump(&rxBuffer, 22);
-				// SendPacketWithCCSDS_AX25(&rxBuffer, 16, adcs_apid, 32, subType); // Send to ground
+				SendPacketWithCCSDS_AX25(&rxBuffer, 22, obc_apid, 31, subType); // Send to ground
 				if (rxBuffer[0] == 2)  // Check this value
 					break;
 				else {
@@ -127,7 +128,7 @@ void decodeService31(uint8_t subType, uint8_t*telecommand) {
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 			break;
 		}
-		memcpy(full_path, &paras[0], 8);
+		memcpy(&full_path[0], &paras[0], 8);
 		photoe_delete();
 		if (photo_save(full_path) == No_Error) {
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
@@ -151,7 +152,7 @@ void decodeService31(uint8_t subType, uint8_t*telecommand) {
 		count = photo_count(photo_last_size);
 		for (int i = 0; i < count; i++) {
 			if (photo_downlink(i, photo_buffer, 190) == No_Error) {
-				SendPacketWithCCSDS_AX25(&photo_buffer, 190, obc_apid, 32, subType);
+				SendPacketWithCCSDS_AX25(&photo_buffer, 190, obc_apid, 31, subType);
 			}
 			else {
 				completionError = FS_IO_ERR;
@@ -160,7 +161,7 @@ void decodeService31(uint8_t subType, uint8_t*telecommand) {
 			}
 		}
 		if (photo_downlink(count, photo_buffer, photo_last_size[0]) == No_Error) {
-			SendPacketWithCCSDS_AX25(&photo_buffer, photo_last_size[0], obc_apid, 32, subType);
+			SendPacketWithCCSDS_AX25(&photo_buffer, photo_last_size[0], obc_apid, 31, subType);
 		}
 		else {
 			completionError = FS_IO_ERR;

@@ -1,19 +1,5 @@
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
 #include <fat_sd/ff.h>
-#include <util/hexdump.h>
-#include <util/timestamp.h>
-#include <nanomind.h>
-#include <dev/i2c.h>
-#include <dev/adc.h>
-#include <vfs/vfs.h>
-#include <time.h>
-#include <string.h>
-#include <inttypes.h>
-
-#include "fs.h"
 #include "parameter.h"
-#include "subsystem.h"
 
 
 void task_format(void* pvParameters) {

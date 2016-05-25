@@ -1170,17 +1170,36 @@ int comhk2(struct command_context * ctx) {
 }
 int comhk(struct command_context * ctx) {
 
-	uint8_t txdata = com_rx_hk;
+	uint8_t txdata;
 	uint8_t val[com_rx_hk_length];
-	// i2c_master_transaction(0, com_rx_node, &txdata, 1, 0, 0, com_delay) ;
-	if (i2c_master_transaction_2(0, com_rx_node, &txdata, 1, &val, com_rx_hk_length, com_delay) == E_NO_ERR) {
-		hex_dump(&val, com_rx_hk_length);
+	uint16_t raw;
+	txdata = 0x25;
+	printf("transmitter: \n");
+	if (i2c_master_transaction_2(0, com_tx_node, &txdata, 1, &val[0], 8, com_delay) == E_NO_ERR) {
+		hex_dump(&val, 8);
+		memcpy(&raw, &val[2], 2);
+		printf("TX temp = .3%f\n", raw * (-0.0546) + 189.5522);
 	}
-	// if (i2c_master_transaction(0, com_rx_node, &txdata, 1, &val, com_rx_hk_length, com_delay) == E_NO_ERR) {
-	// 	hex_dump(&val, com_rx_hk_length);
-	// }
 	else
-		printf("ERROR!!  Get no reply from COM \r\n");
+		printf("ERROR!!  Get no reply from COM TX \r\n");
+	txdata = com_rx_hk;
+	printf("Receiver: \n");
+	if (i2c_master_transaction_2(0, com_rx_node, &txdata, 1, &val[0], com_rx_hk_length, com_delay) == E_NO_ERR) {
+		hex_dump(&val, com_rx_hk_length);
+
+		memcpy(&raw, &val[0], 2);		
+		printf("TX current\t%.3f mA\n", raw * (0.0897 ));
+		memcpy(&raw, &val[4], 2);		
+		printf("RX current\t%.3f mA\n", raw * (0.0305));
+		memcpy(&raw, &val[6], 2);		
+		printf("Voltage\t\t%.3f V\n", raw * (0.00488));
+		memcpy(&raw, &val[8], 2);		
+		printf("Oscillator Temp\t%.3f\n", raw * (-0.0546) + 189.5522);
+		memcpy(&raw, &val[10], 2);		
+		printf("Amplifier Temp\t%.3f\n", raw * (-0.0546) + 189.5522);
+	}
+	else
+		printf("ERROR!!  Get no reply from COM RX\r\n");
 
 	return CMD_ERROR_NONE;
 }

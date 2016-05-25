@@ -45,6 +45,10 @@ int finalCheck (struct command_context * ctx)
 		printf("| \E[1;31mGround Test Mode\t\t%d\E[0m\t\t|\n", ground_Test_Mode);
 	else
 		printf("| Ground Test Mode\t\t%d\t\t|\n", ground_Test_Mode);
+	if (mode_task == NULL)
+		printf("| \E[1;31mMode Task\t\t\tOFF\E[0m\t\t|\n");
+	else
+		printf("| Ground Test Mode\t\tON\t\t|\n");
 	printf("|-----------------------------------------------|\n");
 	printf("| enable_stm_EPS\t\t%d\t\t|\n", enable_stm_EPS);
 	printf("| enable_stm_ADCS\t\t%d\t\t|\n", enable_stm_ADCS);
@@ -246,7 +250,7 @@ int measure_INMS_current(struct command_context * ctx) {
 	printf("3.3V Supply: %.3f mA\n", (double)current_3V3 / 68);
 	printf("temp_INMS: %.3f \n", (((double)temp_INMS / 3) - (double)273));
 	printf("temp_IFB: %.3f \n", (double)(159 - 0.08569 * temp_IFB));
-	
+
 	return CMD_ERROR_NONE;
 }
 

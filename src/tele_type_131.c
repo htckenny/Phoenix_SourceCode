@@ -99,23 +99,31 @@ void decodeService131(uint8_t subType, uint8_t * telecommand) {
 
 	/*--------------ID:6 Deploy_Magnetometer_Boom----------------*/
 
-	//TODO: unlock this option
 	else if (subType == Deploy_Magnetometer_Boom) {
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
-		magnetometer_deploy = 1;
-		printf("deploy magnetometer !! (simulation)\n");
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
-		// txBuffer[0] = subType;
-		// parameterLength = 1;
-		// memcpy(&txBuffer[1], telecommand + 9, parameterLength);
-		// if (i2c_master_transaction_2(0, adcs_node, &txBuffer, parameterLength + 1, 0, 0, adcs_delay) == E_NO_ERR)
-		// 	sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
-		// else {
-		// 	completionError = I2C_SEND_ERROR;
-		// 	sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
-		// }
+		if (HK_frame.mode_status_flag != 0)
+		{
+			magnetometer_deploy = 1;
+#if mag_meter_deploy
+			// txBuffer[0] = subType;
+			// parameterLength = 1;
+			// memcpy(&txBuffer[1], telecommand + 9, parameterLength);
+			// if (i2c_master_transaction_2(0, adcs_node, &txBuffer, parameterLength + 1, 0, 0, adcs_delay) == E_NO_ERR)
+			// 	sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+			// else {
+			// 	completionError = I2C_SEND_ERROR;
+			// 	sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+			// }
+#else
+			printf("deploy magnetometer !! (simulation)\n");
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+#endif
+		}
+		else {
+			completionError = I2C_SEND_ERROR;
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+		}
 	}
-
 	/*--------------ID:7 Trigger_ADCS_Loop----------------*/
 	else if (subType == Trigger_ADCS_Loop) {
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);

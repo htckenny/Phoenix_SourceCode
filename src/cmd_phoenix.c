@@ -57,6 +57,11 @@ int finalCheck (struct command_context * ctx)
 		printf("| \E[1;31mantenna_deploy\t\t%d\E[0m\t\t|\n", antenna_deploy);
 	else
 		printf("| antenna_deploy\t\t%d\t\t|\n", antenna_deploy);
+	if (mag_meter_deploy == 0)
+		printf("| \E[1;31mmagnetometer_deploy\t\t%d\E[0m\t\t|\n", mag_meter_deploy);
+	else
+		printf("| magnetometer_deploy\t\t%d\t\t|\n", mag_meter_deploy);
+
 	printf("| initila_Time\t\t\t%d\t|\n", initila_Time);
 	printf("|_______________________________________________|\n");
 	return CMD_ERROR_NONE;
@@ -1178,7 +1183,7 @@ int comhk(struct command_context * ctx) {
 	if (i2c_master_transaction_2(0, com_tx_node, &txdata, 1, &val[0], 8, com_delay) == E_NO_ERR) {
 		hex_dump(&val, 8);
 		memcpy(&raw, &val[2], 2);
-		printf("TX temp = .3%f\n", raw * (-0.0546) + 189.5522);
+		printf("TX temp = %.3f\n", raw * (-0.0546) + 189.5522);
 	}
 	else
 		printf("ERROR!!  Get no reply from COM TX \r\n");
@@ -1187,15 +1192,15 @@ int comhk(struct command_context * ctx) {
 	if (i2c_master_transaction_2(0, com_rx_node, &txdata, 1, &val[0], com_rx_hk_length, com_delay) == E_NO_ERR) {
 		hex_dump(&val, com_rx_hk_length);
 
-		memcpy(&raw, &val[0], 2);		
+		memcpy(&raw, &val[0], 2);
 		printf("TX current\t%.3f mA\n", raw * (0.0897 ));
-		memcpy(&raw, &val[4], 2);		
+		memcpy(&raw, &val[4], 2);
 		printf("RX current\t%.3f mA\n", raw * (0.0305));
-		memcpy(&raw, &val[6], 2);		
+		memcpy(&raw, &val[6], 2);
 		printf("Voltage\t\t%.3f V\n", raw * (0.00488));
-		memcpy(&raw, &val[8], 2);		
+		memcpy(&raw, &val[8], 2);
 		printf("Oscillator Temp\t%.3f\n", raw * (-0.0546) + 189.5522);
-		memcpy(&raw, &val[10], 2);		
+		memcpy(&raw, &val[10], 2);
 		printf("Amplifier Temp\t%.3f\n", raw * (-0.0546) + 189.5522);
 	}
 	else

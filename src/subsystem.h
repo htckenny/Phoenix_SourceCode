@@ -21,6 +21,7 @@
 #define enable_stm_ADCS_T	0
 
 #define antenna_deploy		0
+#define mag_meter_deploy	0
 #define initila_Time		1462838400		//1475280000 			//946684800 
 /* !!!!!!!!!!!!!!!!!!!!!!!! UINT = LSB !!!!!!!!!!!!!! */
 /* Script Length */

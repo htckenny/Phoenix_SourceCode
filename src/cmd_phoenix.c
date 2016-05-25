@@ -232,14 +232,21 @@ int moveScriptFromSD (struct command_context *ctx) {
 }
 
 int measure_INMS_current(struct command_context * ctx) {
-	uint16_t current_3V3, current_5V0;
+	uint16_t current_3V3, current_5V0, temp_INMS, temp_IFB;
 
 	current_5V0 = Interface_5V_current_get();
+	vTaskDelay(0.01 * delay_time_based);
 	current_3V3 = Interface_3V3_current_get();
+	vTaskDelay(0.01 * delay_time_based);
+	temp_INMS = Interface_inms_thermistor_get();
+	vTaskDelay(0.01 * delay_time_based);
+	temp_IFB = Interface_tmp_get();
 
 	printf("5V Supply: %.3f mA\n", (double)current_5V0 / 4.7);
 	printf("3.3V Supply: %.3f mA\n", (double)current_3V3 / 68);
-
+	printf("temp_INMS: %.3f \n", (((double)temp_INMS / 3) - (double)273));
+	printf("temp_IFB: %.3f \n", (double)(159 - 0.08569 * temp_IFB));
+	
 	return CMD_ERROR_NONE;
 }
 
@@ -1006,7 +1013,6 @@ int jump_mode(struct command_context * ctx) {
 	if (ctx->argc != 2)
 		return CMD_ERROR_SYNTAX;
 
-
 	if (sscanf(ctx->argv[1], "%u", &mode) != 1)
 		return CMD_ERROR_SYNTAX;
 
@@ -1030,11 +1036,6 @@ int pararead(struct command_context * ctx) {
 	printf("First Flight \t\t\t%d\n", (int) parameters.first_flight);
 	printf("shutdown_flag \t\t\t%d\n", (int) parameters.shutdown_flag);
 	printf("ant_deploy_flag \t\t%d\n", (int) parameters.ant_deploy_flag);
-	// printf("wod_store_count \t\t%d\n", (int) parameters.wod_store_count);
-	// printf("inms_store_count \t\t%d\n", (int) parameters.inms_store_count);
-	// printf("seuv_store_count \t\t%d\n", (int) parameters.seuv_store_count);
-	// printf("hk_store_count \t\t\t%d\n", (int) parameters.hk_store_count);
-	// printf("eop_store_count \t\t%d\n", (int) parameters.eop_store_count);
 	printf("obc_packet_sequence_count \t%d\n", (int) parameters.obc_packet_sequence_count);
 	printf("vbat_recover_threshold \t\t%d\n", (int) parameters.vbat_recover_threshold);
 	printf("vbat_safe_threshold \t\t%d\n", (int) parameters.vbat_safe_threshold);

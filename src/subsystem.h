@@ -124,9 +124,9 @@
 #define Error          		1
 #define inms_data_length 	196
 #define wod_length 			232
-#define eop_length 			32				/* TBD */
+#define eop_length 			32
 #define seuv_length 		37
-#define hk_length 			100 + sizeof(hk_frame_t) + 8
+#define hk_length 			100 + sizeof(hk_frame_t) + 8 + 16
 #define schedule_length		20
 /*----------------AX.25 2ed header------------------*/
 #define AX25_2ed_size 		5

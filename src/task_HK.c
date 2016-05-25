@@ -28,7 +28,7 @@
 
 
 int num;
-uint8_t hk_buffer[200];
+uint8_t hk_buffer[150];
 
 /* Thermistor Sensor data */
 void TS12_16() {
@@ -210,7 +210,8 @@ void Thermal_Task(void * pvParameters) {
 }
 
 uint8_t hk_get() {
-	uint8_t txbuf;
+	uint8_t txbuf[2];
+	uint8_t rxbuf[sizeof(eps_hk_t) + 2];
 	timestamp_t t;
 	t.tv_sec = 0;
 	t.tv_nsec = 0;
@@ -220,15 +221,15 @@ uint8_t hk_get() {
 
 
 	/* get adcs hk1			ID = 136, Current ADCS state */
-	txbuf = 0x88;
+	txbuf[0] = 0x88;
 	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &hk_buffer[4], 48, adcs_delay) != E_NO_ERR)
 		return Error;
 	/* get adcs hk2:		ID = 137, Calibrated sensor measurements */
-	txbuf = 0x89;
+	txbuf[0] = 0x89;
 	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &hk_buffer[52], 36, adcs_delay) != E_NO_ERR)
 		return Error;
 	/* get adcs hk3:		ID = 138, Actuator commands */
-	txbuf = 0x8A;
+	txbuf[0] = 0x8A;
 	if (i2c_master_transaction_2(0, adcs_node, &txbuf, 1, &hk_buffer[88], 12, adcs_delay) != E_NO_ERR)
 		return Error;
 
@@ -244,32 +245,34 @@ uint8_t hk_get() {
 
 
 	/* get Thermal Data from subsystems */
-	// TS1_4();			/* No need to measure EPS temperature, it's in WOD */
-	// TS5();			/* No need to measure COM temperature, it's in WOD */
 	TS6();			/* Measure Antenna Temperature */
 	TS7();			/* Measure ADCS CPU Temperature */
 	TS8();			/* Measure ADCS Rate Sensor & Magnetometer Temperature */
 	TS9();			/* Measure OBC Temperature */
-	// TS10();			/* No need to measure interface board temperature, it's in HK */
-	// TS11();			/* No need to measure INMS temperature, it's in HK */
 	memcpy(&hk_buffer[100 + sizeof(hk_frame_t)], &ThermalFrame.T6, 8);
 
+	/* get EPS HK Data from subsystems */
+
+
+
+	txbuf[0] = 8;
+	txbuf[1] = 0;
+	if (i2c_master_transaction_2(0, eps_node, &txbuf, 2, &rxbuf, sizeof(eps_hk_t) + 2, eps_delay) == E_NO_ERR) {
+		memcpy(&hk_buffer[100 + sizeof(hk_frame_t) + 8], &rxbuf[2], 6);
+		memcpy(&hk_buffer[100 + sizeof(hk_frame_t) + 8 + 6], &rxbuf[10], 10);
+	}
 	/**
 	 * Total HK length :
-	 * 4		48			36			12			14		8
-	 * Time		ADCS_HK1	ADCS_HK2	ADCS_HK3	HK 		Thermal
+	 * 4		48			36			12			14		8			16
+	 * Time		ADCS_HK1	ADCS_HK2	ADCS_HK3	HK 		Thermal 	EPS
 	 *
-	 * => 122 Bytes
+	 * => 138 Bytes
 	 */
 
-	// Finish collecting, dump the complete frame.
-	// hex_dump(&hk_buffer[0], hk_length);
-
 	return No_Error;
-
 }
 void clean_hk_buffer() {
-	for (int f = 0; f < 200; f++)
+	for (int f = 0; f < 150; f++)
 		hk_buffer[f] = 0;
 }
 
@@ -277,7 +280,7 @@ void HK_Task(void * pvParameters) {
 
 	while (1) {
 
-		vTaskDelay(60 * delay_time_based);  //60000
+		vTaskDelay(60 * delay_time_based);
 
 		clean_hk_buffer();
 		clean_all();

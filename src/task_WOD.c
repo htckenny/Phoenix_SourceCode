@@ -270,10 +270,12 @@ void WOD_Task(void * pvParameters) {
 			}
 			vTaskDelay(60 * delay_time_based);
 		}
-		if (parameters.crippled_Mode == 0)
-			wod_write_dup(&wod[0]);
-		else
-			wod_write_crippled(&wod[0]);
+		if (HK_frame.mode_status_flag != 5) {
+			if (parameters.crippled_Mode == 0)
+				wod_write_dup(&wod[0]);
+			else
+				wod_write_crippled(&wod[0]);
+		}
 
 		for (int i = 0; i < 232; i++) {
 			wod[i] = 0;

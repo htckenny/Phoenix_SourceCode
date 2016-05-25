@@ -19,14 +19,15 @@ extern void Enter_Recovery_Mode() ;
 void ModeControl_Task(void * pvParameters) {
 	/* Mode 1 = INIT Mode
 	 * Mode 2 = ADCS MODE
-	 * MODE 3 = PAYLOAD MODE
+	 * MODE 3 = NOMINAL MODE
 	 * MODE 0 = SAFE MODE
+	 * MODE 5 = RECOVERY MODE
 	 */
 
 	uint8_t lastmode ;
 	/* power off all configurable device for insurance. */
 	power_OFF_ALL();
-	vTaskDelay(2 * delay_time_based);  // waiting for power off being applied
+	vTaskDelay(2 * delay_time_based);
 
 	/* Set satellite to enter INIT mode */
 	HK_frame.mode_status_flag = 1;
@@ -40,7 +41,7 @@ void ModeControl_Task(void * pvParameters) {
 		/* Mode change detected!!! */
 		if (HK_frame.mode_status_flag != lastmode) {
 			/* desire to Enter the Initial mode */
-			if (HK_frame.mode_status_flag == 1 /*&& parameters.first_flight != 1*/) {
+			if (HK_frame.mode_status_flag == 1 ) {
 				printf("---------------------Enter Init Mode----------------------\n");
 
 				if (init_task == NULL)

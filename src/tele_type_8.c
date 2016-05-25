@@ -30,7 +30,7 @@
 #define set_call_sign 				13				/* Set Call sign "To” : NCKUGS & “From” : TW01TN*/
 #define power_on_target 			14				/* Power ON specific system */
 #define power_off_target 			15				/* Power OFF specific system */
-#define enter_nominal_mode			16				/* Enter Nominal mode to start science related task */
+#define enter_specific_mode			16				/* Enter specifc mode for certain purpose */
 #define INMS_Script_State			17				/* Set INMS handler to enable/ disable */
 #define SD_partition 				18				/* Set which partition would like to read from */
 #define INMS_timeout_change			19				/* Set INMS timeout value */
@@ -39,7 +39,7 @@
 #define Reset_Error_Report			22				/* Reset Error Report, should be conducted after successful downlink of Error Report */
 #define Manual_Heater_Switch		23				/* Switch ON/OFF EPS heater in case of auto switch has problem */
 #define switchInterfaceBoard		24				/* switch the use of interface board, in case the IFB failed in cold platue */
-#define GS_timeout_change			25				/* Set GS anomaly's threshole value */
+#define GS_timeout_change			25				/* Set GS anomaly's threshold  value */
 #define Activate_GPS_process		26				/* Activate GPS process, and record the information */
 #define SD_card_format				30				/* Format SD card, and create default folders */
 #define enter_crippled_mode			32				/* Enter Crippled mode, change storage place to flash memory */
@@ -313,8 +313,8 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
-	/*---------------  ID:16 enter nominal mode      ----------------*/
-	case enter_nominal_mode:
+	/*---------------  ID:16 enter specific mode      ----------------*/
+	case enter_specific_mode:
 		if (para_length == 1)
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 		else {
@@ -322,10 +322,52 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			break;
 		}
 		printf("Execute Type 8 Sybtype 16, enter specific mode  \r\n");
+		if (paras[0] == 1) {
+			if (HK_frame.mode_status_flag == 5) {
+				HK_frame.mode_status_flag = paras[0];
+			}
+			else {
+				printf("Wrong\n");
+				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+				break;
+			}
+		}
+		else if (paras[0] == 2 || paras[0] == 4) {
+			if (HK_frame.mode_status_flag == 1) {
+				HK_frame.mode_status_flag = paras[0];
+			}
+			else {
+				printf("Wrong\n");
+				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+				break;
+			}
+		}
+		else if (paras[0] == 3) {
+			if (HK_frame.mode_status_flag == 2 || HK_frame.mode_status_flag == 4) {
+				HK_frame.mode_status_flag = paras[0];
+			}
+			else {
+				printf("Wrong\n");
+				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+				break;
+			}
+		}
+		else if (paras[0] == 5) {
+			if (HK_frame.mode_status_flag == 2 || HK_frame.mode_status_flag == 3 || HK_frame.mode_status_flag == 4) {
+				HK_frame.mode_status_flag = paras[0];
+			}
+			else {
+				printf("Wrong\n");
+				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+				break;
+			}
+		}
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+			break;
+		}
 
-		HK_frame.mode_status_flag = paras[0];
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
-
 		break;
 	/*---------------  ID:17 Enable / Disable INMS script handler  ----------------*/
 	case INMS_Script_State:

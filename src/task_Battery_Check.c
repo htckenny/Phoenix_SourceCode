@@ -30,14 +30,13 @@ uint16_t battery_read() {
 	return csp_ntoh16(Vbat);
 }
 void Enter_Recovery_Mode() {
-
-	if (wod_task != NULL) {
-		printf("Shutting WOD Task\n");
-		vTaskDelete(wod_task);
-		wod_task = NULL;
+	if (bat_check_task == NULL) {
+		printf("Shutting Down battery Task\n");
+		vTaskDelete(bat_check_task);
+		bat_check_task = NULL;
 	}
 	if (Anom_mon_task != NULL) {
-		printf("Shutting Anomaly Task\n");
+		printf("Shutting Down Anomaly Task\n");
 		vTaskDelete(Anom_mon_task);
 		Anom_mon_task = NULL;
 	}
@@ -46,12 +45,10 @@ void Enter_Recovery_Mode() {
 		vTaskDelete(schedule_task);
 		schedule_task = NULL;
 	}
-	if (parameters.first_flight == 1) {
-		if (eop_task != NULL) {
-			printf("Shutting Down EOP Task\n");
-			vTaskDelete(eop_task);
-			eop_task = NULL;
-		}
+	if (eop_task != NULL) {
+		printf("Shutting Down EOP Task\n");
+		vTaskDelete(eop_task);
+		eop_task = NULL;
 	}
 	if (hk_task != NULL) {
 		printf("Shutting Down HK_Task\n");

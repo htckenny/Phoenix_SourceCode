@@ -22,6 +22,7 @@
 
 #define maxlength 	20
 #define maxNum		50
+
 FATFS fs[2];
 FRESULT res;
 FIL file, fileHK, fileINMS, fileSEUV, fileEOP, fileWOD, filePhoto, fileGPS;
@@ -388,7 +389,7 @@ void image_merge(uint8_t last_part, uint16_t last_bytes)
 	int in, out, fdold, fdnew;
 	char filename_sd[50];
 	char filename_flash[] = "/sd0/nanomind.bin";
-	char buf[255];
+	char buf[image_frame_set];
 	char buf1[1];
 
 	fdnew = open(filename_flash, O_CREAT | O_TRUNC | O_WRONLY);
@@ -443,7 +444,7 @@ int image_part_check(uint8_t partNo, uint8_t * Error_record, int * total_Errnumb
 	fd = open(path, O_RDONLY);
 
 	if (partNo != image_lastPartNum) {
-		for (int j = 0; j < 255; j++) {
+		for (int j = 0; j < image_frame_set; j++) {
 			lseek(fd, 150 * j, SEEK_SET);
 			check_byte = 0;
 			for (int k = 0; k < 150; k++) {
@@ -504,7 +505,7 @@ int image_check(uint8_t last_partNo, uint16_t last_part_length, uint8_t * Error_
 			fseek(image, 0L, SEEK_END);
 			part_size = ftell(image);
 			if (i != last_partNo) {
-				if (part_size != 150 * 255) {
+				if (part_size != 150 * image_frame_set) {
 					Error_record[error_number ++] = i;
 				}
 			}
@@ -545,7 +546,7 @@ int image_write(int part_no, uint8_t piece_no, uint8_t scriptCont[], int size, i
 			return Error;
 		}
 		else {
-			f_lseek(&fileImage, 150 * 255 - 1);
+			f_lseek(&fileImage, 150 * image_frame_set - 1);
 			res = f_write(&fileImage, &eof, 1, &bw);
 			f_close(&fileImage);
 			return No_Error;

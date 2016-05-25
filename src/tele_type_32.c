@@ -35,7 +35,7 @@ void decodeService32(uint8_t subType, uint8_t*telecommand) {
 	uint8_t completionError = I2C_SEND_ERROR;
 	uint16_t para_length = (telecommand[4] << 8) + telecommand[5] - 4;
 	uint8_t paras[180];
-	uint8_t Miss_Part_table[255];
+	uint8_t Miss_Part_table[image_frame_set];
 	uint8_t Miss_table[20];
 	int total_number[1];
 

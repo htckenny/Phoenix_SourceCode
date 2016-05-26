@@ -58,7 +58,7 @@ void Telecom_Task(void * pvParameters) {
 
 	set_Call_Sign(0);
 	set_tx_rate(8);
-	lastCommandTime = initila_Time;
+	lastCommandTime = initial_Time;
 
 	if (parameters.shutdown_flag == 1) {
 		printf("Shutdown Command Detected!! \r\n");
@@ -71,11 +71,10 @@ void Telecom_Task(void * pvParameters) {
 		obc_timesync(&t, 6000);
 		// printf("\t\tdiff = %" PRIu32 "\t\n", t.tv_sec - lastCommandTime);
 		// printf("\E[1A\r");
-		if (t.tv_sec > lastCommandTime + parameters.GS_threshold) {
+		if (t.tv_sec > (lastCommandTime + parameters.GS_threshold)) {
 			printf("\nTimeout !! reboot whole system\n");
 			txBuffer = 20;
 			i2c_master_transaction_2(0, eps_node, &txBuffer, 1, 0, 0, eps_delay);
-			lastCommandTime = t.tv_sec;
 		}
 		/*-------Avoid COM WDT(1 minute) reset itself ---------*/
 		tx_wdt_flag++;

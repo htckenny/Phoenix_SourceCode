@@ -48,7 +48,7 @@ int finalCheck (struct command_context * ctx)
 	if (mode_task == NULL)
 		printf("| \E[1;31mMode Task\t\t\tOFF\E[0m\t\t|\n");
 	else
-		printf("| Ground Test Mode\t\tON\t\t|\n");
+		printf("| Mode Task\t\t\tON\t\t|\n");
 	printf("|-----------------------------------------------|\n");
 	printf("| enable_stm_EPS\t\t%d\t\t|\n", enable_stm_EPS);
 	printf("| enable_stm_ADCS\t\t%d\t\t|\n", enable_stm_ADCS);

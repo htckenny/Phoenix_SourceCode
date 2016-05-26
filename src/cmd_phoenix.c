@@ -66,7 +66,7 @@ int finalCheck (struct command_context * ctx)
 	else
 		printf("| magnetometer_deploy\t\t%d\t\t|\n", mag_meter_deploy);
 
-	printf("| initila_Time\t\t\t%d\t|\n", initila_Time);
+	printf("| initial_Time\t\t\t%d\t|\n", initial_Time);
 	printf("|_______________________________________________|\n");
 	return CMD_ERROR_NONE;
 }
@@ -1088,41 +1088,77 @@ int idleunlock(struct command_context * ctx) {
 
 int testmode(struct command_context * ctx) {
 
-	if (mode_task != NULL)
+	if (mode_task != NULL) {
 		vTaskDelete(mode_task);
-	if (bat_check_task != NULL)
+		mode_task = NULL;
+	}
+	if (bat_check_task != NULL) {
 		vTaskDelete(bat_check_task);
-	if (com_task != NULL)
+		bat_check_task = NULL;
+	}
+	if (com_task != NULL) {
 		vTaskDelete(com_task);
-	if (wod_task != NULL)
+		com_task = NULL;
+	}
+	if (wod_task != NULL) {
 		vTaskDelete(wod_task);
-	if (beacon_task != NULL)
+		wod_task = NULL;
+	}
+	if (beacon_task != NULL) {
 		vTaskDelete(beacon_task);
+		beacon_task = NULL;
+	}
 
-	if (init_task != NULL)
+	if (init_task != NULL) {
 		vTaskDelete(init_task);
-	if (adcs_task != NULL)
+		init_task = NULL;
+	}
+	if (adcs_task != NULL) {
 		vTaskDelete(adcs_task);
-	if (seuv_task != NULL)
+		adcs_task = NULL;
+	}
+	if (seuv_task != NULL) {
 		vTaskDelete(seuv_task);
-	if (eop_task != NULL)
+		seuv_task = NULL;
+	}
+	if (eop_task != NULL) {
 		vTaskDelete(eop_task);
-	if (hk_task != NULL)
+		eop_task = NULL;
+	}
+	if (hk_task != NULL) {
 		vTaskDelete(hk_task);
+		hk_task = NULL;
+	}
 
-	if (inms_error_handle != NULL)
+	if (inms_error_handle != NULL) {
 		vTaskDelete(inms_error_handle);
-	if (inms_current_moniter != NULL)
+		inms_error_handle = NULL;
+	}
+	if (inms_current_moniter != NULL) {
 		vTaskDelete(inms_current_moniter);
-	if (inms_task != NULL)
+		inms_current_moniter = NULL;
+	}
+	if (inms_task != NULL) {
 		vTaskDelete(inms_task);
-	if (inms_task_receive != NULL)
+		inms_task = NULL;
+	}
+	if (inms_task_receive != NULL) {
 		vTaskDelete(inms_task_receive);
+		inms_task_receive = NULL;
+	}
 
-	if (schedule_task != NULL)
+	if (schedule_task != NULL) {
 		vTaskDelete(schedule_task);
-	if (seuv_cm_task != NULL)
+		schedule_task = NULL;
+	}
+	if (seuv_cm_task != NULL) {
 		vTaskDelete(seuv_cm_task);
+		seuv_cm_task = NULL;
+	}
+	if (Anom_mon_task != NULL) {
+		vTaskDelete(Anom_mon_task);
+		Anom_mon_task = NULL;
+	}
 
 	printf("Enter Ground Test mode, delete all task\r\n");
 	return CMD_ERROR_NONE;

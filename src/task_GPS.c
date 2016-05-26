@@ -73,14 +73,17 @@ void GPS_task(void* pvParameters)
 					printf("OBC time Sync by GPS to : %s\r\n", ctime(&tt));
 					memcpy(&GPS_information[6], &rxBuffer[0], 6);
 				}
+				vTaskDelay(1 * delay_time_based);
 				txBuffer[0] = 170; /* Raw GPS X */
 				if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 1, &rxBuffer[0], 6, adcs_delay) == E_NO_ERR) {
 					memcpy(&GPS_information[12], &rxBuffer[0], 6);
 				}
+				vTaskDelay(1 * delay_time_based);
 				txBuffer[0] = 171; /* Raw GPS Y */
 				if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 1, &rxBuffer[0], 6, adcs_delay) == E_NO_ERR) {
 					memcpy(&GPS_information[18], &rxBuffer[0], 6);
 				}
+				vTaskDelay(1 * delay_time_based);
 				txBuffer[0] = 172; /* Raw GPS Z */
 				if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 1, &rxBuffer[0], 6, adcs_delay) == E_NO_ERR) {
 					memcpy(&GPS_information[24], &rxBuffer[0], 6);
@@ -99,6 +102,7 @@ void GPS_task(void* pvParameters)
 		}
 		vTaskDelayUntil(&xLastWakeTime, xFrequency );
 	}
+	power_control(2, OFF);
 	gps_task = NULL;
 	vTaskDelete(NULL);
 }

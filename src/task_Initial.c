@@ -57,6 +57,7 @@ void Init_Task(void * pvParameters) {
 		}
 		if (idleunlocks == 1)
 			break;
+		battery_read(); /* To avoid EPS watchdog timer */
 	}
 
 #if !ground_Test_Mode

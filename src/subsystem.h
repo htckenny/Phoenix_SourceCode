@@ -13,7 +13,8 @@
 
 #define ground_Test_Mode	1
 
-#define enable_stm_EPS		0
+#define enable_stm_EPS_V	0
+#define enable_stm_EPS_I	0
 #define enable_stm_ADCS		0
 #define enable_stm_IFB		0
 #define enable_stm_COM		0
@@ -62,7 +63,13 @@
 /* EPS Board */
 
 #define eps_node 			0x02
-#if ground_Test_Mode && enable_stm_EPS
+#if ground_Test_Mode && enable_stm_EPS_V
+#define stm_eps_node_v 		0x72
+#else
+#define stm_eps_node_v 		0x02
+#endif
+
+#if ground_Test_Mode && enable_stm_EPS_I
 #define stm_eps_node 		0x72
 #else
 #define stm_eps_node 		0x02

@@ -50,7 +50,8 @@ int finalCheck (struct command_context * ctx)
 	else
 		printf("| Mode Task\t\t\tON\t\t|\n");
 	printf("|-----------------------------------------------|\n");
-	printf("| enable_stm_EPS\t\t%d\t\t|\n", enable_stm_EPS);
+	printf("| enable_stm_EPS_V\t\t%d\t\t|\n", enable_stm_EPS_V);
+	printf("| enable_stm_EPS_I\t\t%d\t\t|\n", enable_stm_EPS_I);
 	printf("| enable_stm_ADCS\t\t%d\t\t|\n", enable_stm_ADCS);
 	printf("| enable_stm_IFB\t\t%d\t\t|\n", enable_stm_IFB);
 	printf("| enable_stm_COM\t\t%d\t\t|\n", enable_stm_COM);

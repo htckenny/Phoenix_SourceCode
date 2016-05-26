@@ -27,6 +27,7 @@ extern void BatteryCheck_Task(void * pvParameters);
 extern void Telecom_Task(void * pvParameters);
 extern void WOD_Task(void * pvParameters);
 extern void Anomaly_Monitor_Task(void * pvParameters);
+extern uint16_t battery_read();
 
 void Init_Task(void * pvParameters) {
 #if antenna_deploy

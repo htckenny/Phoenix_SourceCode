@@ -256,6 +256,7 @@ void beacon_Task(void * pvParameters) {
 
 void WOD_Task(void * pvParameters) {
 	printf("Active WOD Task\n");
+	vTaskDelay(2 * delay_time_based);
 	xTaskCreate(beacon_Task, (const signed char *) "beacon", 1024 * 4, NULL, 2, &beacon_task);
 
 	while (1) {

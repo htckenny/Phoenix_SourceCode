@@ -30,7 +30,7 @@ uint16_t battery_read() {
 	return csp_ntoh16(Vbat);
 }
 void Enter_Recovery_Mode() {
-	if (bat_check_task == NULL) {
+	if (bat_check_task != NULL) {
 		printf("Shutting Down battery Task\n");
 		vTaskDelete(bat_check_task);
 		bat_check_task = NULL;
@@ -92,6 +92,8 @@ void Enter_Recovery_Mode() {
 	}
 
 	power_control(2, OFF);      // Power OFF GPS
+	power_control(3, OFF);      // Power OFF SEUV
+	power_control(4, OFF);      // Power OFF INMS
 }
 void Enter_Safe_Mode(int last_mode) {
 

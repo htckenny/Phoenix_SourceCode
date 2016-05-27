@@ -63,7 +63,7 @@ void Telecom_Task(void * pvParameters) {
 	if (parameters.shutdown_flag == 1) {
 		printf("Shutdown Command Detected!! \r\n");
 	}
-
+	vTaskDelay(1 * delay_time_based);
 	while (1) {
 
 		t.tv_sec = 0;

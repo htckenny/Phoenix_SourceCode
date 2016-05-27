@@ -2210,7 +2210,7 @@ int scan_files_Downlink (
 				printf("--------------------------------------------- \r\n");
 			}
 			if (related_file != 0)
-				vTaskDelay(0.3 * delay_time_based);
+				vTaskDelay(0.5 * delay_time_based);
 			else
 				related_file = 1;
 		}

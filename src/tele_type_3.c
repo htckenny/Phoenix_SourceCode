@@ -395,6 +395,7 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 				memcpy(&txBufferWithSID[1], &gps_data[0], txlen);
 				SendPacketWithCCSDS_AX25(&txBufferWithSID[0], txlen + 1, obc_apid, type, 25);
 			}
+			vTaskDelay(0.5 * delay_time_based);
 		}
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;

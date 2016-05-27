@@ -106,6 +106,11 @@ void decode_time (char fileName[], char * buf )
 	strcat(buf, Min);
 	strcat(buf, Sec);
 }
+int GPS_delete()
+{
+	f_unlink("0:/GPS.bin");
+	return No_Error;
+}
 int GPS_read(uint8_t * txbuf, uint8_t number)
 {
 	char fileName[] = "0:/GPS.bin";
@@ -126,7 +131,6 @@ int GPS_read(uint8_t * txbuf, uint8_t number)
 int GPS_write(uint8_t frameCont [])
 {
 	char fileName[] = "0:/GPS.bin";
-	f_unlink(fileName);
 	res = f_open(&fileGPS, fileName, FA_OPEN_ALWAYS | FA_WRITE );
 	f_lseek(&fileGPS, fileGPS.fsize);
 	res = f_write(&fileGPS, frameCont, 30, &bw);

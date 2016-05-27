@@ -37,6 +37,7 @@ void GPS_task(void* pvParameters)
 
 	xLastWakeTime = xTaskGetTickCount();
 	xFrequency = 30 * delay_time_based;
+	GPS_delete();
 	while (1) {
 		txBuffer[0] = 168;
 		if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 1, &rxBuffer, 6, adcs_delay) == E_NO_ERR) {

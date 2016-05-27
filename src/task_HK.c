@@ -91,7 +91,7 @@ int TS7()
 	uint8_t txbuffer = 173;		// check 135
 	uint8_t rxbuffer[6];
 
-	if (i2c_master_transaction_2(0, stm_adcsT_node, &txbuffer, 1, &rxbuffer, 6, adcs_delay) != E_NO_ERR)
+	if (i2c_master_transaction_2(0, stm_adcsT_node, &txbuffer, 1, &rxbuffer, 6, 20) != E_NO_ERR)
 		return Error;
 
 	memcpy(&ThermalFrame.T7, &rxbuffer[4], 2);

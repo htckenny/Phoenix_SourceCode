@@ -218,8 +218,8 @@ void Schedule_Task(void * pvParameters)
 				if (sche_time[sort_seq[i]] <= onBoardTime) {
 					break;
 				}
-				/* 5 seconds margin to send the command */
-				if (sche_time[sort_seq[i]] - onBoardTime <= 5) {
+				/* 3 seconds margin to send the command */
+				if (sche_time[sort_seq[i]] - onBoardTime <= 3) {
 					sendCommand(tele_buf);
 					printf("send command !!\n");
 					*tele_buf = 0;

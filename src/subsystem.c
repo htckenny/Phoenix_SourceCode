@@ -70,7 +70,7 @@ int status_update()
 	status_frame.schedule_task = (schedule_task != NULL) ? 1 : 0;
 	status_frame.seuv_cm_task = (seuv_cm_task != NULL) ? 1 : 0;
 	status_frame.Anom_mon_task = (Anom_mon_task != NULL) ? 1 : 0;
-
+	status_frame.gps_task = (gps_task != NULL) ? 1 : 0;
 	return E_NO_ERR;
 }
 

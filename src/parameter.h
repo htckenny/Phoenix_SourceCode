@@ -60,6 +60,7 @@ typedef struct __attribute__((packed)) {
 	uint8_t schedule_task;
 	uint8_t seuv_cm_task;
 	uint8_t Anom_mon_task;
+	uint8_t	gps_task;
 } status_frame_t;
 status_frame_t status_frame;
 

@@ -247,6 +247,7 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 			printf("Sche_task\t\t%d\n", status_frame.schedule_task);
 			printf("SEUVCM_task\t\t%d\n", status_frame.seuv_cm_task);
 			printf("Anom_Mon task\t\t%d\n", status_frame.Anom_mon_task);
+			printf("GPS task\t\t\t%d\n", status_frame.gps_task);
 
 			memcpy(&txBuffer[0], &status_frame.mode_task, sizeof(status_frame_t));
 

@@ -195,7 +195,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 				for (int i = 0 ; i < 7 ; i++) {
 					inms_script_delete_flash(i);
 				}
-				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+				sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 				break;
 			}
 			else

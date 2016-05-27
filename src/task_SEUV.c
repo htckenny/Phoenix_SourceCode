@@ -151,7 +151,6 @@ void seuv_work_with_inms(int switch_status) {
     }
 }
 void get_a_packet(int gain) {
-    seuv_finished = 0;
     uint8_t count = 0;           // error count , 0 = no error
     uint8_t frame_1 [2 * parameters.seuv_sample_rate];
     uint8_t frame_2 [2 * parameters.seuv_sample_rate];
@@ -227,7 +226,6 @@ void get_a_packet(int gain) {
             printf("Fail to get SEUV data\n");
         }
     }
-    seuv_finished = 1;
 }
 
 void SolarEUV_Task(void * pvParameters) {
@@ -250,9 +248,11 @@ void SolarEUV_Task(void * pvParameters) {
             if (seuv_cm_task == NULL) {
                 xTaskCreate(SEUV_CurrentMonitor, (const signed char *) "SEU_CM", 1024 * 4, NULL, 2, &seuv_cm_task);
             }
+            seuv_finished = 0;
             get_a_packet(1);
             vTaskDelay(1 * delay_time_based);
             get_a_packet(8);
+            seuv_finished = 1;
         }
         else if (parameters.seuv_mode == 0x03) {    /* Mode C: Standby Mode */
             if (seuv_cm_task != NULL) {

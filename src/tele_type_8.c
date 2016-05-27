@@ -581,8 +581,10 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			break;
 		}
 		printf("Execute Type 8 Sybtype 26, Activate GPS process\r\n");
-		if (gps_task == NULL)
+		if (gps_task == NULL) {
 			xTaskCreate(GPS_task, (const signed char*) "GPS", 1024 * 4, NULL, 3, &gps_task);
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		}
 		break;
 	/*---------------  ID:30 Format SD and Initialize ----------------*/
 	case SD_card_format:

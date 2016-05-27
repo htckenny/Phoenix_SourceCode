@@ -178,6 +178,7 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 		little2big_32(&txBuffer[29]);
 		little2big_32(&txBuffer[33]);
 		little2big_32(&txBuffer[37]);
+		little2big_32(&txBuffer[58]);
 
 		little2big_16(&txBuffer[41]);
 		little2big_16(&txBuffer[45]);
@@ -209,6 +210,7 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 		i2c_tx[0] = 0xC0;
 		if (i2c_master_transaction_2(0, ant_node, &i2c_tx, 1, &txBuffer[0], 2, com_delay) == E_NO_ERR) {
 			memcpy(&txBufferWithSID[4], &txBuffer[0], 2);
+			little2big_16(&txBufferWithSID[4]);
 			SendPacketWithCCSDS_AX25(&txBufferWithSID[0], txlen + 1, obc_apid, type, 25);
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}

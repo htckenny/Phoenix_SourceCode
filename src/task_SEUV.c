@@ -248,11 +248,9 @@ void SolarEUV_Task(void * pvParameters) {
             if (seuv_cm_task == NULL) {
                 xTaskCreate(SEUV_CurrentMonitor, (const signed char *) "SEU_CM", 1024 * 4, NULL, 2, &seuv_cm_task);
             }
-            seuv_finished = 0;
             get_a_packet(1);
             vTaskDelay(1 * delay_time_based);
             get_a_packet(8);
-            seuv_finished = 1;
         }
         else if (parameters.seuv_mode == 0x03) {    /* Mode C: Standby Mode */
             if (seuv_cm_task != NULL) {
@@ -306,14 +304,14 @@ void SEUV_CurrentMonitor(void * pvParameters) {
             printf("outCounter = %d\n", outRangeCounter);
             if (outRangeCounter >= 6) {
 
-                while (1) {
-                    if (seuv_finished == 1) {
-                        power_control(3, OFF);
-                        break;
-                    }
-                    vTaskDelay(0.5 * delay_time_based);
+                if (seuv_task != NULL) {
+                    vTaskDelete(seuv_task);
+                    seuv_task = NULL;
                 }
+                power_control(3, OFF);
                 parameters.seuv_mode = 3;
+                if (seuv_task == NULL && HK_frame.mode_status_flag == 3)
+                    xTaskCreate(SolarEUV_Task, (const signed char * ) "SEUV", 1024 * 4, NULL, 2, &seuv_task);
                 para_w_flash();
                 outRangeCounter = 0;
                 generate_Error_Report(6, SEUV_current);

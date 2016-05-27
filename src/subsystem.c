@@ -266,11 +266,6 @@ void power_control(int device, int stats)
 			i2c_master_transaction_2(0, eps_node, &txdata, 1 + sizeof(eps_output_set_single_req), 0, 0, eps_delay);
 		}
 		else if (stats == OFF) {
-			while (1) {
-				if (seuv_finished == 1)
-					break;
-				vTaskDelay(0.5 * delay_time_based);
-			}
 			/* channel 5 = SEUV 3.3V */
 			eps_switch.channel = 5;
 			memcpy(&txdata[1], &eps_switch, sizeof(eps_output_set_single_req));

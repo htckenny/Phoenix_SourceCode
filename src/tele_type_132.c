@@ -17,6 +17,7 @@
 #define change_mode						2
 #define Execute_sampling_downlink		3
 #define Change_channel_parameter		4
+extern void SolarEUV_Task(void * pvParameters);
 
 void decodeService132(uint8_t subType, uint8_t*telecommand) {
 
@@ -53,19 +54,26 @@ void decodeService132(uint8_t subType, uint8_t*telecommand) {
 
 			if (parameters.seuv_mode == 2 || parameters.seuv_mode == 4) {
 				if (paras[0] == 3) {
+					if (seuv_task != NULL) {
+						vTaskDelete(seuv_task);
+						seuv_task = NULL;
+					}
 					power_control(3, OFF);
+					parameters.seuv_mode = paras[0];
+					if (seuv_task == NULL && HK_frame.mode_status_flag == 3)
+						xTaskCreate(SolarEUV_Task, (const signed char * ) "SEUV", 1024 * 4, NULL, 2, &seuv_task);
 				}
 			}
 			else if (parameters.seuv_mode == 3 || parameters.seuv_mode == 4) {
 				if (paras[0] == 2) {
 					power_control(3, ON);
+					parameters.seuv_mode = paras[0];	//set the seuv mode
 				}
 			}
 			else {
 				completionError = PARA_ERR;
 				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 			}
-			parameters.seuv_mode = paras[0];	//set the seuv mode
 			para_w_flash();
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}

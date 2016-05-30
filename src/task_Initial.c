@@ -22,6 +22,7 @@
 #include <string.h>
 #include <math.h>
 #include "tele_function.h"
+#include <nanomind.h>
 
 extern void BatteryCheck_Task(void * pvParameters);
 extern void Telecom_Task(void * pvParameters);
@@ -30,9 +31,14 @@ extern void Anomaly_Monitor_Task(void * pvParameters);
 extern uint16_t battery_read();
 
 void Init_Task(void * pvParameters) {
+	timestamp_t t;
 #if antenna_deploy
 	uint8_t txdata;
 #endif
+	t.tv_sec = 0;
+	t.tv_nsec = 0;
+	obc_timesync(&t, 6000);
+	lastCommandTime = t.tv_sec;
 	/* Initialize the system parameters */
 	if (parameter_init()  == Error)
 		printf("Can't read parameter from fs\n");

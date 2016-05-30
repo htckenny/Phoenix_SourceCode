@@ -100,7 +100,6 @@ int parameter_init()
 	inms_tm_status						= 1;
 	seuv_with_INMS 						= 0;
 	decode_command						= 0;
-	lastCommandTime 					= initial_Time;
 	/*--File System store count--*/
 	parameters.wod_store_count			= 0;
 	parameters.inms_store_count			= 0;

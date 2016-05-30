@@ -138,6 +138,11 @@ void Enter_Safe_Mode(int last_mode) {
 			vTaskDelete(seuv_task);
 			seuv_task = NULL;
 		}
+		if (seuv_cm_task != NULL) {
+			printf("Shutting Down SEUV current monitor Task\n");
+			vTaskDelete(seuv_cm_task);
+			seuv_cm_task = NULL;
+		}
 		if (inms_error_handle != NULL) {
 			printf("Shutting Down INMS Error task \n");
 			vTaskDelete(inms_error_handle);
@@ -165,6 +170,23 @@ void Enter_Safe_Mode(int last_mode) {
 		}
 		power_OFF_ALL();
 	}
+	if (schedule_task != NULL) {
+		printf("Shutting Down schedule task \n");
+		vTaskDelete(schedule_task);
+		schedule_task = NULL;
+	}
+	if (gps_task != NULL) {
+		printf("Shutting Down GPS task \n");
+		vTaskDelete(gps_task);
+		gps_task = NULL;
+	}
+	if (Anom_mon_task != NULL) {
+		printf("Shutting Down GPS task \n");
+		vTaskDelete(Anom_mon_task);
+		Anom_mon_task = NULL;
+	}
+
+
 }
 void Leave_safe_mode()
 {

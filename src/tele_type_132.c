@@ -63,12 +63,16 @@ void decodeService132(uint8_t subType, uint8_t*telecommand) {
 					if (seuv_task == NULL && HK_frame.mode_status_flag == 3)
 						xTaskCreate(SolarEUV_Task, (const signed char * ) "SEUV", 1024 * 4, NULL, 2, &seuv_task);
 				}
+				if (paras[0] == 4)
+					parameters.seuv_mode = paras[0];
 			}
 			else if (parameters.seuv_mode == 3 || parameters.seuv_mode == 4) {
 				if (paras[0] == 2) {
 					power_control(3, ON);
 					parameters.seuv_mode = paras[0];	//set the seuv mode
 				}
+				if (paras[0] == 4)
+					parameters.seuv_mode = paras[0];
 			}
 			else {
 				completionError = PARA_ERR;

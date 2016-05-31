@@ -193,14 +193,22 @@ int getWodFrame(int fnum) {
 	tempEps = __max(__min(floor(4 * ((((float)EPS_HK[8] + (float)EPS_HK[9] + (float)EPS_HK[10]) / 3)) + 60), 255), 0);
 	tempBat = __max(__min(floor(4 * (((float)EPS_HK[11])) + 60), 255), 0);
 
-	if (mode)	calbit(fnum);
-	calmulbit(fnum, 1, batVoltage);
-	calmulbit(fnum, 2, batCurrent);
-	calmulbit(fnum, 3, bus3v3Current);
-	calmulbit(fnum, 4, bus5v0Current);
-	calmulbit(fnum, 5, tempComm);
-	calmulbit(fnum, 6, tempEps);
-	calmulbit(fnum, 7, tempBat);
+	// if (mode)	calbit(fnum);
+	// calmulbit(fnum, 1, batVoltage);
+	// calmulbit(fnum, 2, batCurrent);
+	// calmulbit(fnum, 3, bus3v3Current);
+	// calmulbit(fnum, 4, bus5v0Current);
+	// calmulbit(fnum, 5, tempComm);
+	// calmulbit(fnum, 6, tempEps);
+	// calmulbit(fnum, 7, tempBat);
+	wod[fnum * 8 + 0] = mode;
+	wod[fnum * 8 + 1] = batVoltage;
+	wod[fnum * 8 + 2] = batCurrent;
+	wod[fnum * 8 + 3] = bus3v3Current;
+	wod[fnum * 8 + 4] = bus5v0Current;
+	wod[fnum * 8 + 5] = tempComm;
+	wod[fnum * 8 + 6] = tempEps;
+	wod[fnum * 8 + 7] = tempBat;
 
 	/* Beacon Message UPDATE */
 	beacon_frame.batVoltage = batVoltage;

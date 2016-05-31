@@ -77,9 +77,12 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 	uint8_t i2c_tx[10];
 	uint8_t type = 3;
 	uint8_t completionError;
-	// note: parameter start from telecommand[10]
-	/*------------------------------------------Telecommand-----------------------------------*/
 
+	uint16_t para_length = (telecommand[4] << 8) + telecommand[5] - 4;
+	uint8_t paras[180];
+
+	if (para_length > 0)
+		memcpy(&paras, telecommand + 9, para_length);
 
 	switch (subType) {
 
@@ -362,11 +365,16 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 			}
 		}
 		else {
-			if (parameters.SD_partition_flag == 0) {
+			if (paras[0] == 0) {
 				strcpy(path, "/sd0");
 			}
-			else if (parameters.SD_partition_flag == 1) {
+			else if (paras[0] == 1) {
 				strcpy(path, "/sd1");
+			}
+			else {
+				completionError = FS_IO_ERR;
+				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+				break;
 			}
 			if (report_Collected_Data(path, data_number) == No_Error) {
 				memcpy(&txBuffer[0], &data_number[0], 10);

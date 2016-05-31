@@ -499,7 +499,7 @@ int image_check(uint8_t last_partNo, uint16_t last_part_length, uint8_t * Error_
 	char path[22];
 	int error_number = 0;
 	int part_size;
-	for (int i = 1; i < last_partNo; i++) {
+	for (int i = 1; i <= last_partNo; i++) {
 		sprintf(path, "/sd0/image/part%d.bin", i);
 		image = fopen(path, "rb");
 		if (image == NULL) {

@@ -26,7 +26,7 @@
 #define initial_Time		1462838400		//1475280000 			//946684800 
 /* !!!!!!!!!!!!!!!!!!!!!!!! UINT = LSB !!!!!!!!!!!!!! */
 /* Image frame set number */
-#define image_frame_set		255
+#define image_frame_set		100
 /* Script Length */
 #define scriptNum 			7
 /* Tick */

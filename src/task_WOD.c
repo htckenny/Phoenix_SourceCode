@@ -201,14 +201,14 @@ int getWodFrame(int fnum) {
 	// calmulbit(fnum, 5, tempComm);
 	// calmulbit(fnum, 6, tempEps);
 	// calmulbit(fnum, 7, tempBat);
-	wod[fnum * 8 + 0] = mode;
-	wod[fnum * 8 + 1] = batVoltage;
-	wod[fnum * 8 + 2] = batCurrent;
-	wod[fnum * 8 + 3] = bus3v3Current;
-	wod[fnum * 8 + 4] = bus5v0Current;
-	wod[fnum * 8 + 5] = tempComm;
-	wod[fnum * 8 + 6] = tempEps;
-	wod[fnum * 8 + 7] = tempBat;
+	wod[(fnum - 1) * 8 + 0] = mode;
+	wod[(fnum - 1) * 8 + 1] = batVoltage;
+	wod[(fnum - 1) * 8 + 2] = batCurrent;
+	wod[(fnum - 1) * 8 + 3] = bus3v3Current;
+	wod[(fnum - 1) * 8 + 4] = bus5v0Current;
+	wod[(fnum - 1) * 8 + 5] = tempComm;
+	wod[(fnum - 1) * 8 + 6] = tempEps;
+	wod[(fnum - 1) * 8 + 7] = tempBat;
 
 	/* Beacon Message UPDATE */
 	beacon_frame.batVoltage = batVoltage;
@@ -269,7 +269,7 @@ void WOD_Task(void * pvParameters) {
 
 	while (1) {
 
-		for (int i = 1; i <= 32; i++)
+		for (int i = 1; i <= 24; i++)
 		{
 			if (getWodFrame(i) == No_Error)
 				printf("--------WOD Frame %d get--------\n", i);

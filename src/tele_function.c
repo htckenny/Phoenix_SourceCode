@@ -529,8 +529,8 @@ uint8_t SendDataWithCCSDS_AX25(uint8_t datatype, uint8_t* data) { //add sid then
 
 		databuffer[0] = wod_sid;
 
-		memcpy(&databuffer[1], &data[0], 4 + 57 * 3);
-		err = CCSDS_GenerateTelemetryPacket(&txframe_time[0], &tx_length, obc_apid, 3, 25, &databuffer[0], 4 + 57 * 3 + 1);
+		memcpy(&databuffer[1], &data[0], 4 + 8 * 24);
+		err = CCSDS_GenerateTelemetryPacket(&txframe_time[0], &tx_length, obc_apid, 3, 25, &databuffer[0], 4 + 8 * 24 + 1);
 
 		memcpy(&txframe[0], &txframe_time[0], 15);
 		memcpy(&txframe[15], &txframe_time[19], tx_length - 15 - 4);

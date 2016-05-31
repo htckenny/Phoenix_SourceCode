@@ -68,6 +68,7 @@ int finalCheck (struct command_context * ctx)
 		printf("| magnetometer_deploy\t\t%d\t\t|\n", mag_meter_deploy);
 
 	printf("| initial_Time\t\t\t%d\t|\n", initial_Time);
+	printf("| GS_threshold\t\t\t%"PRIu32"\t\t|\n", parameters.GS_threshold);
 	printf("|_______________________________________________|\n");
 	return CMD_ERROR_NONE;
 }

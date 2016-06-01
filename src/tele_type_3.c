@@ -79,7 +79,8 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 	uint8_t completionError;
 
 	uint16_t para_length = (telecommand[4] << 8) + telecommand[5] - 4;
-	uint8_t paras[180];
+	uint8_t paras[1];
+
 
 	if (para_length > 0)
 		memcpy(&paras, telecommand + 9, para_length);
@@ -88,6 +89,12 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 
 	/*---------------ID:1 Report_HK_State----------------*/
 	case Report_HK_State:
+		char Version_check[] = software_version;
+		char time_check[] = Last_Update_time;
+		char v_num[5];
+		char v_year[5] = {0};
+		char v_month[5]= {0};
+		char v_day[5]= {0};
 
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 
@@ -95,11 +102,18 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 		if (HK_frame.mode_status_flag == 2 && parameters.first_flight == 1)
 			HK_frame.mode_status_flag = 4;
 
+		strncpy(&v_num[2], &Version_check[1], 1)
+		strncpy(&v_num[3], &Version_check[3], 1)
+		strncpy(&v_year[0], &time_check[0], 4)
+		strncpy(&v_month[2], &time_check[5], 2)
+		strncpy(&v_day[2], &time_check[8], 2)
+
 		memcpy(&txBuffer[0], &HK_frame.mode_status_flag, 1);
-		memcpy(&txBuffer[1], &parameters.inms_store_count, 4);
-		memcpy(&txBuffer[5], &parameters.seuv_store_count, 4);
-		memcpy(&txBuffer[9], &parameters.hk_store_count, 4);
-		memcpy(&txBuffer[13], &parameters.wod_store_count, 4);
+
+		memcpy(&txBuffer[1], &v_num[0], 4);
+		memcpy(&txBuffer[5], &v_year[0], 4);
+		memcpy(&txBuffer[9], &v_month[0], 4);
+		memcpy(&txBuffer[13] &v_day[0], 4);
 
 		buffs = Interface_3V3_current_get();
 		vTaskDelay(0.01 * delay_time_based);

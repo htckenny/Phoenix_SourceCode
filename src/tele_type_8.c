@@ -15,8 +15,6 @@
 #include "fs.h"
 
 /* Definition of the subtype */
-#define Enable_Subsystem			1				/* (?)This function is not used */
-#define Disable_Subsystem			2				/* (?)This function is not used */
 #define reboot						3				/* Reboot the whole system */
 #define Sync_Time					4				/* Sync the OBC time */
 #define Sync_Time_With_GPS			5				/* Sync the OBC time with GPS */
@@ -27,7 +25,6 @@
 #define I2C_COMMAND					10				/* (!)very useful, but use it carefully */
 #define para_to_default 			11				/* Set parameters to default */
 #define set_tx_rates 				12				/* Set tx rate */
-#define set_call_sign 				13				/* Set Call sign "To” : NCKUGS & “From” : TW01TN*/
 #define power_on_target 			14				/* Power ON specific system */
 #define power_off_target 			15				/* Power OFF specific system */
 #define enter_specific_mode			16				/* Enter specifc mode for certain purpose */
@@ -74,6 +71,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		}
 		printf("Execute Type 8 Sybtype 3 , Rebooting \r\n");
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		vTaskDelay(1 * delay_time_based);
 		txBuffer[0] = 20;
 		i2c_master_transaction_2(0, eps_node, &txBuffer, 1, 0, 0, eps_delay);
 
@@ -265,21 +263,6 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		}
 		else
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
-		break;
-
-	/*---------------ID:13 set_call_sign      ----------------*/
-	case set_call_sign:
-		if (para_length == 0)
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
-		else {
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
-			break;
-		}
-		printf("Execute Type 8 Sybtype 13 ,set_call_sign \r\n");
-		set_Call_Sign(0);
-
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
-
 		break;
 
 	/*---------------ID:14 power_on_target     ----------------*/

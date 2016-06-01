@@ -2042,6 +2042,9 @@ int errPacket_dump()
 
 	for (int i = 0 ; i < lastNum ; i++) {
 		memcpy(&txBufferWithSID[1], &err_buf[10 * i], txlen);
+		little2big_32(&txBufferWithSID[1]);
+		little2big_16(&txBufferWithSID[5]);
+		little2big_16(&txBufferWithSID[9]);
 		SendPacketWithCCSDS_AX25(&txBufferWithSID[0], txlen + 1, obc_apid, 3, 25);
 		vTaskDelay(0.3 * delay_time_based);
 	}

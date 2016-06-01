@@ -122,6 +122,10 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 		memcpy(&txBuffer[5], &i_year, 4);
 		memcpy(&txBuffer[9], &i_month, 4);
 		memcpy(&txBuffer[13], &i_day, 4);
+		little2big_32(&txBuffer[1]);
+		little2big_32(&txBuffer[5]);
+		little2big_32(&txBuffer[9]);
+		little2big_32(&txBuffer[13]);
 
 		buffs = Interface_3V3_current_get();
 		vTaskDelay(0.01 * delay_time_based);

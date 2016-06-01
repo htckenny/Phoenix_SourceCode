@@ -328,6 +328,10 @@ int image_remove (int type)
 	}
 	return No_Error;
 }
+int image_checksum()
+{
+	return No_Error;
+}
 int image_boot_write(uint8_t configure[])
 {
 	int fd;
@@ -1987,9 +1991,6 @@ int errPacket_dump()
 
 	for (int i = 0 ; i < lastNum ; i++) {
 		memcpy(&txBufferWithSID[1], &err_buf[10 * i], txlen);
-		little2big_32(&err_buf[10 * i + 0]);
-		little2big_16(&err_buf[10 * i + 4]);
-		little2big_16(&err_buf[10 * i + 8]);
 		SendPacketWithCCSDS_AX25(&txBufferWithSID[0], txlen + 1, obc_apid, 3, 25);
 		vTaskDelay(0.3 * delay_time_based);
 	}

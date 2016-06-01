@@ -29,7 +29,8 @@
 #define perform_merge				5				/* Merge the part into one file */
 #define move_to_flash				6				/* Move the image from SD card to FLASH memory */
 #define boot_configure				7				/* Upload the boot.conf file */
-#define remove_image				8				/* Remove the image and configuration file */
+#define return_checksum				8				/* return calculated checksum */ 
+#define remove_image				9				/* Remove the image and configuration file */
 
 void decodeService32(uint8_t subType, uint8_t*telecommand) {
 	uint8_t completionError = I2C_SEND_ERROR;
@@ -154,7 +155,23 @@ void decodeService32(uint8_t subType, uint8_t*telecommand) {
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		}
 		break;
-	/*--------------- ID:8 Remove the image and configuration file ----------------*/
+	/*--------------- ID:8 Return Calculated checksum ----------------*/
+	case return_checksum:
+		if (para_length == 0)
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
+			break;
+		}
+		if (image_checksum() == Error) {
+			completionError = FS_IO_ERR;
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+		}
+		else {
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		}
+		break;	
+	/*--------------- ID:9 Remove the image and configuration file ----------------*/
 	case remove_image:
 		if (para_length == 1)
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);

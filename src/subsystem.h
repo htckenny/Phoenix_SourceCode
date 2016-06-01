@@ -9,7 +9,7 @@
 
 #include "parameter.h"
 #define software_version	"v2.5"
-#define Last_Update_time	"2016-05-27"
+#define Last_Update_time	"2016-06-01"
 
 #define ground_Test_Mode	1
 

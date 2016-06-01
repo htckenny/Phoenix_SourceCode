@@ -9,11 +9,13 @@
 #include <freertos/task.h>
 #include <util/hexdump.h>
 #include <util/timestamp.h>
+#include <util/crc32.h>
 #include <csp/csp_endian.h>
 #include <dev/i2c.h>
-#include <nanomind.h>
 #include <fat_sd/ff.h>
 #include <vfs/vfs.h>
+#include <lzo/lzoutils.h>
+#include <nanomind.h>
 
 #include "parameter.h"
 #include "tele_function.h"
@@ -330,6 +332,55 @@ int image_remove (int type)
 }
 int image_checksum()
 {
+	FILE * fp;
+
+	/* Pointer to start of memory */
+	void * dst = (void *) 0x50000000;
+	/* _Maximum_ size of image is 1MB */
+	int	size = 0xC0000 - 1;
+
+	char *image = "/boot/nanomind.bin.lzo";
+	if (lzo_is_lzop_image(image)) {
+
+		printf("Image is LZO compressed - decompressing\r\n");
+		/* Decompress image into memory */
+		if ((size = lzo_decompress_image(image, dst, size)) < 0) {
+			printf("Failed to decompress image\r\n");
+			return Error;
+		}
+
+	} else {
+
+		/* Open image */
+		fp = fopen(image, "r");
+		if (!fp) {
+			printf("Failed to open file %s\r\n", image);
+			return Error;
+		}
+
+		/* Read image size */
+		struct stat st;
+		if (stat(image, &st) != 0) {
+			printf("Failed to stat image file\r\n");
+			fclose(fp);
+			return Error;
+		}
+		size = st.st_size;
+
+		/* Copy image */
+		printf("Copying %u bytes to %p\r\n", size, dst);
+
+		int r;
+		if ((r = fread(dst, 1, size, fp)) != size) {
+			printf("Failed to copy %u bytes\r\n", size);
+			fclose(fp);
+			return Error;
+		}
+	}
+
+	/* Checking checksum */
+	unsigned int checksum_ram = chksum_crc32((unsigned char *) dst, size);
+	printf("Checksum RAM: 0x%x\r\n", checksum_ram);
 	return No_Error;
 }
 int image_boot_write(uint8_t configure[])

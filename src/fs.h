@@ -91,6 +91,7 @@ void image_merge(uint8_t last_part, uint16_t last_bytes);
 int image_move();
 int image_boot_write(uint8_t configure[]);
 int image_remove (int type);
+int image_checksum();
 
 int photo_save(char fileName []);
 int photo_downlink(uint8_t frame_id, uint8_t * txbuf, uint8_t last_bytes);

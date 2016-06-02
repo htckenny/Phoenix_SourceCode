@@ -384,7 +384,7 @@ int image_checksum()
 	uint8_t checksum_trans[4];
 	memcpy(&checksum_trans, &checksum_ram, 4);
 	little2big_32(&checksum_trans[0]);
-	SendPacketWithCCSDS_AX25(&checksum_trans, 4, obc_apid, 32, 8);
+	SendPacketWithCCSDS_AX25(&checksum_trans, 4, obc_apid, 32, 7);
 	return No_Error;
 }
 int image_boot_write(uint8_t configure[])

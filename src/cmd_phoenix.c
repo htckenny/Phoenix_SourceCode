@@ -722,243 +722,10 @@ int jumpTime(struct command_context * ctx)
 	printf("\n");
 	return CMD_ERROR_NONE;
 }
-int scheduleDelete(struct command_context * ctx) {
-
-	uint32_t time_absolute_1, time_absolute_2;
-	uint8_t telecommand[256] = {0};
-	// uint8_t length = (ctx->argc) - 4;
-	unsigned int range;
-	// unsigned int subtype;
-	// unsigned int buffer[255] = {0};
-	if (!ctx->argc >= 4) {
-		return CMD_ERROR_SYNTAX;
-	}
-	if (sscanf(ctx->argv[1], "%u", &range) != 1) {
-		return CMD_ERROR_SYNTAX;
-	}
-	if (sscanf(ctx->argv[2], "%" PRIu32 "", &time_absolute_1) != 1) {
-		return CMD_ERROR_SYNTAX;
-	}
-	if (range == 1) {
-		if (sscanf(ctx->argv[3], "%" PRIu32 "", &time_absolute_2) != 1) {
-			return CMD_ERROR_SYNTAX;
-		}
-	}
-	/* length of the telecommand */
-	telecommand[4] = ctx->argc + 5 ;
-	/* 4 bytes time */
-
-	telecommand[5] = 0;
-	telecommand[7] = 11;
-	telecommand[8] = 6;
-	telecommand[9] = range;
-	memcpy(&telecommand[10], &time_absolute_1, 4);
-	memcpy(&telecommand[15], &time_absolute_2, 4);
-
-	if (schedule_delete(range, telecommand) == 1) {
-		return CMD_ERROR_FAIL;
-	}
-	else {
-		schedule_new_command_flag = 1 ;
-		// parameters.schedule_series_number ++;
-		// para_w();
-		return CMD_ERROR_NONE;
-	}
-
-}
-int scheduleRelated(struct command_context * ctx) {
-	unsigned int command_type;
-	int32_t time_shift;
-	// int time_range;
-	uint8_t telecommand[4] = {0};
-	if (!ctx->argc >= 2) {
-		return CMD_ERROR_SYNTAX;
-	}
-	if (sscanf(ctx->argv[1], "%u", &command_type) != 1) {
-		return CMD_ERROR_SYNTAX;
-	}
-	if (sscanf(ctx->argv[2], "%" PRIu32 "", &time_shift) != 1) {
-		return CMD_ERROR_SYNTAX;
-	}
-	switch (command_type) {
-	/* schedule reset */
-	case 1 :
-		if (schedule_reset_flash() == 1) {
-			return CMD_ERROR_FAIL;
-		}
-		else {
-			schedule_new_command_flag = 1;
-			return CMD_ERROR_NONE;
-		}
-		break;
-	/* schedule dump */
-	case 2 :
-		if (schedule_dump() == 1)
-			return CMD_ERROR_FAIL;
-		else
-			return CMD_ERROR_NONE;
-		break;
-	/* schedule shift */
-	case 3 :
-		printf("time_shift = %" PRIu32 "\n", time_shift);
-		memcpy(&telecommand, &time_shift, 4);
-		for (int i = 0; i < 4 ; i++) {
-			printf("%d\n", telecommand[i]);
-		}
-		if (schedule_shift(telecommand) == 1)
-			return CMD_ERROR_FAIL;
-		else {
-			printf("no error\n");
-			return CMD_ERROR_NONE;
-		}
-		break;
-	/* schedule delete */
-	// case 4 :
-	// 	if (sscanf(ctx->argv[2], "%u", &time_range) != 1) {
-	// 		return CMD_ERROR_SYNTAX;
-	// 	}
-
-	// 	if (schedule_delete(time_range, ) == 1)
-	// 		return CMD_ERROR_FAIL;
-	// 	else
-	// 		return CMD_ERROR_NONE;
-	// 	break;
-	default:
-		return CMD_ERROR_SYNTAX;
-	}
-
-}
-int scheduleWrite(struct command_context * ctx)
-{
-	uint32_t time_absolute;
-	uint8_t telecommand[256] = {0};
-	uint8_t length = (ctx->argc) - 4;
-	unsigned int type;
-	unsigned int subtype;
-	unsigned int buffer[255] = {0};
-	if (!ctx->argc >= 4) {
-		return CMD_ERROR_SYNTAX;
-	}
-	if (sscanf(ctx->argv[1], "%" PRIu32 "", &time_absolute) != 1) {
-		return CMD_ERROR_SYNTAX;
-	}
-	if (sscanf(ctx->argv[2], "%u", &type) != 1) {
-		return CMD_ERROR_SYNTAX;
-	}
-	if (sscanf(ctx->argv[3], "%u", &subtype) != 1) {
-		return CMD_ERROR_SYNTAX;
-	}
-	for (int i = 4; i < (length + 4); i++) {
-		if (sscanf(ctx->argv[i], "%u", &buffer[i - 4]) != 1) {
-			return CMD_ERROR_SYNTAX;
-		}
-	}
-	// printf("test1 \n");
-	/* length of the telecommand */
-	telecommand[0] = ctx->argc + 5 ;
-	/* 4 bytes time */
-	memcpy(&telecommand[1], &time_absolute, 4);
-	telecommand[5] = 0;
-	telecommand[6] = type;
-	telecommand[7] = subtype;
-
-	for (int i = 0 ; i < length ; i++) {
-		telecommand[i + 8] = buffer[i];
-	}
-	// printf("test2\n");
-	// if (sscanf(ctx->argv[2], "%u", &len) != 1) {
-	// 	return CMD_ERROR_SYNTAX;
-	// }
-	for (int i = 0 ; i < ctx->argc + 4; i++) {
-		// if(telecommand[i] != 0){
-		printf("%x ", telecommand[i]);
-		// }
-	}
-	printf("\ntelecommand scan\n");
-	para_r_flash();
-
-	if (schedule_write_flash(telecommand) == 1) {
-		return CMD_ERROR_FAIL;
-	}
-	else {
-		schedule_new_command_flag = 1 ;
-		// parameters.schedule_series_number ++;
-		// para_w();
-		return CMD_ERROR_NONE;
-	}
-}
-
-int telecomtest(struct command_context * ctx)
-{
-	int num;
-	int len;
-	uint8_t packet[256];
-
-	if (ctx->argc != 3) {
-		return CMD_ERROR_SYNTAX;
-	}
-	if (sscanf(ctx->argv[1], "%u", &num) != 1) {
-		return CMD_ERROR_SYNTAX;
-	}
-	if (sscanf(ctx->argv[2], "%u", &len) != 1) {
-		return CMD_ERROR_SYNTAX;
-	}
-
-	for (int b = 1; b < 256; b++)
-		packet[b] = 255;
-
-	packet[0] = com_tx_send;
-	for (int a = 0; a < num; a++) {
-		SendPacketWithCCSDS_AX25(&packet, len, 10, 1, 1);
-	}
-
-	return CMD_ERROR_NONE;
-}
-
-int ccsds_send(struct command_context * ctx) {
-
-	if (ctx->argc < 3)
-		return CMD_ERROR_SYNTAX;
-
-	int type;
-	int subtype;
-	int buffer[255];
-	uint8_t txbuf[255];
-	uint8_t length = (ctx->argc) - 3;
-	printf("length  %d\n", length);
-	if (sscanf(ctx->argv[1], "%u", &type) != 1)
-		return CMD_ERROR_SYNTAX;
-	if (sscanf(ctx->argv[2], "%u", &subtype) != 1)
-		return CMD_ERROR_SYNTAX;
-
-	for (int a = 3; a < (length + 3); a++) {
-		if (sscanf(ctx->argv[a], "%x", &buffer[a - 3]) != 1) {
-			return CMD_ERROR_SYNTAX;
-		}
-	}
-
-
-	for (int a = 3; a < (length + 3); a++)
-		txbuf[a - 3] = (uint8_t)buffer[a - 3];
-
-
-	hex_dump(&txbuf, length);
-
-	while (1) {
-		if (SendPacketWithCCSDS_AX25(&txbuf, length, obc_apid, type, subtype) != ERR_SUCCESS)
-			break;
-		vTaskDelay(10 * delay_time_based);
-	}
-//   SendPacketWithCCSDS_AX25(&txbuf,length,obc_apid,type,subtype);
-
-	return CMD_ERROR_NONE;
-}
-
-
-extern void Thermal_Task(void * pvParameters);
-xTaskHandle T_task;
 
 int T_test(struct command_context * ctx) {
+	extern void Thermal_Task(void * pvParameters);
+	xTaskHandle T_task;
 	int mode;
 
 	if (ctx->argc != 2)
@@ -981,37 +748,25 @@ int T_test(struct command_context * ctx) {
 	return CMD_ERROR_NONE;
 }
 
-/*---------------ID:9 ShutdownTransmitter----------------*/
 int shutdown_tm(struct command_context * ctx) {
 
 	int off_on;
-
 	if (ctx->argc != 2)
 		return CMD_ERROR_SYNTAX;
-
 	if (sscanf(ctx->argv[1], "%u", &off_on) != 1)
 		return CMD_ERROR_SYNTAX;
-
-	if (off_on == 1)
-	{
+	if (off_on == 1)	{
 		parameters.shutdown_flag = 1;
 		para_w_flash();
 		printf("Shutdown Command Detected!! \r\n");
-
 	}
-
-	if (off_on == 0)
-	{
+	else if (off_on == 0)	{
 		parameters.shutdown_flag = 0;
 		para_w_flash();
 		printf("Resume Command Detected!! \r\n");
-
 	}
-
-
 	return CMD_ERROR_NONE;
 }
-
 
 int jump_mode(struct command_context * ctx) {
 	int mode;
@@ -1068,17 +823,6 @@ int paradelete(struct command_context * ctx) {
 }
 
 int T_data_del(struct command_context * ctx) {
-	T_data_d();
-	return CMD_ERROR_NONE;
-}
-
-int alldatadelete(struct command_context * ctx) {
-
-	para_d_flash();
-	inms_data_delete();
-	wod_delete();
-	seuv_delete();
-	hk_delete();
 	T_data_d();
 	return CMD_ERROR_NONE;
 }
@@ -1273,35 +1017,14 @@ command_t __root_command ph_commands[] = {
 	{ .name = "seuvs", .help = "PHOENIX: seuvs [ON = 1 / OFF = 0]", .handler = seuv_switch, },
 	{ .name = "tele", .help = "PHOENIX: tele [ON = 1 / OFF = 0]", .handler = telecom, },
 	{ .name = "jt", .help = "PHOENIX: jt [sec]", .handler = jumpTime, },
-	{
-		.name = "schd",
-		.help = "PHOENIX: schedule_delete <range> <time_1> <time_2 (opt)>",
-		.usage = "<range> <time_1> <time_2 (opt)>",
-		.handler = scheduleDelete,
-	},
-	{
-		.name = "schw",
-		.help = "PHOENIX: schedule_write <Absolute_time> <Type> <Subtype> <para>",
-		.usage = "<Absolute_time> <Type> <Subtype> <para>",
-		.handler = scheduleWrite,
-	},
-	{
-		.name = "sch",
-		.help = "PHOENIX: schedule_command 1:reset, 2:dump, 3:shift, 4:delete" ,
-		.usage = "sch <Command ID> <Para(optional)>",
-		.handler = scheduleRelated,
-	},
 	{ .name = "ir", .help = "PHOENIX: inms script read", .usage = "<buffer>" , .handler = ir, },
 	{ .name = "ct", .help = "PHOENIX: simulate receiving a uplink command and execute it", .usage = "<type> <subtype> <data*N> " , .handler = ct, },
-	{ .name = "ccsds_send", .help = "PHOENIX: send a ccsds packet every 10 seconds", .usage = "<type> <subtype> <data> " , .handler = ccsds_send, },
-	{ .name = "telecomtest", .help = "PHOENIX: telecomtest <packet_num> <packet_len>", .usage = "<packet_num> <packet_len>", .handler = telecomtest,	},
 	{ .name = "T_test", .help = "PHOENIX: Activate/OFF Thermal Task,switch 1=on, 0 =off", .usage = "T_test <switch>", .handler = T_test, },
 	{ .name = "shutdown_tm", .help = "PHOENIX: change transceiver standby mode", .usage = "shutdown_transmitter <switch>", .handler = shutdown_tm, },
 	{ .name = "parawrite", .help = "PHOENIX: write para setting in FS", .handler = parawrite, },
 	{ .name = "pararead", .help = "PHOENIX: read on board parameter setting in FS", .usage = "<partition(0, 1)>", .handler = pararead, },
 	{ .name = "paradelete", .help = "PHOENIX: delete parameters.bin", .handler = paradelete, },
 	{ .name = "T_data_del", .help = "PHOENIX: delete t_obc.bin t_inms.bin", .handler = T_data_del, },
-	{ .name = "alldatadelete", .help = "PHOENIX: delete all on board data.bin", .handler = alldatadelete, },
 	{ .name = "jump_mode", .help = "PHOENIX: jump_mode [mode] // 0=safe mode, 2=adcs mode,3=payload mode", .handler = jump_mode, },
 	{ .name = "idleunlock", .help = "PHOENIX: skip idle 30m step", .handler = idleunlock, },
 	{ .name = "testmode", .help = "PHOENIX: enter  testmode, please reboot satellite if want to leave this mode", .handler = testmode, },

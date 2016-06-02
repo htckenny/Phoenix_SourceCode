@@ -84,42 +84,6 @@ uint16_t CCSDS_GetSequenceCount(uint16_t apid) {
 			parameters.obc_packet_sequence_count ++ ;
 		return parameters.obc_packet_sequence_count;
 	}
-	// /* INMS related command */
-	// else if (apid == inms_apid) {
-	// 	if (parameters.inms_packet_sequence_count == 16383) {
-	// 		parameters.inms_packet_sequence_count = 0;
-	// 	}
-	// 	else
-	// 		parameters.inms_packet_sequence_count++ ;
-	// 	return parameters.inms_packet_sequence_count;
-	// }
-	// /* SEUV related command */
-	// else if (apid == seuv_apid) {
-	// 	if (parameters.seuv_packet_sequence_count == 16383) {
-	// 		parameters.seuv_packet_sequence_count = 0;
-	// 	}
-	// 	else
-	// 		parameters.seuv_packet_sequence_count++;
-	// 	return parameters.seuv_packet_sequence_count;
-	// }
-	//  /* WOD related command */
-	// else if (apid == wod_apid) {
-	// 	if (parameters.wod_packet_sequence_count == 16383) {
-	// 		parameters.wod_packet_sequence_count = 0;
-	// 	}
-	// 	else
-	// 		parameters.wod_packet_sequence_count ++;
-	// 	return parameters.wod_packet_sequence_count;
-	// }
-	// /* HK related command */
-	// else if (apid == phoenix_hk_apid) {
-	// 	if (parameters.phoenix_hk_packet_sequence_count == 16383) {
-	// 		parameters.phoenix_hk_packet_sequence_count = 0;
-	// 	}
-	// 	else
-	// 		parameters.phoenix_hk_packet_sequence_count++;
-	// 	return parameters.phoenix_hk_packet_sequence_count;
-	// }
 	else
 		return 255;
 }
@@ -206,8 +170,6 @@ uint8_t CCSDS_GenerateTelemetryPacketWithTime(uint8_t* telemetryBuffer,
 	// Compute CRC (all packet data except FCS field)
 	for (int i = 0; i < packetLength - 2; i++)
 		chk = crc_opt(telemetryBuffer[i], chk, LTbl);
-
-
 
 	// Fill CRC field
 	telemetryBuffer[packetLength - 2] = (uint8_t)(chk >> 8);
@@ -459,7 +421,6 @@ uint8_t SendPacketWithCCSDS_AX25(void * hkBuffer, uint8_t hkBufferLength, uint8_
 	err = CCSDS_GenerateTelemetryPacket(&messageBuffer[0], &packetLength, apid, type, subTypes, hkBuffer, hkBufferLength);
 	if (err == ERR_SUCCESS) {
 		return AX25_GenerateTelemetryPacket_Send(&messageBuffer[0], packetLength);
-//   	 return AX25_Send(&messageBuffer[0],packetLength);
 	}
 	return CCSDS_PACKET_ERROR;
 }  /* end of SendPacketWithCCSDS_AX25 */

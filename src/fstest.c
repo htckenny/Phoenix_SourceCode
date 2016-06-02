@@ -28,7 +28,7 @@
 #define Test_xHandle		0
 #define Test_Err_Packet		0
 #define Test_ECEF_ECI		0
-#define Test_infinite_loop	1
+#define Test_infinite_loop	0
 #define Test_OBC_Temp		0
 #define Test_Crippled_mode	0
 #define Test_Malloc			0

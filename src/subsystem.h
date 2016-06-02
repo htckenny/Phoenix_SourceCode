@@ -187,7 +187,6 @@
 #define com_hk_sid 		7
 #define adcs_hk_sid 	8
 
-#define adcs_tmp_sid 	0xF0   //-----------------
 
 /*---------------Service Type---------------*/
 #define T3_SYS_CONF 				3

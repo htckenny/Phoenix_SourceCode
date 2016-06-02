@@ -35,7 +35,6 @@ void decodeService11(uint8_t subType, uint8_t *telecommand) {
 		memcpy(&paras[1], telecommand + 9, packet_length - 4);
 	switch (subType) {
 
-
 	/*---------------ID:1 Enable_Telecommand_Release----------------*/
 	case Enable_Telecommand_Release:
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
@@ -66,14 +65,12 @@ void decodeService11(uint8_t subType, uint8_t *telecommand) {
 
 	/*---------------ID:3 Reset_Command_Schedule----------------*/
 	case Reset_Command_Schedule:
-		// It shall clear all entries in the command schedule. The command schedule shall be disabled.
 
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 		if (schedule_reset_flash() == Error) {
 			printf("schedule reset failed\n");
 			completionError = FS_IO_ERR;
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
-			// It shall reset the scheduling event information
 		}
 		else {
 			printf("schedule reset success!!\n");

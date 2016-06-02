@@ -234,16 +234,6 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		para_d_flash();
 		parameter_init();
 
-		printf("First Flight %d\n", (int) parameters.first_flight);
-		printf("shutdown_flag %d\n", (int) parameters.shutdown_flag);
-		printf("wod_store_count %d\n", (int) parameters.wod_store_count);
-		printf("inms_store_count %d\n", (int) parameters.inms_store_count);
-		printf("seuv_store_count %d\n", (int) parameters.seuv_store_count);
-		printf("hk_store_count %d\n", (int) parameters.hk_store_count);
-		printf("obc_packet_sequence_count %d\n", (int) parameters.obc_packet_sequence_count);
-		printf("vbat_recover_threshold %d\n", (int) parameters.vbat_recover_threshold);
-		printf("vbat_safe_threshold %d\n", (int) parameters.vbat_safe_threshold);
-
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
 	/*---------------ID:12 set_tx_rates      ----------------*/

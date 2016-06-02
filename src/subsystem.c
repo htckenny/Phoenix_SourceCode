@@ -100,12 +100,6 @@ int parameter_init()
 	inms_tm_status						= 1;
 	seuv_with_INMS 						= 0;
 	decode_command						= 0;
-	/*--File System store count--*/
-	parameters.wod_store_count			= 0;
-	parameters.inms_store_count			= 0;
-	parameters.seuv_store_count			= 0;
-	parameters.hk_store_count			= 0;
-	parameters.eop_store_count			= 0;
 
 	/* Protocol sequence count */
 	parameters.obc_packet_sequence_count = 0;
@@ -137,7 +131,7 @@ int parameter_init()
 	parameters.seuv_mode				= 0x03;
 
 	/* battery*/
-	parameters.vbat_recover_threshold	= 7500;
+	parameters.vbat_recover_threshold	= 7400;
 	parameters.vbat_safe_threshold		= 7000;
 
 	parameters.INMS_timeout 			= 400;

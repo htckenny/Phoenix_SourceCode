@@ -56,22 +56,19 @@ void GPS_task(void* pvParameters)
 					wt.week = gps_week;
 					wt.sec = gps_second / 1000;
 
-					/* Display time in the form of "YYYY/MM/DD HH:MM:SS" */
-					tmbuf = wtime_to_date(wt);
-					// printf("%4.4d%2.2d%2.2d_%2.2d%2.2d%2.2d\n",
-					//        tmbuf.tm_year + 1900, tmbuf.tm_mon + 1, tmbuf.tm_mday,
-					//        tmbuf.tm_hour, tmbuf.tm_min, tmbuf.tm_sec);
-
-					/* Construct struct time to epoch seconds */
-					t_of_day = mktime(&tmbuf);
-					ctime(&t_of_day);
-					t.tv_nsec = 0;
-					t.tv_sec = t_of_day ;
-					obc_timesync(&t, 1000);
-					tt = t.tv_sec;
-
-					lastCommandTime = t.tv_sec;
-					printf("OBC time Sync by GPS to : %s\r\n", ctime(&tt));
+					if (wt.week != 0 || wt.sec != 0) {
+						/* Construct struct time to epoch seconds */
+						tmbuf = wtime_to_date(wt);
+						t_of_day = mktime(&tmbuf);
+						ctime(&t_of_day);
+						
+						t.tv_nsec = 0;
+						t.tv_sec = t_of_day ;
+						obc_timesync(&t, 1000);
+						tt = t.tv_sec;
+						lastCommandTime = t.tv_sec;
+						printf("OBC time Sync by GPS to : %s\r\n", ctime(&tt));
+					}
 					memcpy(&GPS_information[6], &rxBuffer[0], 6);
 				}
 				vTaskDelay(1 * delay_time_based);

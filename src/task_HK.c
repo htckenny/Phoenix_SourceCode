@@ -280,7 +280,7 @@ void HK_Task(void * pvParameters) {
 
 	while (1) {
 
-		vTaskDelay(60 * delay_time_based);
+		vTaskDelay(parameters.hk_collect_period * delay_time_based);
 
 		clean_hk_buffer();
 		clean_all();

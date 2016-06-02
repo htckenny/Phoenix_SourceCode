@@ -381,6 +381,7 @@ int image_checksum()
 	/* Checking checksum */
 	unsigned int checksum_ram = chksum_crc32((unsigned char *) dst, size);
 	printf("Checksum RAM: 0x%x\r\n", checksum_ram);
+	SendPacketWithCCSDS_AX25(&checksum_ram, 4, obc_apid, 32, 8);
 	return No_Error;
 }
 int image_boot_write(uint8_t configure[])

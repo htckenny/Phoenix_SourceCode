@@ -445,7 +445,7 @@ uint8_t SendDataWithCCSDS_AX25(uint8_t datatype, uint8_t* data) { //add sid then
 	if (datatype == 1) {
 		datalength = hk_length;
 		memcpy(&databuffer[0], &data[0], datalength);
-		err = CCSDS_GenerateTelemetryPacket(&txframe[0], &tx_length, obc_apid, 128, 1, &databuffer[0], datalength);
+		err = CCSDS_GenerateTelemetryPacket(&txframe[0], &tx_length, obc_apid, 125, 1, &databuffer[0], datalength);
 		if (err == ERR_SUCCESS) {
 			AX25_GenerateTelemetryPacket_Send(&txframe[0], tx_length);
 			return No_Error;

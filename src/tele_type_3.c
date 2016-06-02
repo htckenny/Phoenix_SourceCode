@@ -201,19 +201,14 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 
 		memcpy(txBuffer, &parameters.first_flight, sizeof(parameter_t));
 
-		little2big_32(&txBuffer[6]);
-		little2big_32(&txBuffer[21]);
-		little2big_32(&txBuffer[25]);
-		little2big_32(&txBuffer[29]);
-		little2big_32(&txBuffer[33]);
-		little2big_32(&txBuffer[37]);
-		little2big_32(&txBuffer[58]);
+		little2big_32(&txBuffer[20]);
+		little2big_32(&txBuffer[24]);
 
-		little2big_16(&txBuffer[41]);
-		little2big_16(&txBuffer[45]);
-		little2big_16(&txBuffer[47]);
-		little2big_16(&txBuffer[50]);
-		little2big_16(&txBuffer[52]);
+		little2big_16(&txBuffer[28]);
+		little2big_16(&txBuffer[32]);
+		little2big_16(&txBuffer[34]);
+		little2big_16(&txBuffer[37]);
+		little2big_16(&txBuffer[40]);
 
 		txlen = sizeof(parameter_t);
 		txBufferWithSID[0] = 34;

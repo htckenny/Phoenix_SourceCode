@@ -1732,9 +1732,16 @@ void decodeService131(uint8_t subType, uint8_t * telecommand) {
 	else if (subType == Configuration) {
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
 		txBuffer[0] = subType;
-		rxBufferLength = 236;
+		rxBufferLength = 240;
 		if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 1, &rxBuffer, rxBufferLength, adcs_delay) == E_NO_ERR) {
-			err = SendPacketWithCCSDS_AX25(&rxBuffer, rxBufferLength , adcs_apid, types, subType);
+			rxBufferWithSID[0] = 192;
+			memcpy(&rxBufferWithSID[1], &rxBuffer[0], 150);
+			err = SendPacketWithCCSDS_AX25(&rxBufferWithSID[0], 150 + 1, adcs_apid, types, subType);
+
+			rxBufferWithSID[0] = 195;
+			memcpy(&rxBufferWithSID[1], &rxBuffer[150], 90);
+			err = SendPacketWithCCSDS_AX25(&rxBufferWithSID[0], 90 + 1, adcs_apid, types, subType);
+			
 			if (err == ERR_SUCCESS)
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 			else {

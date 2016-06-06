@@ -21,8 +21,12 @@ int set_tx_rate(uint8_t mode) {
 	uint8_t txbuf[2];
 	txbuf[0] = com_tx_rate;
 	txbuf[1] = mode;
-	if (i2c_master_transaction_2(0, com_tx_node, &txbuf, 2, 0, 0, com_delay) == E_NO_ERR)
-		return No_Error;
+	if (mode == 1 || mode == 8) {
+		if (i2c_master_transaction_2(0, com_tx_node, &txbuf, 2, 0, 0, com_delay) == E_NO_ERR)
+			return No_Error;
+		else
+			return Error;
+	}
 	else
 		return Error;
 

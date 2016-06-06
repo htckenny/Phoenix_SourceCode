@@ -187,8 +187,8 @@ int firstflight_switch(struct command_context * ctx) {
 	if (sscanf(ctx->argv[1], "%u", &buffer) != 1) {
 		return CMD_ERROR_SYNTAX;
 	}
-	// if (buffer == 1) {
-	parameters.first_flight = buffer;
+	if (buffer == 1 || buffer == 0)
+		parameters.first_flight = buffer;
 	para_w_flash();
 	return CMD_ERROR_NONE;
 }
@@ -755,12 +755,12 @@ int shutdown_tm(struct command_context * ctx) {
 		return CMD_ERROR_SYNTAX;
 	if (sscanf(ctx->argv[1], "%u", &off_on) != 1)
 		return CMD_ERROR_SYNTAX;
-	if (off_on == 1)	{
+	if (off_on == 1) {
 		parameters.shutdown_flag = 1;
 		para_w_flash();
 		printf("Shutdown Command Detected!! \r\n");
 	}
-	else if (off_on == 0)	{
+	else if (off_on == 0) {
 		parameters.shutdown_flag = 0;
 		para_w_flash();
 		printf("Resume Command Detected!! \r\n");
@@ -781,7 +781,6 @@ int jump_mode(struct command_context * ctx) {
 
 	return CMD_ERROR_NONE;
 }
-
 
 int parawrite(struct command_context * ctx) {
 	parameter_init();

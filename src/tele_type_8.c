@@ -179,11 +179,15 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 
 		memcpy(&threshold, &paras, 2);
 		threshold = csp_ntoh16(threshold);
-
-		memcpy(&parameters.vbat_safe_threshold, &threshold, 2);
-		para_w_flash();
-		printf("Enter_Safe_Threshold = %d mV\n", parameters.vbat_safe_threshold);
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		if (threshold >= 6500 && threshold <= 8300) {
+			memcpy(&parameters.vbat_safe_threshold, &threshold, 2);
+			para_w_flash();
+			printf("Enter_Safe_Threshold = %d mV\n", parameters.vbat_safe_threshold);
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		}
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+		}
 		break;
 	/*---------------ID:9 Leave_Safe_Threshold----------------*/
 	case  Leave_Safe_Threshold:
@@ -197,29 +201,15 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 
 		memcpy(&threshold, &paras, 2);
 		threshold = csp_ntoh16(threshold);
-
-		memcpy(&parameters.vbat_recover_threshold, &threshold, 2);
-		para_w_flash();
-		printf("Leave_Safe_Threshold = %d mV\n", parameters.vbat_recover_threshold);
-		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
-		break;
-	/*---------------ID:10 I2C_COMMAND----------------*/
-	case  I2C_COMMAND:
-		if (para_length >= 2)
-			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
-		else {
-			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
-			break;
-		}
-		printf("Execute Type 8 Sybtype 10 , I2C_COMMAND node[%d] rx[%d] parameter \r\n", paras[0], para_length - 2);
-		if (i2c_master_transaction_2(0, paras[0], &paras[2], para_length - 2, &txBuffer, paras[1], com_delay) == E_NO_ERR) {
-			if (paras[1] != 0) {
-				i2c_master_transaction(0, com_tx_node, &txBuffer, paras[1], 0, 0, com_delay);
-			}
+		if (threshold >= 6500 && threshold <= 8300) {
+			memcpy(&parameters.vbat_recover_threshold, &threshold, 2);
+			para_w_flash();
+			printf("Leave_Safe_Threshold = %d mV\n", parameters.vbat_recover_threshold);
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
-		} else
+		}
+		else {
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
-
+		}
 		break;
 
 	/*---------------ID:11 para_to_default----------------*/
@@ -381,8 +371,10 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			parameters.SD_partition_flag = 1;
 			printf("Set SD Read to partition [1]\n");
 		}
-		else
+		else {
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+			break;
+		}
 
 		para_w_flash();
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
@@ -601,9 +593,13 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			parameters.crippled_Mode = 1;
 			printf("Set storage place to flash\n");
 		}
-		else {
+		else if (paras[0] == 0) {
 			parameters.crippled_Mode = 0;
 			printf("Set storage place to SD card\n");
+		}
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+			break;
 		}
 		para_w_flash();
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);

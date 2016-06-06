@@ -69,6 +69,7 @@ void decodeService32(uint8_t subType, uint8_t*telecommand) {
 		}
 		parameters.image_lastPartNum = paras[0];
 		parameters.image_lastPartLen = (paras[1] << 8) + paras[2];
+		para_w_flash();
 		printf("%d %d\n", parameters.image_lastPartNum, parameters.image_lastPartLen);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;

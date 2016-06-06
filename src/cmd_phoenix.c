@@ -813,6 +813,8 @@ int pararead(struct command_context * ctx) {
 	printf("crippled_Mode\t\t\t%d\n", (int) parameters.crippled_Mode);
 	printf("use_IFB\t\t\t\t%d\n", (int) parameters.use_IFB);
 	printf("GS_threshold\t\t\t%d\n", (int) parameters.GS_threshold);
+	printf("last_part_number\t\t%d\n", (int) parameters.image_lastPartNum);
+	printf("last_part_length\t\t%d\n", (int) parameters.image_lastPartLen);
 
 	return CMD_ERROR_NONE;
 }

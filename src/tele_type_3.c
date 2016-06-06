@@ -29,6 +29,7 @@
 #define Report_Error_Record	11		/* Report Error Record */
 #define Report_Data_Number	12		/* Report Collected Data Number */
 #define Report_GPS_Record	13		/* Report GPS's Record */
+#define Report_image_conf	14		/* Report image's configuration */
 
 extern uint16_t fletcher(uint8_t *script, size_t length);
 extern void little2big_32(uint8_t * input_data);
@@ -429,6 +430,21 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 			}
 			vTaskDelay(0.5 * delay_time_based);
 		}
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		break;
+	/*--------------- ID:14 Report Image's Configuration ----------------*/
+	case Report_image_conf:
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+
+		memcpy(txBuffer, &parameters.image_lastPartNum, 3);
+
+		little2big_16(&txBuffer[1]);
+
+		txlen = 3;
+		txBufferWithSID[0] = 44;
+		memcpy(&txBufferWithSID[1], &txBuffer[0], txlen);
+		hex_dump(&txBufferWithSID[1], txlen);
+		SendPacketWithCCSDS_AX25(&txBufferWithSID[0], txlen + 1, obc_apid, type, 25);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
 	default:

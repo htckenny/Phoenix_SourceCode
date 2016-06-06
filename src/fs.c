@@ -506,7 +506,7 @@ int image_part_check(uint8_t partNo, uint8_t * Error_record, int * total_Errnumb
 
 	fd = open(path, O_RDONLY);
 
-	if (partNo != image_lastPartNum) {
+	if (partNo != parameters.image_lastPartNum) {
 		for (int j = 0; j < image_frame_set; j++) {
 			lseek(fd, 150 * j, SEEK_SET);
 			check_byte = 0;
@@ -522,7 +522,7 @@ int image_part_check(uint8_t partNo, uint8_t * Error_record, int * total_Errnumb
 		}
 	}
 	else {
-		piece_number = image_lastPartLen / 150 ;
+		piece_number = parameters.image_lastPartLen / 150 ;
 		for (int j = 0; j < piece_number; j++) {
 			lseek(fd, 150 * j, SEEK_SET);
 			check_byte = 0;
@@ -538,7 +538,7 @@ int image_part_check(uint8_t partNo, uint8_t * Error_record, int * total_Errnumb
 		}
 		lseek(fd, 150 * piece_number, SEEK_SET);
 		check_byte = 0;
-		for (int k = 0; k < (image_lastPartLen - piece_number * 150); k++) {
+		for (int k = 0; k < (parameters.image_lastPartLen - piece_number * 150); k++) {
 			load_byte = 0;
 			read(fd, &load_byte, sizeof(load_byte));
 			check_byte += load_byte;

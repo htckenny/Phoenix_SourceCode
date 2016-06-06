@@ -101,8 +101,7 @@ uint8_t use_GPS_header;
 uint8_t inms_tm_status;
 uint8_t seuv_with_INMS;
 uint8_t INMS_power_status;
-uint8_t image_lastPartNum;
-uint16_t image_lastPartLen;
+
 uint8_t decode_command;
 uint32_t lastCommandTime;
 
@@ -122,7 +121,7 @@ typedef struct __attribute__((packed)) {
 
 	/*  seuv related  */
 	uint8_t seuv_mode;					/*	(0x02) = Mode B always work
-											(0x03) = Mode Off	
+											(0x03) = Mode Off
 											(0x04) = Mode Auto             */
 	uint8_t seuv_period;				// period to collect a SEUV data, default = 60 (second)
 	uint8_t seuv_sample_rate;			// how many samples to take when collect a SEUV data
@@ -134,7 +133,7 @@ typedef struct __attribute__((packed)) {
 	uint8_t seuv_ch2_G8_conf;
 	uint8_t seuv_ch3_G8_conf;
 	uint8_t seuv_ch4_G8_conf;
-	
+
 
 	uint8_t hk_collect_period;      	// period to collect a house keeping data, default = 60 (second)
 	uint8_t beacon_period;         	 	// beacon period while not in early orbit mode, default = 30(s)
@@ -159,6 +158,10 @@ typedef struct __attribute__((packed)) {
 	/* INMS related */
 	uint8_t inms_status;
 	uint16_t INMS_timeout;
+
+	/* Image related */
+	uint8_t image_lastPartNum;
+	uint16_t image_lastPartLen;
 
 } parameter_t;
 parameter_t parameters;

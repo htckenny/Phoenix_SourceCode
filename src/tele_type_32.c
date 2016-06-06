@@ -67,9 +67,9 @@ void decodeService32(uint8_t subType, uint8_t*telecommand) {
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 			break;
 		}
-		image_lastPartNum = paras[0];
-		image_lastPartLen = (paras[1] << 8) + paras[2];
-		printf("%d %d\n", image_lastPartNum, image_lastPartLen);
+		parameters.image_lastPartNum = paras[0];
+		parameters.image_lastPartLen = (paras[1] << 8) + paras[2];
+		printf("%d %d\n", parameters.image_lastPartNum, parameters.image_lastPartLen);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
 	/*--------------- ID:3 Request Image part's status ----------------*/
@@ -101,7 +101,7 @@ void decodeService32(uint8_t subType, uint8_t*telecommand) {
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 			break;
 		}
-		if (image_check(image_lastPartNum, image_lastPartLen, Miss_table, total_number) == Error) {
+		if (image_check(parameters.image_lastPartNum, parameters.image_lastPartLen, Miss_table, total_number) == Error) {
 			completionError = FS_IO_ERR;
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 		}
@@ -120,7 +120,7 @@ void decodeService32(uint8_t subType, uint8_t*telecommand) {
 			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 			break;
 		}
-		image_merge(image_lastPartNum, image_lastPartLen);
+		image_merge(parameters.image_lastPartNum, parameters.image_lastPartLen);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
 	/*--------------- ID:6 Move the image from SD card to FLASH memory ----------------*/

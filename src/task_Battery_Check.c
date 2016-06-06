@@ -181,7 +181,7 @@ void Enter_Safe_Mode(int last_mode) {
 		gps_task = NULL;
 	}
 	if (Anom_mon_task != NULL) {
-		printf("Shutting Down GPS task \n");
+		printf("Shutting Down Anomaly task \n");
 		vTaskDelete(Anom_mon_task);
 		Anom_mon_task = NULL;
 	}
@@ -196,40 +196,50 @@ void Leave_safe_mode()
 
 void BatteryCheck_Task(void * pvParameters) {
 	uint16_t vbat;
+	uint8_t safe_counter = 0;
+	uint8_t normal_counter = 0;
 
 	vTaskDelay(3 * delay_time_based);
 	printf("Battery Check Task activated \r\n");
 
 	while (1) {
 		vbat = battery_read();
-		printf("vbat = %" PRIu16 " mV\n", vbat);
-		if ( (int) vbat < (int) parameters.vbat_safe_threshold && vbat != 0) {
-			vTaskDelay(5 * delay_time_based);
-			vbat = battery_read();
-			if ( (int) vbat < (int) parameters.vbat_safe_threshold && vbat != 0) {
-				if (parameters.vbat_safe_threshold != 0) {
-					printf("safe mode detected\n");
-					generate_Error_Report(1, vbat);
-					HK_frame.mode_status_flag = safe_mode;
-				}
-			}
-		}
+		printf("vbat = %" PRIu16 " mV\t", vbat);
 
 		if (HK_frame.mode_status_flag == safe_mode) {
 			while (1) {
 				vTaskDelay(30 * delay_time_based);
 				vbat = battery_read();
-				printf("(safe)vbat = %04u mV \r\n", vbat);
+				printf("(safe)vbat = %04u mV \t", vbat);
 				if ( (int)vbat > (int)parameters.vbat_recover_threshold) {
-					vTaskDelay(5 * delay_time_based);
-					vbat = battery_read();
-					if ( (int)vbat > (int)parameters.vbat_recover_threshold) {
-						if (parameters.vbat_recover_threshold != 0 && vbat != 0) {
-							Leave_safe_mode();           /* Leave safemode  */
-							break;
-						}
+					safe_counter ++;
+					printf("Batt outcounter = %d\n", safe_counter);
+					if (safe_counter >= 6) {
+						safe_counter = 0;
+						Leave_safe_mode();
+						break;
 					}
 				}
+				else {
+					printf("\n");
+					safe_counter = 0;
+				}
+			}
+		}
+		else {
+			if ( (int) vbat < (int) parameters.vbat_safe_threshold && vbat != 0) {
+				normal_counter ++;
+				printf("Batt outcounter = %d\n", normal_counter);
+				if (normal_counter >= 6) {
+					printf("safe mode detected\n");
+					generate_Error_Report(1, vbat);
+					HK_frame.mode_status_flag = safe_mode;
+					normal_counter = 0;
+				}
+			}
+			else {
+				printf("\n");
+				normal_counter = 0;
 			}
 		}
 		vTaskDelay(30 * delay_time_based);

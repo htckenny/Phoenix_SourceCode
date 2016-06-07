@@ -157,26 +157,20 @@ void adcs2body(uint16_t *adcs, uint16_t *body)
 void adcs2inms(uint8_t *adcs, uint8_t *inms)
 {
 	int16_t value;
-	uint16_t value_f;
-	for (int i = 0; i < 3; i++)
-	{
+	int16_t value_f;
+	for (int i = 0; i < 3; i++)	{
 		memcpy(&value, &adcs[2 * i + 4], 2);
-		value_f = (uint16_t) (value * 0.005);
-		printf("%x\n", value_f );
+		value_f = (int16_t) (value * 0.005);
 		memcpy(&inms[2 * i + 4], &value_f, 2);
 	}
-	for (int i = 0; i < 3; i++)
-	{
+	for (int i = 0; i < 3; i++)	{
 		memcpy(&value, &adcs[2 * i + 10], 2);
-		value_f = (uint16_t) (value * 10);
-		printf("%x\n", value_f );
+		value_f = (int16_t) (value * 10);
 		memcpy(&inms[2 * i + 10], &value_f, 2);
 	}
-	for (int i = 0; i < 3; i++)
-	{
+	for (int i = 0; i < 3; i++)	{
 		memcpy(&value, &adcs[2 * i + 16], 2);
-		value_f = (uint16_t) (value * 0.05);
-		printf("%x\n", value_f );
+		value_f = (int16_t) (value * 0.05);
 		memcpy(&inms[2 * i + 16], &value_f, 2);
 	}
 }

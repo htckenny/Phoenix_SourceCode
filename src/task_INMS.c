@@ -154,12 +154,39 @@ void adcs2body(uint16_t *adcs, uint16_t *body)
 	body[4] = adcs[4];		/* phoenix y = adcs y */
 	body[5] = -adcs[3];		/* phoenix z =-adcs x */
 }
-void package_with_header(uint8_t *ucharAdcs)
+void adcs2inms(uint8_t *adcs, uint8_t *inms)
+{
+	int16_t value;
+	uint16_t value_f;
+	for (int i = 0; i < 3; i++)
+	{
+		memcpy(&value, &adcs[2 * i + 4], 2);
+		value_f = (uint16_t) (value * 0.005);
+		printf("%x\n", value_f );
+		memcpy(&inms[2 * i + 4], &value_f, 2);
+	}
+	for (int i = 0; i < 3; i++)
+	{
+		memcpy(&value, &adcs[2 * i + 10], 2);
+		value_f = (uint16_t) (value * 10);
+		printf("%x\n", value_f );
+		memcpy(&inms[2 * i + 10], &value_f, 2);
+	}
+	for (int i = 0; i < 3; i++)
+	{
+		memcpy(&value, &adcs[2 * i + 16], 2);
+		value_f = (uint16_t) (value * 0.05);
+		printf("%x\n", value_f );
+		memcpy(&inms[2 * i + 16], &value_f, 2);
+	}
+}
+void package_with_header(uint8_t *ucharAdcs_final)
 {
 	uint8_t rxbuf[48];
 	uint8_t txbuf;
 	uint16_t rxbuf_ADCS[6];
 	uint16_t rxbuf_Body[6];
+	uint8_t ucharAdcs[22];
 	int16_t	r_ECI[3];
 	int32_t	r_ECEF[3];
 	float ECEF_time[6];
@@ -172,7 +199,7 @@ void package_with_header(uint8_t *ucharAdcs)
 	t.tv_nsec = 0;
 	obc_timesync(&t, 6000);
 	t.tv_sec -= 946684800;
-	memcpy(&ucharAdcs[0], &t.tv_sec, 4);
+	memcpy(&ucharAdcs_final[0], &t.tv_sec, 4);
 
 	if (use_GPS_header == 0) {
 		txbuf = 0x88;	// ID 136
@@ -181,7 +208,8 @@ void package_with_header(uint8_t *ucharAdcs)
 			memcpy(&rxbuf_ADCS[0], &rxbuf[18], 12);
 			adcs2body(&rxbuf_ADCS[0], &rxbuf_Body[0]);
 			memcpy(&ucharAdcs[4], &rxbuf_Body[0], 12);
-			memcpy(&ucharAdcs[16], &rxbuf_ADCS[0], 6);
+			memcpy(&ucharAdcs[16], &rxbuf[30], 6);
+			adcs2inms(&ucharAdcs[0], &ucharAdcs_final[0]);
 		}
 	}
 	else if (use_GPS_header == 1) {
@@ -232,7 +260,8 @@ void package_with_header(uint8_t *ucharAdcs)
 					memcpy(&rxbuf_ADCS[0], &rxbuf[18], 12);
 					adcs2body(&rxbuf_ADCS[0], &rxbuf_Body[0]);
 					memcpy(&ucharAdcs[4], &rxbuf_Body[0], 12);
-					memcpy(&ucharAdcs[16], &rxbuf_ADCS[0], 6);
+					memcpy(&ucharAdcs[16], &rxbuf[30], 6);
+					adcs2inms(&ucharAdcs[0], &ucharAdcs_final[0]);
 				}
 			}
 		}

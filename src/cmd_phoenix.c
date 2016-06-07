@@ -501,9 +501,11 @@ int INMS_switch(struct command_context * ctx) {
 	} else if (buffer == 4) {
 		if (inms_temp_moniter == NULL)
 			xTaskCreate(vTaskInmsTemperatureMonitor, (const signed char * ) "InmsTM", 1024 * 4, NULL, 1, &inms_temp_moniter);
+	} else if (buffer == 5) {
+		if (inms_task_receive == NULL)
+			xTaskCreate(vTaskInmsReceive, (const signed char*) "INMSR", 1024 * 4, NULL, 2, &inms_task_receive);
 	}
-
-	// xTaskCreate(vTaskInmsReceive, (const signed char*) "INMSR", 1024 * 4, NULL, 2, &inms_task_receive);
+	
 
 	else if (buffer == 0) {
 		if (inms_error_handle != NULL) {
@@ -521,6 +523,10 @@ int INMS_switch(struct command_context * ctx) {
 		if (inms_temp_moniter != NULL) {
 			vTaskDelete(inms_temp_moniter);
 			inms_temp_moniter = NULL;
+		}
+		if (inms_task_receive != NULL) {
+			vTaskDelete(inms_task_receive);
+			inms_task_receive = NULL;
 		}
 	}
 	return CMD_ERROR_NONE;

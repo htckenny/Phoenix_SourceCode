@@ -210,6 +210,7 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 		little2big_16(&txBuffer[34]);
 		little2big_16(&txBuffer[37]);
 		little2big_16(&txBuffer[40]);
+		little2big_16(&txBuffer[43]);
 
 		txlen = sizeof(parameter_t);
 		txBufferWithSID[0] = 34;

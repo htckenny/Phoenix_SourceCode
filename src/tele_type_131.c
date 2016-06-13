@@ -1779,13 +1779,48 @@ void decodeService131(uint8_t subType, uint8_t * telecommand) {
 		txBuffer[0] = subType;
 		rxBufferLength = 240;
 		if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 1, &rxBuffer, rxBufferLength, adcs_delay) == E_NO_ERR) {
+
+			little2big_16(&rxBuffer[3]);
+			little2big_16(&rxBuffer[5]);
+			little2big_16(&rxBuffer[7]);
+			little2big_16(&rxBuffer[10]);
+			little2big_16(&rxBuffer[13]);
+			little2big_16(&rxBuffer[15]);
+			little2big_16(&rxBuffer[18]);
+			little2big_16(&rxBuffer[20]);
+			little2big_16(&rxBuffer[22]);
+			little2big_16(&rxBuffer[40]);
+			little2big_16(&rxBuffer[42]);
+			little2big_16(&rxBuffer[44]);
+			little2big_16(&rxBuffer[52]);
+			little2big_16(&rxBuffer[54]);
+			little2big_16(&rxBuffer[57]);
+			little2big_16(&rxBuffer[59]);
+			little2big_16(&rxBuffer[61]);
+			little2big_16(&rxBuffer[69]);
+			little2big_16(&rxBuffer[71]);
+			for (int i = 0; i < 38; ++i) {
+				little2big_16(&rxBuffer[74 + 2 * i]);
+			}
+
+			little2big_32(&rxBuffer[150]);
+			little2big_32(&rxBuffer[154]);
+			little2big_16(&rxBuffer[158]);
+			for (int i = 0; i < 7; ++i) {
+				little2big_32(&rxBuffer[160 + 4 * i]);
+			}
+			little2big_16(&rxBuffer[188]);
+			for (int i = 0; i < 12; ++i) {
+				little2big_32(&rxBuffer[190 + 4 * i]);
+			}
+
 			rxBufferWithSID[0] = 192;
 			memcpy(&rxBufferWithSID[1], &rxBuffer[0], 150);
-			err = SendPacketWithCCSDS_AX25(&rxBufferWithSID[0], 150 + 1, adcs_apid, types, subType);
-
+			err = SendPacketWithCCSDS_AX25(&rxBufferWithSID[0], 150 + 1, adcs_apid, 3, 25);
+			vTaskDelay(1 * delay_time_based);
 			rxBufferWithSID[0] = 195;
 			memcpy(&rxBufferWithSID[1], &rxBuffer[150], 90);
-			err = SendPacketWithCCSDS_AX25(&rxBufferWithSID[0], 90 + 1, adcs_apid, types, subType);
+			err = SendPacketWithCCSDS_AX25(&rxBufferWithSID[0], 90 + 1, adcs_apid, 3, 25);
 
 			if (err == ERR_SUCCESS)
 				sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);

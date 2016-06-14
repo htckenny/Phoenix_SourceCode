@@ -201,14 +201,14 @@ int getWodFrame(int fnum) {
 	// calmulbit(fnum, 5, tempComm);
 	// calmulbit(fnum, 6, tempEps);
 	// calmulbit(fnum, 7, tempBat);
-	wod[(fnum - 1) * 8 + 0] = mode;
-	wod[(fnum - 1) * 8 + 1] = batVoltage;
-	wod[(fnum - 1) * 8 + 2] = batCurrent;
-	wod[(fnum - 1) * 8 + 3] = bus3v3Current;
-	wod[(fnum - 1) * 8 + 4] = bus5v0Current;
-	wod[(fnum - 1) * 8 + 5] = tempComm;
-	wod[(fnum - 1) * 8 + 6] = tempEps;
-	wod[(fnum - 1) * 8 + 7] = tempBat;
+	wod[(fnum - 1) * 8 + 4] = mode;
+	wod[(fnum - 1) * 8 + 5] = batVoltage;
+	wod[(fnum - 1) * 8 + 6] = batCurrent;
+	wod[(fnum - 1) * 8 + 7] = bus3v3Current;
+	wod[(fnum - 1) * 8 + 8] = bus5v0Current;
+	wod[(fnum - 1) * 8 + 9] = tempComm;
+	wod[(fnum - 1) * 8 + 10] = tempEps;
+	wod[(fnum - 1) * 8 + 11] = tempBat;
 
 	/* Beacon Message UPDATE */
 	beacon_frame.batVoltage = batVoltage;

@@ -991,7 +991,6 @@ int inms_data_read_crippled(int data_no, void * txbuf)
 		close(fd);
 		return Error;
 	}
-	hex_dump(txbuf, inms_data_length);
 	close(fd);
 	return No_Error;
 }
@@ -1305,7 +1304,6 @@ int wod_read_crippled(int data_no, void * txbuf)
 		close(fd);
 		return Error;
 	}
-	hex_dump(txbuf, wod_length);
 	close(fd);
 	return No_Error;
 }
@@ -1354,6 +1352,14 @@ void seuv_write_crippled ()
 	int fd, bytes;
 
 	char fileName[] = "/boot/SEU_DATA.bin";
+
+	timestamp_t t;
+	// Get current time
+	t.tv_sec = 0;
+	t.tv_nsec = 0;
+	obc_timesync(&t, 6000);
+
+	seuvFrame.packettime = t.tv_sec - 946684800;
 
 	fd = open(fileName, O_CREAT | O_APPEND | O_RDWR);
 	if (fd < 0) {
@@ -1442,7 +1448,6 @@ int seuv_read_crippled(int data_no, void * txbuf)
 		close(fd);
 		return Error;
 	}
-	hex_dump(txbuf, seuv_length);
 	close(fd);
 	return No_Error;
 }
@@ -1575,7 +1580,6 @@ int hk_read_crippled(int data_no, void * txbuf)
 		close(fd);
 		return Error;
 	}
-	hex_dump(txbuf, hk_length);
 	close(fd);
 	return No_Error;
 }
@@ -1707,7 +1711,6 @@ int eop_read_crippled(int data_no, void * txbuf)
 		close(fd);
 		return Error;
 	}
-	hex_dump(txbuf, eop_length);
 	close(fd);
 	return No_Error;
 }

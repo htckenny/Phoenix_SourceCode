@@ -187,7 +187,10 @@ void get_a_packet(int gain) {
             printf("4 A = %.3f , S = %.3f\n", seuvFrame.ch4AVG, seuvFrame.ch4STD);
 
             seuvFrame.samples += 0 ;
-            seuv_write_dup();
+            if (parameters.crippled_Mode == 0)
+                seuv_write_dup();
+            else
+                seuv_write_crippled();
             seuvFrame.samples -= 0 ;
         }
         else {

@@ -152,6 +152,7 @@ void decodeService31(uint8_t subType, uint8_t*telecommand) {
 		count = photo_count(photo_last_size);
 		for (int i = 0; i < count; i++) {
 			if (photo_downlink(i, photo_buffer, 190) == No_Error) {
+				printf("\t %d\n", i);
 				SendPacketWithCCSDS_AX25(&photo_buffer, 190, obc_apid, 31, subType);
 			}
 			else {
@@ -159,6 +160,7 @@ void decodeService31(uint8_t subType, uint8_t*telecommand) {
 				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 				break;
 			}
+			vTaskDelay(0.5 *delay_time_based);
 		}
 		if (photo_downlink(count, photo_buffer, photo_last_size[0]) == No_Error) {
 			SendPacketWithCCSDS_AX25(&photo_buffer, photo_last_size[0], obc_apid, 31, subType);

@@ -37,7 +37,7 @@
      _a < _b ? _a : _b; })
 
 static timestamp_t t;
-uint8_t wod[232];
+uint8_t wod[wod_length];
 uint8_t beaconWod [8];
 
 /* calculate the position of the memory and then store in. */
@@ -286,7 +286,7 @@ void WOD_Task(void * pvParameters) {
 				wod_write_crippled(&wod[0]);
 		}
 
-		for (int i = 0; i < 232; i++) {
+		for (int i = 0; i < wod_length; i++) {
 			wod[i] = 0;
 		}
 	}

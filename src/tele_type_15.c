@@ -22,6 +22,8 @@
 #define abort_transfer		128
 
 extern void beacon_Task(void * pvParameters);
+extern int CIC();
+extern void Read_Execute();
 
 void decodeService15(uint8_t subType, uint8_t*telecommand) {
 

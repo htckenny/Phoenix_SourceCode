@@ -33,6 +33,7 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 	uint16_t packet_length = (telecommand[4] << 8) + telecommand[5] - 4;
 	uint8_t *rxdata = NULL;
 	uint8_t paras[180];
+	uint8_t flag;
 	if ( packet_length > 0)
 		memcpy(&paras, telecommand + 9, packet_length );
 	switch (subType) {
@@ -221,12 +222,23 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 					vTaskSuspend(hk_task);
 				rxdata = malloc(hk_length);
 				for (int i = paras[1]; i < paras[1] + paras[2]; i++) {
+					if (abort_transfer_flag == 1) {
+						abort_transfer_flag = 0;
+						break;
+					}
 					if (hk_read_crippled(i, rxdata) == No_Error) {
 						SendDataWithCCSDS_AX25(1, &rxdata[0]);
 						vTaskDelay(0.5 * delay_time_based);
 					}
 					else
 						break;
+					flag = CIC();
+					if ((flag > 0) && (flag < 41)) {
+						printf("--------------------------------------------- \r\n");
+						printf("Find %d frame in receive buffer \r\n", flag);
+						Read_Execute();
+						printf("--------------------------------------------- \r\n");
+					}
 				}
 				if (hk_task != NULL)
 					vTaskResume(hk_task);
@@ -237,12 +249,23 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 					vTaskSuspend(inms_task);
 				rxdata = malloc(inms_data_length);
 				for (int i = paras[1]; i < paras[1] + paras[2]; i++) {
+					if (abort_transfer_flag == 1) {
+						abort_transfer_flag = 0;
+						break;
+					}
 					if (inms_data_read_crippled(i, rxdata) == No_Error) {
 						SendDataWithCCSDS_AX25(2, &rxdata[0]);
 						vTaskDelay(0.5 * delay_time_based);
 					}
 					else
 						break;
+					flag = CIC();
+					if ((flag > 0) && (flag < 41)) {
+						printf("--------------------------------------------- \r\n");
+						printf("Find %d frame in receive buffer \r\n", flag);
+						Read_Execute();
+						printf("--------------------------------------------- \r\n");
+					}
 				}
 				if (inms_task != NULL)
 					vTaskResume(inms_task);
@@ -253,12 +276,23 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 					vTaskSuspend(seuv_task);
 				rxdata = malloc(seuv_length);
 				for (int i = paras[1]; i < paras[1] + paras[2]; i++) {
+					if (abort_transfer_flag == 1) {
+						abort_transfer_flag = 0;
+						break;
+					}
 					if (seuv_read_crippled(i, rxdata) == No_Error) {
 						SendDataWithCCSDS_AX25(3, &rxdata[0]);
 						vTaskDelay(0.5 * delay_time_based);
 					}
 					else
 						break;
+					flag = CIC();
+					if ((flag > 0) && (flag < 41)) {
+						printf("--------------------------------------------- \r\n");
+						printf("Find %d frame in receive buffer \r\n", flag);
+						Read_Execute();
+						printf("--------------------------------------------- \r\n");
+					}
 				}
 				if (seuv_task != NULL)
 					vTaskResume(seuv_task);
@@ -269,12 +303,23 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 					vTaskSuspend(eop_task);
 				rxdata = malloc(eop_length);
 				for (int i = paras[1]; i < paras[1] + paras[2]; i++) {
+					if (abort_transfer_flag == 1) {
+						abort_transfer_flag = 0;
+						break;
+					}
 					if (eop_read_crippled(i, rxdata) == No_Error) {
 						SendDataWithCCSDS_AX25(4, &rxdata[0]);
 						vTaskDelay(0.5 * delay_time_based);
 					}
 					else
 						break;
+					flag = CIC();
+					if ((flag > 0) && (flag < 41)) {
+						printf("--------------------------------------------- \r\n");
+						printf("Find %d frame in receive buffer \r\n", flag);
+						Read_Execute();
+						printf("--------------------------------------------- \r\n");
+					}
 				}
 				if (eop_task != NULL)
 					vTaskResume(eop_task);
@@ -285,12 +330,23 @@ void decodeService15(uint8_t subType, uint8_t*telecommand) {
 					vTaskSuspend(wod_task);
 				rxdata = malloc(wod_length);
 				for (int i = paras[1]; i < paras[1] + paras[2]; i++) {
+					if (abort_transfer_flag == 1) {
+						abort_transfer_flag = 0;
+						break;
+					}
 					if (wod_read_crippled(i, rxdata) == No_Error) {
 						SendDataWithCCSDS_AX25(5, &rxdata[0]);
 						vTaskDelay(0.5 * delay_time_based);
 					}
 					else
 						break;
+					flag = CIC();
+					if ((flag > 0) && (flag < 41)) {
+						printf("--------------------------------------------- \r\n");
+						printf("Find %d frame in receive buffer \r\n", flag);
+						Read_Execute();
+						printf("--------------------------------------------- \r\n");
+					}
 				}
 				if (wod_task != NULL)
 					vTaskResume(wod_task);

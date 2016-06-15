@@ -98,8 +98,12 @@ void decodeService31(uint8_t subType, uint8_t*telecommand) {
 		if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 1, 0, 0, adcs_delay) == E_NO_ERR) {
 			printf("reset list\n");
 		}
-		else
+		else {
 			printf("failed to reset list\n");
+			completionError = I2C_READ_ERROR;
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+			break;
+		}
 		while (1) {
 			txBuffer[0] = 240;
 			if (i2c_master_transaction_2(0, adcs_node, &txBuffer, 1, &rxBuffer, 22, adcs_delay) == E_NO_ERR) {
@@ -113,8 +117,12 @@ void decodeService31(uint8_t subType, uint8_t*telecommand) {
 					i2c_master_transaction_2(0, adcs_node, &txBuffer, 1, 0, 0, adcs_delay);
 				}
 			}
-			else
+			else {
 				printf("failed get file information\n");
+				completionError = I2C_READ_ERROR;
+				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+				break;
+			}
 			vTaskDelay(0.5 * delay_time_based);
 		}
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
@@ -136,7 +144,9 @@ void decodeService31(uint8_t subType, uint8_t*telecommand) {
 		else {
 			completionError = FS_IO_ERR;
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+			break;
 		}
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
 	/*---------------  ID:5 File download operation  ----------------*/
 	case file_download:
@@ -160,7 +170,7 @@ void decodeService31(uint8_t subType, uint8_t*telecommand) {
 				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 				break;
 			}
-			vTaskDelay(0.5 *delay_time_based);
+			vTaskDelay(0.5 * delay_time_based);
 		}
 		if (photo_downlink(count, photo_buffer, photo_last_size[0]) == No_Error) {
 			SendPacketWithCCSDS_AX25(&photo_buffer, photo_last_size[0], obc_apid, 31, subType);

@@ -274,8 +274,9 @@ int photo_save(char fileName [])
 			else
 				return Error;
 
-			if (blockLength != 0)
+			if (blockLength != 0) {
 				break;
+			}
 			else {
 				txBuffer[0] = 117;
 				memcpy(&txBuffer[1], &counter, 2);

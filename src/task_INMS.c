@@ -830,7 +830,7 @@ void vTaskInmsCurrentMonitor(void * pvParameters) {
 		currentValue_5 = Interface_5V_current_get() ;
 		currentValue_33 = Interface_3V3_current_get();
 
-		printf("\t\t\t\t\t\t\tCurrent_5V: %.3lf mA\t", (double)currentValue_5 / 4.7);
+		printf("\t\t\t\t\t\t\t\t\t\tCurrent_5V: %.3lf mA\t", (double)currentValue_5 / 4.7);
 		if ((double)currentValue_5 / 4.7 >= overCurrent_5) {
 			Counter_5 ++;
 			printf("C: %d\n", Counter_5);
@@ -846,7 +846,7 @@ void vTaskInmsCurrentMonitor(void * pvParameters) {
 		}
 		// printf("\E[1A\r");
 
-		printf("\t\t\t\t\t\t\tCurrent_3.3V: %.3lf mA\t", (double)currentValue_33 / 68);
+		printf("\t\t\t\t\t\t\t\t\t\tCurrent_3.3V: %.3lf mA\t", (double)currentValue_33 / 68);
 		if ((double)currentValue_33 / 68 >= overCurrent_33) {
 			Counter_33 ++;
 			printf("C: %d\n", Counter_33);
@@ -873,7 +873,7 @@ void vTaskInmsTemperatureMonitor(void * pvParameters) {
 		/* Get temperature data from ADC */
 		inms_temperature = (Interface_inms_thermistor_get() / 3) - 273;
 
-		printf("\t\t\t\t\t\t\tTemperature %03d degree\t", inms_temperature);
+		printf("\t\t\t\t\t\t\t\t\t\tTemperature %03d degree\t", inms_temperature);
 		// printf("\E[1A\r");
 
 		/* Operational Temperature Range -20 to +40 */

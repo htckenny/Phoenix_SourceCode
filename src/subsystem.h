@@ -8,8 +8,8 @@
 #define SUBSYSTEM_H_
 
 #include "parameter.h"
-#define software_version	"v2.8"
-#define Last_Update_time	"2016-06-14"
+#define software_version	"v3.0"
+#define Last_Update_time	"2016-06-20"
 
 #define ground_Test_Mode	1
 
@@ -23,7 +23,7 @@
 
 #define antenna_deploy		0
 #define mag_meter_deploy	0
-#define initial_Time		1462838400		//1475280000 			//946684800 
+#define initial_Time		946684800		//1475280000 			//946684800 
 /* !!!!!!!!!!!!!!!!!!!!!!!! UINT = LSB !!!!!!!!!!!!!! */
 /* Image frame set number */
 #define image_frame_set		100

@@ -237,11 +237,11 @@ void beacon_Task(void * pvParameters) {
 	xLastWakeTime = xTaskGetTickCount();
 	while (1) {
 
-		if (parameters.first_flight == 1) {
-			xFrequency = 10 * delay_time_based;		// when early orbit, beacon period = 10 sec
-		}
-		else if (HK_frame.mode_status_flag == 0) {	// Safe mode
+		if (HK_frame.mode_status_flag == 0) {	// Safe mode
 			xFrequency = 20 * delay_time_based;
+		}
+		else if (parameters.first_flight == 1) {
+			xFrequency = 10 * delay_time_based;		// when early orbit, beacon period = 10 sec
 		}
 		else if (parameters.beacon_period > 0) {
 			xFrequency = parameters.beacon_period * delay_time_based;

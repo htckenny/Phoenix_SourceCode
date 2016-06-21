@@ -888,6 +888,7 @@ void vTaskInmsTemperatureMonitor(void * pvParameters) {
 			inRangeCounter = 0;
 		}
 		else if (inms_temperature <= 37 && inms_temperature >= -17) {
+			printf("\n");
 			inRangeCounter ++;
 			if (inRangeCounter >= 6) {
 				inms_tm_status = 1;

@@ -30,6 +30,7 @@
 #define Report_Data_Number	12		/* Report Collected Data Number */
 #define Report_GPS_Record	13		/* Report GPS's Record */
 #define Report_image_conf	14		/* Report image's configuration */
+#define Report_secret_cmd	99		/* Report Secrect Command */
 
 extern uint16_t fletcher(uint8_t *script, size_t length);
 extern void little2big_32(uint8_t * input_data);
@@ -448,6 +449,21 @@ void decodeService3(uint8_t subType, uint8_t* telecommand) {
 		SendPacketWithCCSDS_AX25(&txBufferWithSID[0], txlen + 1, obc_apid, type, 25);
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
+
+	/*--------------- ID:99 Report Secret Commnad ----------------*/
+	case Report_secret_cmd:
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+		txlen = 48;
+
+		for (int i = 0 ; i < 40 ; i++) {
+			secret_command_read(i, &txBuffer[0]);
+			hex_dump(&txBuffer[0], txlen);
+			SendPacketWithCCSDS_AX25(&txBuffer[0], txlen, obc_apid, type, subType);
+			vTaskDelay(0.5 * delay_time_based);
+		}
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		break;
+
 	default:
 		sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
 		break;

@@ -24,7 +24,7 @@
 #define Test_Delay			0
 #define format_SD			0
 #define Test_downlink		0
-#define Test_downlink_2		1
+#define Test_downlink_2		0
 #define Test_xHandle		0
 #define Test_Err_Packet		0
 #define Test_ECEF_ECI		0

@@ -24,7 +24,7 @@
 #define Test_Delay			0
 #define format_SD			0
 #define Test_downlink		0
-#define Test_downlink_2		0
+#define Test_downlink_2		1
 #define Test_xHandle		0
 #define Test_Err_Packet		0
 #define Test_ECEF_ECI		0
@@ -517,8 +517,12 @@ void vTaskfstest(void * pvParameters) {
 
 	vTaskDelay(1 * delay_time_based);
 
-	uint8_t test[inms_data_length];
-	for (int i = 0; i < inms_data_length; i++)
+	uint8_t test[wod_length];
+	test[0] = 0;
+	test[1] = 0;
+	test[2] = 0;
+	test[3] = 0x1c;
+	for (int i = 4; i < wod_length - 4; i++)
 	{
 		test[i] = i;
 	}
@@ -526,14 +530,15 @@ void vTaskfstest(void * pvParameters) {
 		if (parameters.crippled_Mode == 0)
 			inms_data_write_dup(test);
 		else {
-			hk_write_crippled(test);
-			vTaskDelay(5 * delay_time_based);
-			inms_data_write_crippled(test);
-			vTaskDelay(5 * delay_time_based);
-			seuv_write_crippled(test);
-			vTaskDelay(5 * delay_time_based);
-			eop_write_crippled(test);
-			vTaskDelay(5 * delay_time_based);
+		// 	hk_write_crippled(test);
+		// 	vTaskDelay(5 * delay_time_based);
+		// 	inms_data_write_crippled(test);
+		// 	vTaskDelay(5 * delay_time_based);
+		// 	seuv_write_crippled(test);
+		// 	vTaskDelay(5 * delay_time_based);
+		// 	eop_write_crippled(test);
+		// 	
+		// 	
 			wod_write_crippled(test);
 
 

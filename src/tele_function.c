@@ -46,12 +46,20 @@ void set_Call_Sign(int SSID) {
 	i2c_master_transaction_2(0, com_tx_node, &txdata, 8, 0, 0, com_delay);
 
 	txdata[0] = 0x23; 	// set FROM Call-Sign //
-	txdata[1] = 79; 	// TW01TN
-	txdata[2] = 78;		// ON01TW
+	/* ON01TW */
+	txdata[1] = 79; 
+	txdata[2] = 78;
 	txdata[3] = 48;
 	txdata[4] = 49;
 	txdata[5] = 84;
 	txdata[6] = 87;
+	/* TW01TN */
+	// txdata[1] = 84; 	
+	// txdata[2] = 87;
+	// txdata[3] = 48;
+	// txdata[4] = 49;
+	// txdata[5] = 84;
+	// txdata[6] = 78;
 	txdata[7] = 0x60 + 2 * (uint8_t)SSID;
 
 	i2c_master_transaction_2(0, com_tx_node, &txdata, 8, 0, 0, com_delay);

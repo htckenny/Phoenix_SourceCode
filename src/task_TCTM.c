@@ -82,6 +82,7 @@ void Telecom_Task(void * pvParameters) {
 			txdata = com_tx_hk;
 			i2c_master_transaction_2(0, com_tx_node, &txdata, 1, &rxdata, 1, com_delay);
 			set_tx_rate(8);
+			set_Call_Sign(0);
 			tx_wdt_flag = 0;
 		}
 		/*----------------------------------*/

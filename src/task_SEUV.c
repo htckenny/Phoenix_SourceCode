@@ -150,7 +150,7 @@ void seuv_work_with_inms(int switch_status) {
         power_control(3, OFF);
     }
 }
-void get_a_packet(int gain) {
+void get_a_packet(int gain, int stop_flag) {
     uint8_t count = 0;           // error count , 0 = no error
     uint8_t frame_1 [2 * parameters.seuv_sample_rate];
     uint8_t frame_2 [2 * parameters.seuv_sample_rate];
@@ -174,6 +174,8 @@ void get_a_packet(int gain) {
             count += seuv_take_data(2, 1, &frame_2[2 * i]);
             count += seuv_take_data(3, 1, &frame_3[2 * i]);
             count += seuv_take_data(4, 1, &frame_4[2 * i]);
+            if (parameters.seuv_mode == 0x03 && stop_flag == 1)
+                break;
         }
         if (count == 0) {
             calculate_avg_std(1, frame_1, parameters.seuv_sample_rate);
@@ -206,6 +208,8 @@ void get_a_packet(int gain) {
             count += seuv_take_data(2, 8, &frame_2[2 * i]);
             count += seuv_take_data(3, 8, &frame_3[2 * i]);
             count += seuv_take_data(4, 8, &frame_4[2 * i]);
+            if (parameters.seuv_mode == 0x03 && stop_flag == 1)
+                break;
         }
         if (count == 0) {
             calculate_avg_std(1, frame_1, parameters.seuv_sample_rate);
@@ -243,17 +247,17 @@ void SolarEUV_Task(void * pvParameters) {
 
         if (parameters.seuv_mode == 0x01) {         /* Mode A: check if the CubeSat is in the sun light area */
             if (HK_frame.sun_light_flag == 1) {     /* If True, get a packet */
-                get_a_packet(1);
-                get_a_packet(8);
+                get_a_packet(1, 1);
+                get_a_packet(8, 1);
             }
         }
         else if (parameters.seuv_mode == 0x02) {    /* Mode B: Keep sampling every 8 seconds */
             if (seuv_cm_task == NULL) {
                 xTaskCreate(SEUV_CurrentMonitor, (const signed char *) "SEU_CM", 1024 * 4, NULL, 2, &seuv_cm_task);
             }
-            get_a_packet(1);
+            get_a_packet(1, 1);
             vTaskDelay(1 * delay_time_based);
-            get_a_packet(8);
+            get_a_packet(8, 1);
         }
         else if (parameters.seuv_mode == 0x03) {    /* Mode C: Standby Mode */
             if (seuv_cm_task != NULL) {
@@ -268,9 +272,9 @@ void SolarEUV_Task(void * pvParameters) {
                 if (seuv_cm_task == NULL) {
                     xTaskCreate(SEUV_CurrentMonitor, (const signed char *) "SEU_CM", 1024 * 4, NULL, 2, &seuv_cm_task);
                 }
-                get_a_packet(1);
+                get_a_packet(1, 1);
                 vTaskDelay(1 * delay_time_based);
-                get_a_packet(8);
+                get_a_packet(8, 1);
                 seuv_sample_run = 0;
             }
             else {

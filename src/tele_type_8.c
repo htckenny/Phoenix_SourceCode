@@ -40,7 +40,7 @@
 #define Activate_GPS_process		26				/* Activate GPS process, and record the information */
 #define SD_card_format				30				/* Format SD card, and create default folders */
 #define enter_crippled_mode			32				/* Enter Crippled mode, change storage place to flash memory */
-#define test_task_hang				33
+#define test_task_hang				33				/* Activate/Deactivate specific task */
 
 extern void vTaskinms(void * pvParameters);
 extern struct tm wtime_to_date(wtime wt);
@@ -295,7 +295,6 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 				HK_frame.mode_status_flag = paras[0];
 			}
 			else {
-				printf("Wrong\n");
 				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 				break;
 			}
@@ -305,7 +304,6 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 				HK_frame.mode_status_flag = paras[0];
 			}
 			else {
-				printf("Wrong\n");
 				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 				break;
 			}
@@ -315,7 +313,6 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 				HK_frame.mode_status_flag = paras[0];
 			}
 			else {
-				printf("Wrong\n");
 				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 				break;
 			}
@@ -325,7 +322,6 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 				HK_frame.mode_status_flag = paras[0];
 			}
 			else {
-				printf("Wrong\n");
 				sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 				break;
 			}
@@ -609,7 +605,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		para_w_flash();
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
-	/*---------------  ID:33 Enter Crippled Mode ----------------*/
+	/*---------------  ID:33 Activate/Deactivate specific task ----------------*/
 	case test_task_hang:
 		if (para_length == 2)
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
@@ -682,7 +678,6 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
 			break;
 		}
-		para_w_flash();
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
 

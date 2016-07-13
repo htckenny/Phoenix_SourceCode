@@ -30,7 +30,6 @@ void decodeService11(uint8_t subType, uint8_t *telecommand) {
 
 	uint8_t paras[180] = {0};
 	paras[0] = packet_length;
-	printf("%d\n", paras[0]);
 	if ((packet_length - 4) > 0)
 		memcpy(&paras[1], telecommand + 9, packet_length - 4);
 	switch (subType) {

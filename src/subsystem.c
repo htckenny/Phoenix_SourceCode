@@ -102,7 +102,7 @@ int parameter_init()
 	inms_tm_status						= 1;
 	seuv_with_INMS 						= 0;
 	decode_command						= 0;
-
+	ADCS_DEBUG 							= 0;
 	/* Protocol sequence count */
 	parameters.obc_packet_sequence_count = 0;
 	parameters.ax25_sequence_count       = 0;

@@ -104,7 +104,7 @@ uint8_t INMS_power_status;
 
 uint8_t decode_command;
 uint32_t lastCommandTime;
-
+uint8_t ADCS_DEBUG;
 typedef struct __attribute__((packed)) {
 
 	/* System Configuration */

@@ -4,7 +4,7 @@
  	* @Author 	Jerry Wu, Kai Wu
  	* @Version	V1.0
  	* @Date     2016/1/25
- 	* @Update   2016/3/2
+ 	* @Update   2016/5/26
  	* @Brief	This program is the flight version for the ADCS flight
  	*			software. Pseudo data would be given from the stm MCU
  	*			as sensor values. The goal is to test the algorthm witg
@@ -26,17 +26,20 @@
 #include <stdbool.h>
 
 #define DATALENGTH 		1
-#define ADCS_DEBUG		0
-
+// #define ADCS_DEBUG		0
+#define delay_adcs		1
+#define adcs_state_delay 0.9
 // #define adcs_node 0x57
-// #define stm_node 0x7F
-//#define adcs_delay 7
+// #define stm_node 0x77
+//#define adcs_delay 7       ADCS node 119
 
 uint8_t txbuf[255];  //Define Tx buffer length
 uint8_t rxbuf[255];  //Define Rx buffer length
 int16_t Angular_Y_rate_difference[2];
 int16_t Angular_Y_reference_rate = -220;
-float adcs_state_delay = 0.9;
+
+portTickType xLastWakeTime;
+portTickType xFrequency = delay_adcs * delay_time_based;
 
 //Declare the structure of the estimated value of angular rate
 typedef struct __attribute__((packed))
@@ -91,6 +94,8 @@ typedef struct __attribute__((packed))
 adcs_process_t adcs_process;
 
 
+
+
 void Initial_Mode()
 {
 	/*---------------------------Enable the ADCS to run mode-------------------------------*/
@@ -131,6 +136,8 @@ void Initial_Mode()
 	/*----------------------------------Proortional condition triggering-------------------------------------*/
 	while (1)
 	{
+		xLastWakeTime = xTaskGetTickCount();
+
 		while (Initial_mode_1st_count_total < Initial_mode_1st_samples)
 		{
 
@@ -140,11 +147,12 @@ void Initial_Mode()
 				adcs_est_ang_rates.angular_X_rate[1] = rxbuf[0] + (rxbuf[1] << 8); //   *256 = <<8, /256= >>8
 				adcs_est_ang_rates.angular_Y_rate[1] = rxbuf[2] + (rxbuf[3] << 8); //   *256 = <<8, /256= >>8
 				adcs_est_ang_rates.angular_Z_rate[1] = rxbuf[4] + (rxbuf[5] << 8); //   *256 = <<8, /256= >>8
-#if ADCS_DEBUG
-				printf("\tWe are in the first logic condition");
-				printf("\tEstimate X angular rate = %d", adcs_est_ang_rates.angular_X_rate[1]);
-				printf("\tEstimate Z angular rate = %d\n", adcs_est_ang_rates.angular_Z_rate[1]);
-#endif
+				if (ADCS_DEBUG)
+				{
+					printf("\tWe are in the first logic condition");
+					printf("\tEstimate X angular rate = %d", adcs_est_ang_rates.angular_X_rate[1]);
+					printf("\tEstimate Z angular rate = %d\n", adcs_est_ang_rates.angular_Z_rate[1]);
+				}
 			}
 
 			if ((adcs_est_ang_rates.angular_X_rate[1] >= -500) && (adcs_est_ang_rates.angular_X_rate[1] <= 500)
@@ -158,13 +166,14 @@ void Initial_Mode()
 				Initial_mode_1st_count_total += 1;
 			}
 
-			vTaskDelay(adcs_state_delay * delay_time_based);
+			vTaskDelayUntil(&xLastWakeTime, xFrequency);
 		}
 
 
 
 		if ((Initial_mode_1st_count / Initial_mode_1st_count_total) >= Initial_mode_1st_conditional_ratio) //The proportion has to larger than 0.5
 		{
+			xLastWakeTime = xTaskGetTickCount();
 			while (Initial_mode_2nd_count_total < Initial_mode_2nd_samples)
 			{
 				txbuf[0] = 0x92;   //0d146 Estimated angular rates
@@ -174,10 +183,11 @@ void Initial_Mode()
 					adcs_est_ang_rates.angular_Y_rate[1] = rxbuf[2] + (rxbuf[3] << 8); //   *256 = <<8, /256= >>8
 					adcs_est_ang_rates.angular_Z_rate[1] = rxbuf[4] + (rxbuf[5] << 8); //   *256 = <<8, /256= >>8
 				}
-#if ADCS_DEBUG
-				printf("\tWe are in the Second logic condition (In yes result)");
-				printf("\tEstimate Y angular rate = %d\n", adcs_est_ang_rates.angular_Y_rate[1]);
-#endif
+				if (ADCS_DEBUG)
+				{
+					printf("\tWe are in the Second logic condition (In yes result)");
+					printf("\tEstimate Y angular rate = %d\n", adcs_est_ang_rates.angular_Y_rate[1]);
+				}
 				if ((adcs_est_ang_rates.angular_Y_rate[1] >= -3000) && (adcs_est_ang_rates.angular_Y_rate[1] <= 3000))
 				{
 					Initial_mode_2nd_count += 1;
@@ -188,7 +198,7 @@ void Initial_Mode()
 					Initial_mode_2nd_count_total += 1;
 				}
 
-				vTaskDelay(adcs_state_delay * delay_time_based);
+				vTaskDelayUntil(&xLastWakeTime, xFrequency);
 			}
 
 			if ((Initial_mode_2nd_count / Initial_mode_2nd_count_total) >= Initial_mode_2nd_conditional_ratio)
@@ -199,9 +209,10 @@ void Initial_Mode()
 
 				adcs_process.initialize_flag = 0;
 				adcs_process.stabilize_flag = 1;
-#if ADCS_DEBUG
-				printf("U jump to Detumbling Control mode\n");
-#endif
+				if (ADCS_DEBUG)
+				{
+					printf("U jump to Detumbling Control mode\n");
+				}
 				break;
 			}
 			else
@@ -209,14 +220,16 @@ void Initial_Mode()
 				adcs_status.initial_flag = 0;
 				adcs_status.high_initial_flag1 = 1;
 				adcs_status.high_initial_flag2 = 0;
-#if ADCS_DEBUG
-				printf("U jump to High Intitial Rate Detumbling mode\n");
-#endif
+				if (ADCS_DEBUG)
+				{
+					printf("U jump to High Intitial Rate Detumbling mode\n");
+				}
 				break;
 			}
 		}
 		else
 		{
+			xLastWakeTime = xTaskGetTickCount();
 			while (Initial_mode_2nd_count_total < Initial_mode_2nd_samples)
 			{
 
@@ -227,13 +240,14 @@ void Initial_Mode()
 					adcs_est_ang_rates.angular_Y_rate[1] = rxbuf[2] + (rxbuf[3] << 8); //   *256 = <<8, /256= >>8
 					adcs_est_ang_rates.angular_Z_rate[1] = rxbuf[4] + (rxbuf[5] << 8); //   *256 = <<8, /256= >>8
 				}
-#if ADCS_DEBUG
-				printf("\tWe are in the Second logic condition(In no result)\n");
+				if (ADCS_DEBUG)
+				{
+					printf("\tWe are in the Second logic condition(In no result)\n");
 
-				printf("\tEstimate X angular rate = %d", adcs_est_ang_rates.angular_X_rate[1]);
-				printf("\tEstimate Y angular rate = %d", adcs_est_ang_rates.angular_Y_rate[1]);
-				printf("\tEstimate Z angular rate = %d", adcs_est_ang_rates.angular_Z_rate[1]);
-#endif
+					printf("\tEstimate X angular rate = %d", adcs_est_ang_rates.angular_X_rate[1]);
+					printf("\tEstimate Y angular rate = %d", adcs_est_ang_rates.angular_Y_rate[1]);
+					printf("\tEstimate Z angular rate = %d", adcs_est_ang_rates.angular_Z_rate[1]);
+				}
 
 				if ((adcs_est_ang_rates.angular_X_rate[1] >= -1500) && (adcs_est_ang_rates.angular_X_rate[1] <= 1500)
 				        && (adcs_est_ang_rates.angular_Y_rate[1] >= -1500) && (adcs_est_ang_rates.angular_Y_rate[1] <= 1500)
@@ -248,7 +262,7 @@ void Initial_Mode()
 					Initial_mode_2nd_count_total += 1;
 				}
 
-				vTaskDelay(adcs_state_delay * delay_time_based);
+				vTaskDelayUntil(&xLastWakeTime, xFrequency);
 			}
 
 			if ((Initial_mode_2nd_count / Initial_mode_2nd_count_total) >= Initial_mode_2nd_conditional_ratio)
@@ -259,9 +273,10 @@ void Initial_Mode()
 
 				adcs_process.initialize_flag = 0;
 				adcs_process.stabilize_flag = 1;
-#if ADCS_DEBUG
-				printf("U jump to Detumbling Control mode\n");
-#endif
+				if (ADCS_DEBUG)
+				{
+					printf("U jump to Detumbling Control mode\n");
+				}
 				break;
 			}
 			else
@@ -269,13 +284,13 @@ void Initial_Mode()
 				adcs_status.initial_flag = 0;
 				adcs_status.high_initial_flag1 = 0;
 				adcs_status.high_initial_flag2 = 1;
-#if ADCS_DEBUG
-				printf("U jump to High Intitial Rate Detumbling mode\n");
-#endif
+				if (ADCS_DEBUG)
+				{
+					printf("U jump to High Intitial Rate Detumbling mode\n");
+				}
 				break;
 			}
 		}
-		vTaskDelay(adcs_state_delay * delay_time_based);
 		break;
 	}
 }
@@ -318,7 +333,7 @@ void High_Initial_Rate_Detumbling(int high_initial_identifier)
 	int High_Initial_mode_flag = 0;
 	int High_Initial_mode_qualified_samples = 60;
 
-
+	xLastWakeTime = xTaskGetTickCount();
 	while (1)
 	{
 		txbuf[0] = 0x92;   //0d146 Estimated angular rates
@@ -332,9 +347,10 @@ void High_Initial_Rate_Detumbling(int high_initial_identifier)
 		/*---------------------------Continously condition triggering (Previously in Yes result)-----------------------------*/
 		if (high_initial_identifier == 1)
 		{
-#if ADCS_DEBUG
-			printf("\tEstimate Y angular rate = %d\n", adcs_est_ang_rates.angular_Y_rate[1]);
-#endif
+			if (ADCS_DEBUG)
+			{
+				printf("\tEstimate Y angular rate = %d\n", adcs_est_ang_rates.angular_Y_rate[1]);
+			}
 			if (High_Initial_mode_flag == 0)
 			{
 				if ((adcs_est_ang_rates.angular_Y_rate[1] >= -3000) && (adcs_est_ang_rates.angular_Y_rate[1] <= 3000))
@@ -380,9 +396,10 @@ void High_Initial_Rate_Detumbling(int high_initial_identifier)
 
 				adcs_process.initialize_flag = 0;
 				adcs_process.stabilize_flag = 1;
-#if ADCS_DEBUG
-				printf("u jump to detumbling mode\n");
-#endif
+				if (ADCS_DEBUG)
+				{
+					printf("u jump to detumbling mode\n");
+				}
 				break;
 			}
 			else
@@ -390,24 +407,26 @@ void High_Initial_Rate_Detumbling(int high_initial_identifier)
 				adcs_status.initial_flag = 0;
 				adcs_status.high_initial_flag1 = 1;
 				adcs_status.high_initial_flag2 = 0;
-#if ADCS_DEBUG
-				printf("u stay in High Intitial Rate Detumbling\n");
-#endif
+				if (ADCS_DEBUG)
+				{
+					printf("u stay in High Intitial Rate Detumbling\n");
+				}
 				//break;
 			}
-
-			vTaskDelay(adcs_state_delay * delay_time_based);
+			vTaskDelayUntil(&xLastWakeTime, xFrequency);
+			// vTaskDelay(adcs_state_delay * delay_time_based);
 			adcs_est_ang_rates.angular_Y_rate[0] = adcs_est_ang_rates.angular_Y_rate[1];
 		}
 
 		else
 		{
-#if ADCS_DEBUG
-			printf("\tWe jump to the second logic condition (In no result)\n");
-			printf("\tEstimate X angular rate = %d", adcs_est_ang_rates.angular_X_rate[1]);
-			printf("\tEstimate Y angular rate = %d", adcs_est_ang_rates.angular_Y_rate[1]);
-			printf("\tEstimate Z angular rate = %d", adcs_est_ang_rates.angular_Z_rate[1]);
-#endif
+			if (ADCS_DEBUG)
+			{
+				printf("\tWe jump to the second logic condition (In no result)\n");
+				printf("\tEstimate X angular rate = %d", adcs_est_ang_rates.angular_X_rate[1]);
+				printf("\tEstimate Y angular rate = %d", adcs_est_ang_rates.angular_Y_rate[1]);
+				printf("\tEstimate Z angular rate = %d", adcs_est_ang_rates.angular_Z_rate[1]);
+			}
 			/*---------------------------Continously condition triggering (Previously in No result)-----------------------------*/
 
 			if (High_Initial_mode_flag == 0)
@@ -462,18 +481,20 @@ void High_Initial_Rate_Detumbling(int high_initial_identifier)
 
 			if (High_Initial_mode_count > High_Initial_mode_qualified_samples)
 			{
-#if ADCS_DEBUG
-				printf("u success\n");
-#endif
+				if (ADCS_DEBUG)
+				{
+					printf("u success\n");
+				}
 				adcs_status.initial_flag = 0;
 				adcs_status.high_initial_flag1 = 0;
 				adcs_status.high_initial_flag2 = 0;
 
 				adcs_process.initialize_flag = 0;
 				adcs_process.stabilize_flag = 1;
-#if ADCS_DEBUG
-				printf("u jump to detumbling mode\n");
-#endif
+				if (ADCS_DEBUG)
+				{
+					printf("u jump to detumbling mode\n");
+				}
 				break;
 			}
 
@@ -483,18 +504,17 @@ void High_Initial_Rate_Detumbling(int high_initial_identifier)
 				adcs_status.initial_flag = 0;
 				adcs_status.high_initial_flag1 = 0;
 				adcs_status.high_initial_flag2 = 1;
-#if ADCS_DEBUG
-				printf("u stay in High Intitial Rate Detumbling\n");
-#endif
-				//break;
+				if (ADCS_DEBUG)
+				{
+					printf("u stay in High Intitial Rate Detumbling\n");
+				}
 			}
-
-			vTaskDelay(adcs_state_delay * delay_time_based);
+			vTaskDelayUntil(&xLastWakeTime, xFrequency);
+			// vTaskDelay(adcs_state_delay * delay_time_based);
 			adcs_est_ang_rates.angular_X_rate[0] = adcs_est_ang_rates.angular_X_rate[1];
 			adcs_est_ang_rates.angular_Z_rate[0] = adcs_est_ang_rates.angular_Z_rate[1];
 		}
 	}
-	vTaskDelay(adcs_state_delay * delay_time_based);
 }
 
 void Detumbling_Control_RKF()
@@ -536,6 +556,7 @@ void Detumbling_Control_RKF()
 	int Detumbling_RKF_mode_flag = 0;
 	int Detumbling_RKF_mode_qualified_samples = 60;
 
+	xLastWakeTime = xTaskGetTickCount();
 	while (1)
 	{
 		txbuf[0] = 0x92;   //0d146 Estimated angular rates
@@ -547,9 +568,10 @@ void Detumbling_Control_RKF()
 		}
 
 		/*---------------------------Continously condition triggering (Previously in Yes result)-----------------------------*/
-#if ADCS_DEBUG
-		printf("\tEstimate Y angular rate = %d\n", adcs_est_ang_rates.angular_Y_rate[1]);
-#endif
+		if (ADCS_DEBUG)
+		{
+			printf("\tEstimate Y angular rate = %d\n", adcs_est_ang_rates.angular_Y_rate[1]);
+		}
 		Angular_Y_rate_difference[1] = adcs_est_ang_rates.angular_Y_rate[1] - Angular_Y_reference_rate;
 		Angular_Y_rate_difference[0] = adcs_est_ang_rates.angular_Y_rate[0] - Angular_Y_reference_rate;
 
@@ -595,9 +617,10 @@ void Detumbling_Control_RKF()
 			adcs_status.detumbling_rkf_flag = 0;
 			adcs_status.detumbling_ekf_flag = 1;
 			adcs_status.y_momentum_intial_flag = 0;
-#if ADCS_DEBUG
-			printf("u jump to Detumbling Control with EKF\n");
-#endif
+			if (ADCS_DEBUG)
+			{
+				printf("u jump to Detumbling Control with EKF\n");
+			}
 			break;
 		}
 		else
@@ -605,9 +628,10 @@ void Detumbling_Control_RKF()
 			adcs_status.detumbling_rkf_flag = 1;
 			adcs_status.detumbling_ekf_flag = 0;
 			adcs_status.y_momentum_intial_flag = 0;
-#if ADCS_DEBUG
-			printf("u stay in Detumbling Control with RKF\n");
-#endif
+			if (ADCS_DEBUG)
+			{
+				printf("u stay in Detumbling Control with RKF\n");
+			}
 		}
 
 		vTaskDelay(adcs_state_delay * delay_time_based);
@@ -656,6 +680,7 @@ void Detumbling_Control_EKF()
 	int Detumbling_EKF_mode_flag = 0;
 	int Detumbling_EKF_mode_qualified_samples = 60;
 
+	xLastWakeTime = xTaskGetTickCount();
 	while (1)
 	{
 		txbuf[0] = 0x92;   //0d146 Estimated angular rates
@@ -673,12 +698,13 @@ void Detumbling_Control_EKF()
 		}
 
 		/*---------------------------Continously condition triggering (Previously in Yes result)-----------------------------*/
-#if ADCS_DEBUG
-		printf("\tEstimate X angular rate = %d\n", adcs_est_ang_rates.angular_X_rate[1]);
-		printf("\tEstimate Y angular rate = %d\n", adcs_est_ang_rates.angular_Y_rate[1]);
-		printf("\tEstimate Z angular rate = %d\n", adcs_est_ang_rates.angular_Z_rate[1]);
-		printf("\tEstimate Pitch angle = %d\n", adcs_est_rpy_angle.pitch_angle[1]);
-#endif
+		if (ADCS_DEBUG)
+		{
+			printf("\tEstimate X angular rate = %d\n", adcs_est_ang_rates.angular_X_rate[1]);
+			printf("\tEstimate Y angular rate = %d\n", adcs_est_ang_rates.angular_Y_rate[1]);
+			printf("\tEstimate Z angular rate = %d\n", adcs_est_ang_rates.angular_Z_rate[1]);
+			printf("\tEstimate Pitch angle = %d\n", adcs_est_rpy_angle.pitch_angle[1]);
+		}
 		Angular_Y_rate_difference[1] = adcs_est_ang_rates.angular_Y_rate[1] - Angular_Y_reference_rate;
 		Angular_Y_rate_difference[0] = adcs_est_ang_rates.angular_Y_rate[0] - Angular_Y_reference_rate;
 
@@ -753,9 +779,10 @@ void Detumbling_Control_EKF()
 			adcs_status.detumbling_rkf_flag = 0;
 			adcs_status.detumbling_ekf_flag = 0;
 			adcs_status.y_momentum_intial_flag = 1;
-#if ADCS_DEBUG
-			printf("u jump to Y_momentum_initial_state\n");
-#endif
+			if (ADCS_DEBUG)
+			{
+				printf("u jump to Y_momentum_initial_state\n");
+			}
 			break;
 		}
 		else
@@ -763,12 +790,13 @@ void Detumbling_Control_EKF()
 			adcs_status.detumbling_rkf_flag = 0;
 			adcs_status.detumbling_ekf_flag = 1;
 			adcs_status.y_momentum_intial_flag = 0;
-#if ADCS_DEBUG
-			printf("u stay in Detumbling Control with EKF\n");
-#endif
+			if (ADCS_DEBUG)
+			{
+				printf("u stay in Detumbling Control with EKF\n");
+			}
 		}
-
-		vTaskDelay(adcs_state_delay * delay_time_based);
+		vTaskDelayUntil(&xLastWakeTime, xFrequency);
+		// vTaskDelay(adcs_state_delay * delay_time_based);
 		adcs_est_ang_rates.angular_X_rate[0] = adcs_est_ang_rates.angular_X_rate[1];
 		adcs_est_ang_rates.angular_Y_rate[0] = adcs_est_ang_rates.angular_Y_rate[1];
 		adcs_est_ang_rates.angular_Z_rate[0] = adcs_est_ang_rates.angular_Z_rate[1];
@@ -816,6 +844,8 @@ void Y_Momontum_Stabilized_Initial()
 	int Steady_state_restart_count = 0;
 	int Steady_state_restart_flag = 0;
 	int Steady_state_restart_qualified_samples = 5;
+
+	xLastWakeTime = xTaskGetTickCount();
 	while (1)
 	{
 
@@ -826,16 +856,18 @@ void Y_Momontum_Stabilized_Initial()
 		}
 
 		steady_state_flag = (int8_t)((ADCS_current_state << 0 ) < 0); //The "int8_t" has 8 bits, the 0th represents the status of Y-momentum steady-state
-
-		printf("%2x\n", ADCS_current_state);
-		printf("%d\n", steady_state_flag);
-
+		if (ADCS_DEBUG)
+		{
+			printf("%2x\n", ADCS_current_state);
+			printf("%d\n", steady_state_flag);
+		}
 		if (steady_state_flag == 1)
 		{
 			//vTaskDelay(10 * delay_time_based);   //Jerry test
-#if ADCS_DEBUG
-			printf("Enter Y_Momontum_Stabilized_Steady_State\n");
-#endif
+			if (ADCS_DEBUG)
+			{
+				printf("Enter Y_Momontum_Stabilized_Steady_State\n");
+			}
 
 			txbuf[0] = 0x92;   //0d146 Estimated angular rates
 			if (i2c_master_transaction_2(0, stm_node, &txbuf, 1, &rxbuf, 6, adcs_delay) == E_NO_ERR)
@@ -902,19 +934,21 @@ void Y_Momontum_Stabilized_Initial()
 
 				adcs_process.initialize_flag = 1;
 				adcs_process.stabilize_flag = 0;
-#if ADCS_DEBUG
-				printf("The satellite is really unstable\n");
-				printf("u restart from initialize process\n");
-#endif
+				if (ADCS_DEBUG)
+				{
+					printf("The satellite is really unstable\n");
+					printf("u restart from initialize process\n");
+				}
 				break;
 			}
 			else
 			{
 				if (magnetometer_deploy == 1)
 				{
-#if ADCS_DEBUG
-					printf("Start Magnetometer Deploy!\n");
-#endif
+					if (ADCS_DEBUG)
+					{
+						printf("Start Magnetometer Deploy!\n");
+					}
 					adcs_status.detumbling_rkf_flag = 0;
 					adcs_status.detumbling_ekf_flag = 0;
 					adcs_status.y_momentum_intial_flag = 0;
@@ -922,20 +956,23 @@ void Y_Momontum_Stabilized_Initial()
 				}
 				else
 				{
-#if ADCS_DEBUG
-					printf("U Stay in Y_Momontum_Stabilized_Steady_State\n");
-#endif
+					if (ADCS_DEBUG)
+					{
+						printf("U Stay in Y_Momontum_Stabilized_Steady_State\n");
+					}
 				}
 
 			}
 		}
 		else
 		{
-#if ADCS_DEBUG
-			printf("U Stay in Y_Momontum_Stabilized_Initial_State\n");
-#endif
+			if (ADCS_DEBUG)
+			{
+				printf("U Stay in Y_Momontum_Stabilized_Initial_State\n");
+			}
 		}
-		vTaskDelay(adcs_state_delay * delay_time_based);
+		vTaskDelayUntil(&xLastWakeTime, xFrequency);
+		// vTaskDelay(adcs_state_delay * delay_time_based);
 		adcs_est_ang_rates.angular_X_rate[0] = adcs_est_ang_rates.angular_X_rate[1];
 		adcs_est_ang_rates.angular_Y_rate[0] = adcs_est_ang_rates.angular_Y_rate[1];
 		adcs_est_ang_rates.angular_Z_rate[0] = adcs_est_ang_rates.angular_Z_rate[1];
@@ -1052,9 +1089,10 @@ void Magnetometer_Deployment_Process()
 					adcs_mag_raw_measurement.mag_raw_measurement_Z[0] = rxbuf[4] + (rxbuf[5] << 8); //   *256 = <<8, /256= >>8, display in LSB
 				}
 			}
-#if ADCS_DEBUG
-			printf("CSS4 measurement= %d\n", CSS4_value);
-#endif
+			if (ADCS_DEBUG)
+			{
+				printf("CSS4 measurement= %d\n", CSS4_value);
+			}
 			if (CSS4_value > CSS4_threshold_value)
 			{
 				// Verify the deployment by checking the raw value of magnetometer measurement
@@ -1071,17 +1109,18 @@ void Magnetometer_Deployment_Process()
 					adcs_mag_raw_measurement.mag_raw_measurement_Y[1] = rxbuf[2] + (rxbuf[3] << 8); //   *256 = <<8, /256= >>8, display in LSB
 					adcs_mag_raw_measurement.mag_raw_measurement_Z[1] = rxbuf[4] + (rxbuf[5] << 8); //   *256 = <<8, /256= >>8, display in LSB
 				}
-#if ADCS_DEBUG
-				printf("\t(Previous)\n");
-				printf("\tRaw X Magnetic Measurement = %d", adcs_mag_raw_measurement.mag_raw_measurement_X[0]);
-				printf("\tRaw Y Magnetic Measurement = %d", adcs_mag_raw_measurement.mag_raw_measurement_Y[0]);
-				printf("\tRaw Z Magnetic Measurement = %d\n", adcs_mag_raw_measurement.mag_raw_measurement_Z[0]);
+				if (ADCS_DEBUG)
+				{
+					printf("\t(Previous)\n");
+					printf("\tRaw X Magnetic Measurement = %d", adcs_mag_raw_measurement.mag_raw_measurement_X[0]);
+					printf("\tRaw Y Magnetic Measurement = %d", adcs_mag_raw_measurement.mag_raw_measurement_Y[0]);
+					printf("\tRaw Z Magnetic Measurement = %d\n", adcs_mag_raw_measurement.mag_raw_measurement_Z[0]);
 
-				printf("\t(Latest)\n");
-				printf("\tRaw X Magnetic Measurement = %d", adcs_mag_raw_measurement.mag_raw_measurement_X[1]);
-				printf("\tRaw Y Magnetic Measurement = %d", adcs_mag_raw_measurement.mag_raw_measurement_Y[1]);
-				printf("\tRaw Z Magnetic Measurement = %d\n", adcs_mag_raw_measurement.mag_raw_measurement_Z[1]);
-#endif
+					printf("\t(Latest)\n");
+					printf("\tRaw X Magnetic Measurement = %d", adcs_mag_raw_measurement.mag_raw_measurement_X[1]);
+					printf("\tRaw Y Magnetic Measurement = %d", adcs_mag_raw_measurement.mag_raw_measurement_Y[1]);
+					printf("\tRaw Z Magnetic Measurement = %d\n", adcs_mag_raw_measurement.mag_raw_measurement_Z[1]);
+				}
 				if ((abs(adcs_mag_raw_measurement.mag_raw_measurement_X[1] - adcs_mag_raw_measurement.mag_raw_measurement_Y[0]) < 2000)
 				        && (abs(adcs_mag_raw_measurement.mag_raw_measurement_Y[1] + adcs_mag_raw_measurement.mag_raw_measurement_X[0]) < 2000)
 				        && (abs(adcs_mag_raw_measurement.mag_raw_measurement_Z[1] - adcs_mag_raw_measurement.mag_raw_measurement_Z[0]) < 2000))
@@ -1090,9 +1129,10 @@ void Magnetometer_Deployment_Process()
 					vTaskDelay(1 * delay_time_based);
 					adcs_para.mag_deploy_status_flag = 1;
 					/*--------------------Maybe add something-----------------------*/
-#if ADCS_DEBUG
-					printf("The magnetometer configuration had been succesfully calibrated and verified\n");
-#endif
+					if (ADCS_DEBUG)
+					{
+						printf("The magnetometer configuration had been succesfully calibrated and verified\n");
+					}
 					break;
 				}
 				else
@@ -1126,9 +1166,10 @@ void Magnetometer_Deployment_Process()
 
 			adcs_process.initialize_flag = 1;
 			adcs_process.stabilize_flag = 0;
-#if ADCS_DEBUG
-			printf("u restart from initialize process\n");
-#endif
+			if (ADCS_DEBUG)
+			{
+				printf("u restart from initialize process\n");
+			}
 			break;
 		}
 		vTaskDelay(adcs_state_delay * delay_time_based);
@@ -1211,7 +1252,6 @@ void Stabilize_Process()
 
 void ADCS_Task(void * pvParameters)
 {
-
 	vTaskDelay(10 * delay_time_based);   //Delay 15s to start ADCS
 	printf("Press Stm reset button!\n"); //Set up the stm for loading pseudo data
 	vTaskDelay(5 * delay_time_based);    //Delay 15s to start ADCS

@@ -567,6 +567,12 @@ int adcs_switch(struct command_context * ctx) {
 	else if (buffer == 5) {
 		xTaskCreate(GPS_task, (const signed char *) "GPS", 1024 * 4, NULL, 3, NULL);
 	}
+	else if (buffer == 10) {
+		ADCS_DEBUG = 0;
+	}
+	else if (buffer == 11) {
+		ADCS_DEBUG = 1;
+	}
 	else if (buffer == 0) {
 		if (adcs_task != NULL)
 			vTaskDelete(adcs_task);

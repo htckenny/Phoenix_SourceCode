@@ -40,6 +40,7 @@
 #define Activate_GPS_process		26				/* Activate GPS process, and record the information */
 #define SD_card_format				30				/* Format SD card, and create default folders */
 #define enter_crippled_mode			32				/* Enter Crippled mode, change storage place to flash memory */
+#define test_task_hang				33
 
 extern void vTaskinms(void * pvParameters);
 extern struct tm wtime_to_date(wtime wt);
@@ -604,6 +605,83 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		para_w_flash();
 		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
 		break;
+	/*---------------  ID:33 Enter Crippled Mode ----------------*/
+	case test_task_hang:
+		if (para_length == 2)
+			sendTelecommandReport_Success(telecommand, CCSDS_S3_ACCEPTANCE_SUCCESS);
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);
+			break;
+		}
+		if (paras[0] == 0) {
+			if (paras[1] == 0) {
+				if (bat_check_task != NULL) {
+					vTaskDelete(bat_check_task);
+					bat_check_task = NULL;
+				}
+			}
+			else {
+				if (bat_check_task == NULL)
+					xTaskCreate(BatteryCheck_Task, (const signed char *) "BatCk", 1024 * 4, NULL, 2, &bat_check_task);
+			}
+		}
+		else if (paras[0] == 1) {
+			if (paras[1] == 0) {
+				if (beacon_task != NULL) {
+					vTaskDelete(beacon_task);
+					beacon_task = NULL;
+				}
+			}
+			else {
+				if (beacon_task == NULL)
+					xTaskCreate(beacon_Task, (const signed char *) "beacon", 1024 * 4, NULL, 2, &beacon_task);
+			}
+		}
+		else if (paras[0] == 2) {
+			if (paras[1] == 0) {
+				if (adcs_task != NULL) {
+					vTaskDelete(adcs_task);
+					adcs_task = NULL;
+				}
+			}
+			else {
+				if (adcs_task == NULL)
+					xTaskCreate(ADCS_Task, (const signed char * ) "ADCS", 1024 * 4, NULL, 2, &adcs_task);
+			}
+
+		}
+		else if (paras[0] == 3) {
+			if (paras[1] == 0) {
+				if (seuv_task != NULL) {
+					vTaskDelete(seuv_task);
+					seuv_task = NULL;
+				}
+			}
+			else {
+				if (seuv_task == NULL)
+					xTaskCreate(SolarEUV_Task, (const signed char * ) "SEUV", 1024 * 4, NULL, 2, &seuv_task);
+			}
+		}
+		else if (paras[0] == 4) {
+			if (paras[1] == 0) {
+				if (Anom_mon_task != NULL) {
+					vTaskDelete(Anom_mon_task);
+					Anom_mon_task = NULL;
+				}
+			}
+			else {
+				if (Anom_mon_task == NULL)
+					xTaskCreate(Anomaly_Monitor_Task, (const signed char *) "Anom", 1024 * 4, NULL, 2, &Anom_mon_task);
+			}
+		}
+		else {
+			sendTelecommandReport_Failure(telecommand, CCSDS_S3_COMPLETE_FAIL, completionError);
+			break;
+		}
+		para_w_flash();
+		sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
+		break;
+
 	/*---------------- Otherwise ----------------*/
 	default:
 		sendTelecommandReport_Failure(telecommand, CCSDS_T1_ACCEPTANCE_FAIL, CCSDS_ERR_ILLEGAL_TYPE);

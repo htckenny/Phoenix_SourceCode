@@ -47,7 +47,11 @@ extern struct tm wtime_to_date(wtime wt);
 extern void little2big_32(uint8_t * input_data);
 extern void task_format(void * pvParameters);
 extern void GPS_task(void* pvParameters);
-
+extern void ADCS_Task(void * pvParameters);
+extern void SolarEUV_Task(void * pvParameters);
+extern void BatteryCheck_Task(void * pvParameters);
+extern void Anomaly_Monitor_Task(void * pvParameters);
+extern void beacon_Task(void * pvParameters);
 
 void decodeService8(uint8_t subType, uint8_t*telecommand) {
 	uint8_t txBuffer[200];

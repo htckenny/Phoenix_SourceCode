@@ -96,11 +96,11 @@ void decodeService132(uint8_t subType, uint8_t*telecommand) {
 				power_control(3, ON);
 			}
 			/* sample SEUV once with gain = 1 */
-			get_a_packet(1, 0);
+			get_a_packet(1);
 			memcpy(&SEUV_data, &seuvFrame, seuv_length);
 			SendDataWithCCSDS_AX25(3, SEUV_data);
 			/* sample SEUV once with gain = 8 */
-			get_a_packet(8, 0);
+			get_a_packet(8);
 			seuvFrame.samples ++;
 			memcpy(&SEUV_data, &seuvFrame, seuv_length);
 			seuvFrame.samples --;

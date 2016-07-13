@@ -11,4 +11,4 @@
 #endif /* SEUV_TASK_H_ */
 
 uint8_t seuv_take_data(uint8_t ch, int gain, uint8_t *frame);
-void get_a_packet(int gain, int stop_flag);
+void get_a_packet(int gain);

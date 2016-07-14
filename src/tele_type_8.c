@@ -527,7 +527,7 @@ void decodeService8(uint8_t subType, uint8_t*telecommand) {
 		little2big_32(&paras[0]);
 
 		memcpy(&parameters.GS_threshold, &paras[0], 4);
-		if (parameters.GS_threshold > 0) {
+		if (parameters.GS_threshold > 43200) {
 			printf("%" PRIu32 "\n", parameters.GS_threshold);
 			para_w_flash();
 			sendTelecommandReport_Success(telecommand, CCSDS_S3_COMPLETE_SUCCESS);
